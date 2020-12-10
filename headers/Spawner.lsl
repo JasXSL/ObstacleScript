@@ -13,6 +13,7 @@
 #define SpawnerMethod$delete 13				// (int)index
 #define SpawnerMethod$add 14				// void - Adds said object, use $ notation to save description
 #define SpawnerMethod$savePortals 15		// (str)batch - Adds all spawned portals to the DB
+#define SpawnerMethod$setSpawnValue 16		// (int)spawnIndex, (int)paramIndex, (var)value - Updates a spawn value
 
 
 

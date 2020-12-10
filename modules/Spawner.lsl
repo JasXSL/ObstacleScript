@@ -172,6 +172,42 @@ handleOwnerMethod( SpawnerMethod$listSpawns )
 
 end
 
+handleOwnerMethod( SpawnerMethod$setSpawnValue )
+    
+    int targ = argInt(0);
+	int param = argInt(1);
+	string desc = argStr(2);
+	
+    integer index;
+    integer i;
+    for( ; i < count(ASSET_TABLES); ++i ){
+        
+        list data = getTableData(l2i(ASSET_TABLES, i));
+        // The object is in this table
+        if( index+count(data) >= targ ){
+            
+            integer de = targ-index;
+			
+			// Get object settings
+			list settings = llJson2List(l2s(data, de));
+			settings = llListReplaceList(settings, (list)desc, param, param);
+			
+			
+			data = llListReplaceList(data, (list)mkarr(settings), de, de);
+            setTableData(l2i(ASSET_TABLES, i), data);
+            llOwnerSay("Object updated");
+            return;
+            
+        }
+        index += count(data);
+        
+    }
+    
+    llOwnerSay("Object not found");
+    
+
+end
+
 handleOwnerMethod( SpawnerMethod$callbackRepoFetch )
     
     qd("All assets have been delivered");
