@@ -1,0 +1,21 @@
+#ifndef __Interact
+#define __Interact
+
+// #define InteractCfg$ON_DESC				// Define this to a function name you want called when a description is detected, usually setting a text on your HUD. Make your function like fnName( key id, string desc )
+// #define InteractCfg$CUSTOM_CLICK 		// Define this to a function name you want to trigger before allowing the interact. The function should be defined as integer fnName( key id, string type, list data ) and return TRUE on success
+// #define InteractCfg$USE_ROOT			// Uses root prim instead
+// #define InteractCfg$ALLOW_ML_LCLICK 	// Use ml lclick as well for E
+// #define InteractCfg$MAX_RATE 0.5			// Seconds between allowed interact attempts
+// #define InteractCfg$IGNORE_UNSIT			// Prevents default action of unsitting when E hit while seated
+// #define InteractCfg$ALLOW_WHEN_SITTING 	// Allows interactions when player is sitting by default. Can be toggled with the method
+// #define InteractCfg$SOUND_ON_FAIL (str)sound // Triggers a sound if interact fails
+// #define InteractCfg$SOUND_ON_SUCCESS (str)sound // Triggers a sound if interact is successful
+
+#define InteractEvt$interact 1			// (key)targ OR custom, (str)task, arg1, arg2...
+
+// * Implemented by default. Though you might need to install a module for it.
+#define InteractMethod$allowWhenSitting 1	// (bool)allow - Toggles whether interacts are allowed while sitting
+
+
+
+#endif

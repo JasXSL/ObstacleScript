@@ -1,0 +1,36 @@
+// This script handles inputs
+
+#ifndef __Controls
+#define __Controls
+
+
+// Evt definitions
+#define ControlsEvt$keypress 1		// (int)keys_pressed, (int)keys_released
+
+
+// Evt handlers
+#define onControlsKeyPress( pressed, released ) \
+	if( SENDER_SCRIPT IS "Controls" AND EVENT_TYPE IS ControlsEvt$keypress ){ \
+		int pressed = argInt(0); \
+		int released = argInt(1); 
+
+
+
+
+#define ControlsMethod$toggle 1		// (bool)on - Lets you turn control handling on/off again. Useful for traps and items that should override controls.
+
+
+
+
+#define Controls$toggle( target, on ) \
+	runMethod( target, "Controls", ControlsMethod$toggle, on )
+
+
+
+
+
+
+#endif
+
+
+

@@ -1,0 +1,35 @@
+
+
+Supportcube implemented. Add its functions to Rlv.lsl. Todo exists in there
+
+First challenge:
+	- Reaching max arousal kicks the player off the current obstacle.
+
+Obstacles:
+	- Shimmying wall: Has waterspouts beneath it that turn on in a fixed pattern. Getting hit by one locks you for a few seconds and increases arousal.
+	- Tumbling beam: Tap left/right to keep a bar in the middle to keep from falling off as you slide across.
+	- Pusher walls: Pushes back/forth at specific intervals.
+	- Tentacle trap: Grabs a player when they get close to it.
+	
+Obstacles (later):
+	- Hitting a button near shimmying wall immediately activates all spouts.
+	- Hitting a button near the slide beam stuns for a while and increases arousal.
+	- Hitting a button activates ALL slider walls.
+
+- QTE
+	- Must be pausable
+	- LR Tap
+	- LR Tap to keep in center
+
+- Water balloons
+
+- Triggers
+
+
+- Gender integration
+
+- Level manager
+
+
+
+- Game start countdown

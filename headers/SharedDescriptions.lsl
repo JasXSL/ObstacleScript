@@ -1,0 +1,78 @@
+/*
+	This framework uses xobj standard description definitions
+	
+	The description syntax is: Syntax: TASKID$VAR1$VAR2...$$TASKID$VAR1$VAR2...
+	
+	Example to show text Sit On and have RLV sit on it
+	D$Sit on$$SO
+	
+*/
+
+#define Desc$TASK_TELEPORT "T"			// (vec)pos_offset - Uses the supportcube to teleport to a pos offset relative to the object's position and rotation
+#define Desc$TASK_DESC "D"				// (str)text - Text that shows on your HUD
+#define Desc$TASK_INTERACT "I"			// (var)data - Sends an interact com to the level
+#define Desc$TASK_CLIMB "CL"			// (rot)rotation_offset, (str)anim_passive, (str)anim_active, (str)anim_active_down, (str)anim_dismount_top, (str)anim_dismount_bottom, (CSV)nodes, (float)climbspeed
+#define Desc$TASK_WATER "WT"			// (vec)stream, (float)cyclone, (float)swimspeed_modifier, (str)windlight_preset
+#define Desc$TASK_SOUNDSPACE "SS"		// (str)name, (float)vol
+#define Desc$TASK_WL_PRESET "WL"		// (str)preset
+#define Desc$TASK_FOOTSTEPS "tFS"		// 
+#define Desc$TASK_TRIGGER_SOUND "TS"	// (key)sound, (float)vol=1
+#define Desc$TASK_PLAY_SOUND "PS"		// (key)sound, (float)vol=1
+#define Desc$TASK_SIT_ON "S"			// 
+
+
+/*
+
+Nice presets I've found:
+- [EUPHORIA} air pollution - very dark
+- Wastes Midnight - Brighter dark
+- Silent hill - Foggy but bright 
+- Places Urbania - Misty green, fairly bright
+- Nacon's nighty fog - Good for underwater
+- Nacon's Fog - Bright but very blue fog
+- Doomed Spaceship - Red medium fog
+- Ambient dark - Incredibly dark
+- [TOR] SPECIAL - Rightvision - Very green
+- [TOR] SPECIAL - Dreamwalker - Very bright white fog
+- Orac - fog - Grey fog
+- Orac - Black fog 1 - Brighter fog
+- [TOR] Night - Nocturne - Default
+
+*/
+
+// Fetches data for the first task of this type
+list _dtd( str _d, str _t ){
+
+	list spl = split(_d, "$$");
+	integer i;
+	for(; i < count(spl); ++i ){
+		
+		list data = split(l2s(spl, i), "$");
+		if( l2s(data, 0) == _t )
+			return llDeleteSubList(data, 0, 0);
+		
+	}
+	return [];
+	
+}
+#define getDescTaskData( desc, type ) \
+	_dtd(desc, type)
+
+// Fetches description for id, respects "ROOT"
+string _fdsc( key id ){
+	
+	string out = prDesc(id);
+	if( out == "ROOT" )
+		out = prDesc(prRoot(id));
+	return out;
+	
+}
+#define fetchDesc( id ) \
+	_fdsc(id)
+
+
+// Should probably use an actual thing here
+//#define getDescTaskData(desc, var, task) list var;{list split=llParseString2List(desc, ["$$"], []); list_shift_each(split, val, {list s = llParseString2List(val, ["$"], []);if(llList2String(s, 0) == task){var=llDeleteSubList(s,0,0); }}})
+
+
+

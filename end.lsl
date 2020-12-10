@@ -1,0 +1,113 @@
+
+}
+
+default{
+	
+	
+	state_entry(){
+		// Set players to owner by default
+		#ifdef USE_PLAYERS
+		_P = [(string)llGetOwner()];
+		#endif
+		onEvent(evt$STATE_ENTRY, "", "", []);
+	} 
+	
+	#ifdef USE_TIMER
+	timer(){_mt([]);}
+	#endif
+	
+	#ifdef USE_LISTEN
+	listen( int ch, string n, key id, str m ){
+		onEvent(evt$LISTEN, "", id, (list)ch + m); 
+	}
+	#endif
+	
+	link_message( integer link, integer nr, string s, key id ){
+
+		// Ignore conditions
+		if( nr < 0 )
+			return;
+			
+		if( nr == globalAction$RESET_ALL && (str)id != llGetScriptName() )
+			llResetScript();
+			
+		#ifdef USE_PLAYERS
+		if( nr == globalAction$SET_PLAYERS ){
+			_P = llJson2List(s);
+			onEvent(globalEvent$players, ":", "", []);
+			return;
+		}
+		#endif
+			
+		int type = (nr>>8)&3;
+		str ids = (string)id;
+		
+		// Filter methods
+		if( type == os$lmtype$method && ids != llGetScriptName() )
+			return;
+			
+		if( type == os$lmtype$method )
+			ids = "!";
+
+		list dta = llJson2List(s);
+		
+		onEvent(nr&0xFF, ids, l2k(dta, 0), llJson2List(l2s(dta, 1)));
+	
+	}
+	
+	#ifdef USE_SENSOR
+	sensor( int tot ){ onEvent(evt$SENSOR, "", "", (list)tot); }
+	#endif
+	
+	#ifdef USE_NO_SENSOR
+	no_sensor(){ onEvent(evt$NO_SENSOR, "", "", []); }
+	#endif
+	
+	
+	#ifdef USE_OBJECT_REZ
+	object_rez( key id ){ onEvent(evt$OBJECT_REZ, "", "", (list)id); }
+	#endif
+	
+	
+	#ifdef USE_CHANGED
+	changed( int change ){ onEvent(evt$CHANGED, "", "", (list)change); }
+	#endif
+	
+	#ifdef USE_RUN_TIME_PERMISSIONS
+	run_time_permissions( int perm ){ onEvent(evt$RUN_TIME_PERMISSIONS, "", "", (list)perm); }
+	#endif
+	
+	#ifdef USE_CONTROL
+	control( key id, int level, int edge ){ onEvent(evt$CONTROL, "", "", (list)level + edge); }
+	#endif
+	
+	#ifdef USE_ON_REZ
+	on_rez( int n ){ onEvent(evt$ON_REZ, "", "", (list)n); }
+	#endif
+	
+	#ifdef USE_COLLISION
+	collision( int n ){ onEvent(evt$COLLISION, "", "", (list)n); }
+	#endif
+	#ifdef USE_COLLISION_START
+	collision_start( int n ){ onEvent(evt$COLLISION_START, "", "", (list)n); }
+	#endif
+	#ifdef USE_COLLISION_END
+	collision_end( int n ){ onEvent(evt$COLLISION_END, "", "", (list)n); }
+	#endif
+	
+	#ifdef USE_TOUCH
+	touch( int n ){ onEvent(evt$TOUCH, "", "", (list)n); }
+	#endif
+	#ifdef USE_TOUCH_START
+	touch_start( int n ){ onEvent(evt$TOUCH_START, "", "", (list)n); }
+	#endif
+	#ifdef USE_TOUCH_END
+	touch_end( int n ){ onEvent(evt$TOUCH_END, "", "", (list)n); }
+	#endif
+	
+	
+	
+	
+	
+}
+
