@@ -23,7 +23,7 @@
 	(l2i(PortalHelper$getConf(), PortalConst$CF_REZ_PARAM)&PortalConst$SP_LIVE)
 
 
-#define PortalEvt$loadComplete 1		// void - All scripts have finished loading
+#define PortalEvt$loadComplete 1		// (str)desc - All scripts have finished loading
 
 
 #define PortalMethod$reset 0		// Resets all scripts
@@ -34,10 +34,14 @@
 	#define PortalConst$KILL_ID 2		// Kills portals where the spawn ID is in filter
 #define PortalMethod$setLive 3			// Sets the portal to l ive. Use PortalMethod$reset to clear live
 
-#define PortalMethod$scriptOnline 3		// (str)script - Sent from a script when it's initialized
-#define PortalMethod$save 4				// Sends a message to spawner telling it to save this object
-#define PortalMethod$init 5				// (vec)pos, (str)desc, (str)group - Passed from Rezzer, sets the object initialization data. Can only be sent once per object.
+#define PortalMethod$scriptOnline 4		// (str)script - Sent from a script when it's initialized
+#define PortalMethod$save 5				// Sends a message to spawner telling it to save this object
+#define PortalMethod$init 6				// (vec)pos, (str)desc, (str)group - Passed from Rezzer, sets the object initialization data. Can only be sent once per object.
 
+
+#define onPortalLoadComplete( desc ) \
+	if( SENDER_SCRIPT IS "Portal" AND EVENT_TYPE IS PortalEvt$loadComplete ){ \
+		str desc = argStr(0);
 
 #define Portal$killAll() \
 	runOmniMethod( "Portal", PortalMethod$kill, PortalConst$KILL_ALL )

@@ -27,7 +27,7 @@ rez(){
     setTimeout("FAIL", 5);
     
     integer startParam;
-    if( l2i(data, 4) )
+    if( l2i(data, 5) )
         startParam = PortalConst$SP_LIVE;
         
     startParam = startParam | ((IDX<<5)&0xFFFF);
@@ -39,7 +39,7 @@ rez(){
         l2s(data, 3) +
         l2s(data, 4)
     ;
-    
+	
     llRezAtRoot(
         l2s(data, 0), 
         llGetPos()-<0,0,5>, 

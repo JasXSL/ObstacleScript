@@ -255,6 +255,7 @@ for(; index < count(_P); ++index ){ \
 #include "./headers/Screpo.lsl"
 #include "./headers/Portal.lsl"
 #include "./headers/Rezzer.lsl"
+#include "./headers/Trigger.lsl"
 
 #include "./headers/PrimSwimParticles.lsl"
 #include "./headers/PrimSwimAux.lsl"

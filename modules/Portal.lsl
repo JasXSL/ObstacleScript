@@ -57,7 +57,7 @@ onRez( total )
     llSetText(mkarr(
         total
     ), ZERO_VECTOR, 0);
-    
+	
     // Start by fetching self
     if( total )
         fetchSelf();
@@ -165,8 +165,9 @@ handleOwnerMethod( PortalMethod$init )
 	llSetRegionPos(argVec(0));
 	
 	string desc = argStr(1);
+	string descOut = desc;
 	if( !PortalHelper$isLive() )
-		desc = "$"+desc;
+		descOut = "$"+descOut;
 	
 	string group = argStr(2);
 	list text = PortalHelper$getConf();
@@ -174,10 +175,11 @@ handleOwnerMethod( PortalMethod$init )
 		text += group;
 	else
 		text = llListReplaceList(text, (list)group, 1, 1);
+		
 	llSetText(mkarr(text), ZERO_VECTOR, 0);	
 	
 	
-	llSetObjectDesc(desc);
+	llSetObjectDesc(descOut);
 	raiseEvent(PortalEvt$loadComplete, desc);
     
 
