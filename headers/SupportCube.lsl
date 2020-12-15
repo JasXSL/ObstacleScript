@@ -55,17 +55,18 @@
 
 #define SupportCubeBuildTask(task, params) llList2Json(JSON_OBJECT, (list)"t" + task + "p" + mkarr(params))
 
-#define SupportCubeBuildTeleport(pos) \
+#define SupportCubeBuildTeleport(pos, rot) \
 	SupportCubeBuildTask(SupportCube$tSetPos, llGetRootPosition()) + \
 	SupportCubeBuildTask(SupportCube$tDelay, .1) + \
 	SupportCubeBuildTask(SupportCube$tForceSit, FALSE + TRUE) + \
 	SupportCubeBuildTask(SupportCube$tSetPos, pos) + \
+	SupportCubeBuildTask(SupportCube$tSetRot, rot) + \
 	SupportCubeBuildTask(SupportCube$tForceUnsit, [])
 	
 #define SupportCubeBuildTeleportNoUnsit(pos, rot) \
 	SupportCubeBuildTask(SupportCube$tSetPos, llGetRootPosition()) + \
 	SupportCubeBuildTask(SupportCube$tDelay, .1) +  \
-	SupportCubeBuildTask(SupportCube$tForceSit, TRUE + TRUE) +  \
+	SupportCubeBuildTask(SupportCube$tForceSit, FALSE + TRUE) +  \
 	SupportCubeBuildTask(SupportCube$tSetPos, pos) +  \
 	SupportCubeBuildTask(SupportCube$tSetRot, rot)
 

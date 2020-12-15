@@ -134,6 +134,12 @@ handleInternalMethod( LevelMethod$resetPlayers )
     
 end
 
+handleOwnerMethod( LevelMethod$raiseEvent )
+	
+	raiseEvent(LevelEvt$custom, SENDER_KEY + METHOD_ARGS);
+
+end
+
 handleInternalMethod( LevelMethod$invite )
     
     string player = llToLower(argStr(0));

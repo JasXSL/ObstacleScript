@@ -296,8 +296,10 @@ end
 // Spawn a batch
 handleOwnerMethod( SpawnerMethod$load )
     
-    integer live = argInt(0);
-    METHOD_ARGS = llDeleteSubList(METHOD_ARGS, 0, 0);
+    integer live = argInt(1);
+	string cb = argStr(0);
+	
+    METHOD_ARGS = llDeleteSubList(METHOD_ARGS, 0, 1);
     if( !count(METHOD_ARGS) )
         METHOD_ARGS = (list)"";
     
@@ -310,6 +312,41 @@ handleOwnerMethod( SpawnerMethod$load )
             
             list spawn = llJson2List(l2s(data, idx));
             if( ~llListFindList(METHOD_ARGS, (list)l2s(spawn, 4)) )
+                Rezzer$rez( 
+                    LINK_THIS, 
+                    l2s(spawn, 0),
+                    (llGetRootPosition()+(vector)l2s(spawn, 1)), 
+                    l2s(spawn, 2),
+                    l2s(spawn, 3),
+                    l2s(spawn, 4), 
+                    live
+                );
+            
+        }
+        
+    }
+	
+	if( cb != JSON_INVALID )
+		Rezzer$cb(LINK_THIS, cb);
+    
+
+end
+
+// Spawn specific
+handleOwnerMethod( SpawnerMethod$spawnByIndex )
+    
+    integer live = argInt(0);
+    METHOD_ARGS = llDeleteSubList(METHOD_ARGS, 0, 0);
+    	
+    integer i;
+    for( ; i < count(ASSET_TABLES); ++i ){
+        
+        list data = getTableData(l2i(ASSET_TABLES, i));
+        integer idx;
+        for( ; idx < count(data); ++idx ){
+            
+            list spawn = llJson2List(l2s(data, idx));
+            if( ~llListFindList(METHOD_ARGS, (list)idx) )
                 Rezzer$rez( 
                     LINK_THIS, 
                     l2s(spawn, 0),

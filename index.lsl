@@ -59,7 +59,7 @@
 
 // Macros
 #include "./macros.lsl"
-#include "./functions.lsl"
+
 
 
 // Global actions
@@ -223,6 +223,9 @@ _me( str ta, str sc, int me, list da ){
 // Player list
 list _P;	// Use #define USE_PLAYERS to include these. In levels they're handled by Level, in HUDs by Com, and assets Portal
 #define PLAYERS _P
+#define isPlayer( targ ) \
+	(~llListFindList(PLAYERS, (list)((str)targ)))
+
 
 #define forPlayer( index, player ) \
 int index; \
@@ -230,6 +233,7 @@ for(; index < count(_P); ++index ){ \
 	key player = l2k(_P, index); 
 
 
+#include "./functions.lsl"
 
 #include "./local/timer.lsl"
 #include "./local/listen.lsl"
@@ -255,6 +259,7 @@ for(; index < count(_P); ++index ){ \
 #include "./headers/Screpo.lsl"
 #include "./headers/Portal.lsl"
 #include "./headers/Rezzer.lsl"
+
 #include "./headers/Trigger.lsl"
 
 #include "./headers/PrimSwimParticles.lsl"

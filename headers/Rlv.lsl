@@ -87,6 +87,14 @@
 	runMethod( target, "Rlv", RlvMethod$damageSprint, perc )
 
 
+#define Rlv$teleportPlayer( target, pos, rot ) \
+	runMethod( target, "Rlv", RlvMethod$cubeTask, SupportCubeBuildTeleport(pos, rot))
+#define Rlv$teleportPlayerNoUnsit( target, pos, rot ) \
+	runMethod( target, "Rlv", RlvMethod$cubeTask, SupportCubeBuildTeleportNoUnsit(pos, rot))
+
+
+
+
 #define onRlvSupportCubeSpawn( id ) \
 	if( SENDER_SCRIPT IS "Rlv" AND EVENT_TYPE IS RlvEvt$supportCubeSpawn ){ \
 		key id = argKey(0);

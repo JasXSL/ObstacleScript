@@ -1,4 +1,6 @@
 #define USE_STATE_ENTRY
+#define USE_COLLISION_START
+#define USE_PLAYERS
 #include "ObstacleScript/index.lsl"
 
 string ID;
@@ -23,9 +25,28 @@ onPortalLoadComplete( desc )
 	FLAGS = l2i(json, 2);
 		
 	llSetScale(size);
+	llVolumeDetect(TRUE);
 	
-	// Todo: Continue here
+	if( PortalHelper$isLive() )
+		llSetAlpha(0, ALL_SIDES );
     
+end
+
+onCollisionStart( total )
+	
+	if( !isPlayer( llDetectedKey(0) ) )
+		return;
+	
+	
+	Level$raiseEvent( TriggerEvt$trigger, llDetectedKey(0) );
+	
+	if( FLAGS & TriggerConst$F_TRIGGER_ONCE ){
+		llSleep(2);
+		llDie();
+		llSleep(3);
+	}
+
+
 end
 
 

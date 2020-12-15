@@ -19,10 +19,27 @@ rez(){
     if( objQueue == [] )
         return;
         
-    BFL = BFL|BFL_REZZING;
+    
     ++IDX;
     
-    list data = llJson2List(l2s(objQueue, 0));
+	
+	
+	// Callback encountered
+	string s = l2s(objQueue, 0);
+	while( llGetSubString(s, 0, 0) == "$" ){
+		
+		raiseEvent(RezzerEvt$cb, llGetSubString(s, 1, -1));
+		objQueue = llDeleteSubList(objQueue, 0, 0);
+		s = l2s(objQueue, 0);
+		
+	}
+	
+	if( !count(objQueue) )
+		return;
+		
+	
+	// Normal queue
+    list data = llJson2List(s);
     objQueue = llDeleteSubList(objQueue, 0, 0);
     setTimeout("FAIL", 5);
     
@@ -47,6 +64,7 @@ rez(){
         (rotation)l2s(data, 2), 
         startParam
     );
+	BFL = BFL|BFL_REZZING;
     
 }
 
@@ -71,6 +89,14 @@ handleTimer( "FAIL" )
     BFL = BFL&~BFL_REZZING;
     rez();
 
+end
+
+handleOwnerMethod( RezzerMethod$cb )
+	
+	string cb = "$"+argStr(0);
+	objQueue += cb;
+	rez();	
+	
 end
 
 handleOwnerMethod( RezzerMethod$rezzed )

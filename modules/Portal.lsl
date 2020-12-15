@@ -96,6 +96,7 @@ handleOwnerMethod( PortalMethod$reset )
 end
 
 handleOwnerMethod( PortalMethod$fetch )
+	llOwnerSay("Updating code");
     fetchSelf();
 end
 
