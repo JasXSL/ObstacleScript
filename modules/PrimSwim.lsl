@@ -237,8 +237,10 @@ toggleCam(integer submerged){
         if(!scriptRunning())
             return;
     #endif
-    if(!isset(wl_set))return;
-    if(submerged){
+    if( !isset(wl_set) )
+		return;
+    
+	if( submerged ){
     
         BFL = BFL|BFL_CAM_UNDER_WATER;
         
@@ -282,7 +284,7 @@ timerEvent( string id ){
 
     
     // Core frame
-    if(id == TIMER_SWIM_CHECK){
+    if( id == TIMER_SWIM_CHECK ){
     
         integer stopped = checkForceStop();
         integer ainfo = llGetAgentInfo(llGetOwner());
@@ -677,43 +679,57 @@ timerEvent( string id ){
     
     else if(id == TIMER_SPEEDCHECK){ // Dynamic timer speed
     
-        setInterval(TIMER_SPEEDCHECK, 4);
+        setTimeout(TIMER_SPEEDCHECK, 4);
         
-        if(BFL&BFL_IN_WATER){
+		// In water = always fast
+        if( BFL & BFL_IN_WATER ){
         
-            if(~BFL&BFL_WITHIN_20M_OF_WATER){
+            if( ~BFL&BFL_WITHIN_20M_OF_WATER ){
             
-                BFL=BFL|BFL_WITHIN_20M_OF_WATER;
+                BFL = BFL|BFL_WITHIN_20M_OF_WATER;
                 timerSpeed = PrimSwimCfg$maxSpeed;
-                setTimer(TIMER_SWIM_CHECK,timerSpeed);
+                setTimer( TIMER_SWIM_CHECK, timerSpeed );
                 
             }
             return;
             
         }
-        else{
+
         
-            vector gpos = llGetRootPosition();
-            integer i; 
-            for(i=0; i<llGetListLength(water); i++){
-                vector pos = llList2Vector(llGetObjectDetails(llList2Key(water,i), [OBJECT_POS]), 0);
-                if(llVecDist(pos,gpos)<30){ 
-                    if(~BFL&BFL_WITHIN_20M_OF_WATER){
-                        timerSpeed = PrimSwimCfg$maxSpeed;
-                        setTimer(TIMER_SWIM_CHECK,timerSpeed);
-                        BFL=BFL|BFL_WITHIN_20M_OF_WATER;
-                    }
-                    return;
-                }
-            }
-            
-        }
-        
-        if(BFL&BFL_WITHIN_20M_OF_WATER){
+		// Scan for water
+		vector gpos = llGetRootPosition();
+		integer i; 
+		for( ; i<llGetListLength(water); ++i ){
+			
+			vector pos = llList2Vector(llGetObjectDetails(llList2Key(water,i), [OBJECT_POS]), 0);
+			if( llVecDist(pos,gpos) < 30 ){ 
+			
+				if( ~BFL&BFL_WITHIN_20M_OF_WATER ){
+					
+					timerSpeed = PrimSwimCfg$maxSpeed;
+					setTimer(TIMER_SWIM_CHECK,timerSpeed);
+					BFL=BFL|BFL_WITHIN_20M_OF_WATER;
+					
+				}
+				return;
+				
+			}
+			
+		}
+		
+       
+        // Water not found
+		
+		// Timer is currently quick, set old speed
+        if( BFL&BFL_WITHIN_20M_OF_WATER ){
+		
             timerSpeed = PrimSwimCfg$minSpeed;
             setTimer(TIMER_SWIM_CHECK, timerSpeed);
+			
         }
-        BFL=BFL&~BFL_WITHIN_20M_OF_WATER;
+		
+		// Unset quick flag
+        BFL = BFL &~ BFL_WITHIN_20M_OF_WATER;
         
         
     }
@@ -802,7 +818,7 @@ onStateEntry()
     setBuoyancy();
     llSensor(PrimSwimCfg$pnWater, "", PASSIVE|ACTIVE, 90, PI);
     llSleep(1);
-    setInterval(TIMER_SPEEDCHECK, .1);
+    setTimeout(TIMER_SPEEDCHECK, .1);
     
     // Slow timer at start
     timerSpeed = PrimSwimCfg$minSpeed;

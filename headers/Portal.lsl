@@ -3,7 +3,8 @@
 
 // Scritps that should be automatically remoteloaded
 #define PortalConst$TRACKED_SCRIPTS (list) \
-	"Trigger"
+	"Trigger" + \
+	"CrusherWall"
 
 // prim text contains some information about the portal
 #define PortalConst$CF_REZ_PARAM 0					// (int)on_rez_param - Contains the supplied int from on_rez

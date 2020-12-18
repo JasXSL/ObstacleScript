@@ -1,16 +1,16 @@
+Next:
+	- Shimmying wall
+		- Make a way to communicate with it and pass data
+		- Merge with level
+	- Slide beam
+		- QTE
+		- Code
+	- Tentacle
+		- Code
+	- Trap door
+		
+		
 
-
-Supportcube implemented. Add its functions to Rlv.lsl. Todo exists in there
-
-First challenge:
-	- Reaching max arousal kicks the player off the current obstacle.
-
-Obstacles:
-	- Shimmying wall: Has waterspouts beneath it that turn on in a fixed pattern. Getting hit by one locks you for a few seconds and increases arousal.
-	- Tumbling beam: Tap left/right to keep a bar in the middle to keep from falling off as you slide across.
-	- Pusher walls: Pushes back/forth at specific intervals.
-	- Tentacle trap: Grabs a player when they get close to it.
-	
 Obstacles (later):
 	- Hitting a button near shimmying wall immediately activates all spouts.
 	- Hitting a button near the slide beam stuns for a while and increases arousal.

@@ -1,6 +1,7 @@
 #ifndef __Level
 #define __Level
 
+
 	#define LevelMethod$invite 1			// (key)player - Invites a specific player to your game. Using * will invite all players within 10m of the game starter
 	#define LevelMethod$resetPlayers 2		// Resets players to owner only
 	#define LevelMethod$acceptInvite 3		// void - Accepts an invite
@@ -32,8 +33,8 @@
 		runMethod(LINK_THIS, "Level", LevelMethod$resetPlayers, "*")
 	#define Level$acceptInvite( target ) \
 		runMethod(target, "Level", LevelMethod$acceptInvite, [])
-	#define Level$raiseEvent( evt, data ) \
-		runMethod(mySpawner(), "Level", LevelMethod$raiseEvent, llGetScriptName() + evt + data )
+	#define Level$raiseEvent( obstacle, evt, data ) \
+		runMethod(mySpawner(), "Level", LevelMethod$raiseEvent, obstacle + evt + data )
 	
 
 

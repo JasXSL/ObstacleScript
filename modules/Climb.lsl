@@ -5,11 +5,11 @@
 
 float CLIMBSPEED = .65;  // M/S
 
+integer RLVFLAGS;
 
 integer BFL;
 #define BFL_MOVING 1
 #define BFL_DISMOUNTING 2
-#define BFL_CLIMBING_ANIM 4
 #define BF_CLIMB_INI 8
 #define BFL_DIR_UP 0x10
 #define BFL_CLIMBING 0x20
@@ -37,11 +37,13 @@ vector ladder_root_pos;
 rotation ladder_root_rot;
 list nodes;
 
+// Cache animation from desc
 string anim_active = "";
 string anim_active_down = "";
 string anim_passive = "";
 string anim_dismount_top = "";
 string anim_dismount_bottom = "";
+
 string anim_active_cur;
 string onStart;
 string onEnd;
@@ -68,7 +70,7 @@ translateCubePos( vector pos ){
     vector p = pos-prPos(CUBE);
     rotation rot = rot*ladder_root_rot/prRot(CUBE);
     
-    llRegionSayTo(
+	llRegionSayTo(
         CUBE, 
         SupportCubeCfg$listenOverride, 
         llList2CSV((list)
@@ -86,7 +88,6 @@ dismount(integer atoffset){
     BFL = BFL|BFL_DISMOUNTING;
     unsetTimer(TIMER_MOVE);
     BFL = BFL&~BF_CLIMB_INI;
-    BFL = BFL&~BFL_CLIMBING_ANIM;
     BFL = BFL&~BFL_CLIMBING;
     anim_active_cur = "";
     
@@ -222,6 +223,12 @@ onControlsKeyPress( pressed, released )
         
 end
 
+onRlvFlags( flags )
+
+	RLVFLAGS = flags;
+
+end
+
 
 // Timers
 handleTimer( TIMER_MOVE )
@@ -241,37 +248,45 @@ handleTimer( TIMER_MOVE )
         return;
         
     }
+	
+	integer bfl = BFL;
+	if( RLVFLAGS & RlvFlags$IMMOBILE )
+		bfl = BFL&~BFL_MOVING;
     
     
     // This is used to limit updates to 0.4 sec unless moving has just started or ended
-    if( BFL&BFL_LAST_UPDATE && (BFL&BFL_MOVING) == (BFL_CACHE&BFL_MOVING) )
+    if( BFL&BFL_LAST_UPDATE && (bfl&BFL_MOVING) == (BFL_CACHE&BFL_MOVING) )
         return;
 
     BFL = BFL|BFL_LAST_UPDATE;
     setTimeout(TIMER_CD, 0.4);
     
-    if( BFL & BFL_MOVING ){
+    if( bfl & BFL_MOVING ){
         
         vector nodea = offset2global(llList2Vector(nodes,1)); 
         vector nodeb = offset2global(llList2Vector(nodes,2));
         float maxdist = llVecDist(nodea, nodeb);
         float spd = CLIMBSPEED/maxdist*.5;
             
-        if( BFL&BFL_DIR_UP )
+        if( bfl&BFL_DIR_UP )
             perc-=spd;
         else
             perc+=spd;
                 
-        if( anim_active != "" && ~BFL&BFL_CLIMBING_ANIM ){
+        if( anim_active != "" ){
             
-            BFL = BFL|BFL_CLIMBING_ANIM;
             string a = anim_active;
                 
-            if( ~BFL&BFL_DIR_UP )
+            if( ~bfl&BFL_DIR_UP )
                 a = anim_active_down;
-            if( a != anim_active_cur )
+				
+            if( a != anim_active_cur ){
+			
+				if( anim_active_cur )
+					AnimHandler$stop(LINK_SET, anim_active_cur);
                 AnimHandler$start(LINK_SET, a);
-                
+				
+            }
             anim_active_cur = a;
             
         }
@@ -286,6 +301,8 @@ handleTimer( TIMER_MOVE )
             
         }
         
+		
+		
         // Move
         vector point = llVecNorm(nodeb-nodea)*maxdist*perc+nodea;
         translateCubePos(point);
@@ -294,7 +311,6 @@ handleTimer( TIMER_MOVE )
     
     else{
     
-        BFL = BFL&~BFL_CLIMBING_ANIM;
         if( anim_active_cur != "" ){
             
             AnimHandler$stop(LINK_SET, anim_active_cur);
@@ -303,7 +319,7 @@ handleTimer( TIMER_MOVE )
         }
         
         // We just stopped moving, tell the cube
-        if( BFL&BFL_MOVING != BFL_CACHE&BFL_MOVING )
+        if( bfl&BFL_MOVING != BFL_CACHE&BFL_MOVING )
             llRegionSayTo(
                 CUBE, 
                 SupportCubeCfg$listenOverride, 
@@ -312,7 +328,7 @@ handleTimer( TIMER_MOVE )
         
     }
     
-    BFL_CACHE = BFL;
+    BFL_CACHE = bfl;
      
 
 end

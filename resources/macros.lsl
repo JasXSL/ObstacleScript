@@ -32,6 +32,8 @@
 #define OR ||
 #define IS ==
 
+
+
 // Debugging
 // Note, using the + operator within os$log will add that as another message, use parentheses if you want to add things within this
 #define os$log( message ) \

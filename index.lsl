@@ -7,6 +7,7 @@
 				Event definitions for these are stored in this file since they all use "" as sender
 				Local doesn't use capital letters at the start of the script name
 	- modules : Contains fully built modules
+	- resources : Tools, asset libraries, and macros
 
 
 	Naming:
@@ -58,7 +59,7 @@
 
 
 // Macros
-#include "./macros.lsl"
+#include "./resources/macros.lsl"
 
 
 
@@ -213,7 +214,7 @@ _me( str ta, str sc, int me, list da ){
 #define argVec(nr) l2vs(METHOD_ARGS, nr)
 
 
-#include "events.lsl"
+#include "./local/events.lsl"
 	
 
 #define end }
@@ -233,11 +234,16 @@ for(; index < count(_P); ++index ){ \
 	key player = l2k(_P, index); 
 
 
-#include "./functions.lsl"
+
+
+
+#include "./resources/functions.lsl"
 
 #include "./local/timer.lsl"
 #include "./local/listen.lsl"
 #include "./local/players.lsl"
+
+#include "./resources/ObstacleEvents.lsl"
 
 #include "./headers/SharedDescriptions.lsl"
 #include "./headers/Controls.lsl"
@@ -260,6 +266,7 @@ for(; index < count(_P); ++index ){ \
 #include "./headers/Portal.lsl"
 #include "./headers/Rezzer.lsl"
 
+#include "./headers/CrusherWall.lsl"
 #include "./headers/Trigger.lsl"
 
 #include "./headers/PrimSwimParticles.lsl"

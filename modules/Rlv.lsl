@@ -19,6 +19,10 @@ integer BFL;
 #define BFL_RUN_LOCKED 0x4
 #define BFL_SPRINT_STARTED 0x8
 
+// Public flags. See header file.
+integer FLAGS;
+
+
 #define SPRINT_SIZE <0.22981, 0.06894, 0.02039>
 #define SPRINT_POS <0, 0, .23>
 
@@ -28,15 +32,18 @@ key cPrim;  // Cache prim
 
 string W_OR;    // Windlight override
 
-list SLOTS = Rlv$SLOTS;
-list STATE = Rlv$STATE;
+list SLOTS = RlvConst$SLOTS;
+list STATE = RlvConst$STATE;
 // Outputs the windlight if it has changed
 setWindlight( string preset ){
     
     if( cWL == preset )
         return;
     cWL = preset;
-    llOwnerSay("@setenv_preset:"+preset+"=force");
+	if( preset == "" )
+		llOwnerSay("@setenv_daytime:-1=force");
+	else
+		llOwnerSay("@setenv_preset:"+preset+"=force");
     
 }
 // Gets the highest level windlight setting
@@ -430,6 +437,17 @@ handleMethod( RlvMethod$damageSprint )
     damageSprint(MAX_SPRINT*perc);
     
 end
+
+handleMethod( RlvMethod$setFlags )
+	FLAGS = FLAGS|argInt(0);
+	raiseEvent(RlvEvt$flags, FLAGS);
+end
+
+handleMethod( RlvMethod$unsetFlags )
+	FLAGS = FLAGS&~argInt(0);
+	raiseEvent(RlvEvt$flags, FLAGS);
+end
+
 
 
 #include "ObstacleScript/end.lsl"

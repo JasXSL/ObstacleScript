@@ -1,8 +1,8 @@
 #ifndef __Functions
 #define __Functions
 
-#include "./headers/Rlv.lsl"
-#include "./headers/SupportCube.lsl"
+#include "../headers/Rlv.lsl"
+#include "../headers/SupportCube.lsl"
 
 
 // Lets you round floats, vectors, and rotations

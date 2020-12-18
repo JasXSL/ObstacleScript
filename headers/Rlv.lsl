@@ -8,27 +8,33 @@
 #ifndef __RLV
 #define __RLV
 
+
+// Flags
+#define RlvFlags$IMMOBILE 0x1			// Unable to move. Todo: Currently this only affects climbing
+
+
+
 // STATE
-#define Rlv$DRESSED 3
-#define Rlv$UNDERWEAR 2
-#define Rlv$BITS 1
-#define Rlv$IGNORE 0
+#define RlvConst$DRESSED 3
+#define RlvConst$UNDERWEAR 2
+#define RlvConst$BITS 1
+#define RlvConst$IGNORE 0
 
 // Translation for the JasX HUD
-#define Rlv$STATE [ \
+#define RlvConst$STATE [ \
 	"Bits", \
 	"Underwear", \
 	"Dressed" \
 ]
 
 // SLOT
-#define Rlv$HEAD 0
-#define Rlv$ARMS 1
-#define Rlv$TORSO 2
-#define Rlv$CROTCH 3
-#define Rlv$FEET 4
+#define RlvConst$HEAD 0
+#define RlvConst$ARMS 1
+#define RlvConst$TORSO 2
+#define RlvConst$CROTCH 3
+#define RlvConst$FEET 4
 
-#define Rlv$SLOTS [ \
+#define RlvConst$SLOTS [ \
 	"Head", \
 	"Arms", \
 	"Torso", \
@@ -48,9 +54,13 @@
 #define RlvMethod$setMaxSprint 7		// (float)duration - Sets sprint max duration in seconds. 0 disables running, -1 sets infinite sprint
 #define RlvMethod$damageSprint 8		// (float)percent
 
+#define RlvMethod$setFlags 9			// (int)flags 
+#define RlvMethod$unsetFlags 10			// (int)flags
+
+
 
 #define RlvEvt$supportCubeSpawn 1		// (key)cube_id
-
+#define RlvEvt$flags 2					// (int)flags
 
 
 
@@ -92,12 +102,20 @@
 #define Rlv$teleportPlayerNoUnsit( target, pos, rot ) \
 	runMethod( target, "Rlv", RlvMethod$cubeTask, SupportCubeBuildTeleportNoUnsit(pos, rot))
 
+#define Rlv$setFlags( target, flags ) \
+	runMethod( target, "Rlv", RlvMethod$setFlags, ((int)flags) )
+#define Rlv$unsetFlags( target, flags ) \
+	runMethod( target, "Rlv", RlvMethod$unsetFlags, ((int)flags) )
 
 
 
 #define onRlvSupportCubeSpawn( id ) \
 	if( SENDER_SCRIPT IS "Rlv" AND EVENT_TYPE IS RlvEvt$supportCubeSpawn ){ \
 		key id = argKey(0);
+		
+#define onRlvFlags( flags ) \
+	if( SENDER_SCRIPT IS "Rlv" AND EVENT_TYPE IS RlvEvt$flags ){ \
+		int flags = argInt(0);
 
 
 
