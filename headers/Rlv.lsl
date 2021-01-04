@@ -102,10 +102,10 @@
 #define Rlv$teleportPlayerNoUnsit( target, pos, rot ) \
 	runMethod( target, "Rlv", RlvMethod$cubeTask, SupportCubeBuildTeleportNoUnsit(pos, rot))
 
-#define Rlv$setFlags( target, flags ) \
-	runMethod( target, "Rlv", RlvMethod$setFlags, ((int)flags) )
-#define Rlv$unsetFlags( target, flags ) \
-	runMethod( target, "Rlv", RlvMethod$unsetFlags, ((int)flags) )
+#define Rlv$setFlags( target, flags, important ) \
+	runMethod( target, "Rlv", RlvMethod$setFlags, ((int)flags) + ((int)important) )
+#define Rlv$unsetFlags( target, flags, important ) \
+	runMethod( target, "Rlv", RlvMethod$unsetFlags, ((int)flags) + ((int)important) )
 
 
 

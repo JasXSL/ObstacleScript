@@ -19,9 +19,9 @@ integer BFL;
 #define BFL_RUN_LOCKED 0x4
 #define BFL_SPRINT_STARTED 0x8
 
-// Public flags. See header file.
-integer FLAGS;
-
+// Public flags. See header file. There are two ints being combined:
+int FLAGS;					// Used by obstacles
+int FLAGS_IMPORTANT;		// Used by the game
 
 #define SPRINT_SIZE <0.22981, 0.06894, 0.02039>
 #define SPRINT_POS <0, 0, .23>
@@ -75,6 +75,14 @@ updateWindlight(){
 
 
 
+
+
+// FLAGS
+onFlagsChanged(){
+	
+	raiseEvent(RlvEvt$flags, (FLAGS|FLAGS_IMPORTANT));
+
+}
 
 
 
@@ -439,13 +447,25 @@ handleMethod( RlvMethod$damageSprint )
 end
 
 handleMethod( RlvMethod$setFlags )
-	FLAGS = FLAGS|argInt(0);
-	raiseEvent(RlvEvt$flags, FLAGS);
+	
+	if( argInt(1) )
+		FLAGS_IMPORTANT = FLAGS_IMPORTANT|argInt(0);
+	else
+		FLAGS = FLAGS|argInt(0);
+	
+	onFlagsChanged();
+	
 end
 
 handleMethod( RlvMethod$unsetFlags )
-	FLAGS = FLAGS&~argInt(0);
-	raiseEvent(RlvEvt$flags, FLAGS);
+	
+	if( argInt(1) )
+		FLAGS_IMPORTANT = FLAGS_IMPORTANT&~argInt(0);
+	else
+		FLAGS = FLAGS&~argInt(0);
+	
+	onFlagsChanged();
+	
 end
 
 

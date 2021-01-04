@@ -7,6 +7,9 @@ vector TRANS = <0,.8,0>;
 float SPEED = 2.0;
 integer FWD = TRUE;			// Gone to the back position
 
+int BFL;
+#define BFL_LOADED 0x1
+
 vector startPos;
 
 translate( integer fwd, integer pingPong ){
@@ -66,13 +69,15 @@ onPortalLoadComplete( desc )
 	SPEED = l2f(data, 3);
 	startPos = llGetPos();
 	llSetScale(scale);
+	
+	BFL = BFL|BFL_LOADED;
 
 end
 
 
 onListen( chan, msg )
 	
-	if( llGetOwnerKey(SENDER_KEY) != llGetOwner() )
+	if( llGetOwnerKey(SENDER_KEY) != llGetOwner() || ~BFL&BFL_LOADED )
 		return;
 		
 	list data = llJson2List(msg);

@@ -8,7 +8,7 @@
 	#define LevelMethod$raiseEvent 4		// (str)script, (int)evt, (var)data1, (var)data2... - Owner only
 
 	#define LevelEvt$mainMenu 1				// Raised when the owner clicks the level controller
-	#define LevelEvt$custom 2				// (key)sender, (str)script, (int)evt, (var)data1, (var)data2...
+	#define LevelEvt$custom 2				// (key)sender, (str)script, (int)evt, (var)data1, (var)data2... These events are defined in resources/LevelCustomEvents
 
 	#define onLevelMainMenu() \
 		if( SENDER_SCRIPT IS "Level" AND EVENT_TYPE IS LevelEvt$mainMenu ){
@@ -34,7 +34,7 @@
 	#define Level$acceptInvite( target ) \
 		runMethod(target, "Level", LevelMethod$acceptInvite, [])
 	#define Level$raiseEvent( obstacle, evt, data ) \
-		runMethod(mySpawner(), "Level", LevelMethod$raiseEvent, obstacle + evt + data )
+		runOmniMethod("Level", LevelMethod$raiseEvent, obstacle + evt + data )
 	
 
 

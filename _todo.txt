@@ -1,7 +1,6 @@
 Next:
 	- Shimmying wall
-		- Make a way to communicate with it and pass data
-		- Merge with level
+		- Test
 	- Slide beam
 		- QTE
 		- Code

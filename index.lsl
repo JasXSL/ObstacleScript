@@ -243,7 +243,7 @@ for(; index < count(_P); ++index ){ \
 #include "./local/listen.lsl"
 #include "./local/players.lsl"
 
-#include "./resources/ObstacleEvents.lsl"
+#include "./resources/LevelCustomEvents.lsl"
 
 #include "./headers/SharedDescriptions.lsl"
 #include "./headers/Controls.lsl"
@@ -255,6 +255,8 @@ for(; index < count(_P); ++index ){ \
 #include "./headers/Rlv.lsl"
 #include "./headers/Footsteps.lsl"
 #include "./headers/AnimHandler.lsl"
+#include "./headers/Qte.lsl"
+
 
 #include "./headers/Com.lsl"
 #include "./headers/SoundspaceAux.lsl"

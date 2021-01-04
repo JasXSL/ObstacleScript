@@ -179,8 +179,8 @@ handleOwnerMethod( PortalMethod$init )
 		
 	llSetText(mkarr(text), ZERO_VECTOR, 0);	
 	
-	
-	llSetObjectDesc(descOut);
+	if( descOut != "" )
+		llSetObjectDesc(descOut);
 	raiseEvent(PortalEvt$loadComplete, desc);
     
 

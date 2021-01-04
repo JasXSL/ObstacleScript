@@ -84,14 +84,17 @@ translateCubePos( vector pos ){
 }
 
 dismount(integer atoffset){
-    if(BFL&BFL_DISMOUNTING)return;
+
+    if( BFL&BFL_DISMOUNTING )
+		return;
+		
     BFL = BFL|BFL_DISMOUNTING;
     unsetTimer(TIMER_MOVE);
     BFL = BFL&~BF_CLIMB_INI;
     BFL = BFL&~BFL_CLIMBING;
     anim_active_cur = "";
     
-
+	
     
     if(anim_active != "")
         AnimHandler$stop(LINK_SET, anim_active);
@@ -125,6 +128,8 @@ dismount(integer atoffset){
     
     setTimeout(TIMER_DISMOUNTING, to);
     raiseEvent(ClimbEvt$end, mkarr(([(string)ladder, onEnd])));
+	Level$raiseEvent( LevelCustomType$STAIR, LevelCustomEvt$STAIR$seated, ladder + 0 );
+	
 }
 
 mount(){
@@ -167,6 +172,8 @@ mount(){
     BFL = BFL|BFL_GRACE_PERIOD;
     // Can't dismount for this period due to SL fuckiness
     setTimeout(TIMER_GRACE, 1.5);
+	
+	Level$raiseEvent( LevelCustomType$STAIR, LevelCustomEvt$STAIR$seated, ladder + 1 );
 
 }
 
