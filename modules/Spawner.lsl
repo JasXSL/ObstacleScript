@@ -338,6 +338,7 @@ handleOwnerMethod( SpawnerMethod$spawnByIndex )
     integer live = argInt(0);
     METHOD_ARGS = llDeleteSubList(METHOD_ARGS, 0, 0);
     	
+	integer I;
     integer i;
     for( ; i < count(ASSET_TABLES); ++i ){
         
@@ -346,7 +347,8 @@ handleOwnerMethod( SpawnerMethod$spawnByIndex )
         for( ; idx < count(data); ++idx ){
             
             list spawn = llJson2List(l2s(data, idx));
-            if( ~llListFindList(METHOD_ARGS, (list)idx) )
+            if( ~llListFindList(METHOD_ARGS, (list)I) ){
+			
                 Rezzer$rez( 
                     LINK_THIS, 
                     l2s(spawn, 0),
@@ -356,6 +358,9 @@ handleOwnerMethod( SpawnerMethod$spawnByIndex )
                     l2s(spawn, 4), 
                     live
                 );
+			}
+			
+			++I;
             
         }
         

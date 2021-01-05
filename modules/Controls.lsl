@@ -9,6 +9,7 @@ int BFL;
 #define BFL_SWIMMING 0x1    // Swimming
 #define BFL_CLIMBING 0x2
 #define BFL_CONTROLS_BLOCKED 0x4    // Method
+#define BFL_QTE 0x8
 
 int RLV_FLAGS;
 
@@ -24,17 +25,19 @@ updateControls(){
         return;
         
     }
+	
+	int takeAll = RLV_FLAGS&RlvFlags$IMMOBILE || BFL&BFL_QTE;
         
 	// RLVFlags pick both since together they grab all controls
     integer c = CONTROL_ML_LBUTTON|CONTROL_UP; // Needs to bind at least one
-    if( BFL&BFL_SWIMMING || RLV_FLAGS&RlvFlags$IMMOBILE )
+    if( BFL&BFL_SWIMMING || takeAll )
         c = c|
             CONTROL_FWD|CONTROL_BACK|
             CONTROL_UP|CONTROL_DOWN|
             CONTROL_LEFT|CONTROL_RIGHT
         ;
         
-    if( BFL&BFL_CLIMBING || RLV_FLAGS&RlvFlags$IMMOBILE )
+    if( BFL&BFL_CLIMBING || takeAll )
         c = c|
             CONTROL_LEFT|CONTROL_RIGHT|
             CONTROL_ROT_LEFT|CONTROL_ROT_RIGHT|
@@ -91,6 +94,15 @@ end
 onClimbEnd( a, b )
     BFL = BFL&~BFL_CLIMBING;
     updateControls();
+end
+
+onQteStart( type )
+	BFL = BFL|BFL_QTE;
+	updateControls();
+end
+onQteEnd( success )
+	BFL = BFL&~BFL_QTE;
+	updateControls();
 end
 
 onTouchStart( total )

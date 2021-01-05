@@ -338,7 +338,7 @@ onControlsKeyPress( pressed, released )
                 
                 vector to = (vector)llList2String(spl,0); 
                 to += prPos(targ);
-                Rlv$cubeTask(LINK_ROOT, SupportCubeBuildTeleport(to));
+                Rlv$cubeTask(LINK_ROOT, SupportCubeBuildTeleport(to, l2s(spl, 1)));
                 
             } 
             else if( 
@@ -363,16 +363,17 @@ onControlsKeyPress( pressed, released )
             else if( task == Desc$TASK_CLIMB ){
                  
                 Climb$start(targ, 
-                    (rotation)llList2String(spl,0), // Rot offset 
-                    llList2String(spl,1), // Anim passive
-                    llList2String(spl,2), // Anim active
-                    llList2String(spl,3), // anim_active_down, 
-                    llList2String(spl,4), // anim_dismount_top, 
-                    llList2String(spl,5), // anim_dismount_bottom, 
-                    llList2String(spl,6), // nodes, 
-                    llList2String(spl,7), // Climbspeed
-                    llList2String(spl,8), // onStart
-                    llList2String(spl,9) // onEnd
+                    l2s(spl,0), // Rot offset 
+                    l2s(spl,1), // Anim passive
+                    l2s(spl,2), // Anim active
+                    l2s(spl,3), // anim_active_down, 
+                    l2s(spl,4), // anim_dismount_top, 
+                    l2s(spl,5), // anim_dismount_bottom, 
+                    l2s(spl,6), // nodes, 
+                    l2s(spl,7), // Climbspeed
+                    l2s(spl,8), // onStart
+                    l2s(spl,9), // onEnd
+					l2i(spl, 10) // Key filter
                 );
                 
             } 

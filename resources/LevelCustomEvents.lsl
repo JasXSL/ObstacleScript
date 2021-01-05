@@ -23,6 +23,10 @@
 	#define LevelCustomEvt$STAIR$seated 1 			// (key)object, (bool)sitting
 
 
+#define LevelCustomType$QTE "avQTE"		
+	#define LevelCustomEvt$QTE$start 1 				// (int)type, (str)callback
+	#define LevelCustomEvt$QTE$end 2				// (bool)success, (str)callback
+
 
 
 #define onTrigger( object, player, label ) \
@@ -47,6 +51,18 @@
 		key stair = argKey(3); \
 		int seated = argInt(4);
 
+
+#define onPlayerQteStarted( hud, type ) \
+	if( isEventLevelCustom() AND argStr(1) == LevelCustomType$QTE AND argInt(2) == LevelCustomEvt$QTE$start ){ \
+		key hud = argKey(0); \
+		int type = argInt(3);
+		
+#define onPlayerQteEnded( hud, success, callback ) \
+	if( isEventLevelCustom() AND argStr(1) == LevelCustomType$QTE AND argInt(2) == LevelCustomEvt$QTE$end ){ \
+		key hud = argKey(0); \
+		int success = argInt(3); \
+		str callback = argStr(4);
+		
 
 
 #endif

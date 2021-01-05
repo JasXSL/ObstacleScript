@@ -167,7 +167,7 @@ handleOwnerMethod( PortalMethod$init )
 	
 	string desc = argStr(1);
 	string descOut = desc;
-	if( !PortalHelper$isLive() )
+	if( !PortalHelper$isLive() && descOut != "" )
 		descOut = "$"+descOut;
 	
 	string group = argStr(2);

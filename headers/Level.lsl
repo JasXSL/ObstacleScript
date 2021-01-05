@@ -33,8 +33,8 @@
 		runMethod(LINK_THIS, "Level", LevelMethod$resetPlayers, "*")
 	#define Level$acceptInvite( target ) \
 		runMethod(target, "Level", LevelMethod$acceptInvite, [])
-	#define Level$raiseEvent( obstacle, evt, data ) \
-		runOmniMethod("Level", LevelMethod$raiseEvent, obstacle + evt + data )
+	#define Level$raiseEvent( customType, evt, data ) \
+		runOmniMethod("Level", LevelMethod$raiseEvent, customType + evt + data )
 	
 
 

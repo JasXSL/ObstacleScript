@@ -17,6 +17,8 @@ integer BFL;
 #define BFL_LAST_UPDATE 0x40
 #define BFL_GRACE_PERIOD 0x80        // Grace period for dismount
 
+integer KEY_FILTER;
+
 // Used in timer_move
 integer BFL_CACHE;
 
@@ -212,10 +214,18 @@ onControlsKeyPress( pressed, released )
 
     integer up = CONTROL_FWD|CONTROL_RIGHT|CONTROL_UP|CONTROL_ROT_RIGHT;
     integer dn = CONTROL_BACK|CONTROL_LEFT|CONTROL_DOWN|CONTROL_ROT_LEFT;
-    
+	
+	if( KEY_FILTER ){
+	
+		pressed = pressed & KEY_FILTER;
+		released = released & KEY_FILTER;
+		
+	}
     if( released&(up|dn) ){
+	
         BFL = BFL&~BFL_MOVING;
         BFL = BFL&~BFL_DIR_UP;
+		
     }
     
     if( pressed&(up|dn) ){
@@ -411,7 +421,11 @@ handleInternalMethod( ClimbMethod$start )
     CLIMBSPEED = argFloat(8);
     onStart = argStr(9);
     onEnd = argStr(10); 
-    
+    KEY_FILTER = argInt(11);
+	
+	// Need to release and re-press the movement key for filter to work
+	BFL = BFL&~BFL_MOVING;
+    BFL = BFL&~BFL_DIR_UP;
 
     if( CLIMBSPEED<=0 )
         CLIMBSPEED = ClimbCfg$defaultSpeed;

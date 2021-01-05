@@ -38,7 +38,7 @@ onCollisionStart( total )
 		return;
 	
 	
-	Level$raiseEvent( ObstacleType$TRIGGER, ObstacleEvt$TRIGGER$trigger, llDetectedKey(0) );
+	Level$raiseEvent( LevelCustomType$TRIGGER, LevelCustomEvt$TRIGGER$trigger, llDetectedKey(0) );
 	
 	if( FLAGS & TriggerConst$F_TRIGGER_ONCE ){
 		llSleep(2);
