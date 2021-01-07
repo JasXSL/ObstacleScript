@@ -6,6 +6,7 @@
 	#define LevelMethod$resetPlayers 2		// Resets players to owner only
 	#define LevelMethod$acceptInvite 3		// void - Accepts an invite
 	#define LevelMethod$raiseEvent 4		// (str)script, (int)evt, (var)data1, (var)data2... - Owner only
+	#define LevelMethod$getPlayers 5		// (int)callbackMethod, (str)callbackScript - Sends callbackMethod to callbackScript with data (str)player1, (str)player2...
 
 	#define LevelEvt$mainMenu 1				// Raised when the owner clicks the level controller
 	#define LevelEvt$custom 2				// (key)sender, (str)script, (int)evt, (var)data1, (var)data2... These events are defined in resources/LevelCustomEvents
@@ -23,7 +24,9 @@
 			int evt = argInt(2); \
 			list data = llDeleteSubList(METHOD_ARGS, 0, 2);
 			
-	
+
+	#define Level$getPlayers( callbackMethod ) \
+		runOmniMethod("Level", LevelMethod$getPlayers, callbackMethod + llGetScriptName() )
 
 	#define Level$invite( player ) \
 		runMethod(LINK_THIS, "Level", LevelMethod$invite, player)

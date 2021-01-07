@@ -95,6 +95,9 @@ onListen( ch, msg )
 end
 
 
+
+
+
 onTouchStart( total )
 
     string targ = llDetectedKey(0);
@@ -125,6 +128,14 @@ end
 
 
 
+
+handleMethod( LevelMethod$getPlayers )
+	
+	string senderScript = argStr(1);
+	int cbMethod = argInt(0);
+	runMethod(SENDER_KEY, senderScript, cbMethod, PLAYERS);
+
+end
 
 // Method
 handleInternalMethod( LevelMethod$resetPlayers )

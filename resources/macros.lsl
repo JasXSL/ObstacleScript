@@ -32,7 +32,7 @@
 #define OR ||
 #define IS ==
 
-
+#define stopAllObjectAnimations() {list l = llGetObjectAnimationNames(); integer i; for(;i<count(l);++i)llStopObjectAnimation(l2s(l,i));}
 
 // Debugging
 // Note, using the + operator within os$log will add that as another message, use parentheses if you want to add things within this

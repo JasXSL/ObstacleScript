@@ -303,6 +303,8 @@ handleOwnerMethod( SpawnerMethod$load )
     if( !count(METHOD_ARGS) )
         METHOD_ARGS = (list)"";
     
+	raiseEvent(SpawnerEvt$loadStart, cb + live + METHOD_ARGS);
+	
     integer i;
     for( ; i < count(ASSET_TABLES); ++i ){
         

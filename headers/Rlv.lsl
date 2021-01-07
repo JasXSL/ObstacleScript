@@ -88,7 +88,7 @@
 	runMethod( target, "Rlv", RlvMethod$setWindlight, preset )
 
 #define Rlv$sit( target, seat, blockUnsit ) \
-	runMethod( target, "Rlv", RlvMethod$setWindlight, seat + blockUnsit )
+	runMethod( target, "Rlv", RlvMethod$sit, seat + blockUnsit )
 
 
 #define Rlv$setMaxSprint( target, dur ) \

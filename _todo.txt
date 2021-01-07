@@ -1,34 +1,29 @@
-Next:
-	- Shimmying wall
-		- Test
-	- Slide beam
-		- QTE
-		- Code
-	- Tentacle
-		- Code
-	- Trap door
-		
-		
+System fixes:
+	- Unsit center players when the game starts
+	- Make level code update on rez
+		- Add button to force an update
+	- 
+
+
+Multiplayer:
+	- Water balloons
+	- All run at the same time mode
+	
 
 Obstacles (later):
 	- Hitting a button near shimmying wall immediately activates all spouts.
 	- Hitting a button near the slide beam stuns for a while and increases arousal.
 	- Hitting a button activates ALL slider walls.
 
-- QTE
-	- Must be pausable
-	- LR Tap
-	- LR Tap to keep in center
 
-- Water balloons
 
-- Triggers
-
+Additional obstacles:
+	- Trap door
+		- Proximity mode
+		- Collission mode
+		- Predelay
+		- Orientation
 
 - Gender integration
-
 - Level manager
 
-
-
-- Game start countdown

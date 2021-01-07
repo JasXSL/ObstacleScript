@@ -39,6 +39,7 @@
 #define PortalMethod$save 5				// Sends a message to spawner telling it to save this object
 #define PortalMethod$init 6				// (vec)pos, (str)desc, (str)group - Passed from Rezzer, sets the object initialization data. Can only be sent once per object.
 
+#define PortalMethod$cbPlayers 7		// Callback binding for getting players
 
 #define onPortalLoadComplete( desc ) \
 	if( SENDER_SCRIPT IS "Portal" AND EVENT_TYPE IS PortalEvt$loadComplete ){ \

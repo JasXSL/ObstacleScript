@@ -3,7 +3,7 @@
 
 // Wall description: [(vec)size, (var)id, (vec)translate_distance, (float)duration]
 
-#define CrusherWallConst$CHAN 0xC35	// Listener
+#define CrusherWallConst$CHAN (OBSTACLE_CHAN+1)	// Listener
 
 #define CrusherWallConst$DIR_FWD 0	// Go to extended
 #define CrusherWallConst$DIR_BACK 1		// Go to contracted

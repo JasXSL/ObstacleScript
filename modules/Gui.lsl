@@ -116,7 +116,8 @@ updateBarPositions(){
         
     }
     
-    
+    if( toSet == [] )
+		return;
     
     float width = size.x;
     if( !hasIcon )

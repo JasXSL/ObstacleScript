@@ -19,9 +19,15 @@
 #define LevelCustomType$TRIGGER "oTrigger"
 	#define LevelCustomEvt$TRIGGER$trigger 1		// (key)player - Raised when a player triggers a collision
 
+
+#define LevelCustomType$TRAP "oTrap"				// Generic type for traps like the lasher
+	#define LevelCustomEvt$TRAP$hit 1					// (key)player1, (key)player2... - Trap has hit a player
+	#define LevelCustomEvt$TRAP$seated 2				// (key)player1, (key)player2... - Trap has been sat on by one or more players
+	#define LevelCustomEvt$TRAP$unseated 3				// (key)player1, (key)player2... - Trap has been unsat by one or more players
+
+
 #define LevelCustomType$STAIR "avStair"		
 	#define LevelCustomEvt$STAIR$seated 1 			// (key)object, (bool)sitting
-
 
 #define LevelCustomType$QTE "avQTE"		
 	#define LevelCustomEvt$QTE$start 1 				// (int)type, (str)callback
@@ -42,8 +48,27 @@
 #define onShimmyWallHit( object, start, players ) \
 	if( isEventLevelCustom() AND argStr(1) == LevelCustomType$SHIMMY_WALL AND (argInt(2) == LevelCustomEvt$SHIMMY_WALL$hitStart OR argInt(2) == LevelCustomEvt$SHIMMY_WALL$hitEnd) ){ \
 		key object = argKey(0); \
-		int start = argInt(2); \
+		int start = argInt(2) == LevelCustomEvt$SHIMMY_WALL$hitStart; \
 		list players = llDeleteSubList(METHOD_ARGS, 0, 2);
+		
+		
+#define onTrapHit( trap, players ) \
+	if( isEventLevelCustom() AND argStr(1) == LevelCustomType$TRAP AND argInt(2) == LevelCustomEvt$TRAP$hit ){ \
+		key trap = argKey(0); \
+		list players = llDeleteSubList(METHOD_ARGS, 0, 2);
+
+#define onTrapSeated( trap, players ) \
+	if( isEventLevelCustom() AND argStr(1) == LevelCustomType$TRAP AND argInt(2) == LevelCustomEvt$TRAP$seated ){ \
+		key trap = argKey(0); \
+		list players = llDeleteSubList(METHOD_ARGS, 0, 2);
+
+#define onTrapUnseated( trap, players ) \
+	if( isEventLevelCustom() AND argStr(1) == LevelCustomType$TRAP AND argInt(2) == LevelCustomEvt$TRAP$unseated ){ \
+		key trap = argKey(0); \
+		list players = llDeleteSubList(METHOD_ARGS, 0, 2);
+
+		
+		
 		
 #define onStairSeated( hud, stair, seated ) \
 	if( isEventLevelCustom() AND argStr(1) == LevelCustomType$STAIR AND argInt(2) == LevelCustomEvt$STAIR$seated ){ \

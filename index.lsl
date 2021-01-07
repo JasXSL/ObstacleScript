@@ -81,7 +81,7 @@
 
 // Channel to communicate on by default
 #define PUB_CHAN 0xB00B
-
+#define OBSTACLE_CHAN 0xC34		// 3124 - Channel to talk to obstacles on
 
 
 

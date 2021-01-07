@@ -7,6 +7,7 @@
 #define RezzerMethod$cb 3			// (str)callback. Adds this to the current position in the queue. When encountered, it raises RezzerEvt$cb
 
 #define RezzerEvt$cb 1				// (str)cb
+#define RezzerEvt$rezzed 2			// (key)id - An object has been spawned and initialized		
 
 #define Rezzer$rez( targ, asset, pos, rot, desc, group, live ) \
 	runMethod(targ, "Rezzer", RezzerMethod$rez, asset + pos + rot + desc + group + live)
@@ -21,6 +22,10 @@
 #define onRezzerCb( cb ) \
 	if( SENDER_SCRIPT IS "Rezzer" AND EVENT_TYPE IS RezzerEvt$cb ){ \
 		str cb = argStr(0);
+		
+#define onRezzerRezzed( obj ) \
+	if( SENDER_SCRIPT IS "Rezzer" AND EVENT_TYPE IS RezzerEvt$rezzed ){ \
+		key obj = argKey(0);
 		
 #define onRezzerGameLoaded() \
 if( SENDER_SCRIPT IS "Rezzer" AND EVENT_TYPE IS RezzerEvt$cb && argStr(0) == SpawnerConst$CB_GAME_START ){

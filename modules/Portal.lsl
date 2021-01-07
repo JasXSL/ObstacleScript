@@ -39,11 +39,14 @@ fetchSelf(){
     Screpo$get( PIN, ScrepoConst$SP_LOADED, llGetScriptName() );
     
 }
+// Got all the scripts, request players
 loadComplete(){
     
     // Fetch desc
 	Rezzer$rezzed( mySpawner(), PortalHelper$getSpawnId() );
     llSetRemoteScriptAccessPin(0);
+	// Get players
+	Level$getPlayers(PortalMethod$cbPlayers);
     
 }
 
@@ -98,6 +101,13 @@ end
 handleOwnerMethod( PortalMethod$fetch )
 	llOwnerSay("Updating code");
     fetchSelf();
+end
+
+handleOwnerMethod( PortalMethod$cbPlayers )
+
+	PLAYERS = METHOD_ARGS;
+	globalAction$setPlayers();
+
 end
 
 handleOwnerMethod( PortalMethod$setLive )
@@ -181,6 +191,7 @@ handleOwnerMethod( PortalMethod$init )
 	
 	if( descOut != "" )
 		llSetObjectDesc(descOut);
+	
 	raiseEvent(PortalEvt$loadComplete, desc);
     
 

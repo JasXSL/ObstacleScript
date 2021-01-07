@@ -20,6 +20,9 @@
 #define SpawnerConst$CB_GAME_START "_G_"
 
 
+#define SpawnerEvt$loadStart 1				// (str)callback, (bool)live, (str)group1, (str)group2... - A group of spawns has started. Use RezzerEvt$cb for detecting when the group is done.
+
+
 #define Spawner$add( targ ) \
 	runMethod(targ, "Spawner", SpawnerMethod$add, [])
 
@@ -30,5 +33,14 @@
 #define Spawner$spawnGame() \
 	Spawner$load( LINK_THIS, "", TRUE, SpawnerConst$CB_GAME_START )
 
+
+
+#define onSpawnerLoadStart( cb, live, groups ) \
+	if( SENDER_SCRIPT IS "Spawner" AND EVENT_TYPE IS SpawnerEvt$loadStart ){ \
+		str cb = argStr(0); \
+		bool live = argInt(1); \
+		list groups = llDeleteSubList(METHOD_ARGS, 0, 1);
+		
+		
 
 #endif
