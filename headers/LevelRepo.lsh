@@ -1,0 +1,29 @@
+#ifndef __LevelRepo
+#define __LevelRepo
+
+
+
+#define LevelRepoMethod$requestNewAssets 1		// void - Forces the HUD to purge level assets and request new ones
+#define LevelRepoMethod$canAttach 2				// void - Checks if we can request permissions for an attachment.
+#define LevelRepoMethod$attach 3				// (str)att1, (str)att2... - Attaches and keeps these items attached
+#define LevelRepoMethod$detach 4				// (str)att1, (str)att2... - Detaches items attached through above
+#define LevelRepoMethod$attSpawned 5			// void - An attachment object has spawned
+
+#define LevelRepo$requestNewAssets( targ ) \
+	runMethod(targ, "LevelRepo", LevelRepoMethod$requestNewAssets, [])
+#define LevelRepo$canAttach() \
+	runMethod(llGetOwner(), "LevelRepo", LevelRepoMethod$canAttach, [])
+#define LevelRepo$attSpawned() \
+	runMethod(llGetOwner(), "LevelRepo", LevelRepoMethod$attSpawned, [])
+#define LevelRepo$attach( targ, attachments ) \
+	runMethod(targ, "LevelRepo", LevelRepoMethod$attach, attachments)
+#define LevelRepo$detach( targ, attachments ) \
+	runMethod(targ, "LevelRepo", LevelRepoMethod$detach, attachments)
+
+
+
+
+
+
+#endif
+

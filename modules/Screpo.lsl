@@ -28,7 +28,7 @@ handleOwnerMethod( ScrepoMethod$get )
     
     integer pin = argInt(0);
     integer startParam = argInt(1);
-    list scripts;
+
     integer i;
     for( i = 2; i < count(METHOD_ARGS); ++i ){
         
@@ -45,17 +45,15 @@ handleOwnerMethod( ScrepoMethod$get )
                 SENDER_KEY +
                 startParam
             ), "SUB"+(str)SC);
+			
+			++SC;
+			if( SC >= SC_MAX )
+				SC = 0;
             
         }else
             llOwnerSay("Invalid script: "+script);
         
-    }
-    
-    ++SC;
-    if( SC >= SC_MAX )
-        SC = 0;
-    
-    
+    }    
     
 end
 

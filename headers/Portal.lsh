@@ -4,7 +4,8 @@
 // Scritps that should be automatically remoteloaded
 #define PortalConst$TRACKED_SCRIPTS (list) \
 	"Trigger" + \
-	"CrusherWall"
+	"CrusherWall" + \
+	"Attachment"
 
 // prim text contains some information about the portal
 #define PortalConst$CF_REZ_PARAM 0					// (int)on_rez_param - Contains the supplied int from on_rez
@@ -22,6 +23,10 @@
 	((l2i(PortalHelper$getConf(), PortalConst$CF_REZ_PARAM)>>5)&0xFFFF)
 #define PortalHelper$isLive() \
 	(l2i(PortalHelper$getConf(), PortalConst$CF_REZ_PARAM)&PortalConst$SP_LIVE)
+	
+// This is a helper for rezzing things outside of screpo. It assumes the object doesn't need to fetch a desc
+#define PortalHelper$rez( obj, pos, vel, rot, live ) \
+	llRezAtRoot(obj, pos, vel, rot, ((!!live)<<4) )
 
 
 #define PortalEvt$loadComplete 1		// (str)desc - All scripts have finished loading
@@ -35,11 +40,14 @@
 	#define PortalConst$KILL_ID 2		// Kills portals where the spawn ID is in filter
 #define PortalMethod$setLive 3			// Sets the portal to l ive. Use PortalMethod$reset to clear live
 
-#define PortalMethod$scriptOnline 4		// (str)script - Sent from a script when it's initialized
+#define PortalMethod$scriptOnline 4		// (str)script - Sent from a script when it's initialized. Required in every remoteloaded script
 #define PortalMethod$save 5				// Sends a message to spawner telling it to save this object
 #define PortalMethod$init 6				// (vec)pos, (str)desc, (str)group - Passed from Rezzer, sets the object initialization data. Can only be sent once per object.
 
 #define PortalMethod$cbPlayers 7		// Callback binding for getting players
+
+
+
 
 #define onPortalLoadComplete( desc ) \
 	if( SENDER_SCRIPT IS "Portal" AND EVENT_TYPE IS PortalEvt$loadComplete ){ \

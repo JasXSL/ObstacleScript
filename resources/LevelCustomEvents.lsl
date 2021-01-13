@@ -11,6 +11,8 @@
 
 */
 
+// Types starting with av are allowed for ANY player. Any other are limited to owner
+
 #define LevelCustomType$SHIMMY_WALL "oShimmyWall"
 	#define LevelCustomEvt$SHIMMY_WALL$hitStart 1		// (key)player1, (key)player2...
 	#define LevelCustomEvt$SHIMMY_WALL$hitEnd 2		// (key)player1, (key)player2...
@@ -25,6 +27,11 @@
 	#define LevelCustomEvt$TRAP$seated 2				// (key)player1, (key)player2... - Trap has been sat on by one or more players
 	#define LevelCustomEvt$TRAP$unseated 3				// (key)player1, (key)player2... - Trap has been unsat by one or more players
 
+
+
+
+#define LevelCustomType$PROJECTILE "plProj"
+	#define LevelCustomEvt$PROJECTILE$hit 1			// (key)player/target
 
 #define LevelCustomType$STAIR "avStair"		
 	#define LevelCustomEvt$STAIR$seated 1 			// (key)object, (bool)sitting
@@ -67,7 +74,11 @@
 		key trap = argKey(0); \
 		list players = llDeleteSubList(METHOD_ARGS, 0, 2);
 
-		
+#define onProjectileHit( projectile, player ) \
+	if( isEventLevelCustom() AND argStr(1) == LevelCustomType$TRAP AND argInt(2) == LevelCustomEvt$TRAP$hit ){ \
+		key projectile = argKey(0); \
+		key player = argKey(3);
+
 		
 		
 #define onStairSeated( hud, stair, seated ) \

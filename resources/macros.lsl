@@ -7,6 +7,9 @@
 #define true TRUE
 #define false FALSE
 
+#define rotateDoor(deg) llSetRot(llEuler2Rot(<0,0,deg*DEG_TO_RAD>));
+
+
 #define int integer
 #define str string
 #define bool integer

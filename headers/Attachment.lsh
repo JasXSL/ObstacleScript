@@ -1,0 +1,22 @@
+#ifndef __Attachment
+#define __Attachment
+
+
+#define AttachmentMethod$reqPerm 1			// void - Sent from LevelRepo to let the attachment know that it can now request permissions
+#define AttachmentMethod$detach 2			// (str)name/"*" - Detaches one or all objects for the user
+
+#define Attachment$reqPerm( target ) \
+	runMethod(target, "Attachment", AttachmentMethod$reqPerm, [])
+#define Attachment$detachAll( target ) \
+	runMethod(target, "Attachment", AttachmentMethod$detach, "*")
+#define Attachment$detach( name ) \
+	runMethod(llGetOwner(), "Attachment", AttachmentMethod$detach, name)
+#define Attachment$detachOmni( name ) \
+	runOmniMethod("Attachment", AttachmentMethod$detach, name)
+
+
+
+
+
+#endif
+

@@ -1,4 +1,4 @@
-
+#define USE_ON_REZ
 #define USE_STATE_ENTRY
 #define USE_TOUCH_START
 #define USE_LISTEN
@@ -50,12 +50,18 @@ invite( key player ){
 
 #include "ObstacleScript/begin.lsl"
 
+onRez( start )
+	llResetScript();
+end
+
 onStateEntry()
     
     _P = [(str)llGetOwner()];  
     updatePlayers();
     setupListenTunnel();
     setupDebug(0); 
+	Com$inviteSuccess(llGetOwner());
+	
 end
 
 
@@ -112,11 +118,13 @@ onTouchStart( total )
     
     integer pos = llListFindList(PLAYERS, (list)targ);
     if( ~pos ){
-        
-        PLAYERS = llDeleteSubList(PLAYERS, pos, pos);
-        updatePlayers();
-        llSay(0, "secondlife:///app/agent/"+targ+"/about has left the game.");
-        
+	
+		/* Todo: menu to leave game
+			PLAYERS = llDeleteSubList(PLAYERS, pos, pos);
+			updatePlayers();
+			llSay(0, "secondlife:///app/agent/"+targ+"/about has left the game.");
+		*/
+		
     }
     else
         llDialog(targ, "Ask secondlife:///app/agent/"+(str)llGetOwner()+"/about for an invite!", [], 123);    
@@ -145,7 +153,11 @@ handleInternalMethod( LevelMethod$resetPlayers )
     
 end
 
-handleOwnerMethod( LevelMethod$raiseEvent )
+handleMethod( LevelMethod$raiseEvent )
+	
+	string type = argStr(0);
+	if( llGetSubString(type, 0, 1) != "av" && !isMethodByOwnerInline() )
+		return;
 	
 	raiseEvent(LevelEvt$custom, SENDER_KEY + METHOD_ARGS);
 
@@ -211,6 +223,36 @@ handleInternalMethod( LevelMethod$invite )
     
 end
 
+handleOwnerMethod( LevelMethod$updateAllHudAssets )
+
+	forPlayer( index, player )
+		
+		LevelRepo$requestNewAssets( player );
+	
+	end
+
+end
+
+handleMethod( LevelMethod$getHudAssets )
+
+	integer i;
+	for( ; i < llGetInventoryNumber(INVENTORY_ALL); ++i ){
+		
+		string name = llGetInventoryName(INVENTORY_ALL, i);
+		if( llGetSubString(name, 0, 3) == "HUD:" ){
+			
+			integer type = llGetInventoryType(name);
+			if( type == INVENTORY_OBJECT || type == INVENTORY_ANIMATION )
+				llGiveInventory(SENDER_KEY, name);
+		
+		}
+	
+	}
+	
+
+	
+
+end
 
 
 #include "ObstacleScript/end.lsl"

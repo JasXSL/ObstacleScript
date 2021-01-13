@@ -47,22 +47,32 @@ key HOST;
                 }
                 else if( 
                     method == ComMethod$inviteSuccess && 
-                    ACC_HOST > 0 && 
-                    SENDER_KEY == PENDING_HOST &&
-                    llGetTime()-ACC_HOST < 10
+					HOST != SENDER_KEY &&
+					(
+						(
+							ACC_HOST > 0 && 
+							SENDER_KEY == PENDING_HOST &&
+							llGetTime()-ACC_HOST < 10
+						) ||
+						llGetOwnerKey(SENDER_KEY) == llGetOwner()
+					)
                 ){
                     
-                    PENDING_HOST = "";
-                    ACC_HOST = 0;
-                    HOST = SENDER_KEY;
-                    _P = (list)((str)llGetOwner()) + (str)llGetOwnerKey(HOST);
-                    llDialog(
-                        llGetOwner(), 
-                        "You have joined "+sender+" 's game!", 
-                        [], 
-                        123
-                    );
-                    raiseEvent(ComEvent$hostChanged, HOST);
+					bool inv = SENDER_KEY == PENDING_HOST;
+					PENDING_HOST = "";
+					ACC_HOST = 0;
+					HOST = SENDER_KEY;
+					_P = (list)((str)llGetOwner()) + (str)llGetOwnerKey(HOST);
+					raiseEvent(ComEvt$hostChanged, HOST);
+						
+					if( inv )
+						llDialog(
+							llGetOwner(), 
+							"You have joined "+sender+" 's game!", 
+							[], 
+							123
+						);
+                    
                     
                 }            
                 

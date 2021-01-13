@@ -1,9 +1,15 @@
+Next:
+	- Texture anim for bars
+	- Test attachment system
+	- Add a "push" feature when a player is hit by a balloon
+	- 
+
+
 System fixes:
 	- Unsit center players when the game starts
 	- Make level code update on rez
 		- Add button to force an update
 	- 
-
 
 Multiplayer:
 	- Water balloons

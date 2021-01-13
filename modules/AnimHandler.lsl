@@ -137,26 +137,23 @@ handleMethod( AnimHandlerMethod$anim )
 end
 
 
-handleInternalMethod( AnimHandlerMethod$remInventory )
-
-    list_shift_each(METHOD_ARGS, val,
-        
-        if( llGetInventoryType(val) == INVENTORY_ANIMATION )
-            llRemoveInventory(val);
-        
-    )
-
-end
-
-
-handleOwnerMethod( AnimHandlerMethod$get )
-
-    list_shift_each(METHOD_ARGS, anim,
-    
-        if( llGetInventoryType(anim) == INVENTORY_ANIMATION )
-            llGiveInventory(SENDER_KEY, anim);
-        
-    )
+handleInternalMethod( AnimHandlerMethod$purgeCustomAnimations )
+	
+	list purge;
+	integer i;
+	for( ; i < llGetInventoryNumber(INVENTORY_ANIMATION); ++i ){
+		
+		string name = llGetInventoryName(INVENTORY_ANIMATION, i);
+		if( llGetSubString(name, 0, 3) == "HUD:" )
+			purge += name;
+	
+	}
+	
+	for( i = 0; i < count(purge); ++i )
+		llRemoveInventory(l2s(purge, i));
+		
+	raiseEvent(AnimHandlerEvt$purgeDone, []);
+	
 
 end
 

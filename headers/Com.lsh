@@ -8,11 +8,12 @@
 
 
 // Events
-#define ComEvent$hostChanged 1			// (key)host - Raised with the host prim whenever you join a game
+#define ComEvt$hostChanged 1			// (key)host - Raised with the host prim whenever you join a game
 
 
 #define onComHostChanged( host ) \
-	if( SENDER_SCRIPT IS "Com" AND EVENT_TYPE IS ComEvt$hostChanged ){
+	if( SENDER_SCRIPT IS "Com" AND EVENT_TYPE IS ComEvt$hostChanged ){ \
+		key host = argKey(0);
 
 
 

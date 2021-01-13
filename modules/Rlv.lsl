@@ -409,7 +409,7 @@ handleMethod( RlvMethod$unSit )
         return;
         
     BFL = BFL&~BFL_NO_UNSIT;
-    llOwnerSay("@unsit=yes,unsit=force");
+    llOwnerSay("@unsit=y,unsit=force");
 
 end
 

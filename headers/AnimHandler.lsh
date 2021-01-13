@@ -29,8 +29,11 @@
 	#define AnimHandler$animFlag$randomize 0x2			// Picks one random element from anim instead of playing all
 	#define AnimHandler$animFlag$stopOnUnsit 0x4			// Stops the animation if the avatar isn't sitting
 	
-#define AnimHandlerMethod$remInventory 1	// anim1, anim2...
-#define AnimHandlerMethod$get 2				// (arr/str)anim | Fetch one or more animations to the sender. Owner only.
+
+#define AnimHandlerMethod$purgeCustomAnimations 2	// Purges all animations starting with HUD:
+
+
+#define AnimHandlerEvt$purgeDone 1			// void - AnimHandler has finished purging animations
 
 
 // Preprocessor shortcuts
@@ -49,6 +52,8 @@
 #define AnimHandler$remInventory(assets) \
 	runMethod(LINK_SET, "AnimHandler", AnimHandlerMethod$remInventory, assets)
 
+#define AnimHandler$purge() \
+	runMethod(LINK_SET, "AnimHandler", AnimHandlerMethod$purgeCustomAnimations, [])
 
 
 
@@ -56,8 +61,8 @@
 
 
 
-
-
+#define onAnimHandlerPurge() \
+	if( SENDER_SCRIPT IS "AnimHandler" AND EVENT_TYPE IS AnimHandlerEvt$purgeDone ){
 
 
 
