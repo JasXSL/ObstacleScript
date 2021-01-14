@@ -74,10 +74,10 @@
 		key trap = argKey(0); \
 		list players = llDeleteSubList(METHOD_ARGS, 0, 2);
 
-#define onProjectileHit( projectile, player ) \
-	if( isEventLevelCustom() AND argStr(1) == LevelCustomType$TRAP AND argInt(2) == LevelCustomEvt$TRAP$hit ){ \
+#define onProjectileHit( projectile, object ) \
+	if( isEventLevelCustom() AND argStr(1) == LevelCustomType$PROJECTILE AND argInt(2) == LevelCustomEvt$PROJECTILE$hit ){ \
 		key projectile = argKey(0); \
-		key player = argKey(3);
+		key object = argKey(3);
 
 		
 		

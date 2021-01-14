@@ -1,21 +1,20 @@
 Next:
-	- Texture anim for bars
-	- Test attachment system
+	- Create a new button mesh with a "slice" sprite sheet
 	- Add a "push" feature when a player is hit by a balloon
-	- 
-
+	- Move the crusher walls forward
+	- Add tentacles under the crusher walls
+	- Add a button that activates the shimmy walls
+	- Add a button that vibrates the slide beams
+	
 
 System fixes:
-	- Unsit center players when the game starts
 	- Make level code update on rez
 		- Add button to force an update
 	- 
 
 Multiplayer:
-	- Water balloons
 	- All run at the same time mode
 	
-
 Obstacles (later):
 	- Hitting a button near shimmying wall immediately activates all spouts.
 	- Hitting a button near the slide beam stuns for a while and increases arousal.

@@ -280,15 +280,21 @@ handleMethod( GuiMethod$createBar )
     
     if( bar == -1 )
         return;
+		
+		
+	integer prim = l2i(pBARS, bar);
         
+    llSetLinkTextureAnim(prim, 0, Gui$BAR_BAR_MAIN, 0,0,0,0,0);
+	llSetLinkTextureAnim(prim, 0, Gui$BAR_BAR_BG, 0,0,0,0,0);
+	
     
-    integer prim = l2i(pBARS, bar);
     llSetLinkPrimitiveParamsFast(prim, (list)
         PRIM_SIZE + BAR_SIZE +
         PRIM_COLOR + ALL_SIDES + ZERO_VECTOR + 0 +
         PRIM_COLOR + Gui$BAR_BORDER + border + 1 +
         PRIM_COLOR + Gui$BAR_BAR_BG + color + 1 +
-        PRIM_TEXTURE + Gui$BAR_BAR_BG + Gui$BAR_TEXTURE_MAIN + <1,.5,1> + <0,-.25,0> + -PI_BY_TWO
+        PRIM_TEXTURE + Gui$BAR_BAR_BG + Gui$BAR_TEXTURE_MAIN + <1,.5,1> + <0,-.25,0> + -PI_BY_TWO +
+		PRIM_DESC + (str)color
     );
     BAR_SETTINGS = llListReplaceList(BAR_SETTINGS, (list)0, bar, bar);
     
@@ -342,6 +348,7 @@ handleMethod( GuiMethod$setBarTexture )
         
     }
     
+
     llSetLinkPrimitiveParamsFast(prim, (list)
         PRIM_COLOR + face + ONE_VECTOR + 0
     );
@@ -363,8 +370,21 @@ handleMethod( GuiMethod$setBarPerc )
     if( bar == -1 )
         return;
         
+	
     integer prim = l2i(pBARS, bar);
+	
+	vector color = (vector)l2s(llGetLinkPrimitiveParams(prim, (list)PRIM_DESC), 0);
+	llSetLinkTextureAnim(prim, 0, Gui$BAR_BAR_MAIN, 0,0,0,0,0);
+	
     llSetLinkPrimitiveParamsFast(prim, [
+		PRIM_COLOR,
+		Gui$BAR_BAR_MAIN,
+		ZERO_VECTOR,
+		0,
+		PRIM_COLOR,
+		Gui$BAR_BAR_BG,
+		color,
+		1,
         PRIM_TEXTURE, 
         Gui$BAR_BAR_BG, 
         Gui$BAR_TEXTURE_MAIN, 
@@ -373,6 +393,70 @@ handleMethod( GuiMethod$setBarPerc )
         -PI_BY_TWO
     ]);
 
+end
+
+handleMethod( GuiMethod$tweenBar )
+
+    str label = argStr(0);
+    float from = argFloat(1);
+	float to = argFloat(2);
+	float time = argFloat(3);
+	
+    integer bar = getBar(label);
+    if( bar == -1 )
+        return;
+        
+	int total = 4*64;
+	int pos = floor(from*total);
+	int y = pos/4;
+	int x = pos-4*y;
+	
+	integer prim = l2i(pBARS, bar);
+	
+	vector color = (vector)l2s(llGetLinkPrimitiveParams(prim, (list)PRIM_DESC), 0);
+    
+	llSetLinkPrimitiveParamsFast(prim, [
+		PRIM_COLOR,
+		Gui$BAR_BAR_BG,
+		ZERO_VECTOR,
+		0.75,
+		PRIM_COLOR,
+		Gui$BAR_BAR_MAIN,
+		color,
+		1,
+		PRIM_TEXTURE,
+		Gui$BAR_BAR_MAIN,
+		Gui$BAR_TEXTURE_ANIM,
+		<0.25, 1.0/64, 0>,
+		<-.375+0.25*x, 1.0/128+1.0/64*31-1.0/64*y, 0>,
+		0
+	]);
+	
+	
+	int frames = floor((to-from)*(total));
+	//pos = floor(from*(total-1));
+	
+	if( !frames || time <= 0 )
+		return;
+		
+	float rate = llFabs(frames/time);
+
+	int reverse;
+	if( frames < 0 )
+		reverse = REVERSE;
+	
+
+		
+	llSetLinkTextureAnim(prim, 0, Gui$BAR_BAR_MAIN, 0,0,0,0,0);
+	llSetLinkTextureAnim(
+		prim, 
+		ANIM_ON|reverse, 
+		Gui$BAR_BAR_MAIN, 
+		4,64,
+		pos,llAbs(frames),
+		rate
+	);
+	
 end
 
 

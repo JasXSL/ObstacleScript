@@ -14,6 +14,7 @@
 #define Gui$BAR_ALPHA_BG 0.5
 
 #define Gui$BAR_TEXTURE_MAIN "c0f942a2-46c3-2489-33ef-f072a6cb4e0d"
+#define Gui$BAR_TEXTURE_ANIM "924b663d-2330-6c0b-cda1-ca485d0ba68a"
 
 #define Gui$ICON_BORDER 0
 #define Gui$ICON_BUTTON_BG 3
@@ -35,6 +36,7 @@
 
 #define GuiMethod$startCountdown 8		// 
 
+#define GuiMethod$tweenBar 9			// (str)label, (float)start, (float)end, (float)time - Tweens the bar to a percentage
 
 
 
@@ -61,6 +63,9 @@
 
 #define Gui$startCountdown( target ) \
 	runMethod( target, "Gui", GuiMethod$startCountdown, [] )
+
+#define Gui$tweenBar( target, label, start, end, time ) \
+	runMethod( target, "Gui", GuiMethod$tweenBar, label + start + end +time )
 
 
 

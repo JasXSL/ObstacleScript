@@ -47,7 +47,7 @@ key HOST;
                 }
                 else if( 
                     method == ComMethod$inviteSuccess && 
-					HOST != SENDER_KEY &&
+					//HOST != SENDER_KEY && Useful to raise regardless of if it's the same, while debugging
 					(
 						(
 							ACC_HOST > 0 && 

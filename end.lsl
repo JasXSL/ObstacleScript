@@ -22,6 +22,8 @@ default{
 	}
 	#endif
 	
+	
+	
 	link_message( integer link, integer nr, string s, key id ){
 
 		// Ignore conditions
@@ -59,10 +61,14 @@ default{
 	sensor( int tot ){ onEvent(evt$SENSOR, "", "", (list)tot); }
 	#endif
 	
+	
 	#ifdef USE_NO_SENSOR
 	no_sensor(){ onEvent(evt$NO_SENSOR, "", "", []); }
 	#endif
 	
+	#ifdef USE_ATTACH
+	attach( key id ){ onEvent(evt$ATTACH, "", "", (list)id); }
+	#endif
 	
 	#ifdef USE_OBJECT_REZ
 	object_rez( key id ){ onEvent(evt$OBJECT_REZ, "", "", (list)id); }
