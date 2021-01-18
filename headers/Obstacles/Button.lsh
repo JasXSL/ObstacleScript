@@ -1,0 +1,22 @@
+#ifndef __Button
+#define __Button
+
+// Description: [(str)label]
+
+#define ButtonConst$CHAN (OBSTACLE_CHAN+0xB7)	// Listener
+
+#define ButtonTask$kfm 1						// (arr)keyframes, (arr)commands
+#define ButtonTask$setSlices 2					// (int)slices - Used to toggle a button on/off.
+#define ButtonTask$playSound 3					// (var)optional - Used to play a sound, you can use any vars you want in your calls.
+
+#define Button$kfm( label, keyframes, commands ) \
+	llRegionSay(ButtonConst$CHAN, mkarr((label) + ButtonTask$kfm + mkarr(keyframes) + mkarr(commands)))
+#define Button$playSound( label, args ) \
+	llRegionSay(ButtonConst$CHAN, mkarr((label) + ButtonTask$playSound + args))
+#define Button$setSlices( label, slices ) \
+	llRegionSay(ButtonConst$CHAN, mkarr((label) + ButtonTask$setSlices + slices))
+
+
+
+#endif
+ 

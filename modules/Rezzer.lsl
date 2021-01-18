@@ -118,9 +118,7 @@ handleOwnerMethod( RezzerMethod$rezzed )
         l2s(descQueue, pos+4)    
     );
     descQueue = llDeleteSubList(descQueue, 0, 4);
-	
-	raiseEvent(RezzerEvt$rezzed, SENDER_KEY);
-	
+		
     // Continue
     if( id == IDX ){
         
@@ -130,6 +128,10 @@ handleOwnerMethod( RezzerMethod$rezzed )
         
     }
 
+end
+
+handleOwnerMethod( RezzerMethod$initialized )
+	raiseEvent(RezzerEvt$rezzed, SENDER_KEY);
 end
 
 

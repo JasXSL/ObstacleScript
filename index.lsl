@@ -268,13 +268,17 @@ for(; index < count(_P); ++index ){ \
 #include "./headers/Portal.lsh"
 #include "./headers/Rezzer.lsh"
 #include "./headers/LevelRepo.lsh"
-#include "./headers/CrusherWall.lsh"
 #include "./headers/Trigger.lsh"
 #include "./headers/Attachment.lsh"
 
 #include "./headers/PrimSwimParticles.lsh"
 #include "./headers/PrimSwimAux.lsh"
 #include "./headers/PrimSwim.lsh"
+
+
+#include "./headers/Obstacles/CrusherWall.lsh"
+#include "./headers/Obstacles/Button.lsh"
+
 
 
 

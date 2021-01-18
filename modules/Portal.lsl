@@ -193,7 +193,8 @@ handleOwnerMethod( PortalMethod$init )
 		llSetObjectDesc(descOut);
 	
 	raiseEvent(PortalEvt$loadComplete, desc);
-    
+    Rezzer$initialized( mySpawner() );
+	
 
 end
 

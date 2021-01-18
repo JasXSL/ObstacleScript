@@ -29,7 +29,6 @@
 
 
 
-
 #define LevelCustomType$PROJECTILE "plProj"
 	#define LevelCustomEvt$PROJECTILE$hit 1			// (key)player/target
 
