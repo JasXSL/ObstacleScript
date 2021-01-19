@@ -11,6 +11,7 @@
 #define TIMER_SPRINT_QUICK "b"
 #define TIMER_SPRINT_START_REGEN "c"
 #define TIMER_SPRINT_FADE "d"
+#define TIMER_PULL_STOP "e"
 
 
 integer BFL;
@@ -328,7 +329,9 @@ handleTimer( TIMER_SPRINT_START_REGEN )
 end
     
 
-
+handleTimer( TIMER_PULL_STOP )
+	llStopMoveToTarget();
+end
 
 
 
@@ -468,6 +471,21 @@ handleMethod( RlvMethod$unsetFlags )
 	
 end
 
+handleMethod( RlvMethod$target )
+
+	vector pos = argVec(0);
+	float speed = argFloat(1);
+	float dur = argFloat(2);
+	if( dur <= 0 )
+		dur = .1;
+	
+	if( pos == ZERO_VECTOR )
+		pos = llGetRootPosition();
+	
+	llMoveToTarget(pos, speed);
+	setTimeout(TIMER_PULL_STOP, dur);
+
+end
 
 
 #include "ObstacleScript/end.lsl"

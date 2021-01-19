@@ -57,7 +57,6 @@
 #define evt$TOUCH_START 15
 #define evt$TOUCH_END 16
 
-
 // Macros
 #include "./resources/macros.lsl"
 
@@ -204,6 +203,8 @@ _me( str ta, str sc, int me, list da ){
 #define handleOwnerMethod( method ) \
 	if( IS_METHOD && METHOD_TYPE == method && _of ){
 	
+#define handleEvent( script, evt ) \
+	if( SENDER_SCRIPT IS script AND EVENT_TYPE IS evt ){
 
 
 #define argStr( nr ) l2s(METHOD_ARGS, nr)
@@ -278,6 +279,8 @@ for(; index < count(_P); ++index ){ \
 
 #include "./headers/Obstacles/CrusherWall.lsh"
 #include "./headers/Obstacles/Button.lsh"
+#include "./headers/Obstacles/ShimmyWall.lsh"
+#include "./headers/Obstacles/SlideBeam.lsh"
 
 
 

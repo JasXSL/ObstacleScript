@@ -57,6 +57,7 @@
 #define RlvMethod$setFlags 9			// (int)flags 
 #define RlvMethod$unsetFlags 10			// (int)flags
 
+#define RlvMethod$target 11				// (vec)pos=targetPos, (float)speed, (float)duration - Uses llMoveToTarget on a player. Pos is the position of the target. Speed is the llMoveToTarget speed, and duration is how long to keep it.
 
 
 #define RlvEvt$supportCubeSpawn 1		// (key)cube_id
@@ -106,6 +107,14 @@
 	runMethod( target, "Rlv", RlvMethod$setFlags, ((int)flags) + ((int)important) )
 #define Rlv$unsetFlags( target, flags, important ) \
 	runMethod( target, "Rlv", RlvMethod$unsetFlags, ((int)flags) + ((int)important) )
+
+#define Rlv$target( target, pos, speed, duration ) \
+	runMethod( target, "Rlv", RlvMethod$target, (pos) + (speed) + (duration) )
+
+
+
+
+
 
 
 

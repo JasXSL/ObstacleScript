@@ -1,0 +1,19 @@
+#ifndef __ShimmyWall
+#define __ShimmyWall
+
+// Description: [(str)label]
+
+#define ShimmyWallConst$CHAN (OBSTACLE_CHAN+0x51)	// Listener
+
+#define ShimmyWallTask$activateAll 1				// void - Activates all spouts
+#define ShimmyWallTask$toggle 2						// (bool)on - Turns the obstacle off or on.
+
+#define ShimmyWall$activateAll( label ) \
+	llRegionSay(ShimmyWallConst$CHAN, mkarr((label) + ShimmyWallTask$activateAll))
+#define ShimmyWall$toggle( label, on ) \
+	llRegionSay(ShimmyWallConst$CHAN, mkarr((label) + ShimmyWallTask$toggle + on))
+
+
+
+#endif
+ 

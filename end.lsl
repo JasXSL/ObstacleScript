@@ -29,7 +29,7 @@ default{
 		// Ignore conditions
 		if( nr < 0 )
 			return;
-			
+
 		if( nr == globalAction$RESET_ALL && (str)id != llGetScriptName() )
 			llResetScript();
 			
