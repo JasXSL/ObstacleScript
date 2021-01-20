@@ -29,7 +29,7 @@
 
 
 
-#define LevelCustomType$PROJECTILE "plProj"
+#define LevelCustomType$PROJECTILE "avProj"
 	#define LevelCustomEvt$PROJECTILE$hit 1			// (key)player/target
 
 #define LevelCustomType$STAIR "avStair"		

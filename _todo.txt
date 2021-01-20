@@ -1,10 +1,10 @@
 Next:
+	- Make new slower beam animations
 	- Add tentacles under the crusher walls
-	- Add a button that vibrates the slide beams
-		- Add mesh
-		- Incorporate the button (See /1 TEST for logic)
-		- Add animation
-	
+		- Animate
+		- Upload
+		- Script
+		
 
 System fixes:
 	- Make level code update on rez

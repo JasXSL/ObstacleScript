@@ -162,7 +162,8 @@ end
 
 handleOwnerMethod( PortalMethod$save )
 
-    Spawner$add(SENDER_KEY);
+	if( !llGetAttached() )
+		Spawner$add(SENDER_KEY);
 
 end
 
