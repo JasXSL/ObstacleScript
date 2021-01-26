@@ -58,6 +58,9 @@ setTableData( integer table, list data ){
 #include "ObstacleScript/begin.lsl"
 
 onStateEntry()
+
+	if( llGetStartParameter() == 1 )
+		Level$scriptInit();
     
     // Todo: 
     //Repo$enum( SpawnerMethod$callbackRepoEnum, "TestPrim" + "Missing" );

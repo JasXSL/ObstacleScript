@@ -1,8 +1,9 @@
 Next:
-	- Level code updater
 	- Trap door
-	- Split the code in the main script
-	- All run at the same time mode
+	- All run at the same time mode in #Game
+	- Increase water balloon accuracy by 50%
+	- Make crusher walls random
+	- Add buttons for crusher walls
 
 System fixes:
 	- Make level code update on rez

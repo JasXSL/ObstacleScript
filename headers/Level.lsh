@@ -1,7 +1,7 @@
 #ifndef __Level
 #define __Level
 
-
+	#define LevelMethod$update 0			// void - Updates ALL assets
 	#define LevelMethod$invite 1			// (key)player - Invites a specific player to your game. Using * will invite all players within 10m of the game starter
 	#define LevelMethod$resetPlayers 2		// Resets players to owner only
 	#define LevelMethod$acceptInvite 3		// void - Accepts an invite
@@ -9,9 +9,15 @@
 	#define LevelMethod$getPlayers 5		// (int)callbackMethod, (str)callbackScript - Sends callbackMethod to callbackScript with data (str)player1, (str)player2...
 	#define LevelMethod$getHudAssets 6			// void - After setting inventory drop, the HUD prim sends this to Level to get all HUD assets. HUD assets names should start with "HUD:"
 	#define LevelMethod$updateAllHudAssets 7	// void - Sends a request to all active players to request new HUD assets
+	#define LevelMethod$scriptInit 8			// (str)script - A script has been remoteloaded. Only needed by scripts in LevelConst$REMOTE_SCRIPTS
 	
 	#define LevelEvt$mainMenu 1				// Raised when the owner clicks the level controller
 	#define LevelEvt$custom 2				// (key)sender, (str)script, (int)evt, (var)data1, (var)data2... These events are defined in resources/LevelCustomEvents
+
+
+	#define LevelConst$REMOTE_SCRIPTS (list)\
+		"Rezzer" + \
+		"Spawner"
 
 	#define onLevelMainMenu() \
 		if( SENDER_SCRIPT IS "Level" AND EVENT_TYPE IS LevelEvt$mainMenu ){
@@ -27,9 +33,14 @@
 			list data = llDeleteSubList(METHOD_ARGS, 0, 2);
 			
 
+	#define Level$update() \
+		runOmniMethod("Level", LevelMethod$update, [])
+
 	#define Level$getPlayers( callbackMethod ) \
 		runOmniMethod("Level", LevelMethod$getPlayers, callbackMethod + llGetScriptName() )
 
+	#define Level$scriptInit() \
+		runMethod(LINK_THIS, "Level", LevelMethod$scriptInit, llGetScriptName())
 	#define Level$invite( player ) \
 		runMethod(LINK_THIS, "Level", LevelMethod$invite, player)
 	#define Level$inviteNearby() \
@@ -44,6 +55,9 @@
 		runMethod(target, "Level", LevelMethod$getHudAssets, [])
 	#define Level$updateAllHudAssets( target ) \
 		runMethod(target, "Level", LevelMethod$updateAllHudAssets, [])
+
+
+	
 
 
 #endif

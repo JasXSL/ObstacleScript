@@ -10,11 +10,10 @@ integer BFL;
 #define BFL_GAME_ACTIVE 0x1
 
 list INVITES;   // key player, int time
-
+list WAITING_SCRIPTS;
 
 updatePlayers(){
     
-    // Todo: update HUDs
     globalAction$setPlayers();  
     forPlayer( i, player )
         Com$players( player, PLAYERS );
@@ -46,16 +45,35 @@ invite( key player ){
     
 }
 
+updateCode(){
+
+	llOwnerSay("Updating level...");
+	WAITING_SCRIPTS = LevelConst$REMOTE_SCRIPTS;
+	integer pin = (int)llFrand(0xFFFFFFF);
+	llSetRemoteScriptAccessPin(pin);
+	Screpo$get( pin, 1, WAITING_SCRIPTS );
+	
+}
 
 
 #include "ObstacleScript/begin.lsl"
 
 onRez( start )
-	llResetScript();
+	
+	if( !start )
+		updateCode();
+
 end
 
 onStateEntry()
     
+	if( llGetStartParameter() == 1 ){
+		
+		llSetRemoteScriptAccessPin(0);
+		llOwnerSay("Level initialized.");
+		
+	}
+	
     _P = [(str)llGetOwner()];  
     updatePlayers();
     setupListenTunnel();
@@ -249,8 +267,26 @@ handleMethod( LevelMethod$getHudAssets )
 	
 	}
 	
+end
 
-	
+handleOwnerMethod( LevelMethod$update )
+	updateCode();
+end
+
+handleInternalMethod( LevelMethod$scriptInit )
+
+	integer pos = llListFindList(WAITING_SCRIPTS, (list)argStr(0));
+	if( pos == -1 )
+		return;
+		
+	WAITING_SCRIPTS = llDeleteSubList(WAITING_SCRIPTS, pos, pos);
+	if( WAITING_SCRIPTS == [] ){
+		
+		integer pin = (int)llFrand(0xFFFFFFF);
+		llSetRemoteScriptAccessPin(pin);
+		Screpo$get( pin, 1, llGetScriptName() );
+			
+	}
 
 end
 

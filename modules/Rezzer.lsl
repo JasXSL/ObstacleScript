@@ -74,7 +74,8 @@ rez(){
 #include "ObstacleScript/begin.lsl"
 
 onStateEntry()
-    
+    if( llGetStartParameter() == 1 )
+		Level$scriptInit();
 end
 
 handleOwnerMethod( RezzerMethod$rez )
