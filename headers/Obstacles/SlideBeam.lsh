@@ -3,7 +3,7 @@
 
 // Desc: [(str)label]
 
-#define SlideBeamConst$CHAN (OBSTACLE_CHAN+0x51)	// Listener
+#define SlideBeamConst$CHAN (OBSTACLE_CHAN+0x511)	// Listener
 
 #define SlideBeamTask$vibrate 1						// (bool)on
 

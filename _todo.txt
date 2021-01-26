@@ -1,10 +1,8 @@
 Next:
-	- Make new slower beam animations
-	- Add tentacles under the crusher walls
-		- Animate
-		- Upload
-		- Script
-		
+	- Level code updater
+	- Trap door
+	- Split the code in the main script
+	- All run at the same time mode
 
 System fixes:
 	- Make level code update on rez
@@ -14,9 +12,6 @@ System fixes:
 Multiplayer:
 	- All run at the same time mode
 	
-Obstacles (later):
-	- Hitting a button near the slide beam stuns for a while and increases arousal.
-
 
 Additional obstacles:
 	- Trap door
