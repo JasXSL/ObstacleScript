@@ -15,6 +15,7 @@
 #define SpawnerMethod$savePortals 15		// (str)batch - Adds all spawned portals to the DB
 #define SpawnerMethod$setSpawnValue 16		// (int)spawnIndex, (int)paramIndex, (var)value - Updates a spawn value
 #define SpawnerMethod$spawnByIndex 17		// (int)live, (int)index1, index2... - Spawns one or many items by index
+#define SpawnerMethod$fetchFromHud 18		// void - Fetches new assets from HUD
 
 
 #define SpawnerConst$CB_GAME_START "_G_"
@@ -33,6 +34,8 @@
 #define Spawner$spawnGame() \
 	Spawner$load( LINK_THIS, "", TRUE, SpawnerConst$CB_GAME_START )
 
+#define Spawner$fetchFromHud( targ ) \
+	runMethod(targ, "Spawner", SpawnerMethod$fetchFromHud, [])
 
 
 #define onSpawnerLoadStart( cb, live, groups ) \
@@ -41,6 +44,6 @@
 		bool live = argInt(1); \
 		list groups = llDeleteSubList(METHOD_ARGS, 0, 1);
 		
-		
+
 
 #endif

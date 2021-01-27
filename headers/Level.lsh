@@ -13,7 +13,7 @@
 	
 	#define LevelEvt$mainMenu 1				// Raised when the owner clicks the level controller
 	#define LevelEvt$custom 2				// (key)sender, (str)script, (int)evt, (var)data1, (var)data2... These events are defined in resources/LevelCustomEvents
-
+	#define LevelEvt$init 2					// Level initialized
 
 	#define LevelConst$REMOTE_SCRIPTS (list)\
 		"Rezzer" + \
@@ -21,6 +21,9 @@
 
 	#define onLevelMainMenu() \
 		if( SENDER_SCRIPT IS "Level" AND EVENT_TYPE IS LevelEvt$mainMenu ){
+		
+	#define onLevelInit() \
+		if( SENDER_SCRIPT IS "Level" AND EVENT_TYPE IS LevelEvt$init ){
 		
 	#define isEventLevelCustom() \
 		(SENDER_SCRIPT IS "Level" AND EVENT_TYPE IS LevelEvt$custom)
@@ -32,7 +35,8 @@
 			int evt = argInt(2); \
 			list data = llDeleteSubList(METHOD_ARGS, 0, 2);
 			
-
+	#define Level$updateThis() \
+		runMethod(LINK_THIS, "Level", LevelMethod$update, [])
 	#define Level$update() \
 		runOmniMethod("Level", LevelMethod$update, [])
 
@@ -55,7 +59,6 @@
 		runMethod(target, "Level", LevelMethod$getHudAssets, [])
 	#define Level$updateAllHudAssets( target ) \
 		runMethod(target, "Level", LevelMethod$updateAllHudAssets, [])
-
 
 	
 

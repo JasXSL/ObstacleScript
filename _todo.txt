@@ -1,18 +1,10 @@
 Next:
 	- Trap door
 	- All run at the same time mode in #Game
-	- Increase water balloon accuracy by 50%
-	- Make crusher walls random
 	- Add buttons for crusher walls
-
-System fixes:
-	- Make level code update on rez
-		- Add button to force an update
-	- 
-
-Multiplayer:
-	- All run at the same time mode
+	- Better E to use highlight
 	
+
 
 Additional obstacles:
 	- Trap door

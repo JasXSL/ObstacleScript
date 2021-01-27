@@ -3,7 +3,8 @@
 #define USE_TIMER
 #include "ObstacleScript/index.lsl"
 
-#define TABLE_SIZE 1016
+#define FACE_SIZE 1016
+#define TABLE_SIZE (FACE_SIZE*2-1)
 
 // DB tables are structured as [TABLE_NAME, data1, data2...]
 integer P_DB;   // Database prim
@@ -48,10 +49,20 @@ setTableData( integer table, list data ){
     llSetLinkMedia(P_DB, face, (list)
         PRIM_MEDIA_PERMS_INTERACT + PRIM_MEDIA_PERM_NONE +
         PRIM_MEDIA_PERMS_CONTROL + PRIM_MEDIA_PERM_NONE +
-        PRIM_MEDIA_HOME_URL + ("http://"+llGetSubString(output, 0, TABLE_SIZE-1)) +
-        PRIM_MEDIA_CURRENT_URL + ("http://"+llGetSubString(output, TABLE_SIZE, TABLE_SIZE*2-1))
+        PRIM_MEDIA_HOME_URL + ("http://"+llGetSubString(output, 0, FACE_SIZE-1)) +
+        PRIM_MEDIA_CURRENT_URL + ("http://"+llGetSubString(output, FACE_SIZE, FACE_SIZE*2-1))
     );
     
+}
+
+fetchAssets(){
+
+	list assets;
+	integer i;
+	for(; i < llGetInventoryNumber(INVENTORY_OBJECT); ++i )
+		assets += llGetInventoryName(INVENTORY_OBJECT, i);
+    Repo$enum( SpawnerMethod$callbackRepoEnum, assets );
+
 }
 
 
@@ -61,10 +72,8 @@ onStateEntry()
 
 	if( llGetStartParameter() == 1 )
 		Level$scriptInit();
-    
-    // Todo: 
-    //Repo$enum( SpawnerMethod$callbackRepoEnum, "TestPrim" + "Missing" );
-    integer i;
+    	
+	integer i;
     for( i = 1; i <= llGetNumberOfPrims(); ++i ){
         
         string name = llGetLinkName(i);
@@ -130,6 +139,16 @@ onStateEntry()
     }    
     
 end
+
+
+
+onLevelInit()
+	
+	fetchAssets();
+
+end
+
+
 
 
 handleOwnerMethod( SpawnerMethod$callbackRepoEnum )
@@ -292,6 +311,8 @@ handleOwnerMethod( SpawnerMethod$add )
         }
         
     }
+	
+	qd("Error: out of DB space");
 
 end
 
@@ -374,6 +395,10 @@ handleOwnerMethod( SpawnerMethod$spawnByIndex )
 
 end
 
+
+handleOwnerMethod( SpawnerMethod$fetchFromHud )
+	fetchAssets();
+end
 
 
 

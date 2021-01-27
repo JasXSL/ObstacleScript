@@ -67,18 +67,21 @@ end
 
 onStateEntry()
     
-	if( llGetStartParameter() == 1 ){
-		
-		llSetRemoteScriptAccessPin(0);
-		llOwnerSay("Level initialized.");
-		
-	}
 	
     _P = [(str)llGetOwner()];  
     updatePlayers();
     setupListenTunnel();
     setupDebug(0); 
 	Com$inviteSuccess(llGetOwner());
+	
+	if( llGetStartParameter() == 1 ){
+		
+		llSetRemoteScriptAccessPin(0);
+		raiseEvent(LevelEvt$init, []);
+		llOwnerSay("Level initialized.");
+		
+	}
+	
 	
 end
 
