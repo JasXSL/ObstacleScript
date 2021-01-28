@@ -67,7 +67,6 @@ end
 
 onStateEntry()
     
-	
     _P = [(str)llGetOwner()];  
     updatePlayers();
     setupListenTunnel();

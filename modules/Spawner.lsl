@@ -46,6 +46,7 @@ setTableData( integer table, list data ){
     
     integer face = l2i(DB_TABLES, table);
     string output = mkarr(l2s(DB_MAP, table) + data);
+	
     llSetLinkMedia(P_DB, face, (list)
         PRIM_MEDIA_PERMS_INTERACT + PRIM_MEDIA_PERM_NONE +
         PRIM_MEDIA_PERMS_CONTROL + PRIM_MEDIA_PERM_NONE +
@@ -163,8 +164,8 @@ handleOwnerMethod( SpawnerMethod$callbackRepoEnum )
         
     }
     
+	
     Repo$fetch(SpawnerMethod$callbackRepoFetch, METHOD_ARGS);
-        
     
 end
 
@@ -258,12 +259,14 @@ handleOwnerMethod( SpawnerMethod$delete )
         
         list data = getTableData(l2i(ASSET_TABLES, i));
         // The object is in this table
-        if( index+count(data) >= delIndex ){
+        if( index+count(data) > delIndex ){
             
             integer de = delIndex-index;
+			
+			llOwnerSay("Object deleted: "+l2s(data, de));
+            
             data = llDeleteSubList(data, de, de);
             setTableData(l2i(ASSET_TABLES, i), data);
-            llOwnerSay("Object deleted");
             return;
             
         }

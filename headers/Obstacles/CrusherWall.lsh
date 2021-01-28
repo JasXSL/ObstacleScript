@@ -5,13 +5,22 @@
 
 #define CrusherWallConst$CHAN (OBSTACLE_CHAN+1)	// Listener
 
+#define CrusherWallTask$move 1					// (int)dir, (array)ids_that_should_move
+#define CrusherWallTask$blink 2					// (int)id - Blinks the wall
+
+
 #define CrusherWallConst$DIR_FWD 0	// Go to extended
 #define CrusherWallConst$DIR_BACK 1		// Go to contracted
 #define CrusherWallConst$DIR_PING_PONG 2	// This makes it ping pong back and forwards endlessly until one of the above are sent. Note that this will go out of sync with other walls
 
 
 #define CrusherWall$trigger( dir, ids ) \
-	llRegionSay(CrusherWallConst$CHAN, mkarr(dir + ids))
+	llRegionSay(CrusherWallConst$CHAN, mkarr(CrusherWallTask$move + dir + ids))
+#define CrusherWall$blink( id ) \
+	llRegionSay(CrusherWallConst$CHAN, mkarr(CrusherWallTask$blink + id))
+#define CrusherWall$blinkTarg( targ, id ) \
+	llRegionSayTo(targ, CrusherWallConst$CHAN, mkarr(CrusherWallTask$blink + id))
+
 
 
 

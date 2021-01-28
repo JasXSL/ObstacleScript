@@ -13,7 +13,7 @@
 	
 	#define LevelEvt$mainMenu 1				// Raised when the owner clicks the level controller
 	#define LevelEvt$custom 2				// (key)sender, (str)script, (int)evt, (var)data1, (var)data2... These events are defined in resources/LevelCustomEvents
-	#define LevelEvt$init 2					// Level initialized
+	#define LevelEvt$init 3					// Level initialized
 
 	#define LevelConst$REMOTE_SCRIPTS (list)\
 		"Rezzer" + \

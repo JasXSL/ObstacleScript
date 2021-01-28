@@ -1,9 +1,16 @@
 Next:
 	- Trap door
-	- All run at the same time mode in #Game
-	- Add buttons for crusher walls
 	- Better E to use highlight
-	
+	- Prettier starting point
+	- Better looking walls and ceiling
+	- Mark QTE as HOLD
+	- Add instruction popups on the screen
+		- E to use
+		- double tap fwd to run
+	- Add tips on the walls:
+		- Crusher walls: Use third person and left click
+		- Shimmy wall: Use third person, mousewheel to zoom
+
 
 
 Additional obstacles:

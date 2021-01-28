@@ -1,5 +1,6 @@
 #define USE_STATE_ENTRY
 #define USE_LISTEN
+#define USE_TIMER
 #include "ObstacleScript/index.lsl"
 
 str ID = "0";
@@ -9,6 +10,8 @@ integer FWD = TRUE;			// Gone to the back position
 
 int BFL;
 #define BFL_LOADED 0x1
+
+integer blinks;
 
 vector startPos;
 
@@ -81,18 +84,43 @@ onListen( chan, msg )
 		return;
 		
 	list data = llJson2List(msg);
-	integer dir = l2i(data, 0);
+	integer task = l2i(data, 0);
 	data = llDeleteSubList(data, 0, 0);
+	
+	if( task == CrusherWallTask$move ){
+	
+		integer dir = l2i(data, 0);
+		data = llDeleteSubList(data, 0, 0);
 
-	if( llListFindList(data, (list)((str)ID)) == -1 )
-		return;
+		if( llListFindList(data, (list)((str)ID)) == -1 )
+			return;
+			
+		if( dir == CrusherWallConst$DIR_PING_PONG )
+			translate(!FWD, TRUE);
+		else if( dir == CrusherWallConst$DIR_FWD )
+			translate(TRUE, FALSE);
+		else if( dir == CrusherWallConst$DIR_BACK )
+			translate(FALSE, FALSE);
 		
-	if( dir == CrusherWallConst$DIR_PING_PONG )
-		translate(!FWD, TRUE);
-	else if( dir == CrusherWallConst$DIR_FWD )
-		translate(TRUE, FALSE);
-	else if( dir == CrusherWallConst$DIR_BACK )
-		translate(FALSE, FALSE);
+	}
+	
+	else if( task == CrusherWallTask$blink ){
+	
+		if( l2s(data, 0) != "*" && l2s(data, 0) != ID )
+			return;
+		
+		blinks = 0;
+		llSetLinkPrimitiveParamsFast(LINK_THIS, (list)PRIM_FULLBRIGHT + ALL_SIDES + TRUE);
+		setTimeout("blink", 0.25);
+	
+	}
+	
+end
+
+
+handleTimer( "blink" )
+	
+	llSetLinkPrimitiveParamsFast(LINK_THIS, (list)PRIM_FULLBRIGHT + ALL_SIDES + FALSE);
 	
 end
 
