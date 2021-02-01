@@ -2,8 +2,7 @@
 #define InteractCfg$SOUND_ON_FAIL "ea0ab603-63f5-6377-21bb-552aa4ba334f"
 #define InteractCfg$SOUND_ON_SUCCESS "31086022-7f9a-65d1-d1a7-05571b8ea0f2"
 
-
-
+#ifndef customDesc
 handleDesc( key id, string desc ){
     
     if( desc )
@@ -12,6 +11,7 @@ handleDesc( key id, string desc ){
     llSetText(desc, <1,1,1>, 1);
     
 }
+#endif
 
 #define USE_STATE_ENTRY
 #define USE_TIMER
@@ -246,6 +246,10 @@ onStateEntry()
     #ifdef InteractCfg$ALLOW_WHEN_SITTING
         BFL = BFL | BFL_ALLOW_SITTING;
     #endif
+
+	#ifdef customStateEntry
+		customStateEntry();
+	#endif
 
     llSetMemoryLimit(llGetUsedMemory()*2);
     if( llGetAttached() )

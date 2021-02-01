@@ -1,3 +1,5 @@
+#ifndef __macros
+#define __macros
 // Implements parts of libJasPre
 
 // GENERAL PSEUDONYMS //
@@ -128,4 +130,6 @@
 	#define links_each(linknum, linkname, fnAction)  {integer linknum; for(linknum=llGetNumberOfPrims()>1; linknum<=llGetNumberOfPrims(); linknum++){ string linkname=llGetLinkName(linknum); fnAction}}
 	// Ex: links_each(num, name, {llSay(0, "Link #"+(string)num+" is called: "+name);});
 	
-	
+
+
+#endif	

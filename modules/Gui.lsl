@@ -9,6 +9,7 @@ list BAR_SETTINGS = [0,0,0];
 #define BAR_HAS_ICON 0x1
 
 list BUTTONS = ["","","","","","","",""];  // (str)label
+list INSTRUCTIONS = [];		// Instruction prims
 
 integer CTDN;
 
@@ -254,6 +255,16 @@ onStateEntry()
             ;
             
         }
+		
+		else if( name == "INST" ){
+			
+			
+			set += (list)PRIM_LINK_TARGET + nr +
+				PRIM_POSITION + (<0,1.5,.75-.1*count(INSTRUCTIONS)>)
+			;
+			INSTRUCTIONS += nr;
+			
+		}
         
         if( name == "CTDN" )
             CTDN = nr;
@@ -261,7 +272,7 @@ onStateEntry()
     )
     
     llSetLinkPrimitiveParamsFast(0, set);
-        
+	        
 end
 
 
@@ -551,6 +562,52 @@ handleMethod( GuiMethod$setButtonCooldown )
     
 end
 
+
+handleMethod( GuiMethod$instruction )
+
+	int frame = argInt(0);
+	int index = argInt(1);
+	int prim = l2i(INSTRUCTIONS, index);
+	
+	if( frame == -1 ){
+
+		llSetLinkPrimitiveParamsFast(prim, (list)
+			PRIM_POS_LOCAL + <0,1.5,0.75-.1*index>
+		);
+
+		return;
+	}
+	
+	key texture = Gui$TEXTURE_INSTRUCTIONS;
+	int xSize = argInt(3);
+	int ySize = argInt(4);
+	
+	if( argKey(2) )
+		texture = argKey(2);
+	
+	if( !xSize )
+		xSize = 4;
+	if( !ySize )
+		ySize = 16;
+		
+	integer y = frame/xSize;
+	integer x = frame-y*xSize;
+		
+	llSetLinkPrimitiveParamsFast(prim, (list)
+		PRIM_TEXTURE + 0 + texture + 
+		<1.0/xSize, 1.0/ySize, 0> + 
+		<
+			-1.0/xSize/2 - 1.0/xSize*(xSize/2-1) + 1.0/xSize*x,
+			1.0/ySize/2 + 1.0/ySize*(ySize/2-1) - 1.0/ySize*y,
+			0
+		> +
+		0 +
+		
+		PRIM_POS_LOCAL + <0,.5,.75-.1*index>
+	);
+	
+	
+end
 
 
 

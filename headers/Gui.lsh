@@ -23,6 +23,13 @@
 #define Gui$ICON_BG_FWD 4
 #define Gui$ICON_ICON_BACK 5
 
+#define Gui$TEXTURE_INSTRUCTIONS "1b3b1eb3-f743-692e-78c6-5708f7ba3467"
+	#define Gui$INSTRUCTION_SPRINT 0
+	#define Gui$INSTRUCTION_LCLICK_SHOOT 1
+	#define Gui$INSTRUCTION_LCLICK_ATTACK 2
+	#define Gui$INSTRUCTION_LCLICK_THROW 3
+	
+
 
 
 #define GuiMethod$createBar 1 			// (str)label, (vec)color, (vec)border - Creates a new default bar
@@ -38,6 +45,7 @@
 
 #define GuiMethod$tweenBar 9			// (str)label, (float)start, (float)end, (float)time - Tweens the bar to a percentage
 
+#define GuiMethod$instruction 10		// (int)frame, (int)index=0, (key)texture=default, (int)xSize=4, (int)ySize=16 - Adds an instruction button. Send -1 frame to hide
 
 
 
@@ -66,6 +74,11 @@
 
 #define Gui$tweenBar( target, label, start, end, time ) \
 	runMethod( target, "Gui", GuiMethod$tweenBar, label + start + end +time )
+
+#define Gui$setDefaultInstruction( target, instruction, index ) \
+	runMethod( target, "Gui", GuiMethod$instruction, instruction + index )
+#define Gui$clearInstruction( target, index ) \
+	runMethod( target, "Gui", GuiMethod$instruction, -1 + index )
 
 
 
