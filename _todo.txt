@@ -1,20 +1,13 @@
 Next:
 	- Some catch up for players behind on everyone runs mode
-	- Trap door
+	- Make arena not have to load level if it's already spawned
 	- Prettier starting point
-	- Better looking walls and ceiling
+	- Better looking arena
 	- Add tips on the walls:
 		- Crusher walls: Use third person and left click
-		- Shimmy wall: Use third person, mousewheel to zoom
 
 
-Additional obstacles:
-	- Trap door
-		- Proximity mode
-		- Collission mode
-		- Predelay
-		- Orientation
-
+- Stripping
 - Gender integration
 - Level manager
 

@@ -371,6 +371,15 @@ handleMethod( RlvMethod$cubeTask )
     
 end
 
+handleMethod( RlvMethod$exitMouselook )
+    
+	
+	llOwnerSay("@camdistmin:0.1=n");
+	llSleep(.1);
+	llOwnerSay("@camdistmin:0.1=y");
+    
+end
+
 handleOwnerMethod( RlvMethod$cubeFlush )
     
     cubeTask([]);

@@ -1,0 +1,33 @@
+#ifndef __Trapdoor
+#define __Trapdoor
+
+// Desc is an array
+#define TrapdoorDesc$id 0
+#define TrapdoorDesc$kfm 1			// Array of KFM frames when triggered. Empty = pivot forward.
+#define TrapdoorDesc$flags 2		// 
+	#define TrapdoorConst$FLAG_BLINK 0x1		// Blink when triggering
+	#define TrapdoorConst$FLAG_ROT 0x2			// Use rotation in KFM
+	#define TrapdoorConst$FLAG_POS 0x4			// Use position in KFM. If none of these 2 are set, both are assumed.
+	
+#define TrapdoorDesc$predelay 3		// Time in sec before triggering after walking over it
+#define TrapdoorDesc$holdtime 4		// Time to hold before resetting. The KFM times are automatically calculated, and this is added to it
+#define TrapdoorDesc$cooldown 5		// Time to wait after resetting before letting it trigger again.
+
+
+
+
+
+#define TrapdoorConst$CHAN (OBSTACLE_CHAN+0x74D)	// Listener
+
+#define TrapdoorTask$trigger 1						// 
+
+#define Trapdoor$trigger( label ) \
+	llRegionSay(TrapdoorConst$CHAN, mkarr(label + TrapdoorTask$trigger))
+
+
+
+
+
+
+
+#endif

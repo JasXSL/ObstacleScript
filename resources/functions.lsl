@@ -51,6 +51,31 @@ string _allRound( list input, integer places ){
 }
 
 
+// Tries to generate a KFM from JSON
+list _kfmConv( list input ){
+
+	integer i;
+	for(; i < count(input); ++i ){
+		
+		if( llGetSubString(l2s(input, i), 0, 0) == "<" ){
+			
+			list spl = split(l2s(input, i), ",");
+			if( count(spl) == 4 )
+				input = llListReplaceList(input, (list)[(rotation)l2s(input, i)], i, i);
+			else
+				input = llListReplaceList(input, (list)[(vector)l2s(input, i)], i, i);
+			
+		}
+		else
+			input = llListReplaceList(input, (list)l2f(input, i), i, i);
+		
+	}
+	
+	return input;
+	
+}
+
+
 // Telports player to a position. A ray is cast from position to the ground and tries to place the player there
 _w2s( key player, vector checkpoint, rotation r, integer unsit ){
     

@@ -19,7 +19,7 @@
 
 	// Sets a timer to run once
 	#define setTimer(id, timeout) \
-		_mt((list)((str)(id)) + timeout + 0)
+		_mt((list)((str)(id)) + (timeout) + 0)
 	// Pseudonym of above
 	#define setTimeout(id, timeout) \
 		setTimer(id, timeout)

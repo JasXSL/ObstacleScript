@@ -5,7 +5,8 @@
 #define PortalConst$TRACKED_SCRIPTS (list) \
 	"Trigger" + \
 	"CrusherWall" + \
-	"Attachment"
+	"Attachment" + \
+	"Trapdoor"
 
 // prim text contains some information about the portal
 #define PortalConst$CF_REZ_PARAM 0					// (int)on_rez_param - Contains the supplied int from on_rez

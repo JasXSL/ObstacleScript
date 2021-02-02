@@ -59,6 +59,7 @@
 
 #define RlvMethod$target 11				// (vec)pos=targetPos, (float)speed, (float)duration - Uses llMoveToTarget on a player. Pos is the position of the target. Speed is the llMoveToTarget speed, and duration is how long to keep it.
 
+#define RlvMethod$exitMouselook 12		// void, kicks the player out of mouselook
 
 #define RlvEvt$supportCubeSpawn 1		// (key)cube_id
 #define RlvEvt$flags 2					// (int)flags
@@ -111,6 +112,8 @@
 #define Rlv$target( target, pos, speed, duration ) \
 	runMethod( target, "Rlv", RlvMethod$target, (pos) + (speed) + (duration) )
 
+#define Rlv$exitMouselook( target ) \
+	runMethod( target, "Rlv", RlvMethod$exitMouselook, [] )
 
 
 
