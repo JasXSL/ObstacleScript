@@ -27,7 +27,10 @@
 	#define LevelCustomEvt$TRAP$seated 2				// (key)player1, (key)player2... - Trap has been sat on by one or more players
 	#define LevelCustomEvt$TRAP$unseated 3				// (key)player1, (key)player2... - Trap has been unsat by one or more players
 
-
+#define LevelCustomType$TRAPDOOR "oTrapdoor"
+	#define LevelCustomEvt$TRAPDOOR$trigger 1		// (str)trapdoor_label, (key)player - Trapdoor has opened
+	#define LevelCustomEvt$TRAPDOOR$reset 2			// (str)trapdoor_label - Trapdoor has closed
+	
 
 #define LevelCustomType$PROJECTILE "avProj"
 	#define LevelCustomEvt$PROJECTILE$hit 1			// (key)player/target
@@ -56,6 +59,20 @@
 		key object = argKey(0); \
 		int start = argInt(2) == LevelCustomEvt$SHIMMY_WALL$hitStart; \
 		list players = llDeleteSubList(METHOD_ARGS, 0, 2);
+		
+		
+		
+		
+#define onTrapdoorTrigger( trap, label, player ) \
+	if( isEventLevelCustom() AND argStr(1) == LevelCustomType$TRAPDOOR AND argInt(2) == LevelCustomEvt$TRAPDOOR$trigger ){ \
+		key trap = argKey(0); \
+		string label = argStr(3); \
+		key player = argKey(4); \
+		
+#define onTrapdoorReset( trap, label ) \
+	if( isEventLevelCustom() AND argStr(1) == LevelCustomType$TRAPDOOR AND argInt(2) == LevelCustomEvt$TRAPDOOR$reset ){ \
+		key trap = argKey(0); \
+		string label = argStr(3);
 		
 		
 #define onTrapHit( trap, players ) \

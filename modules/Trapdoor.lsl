@@ -2,6 +2,7 @@
 #define USE_TIMER
 #define USE_PLAYERS
 #define USE_COLLISION_START
+#define USE_COLLISION_END 
 #define USE_LISTEN
 #include "ObstacleScript/index.lsl"
 
@@ -19,10 +20,20 @@ integer BFL;
 rotation startRot;
 vector startPos;
 
+list COLLIDERS;
 
 
+trigger( bool evt ){
 
-trigger(){
+	if( evt ){
+	
+		Level$raiseEvent( 
+			LevelCustomType$TRAPDOOR, 
+			LevelCustomEvt$TRAPDOOR$trigger,
+			ID + llDetectedKey(0)
+		);
+	
+	}
 
 	BFL = BFL|BFL_TRIG;
     if( FLAGS&TrapdoorConst$FLAG_BLINK )
@@ -96,17 +107,38 @@ end
 
 
 onCollisionStart( total )
-
-    if( llListFindList(PLAYERS, [(str)llDetectedKey(0)]) == -1 )
-        return;
-        
-    if( BFL&BFL_TRIG )
-        return;
-        
-    trigger();
+	
+	integer i;
+	for(; i < total; ++i ){
+	
+		string k = llDetectedKey(i);
+	
+		if( ~llListFindList(PLAYERS, (list)k) && llListFindList(COLLIDERS, (list)k) == -1 )
+			COLLIDERS += k;
+			
+	}
+	
+	if( COLLIDERS == [] || BFL&BFL_TRIG )
+		return;
+		
+	
+    trigger( true );
 
 end
 
+onCollisionEnd( total )
+
+	integer i;
+	for(; i < total; ++i ){
+	
+		string k = llDetectedKey(i);
+		integer pos = llListFindList(COLLIDERS, (list)k);
+		if( ~pos )
+			COLLIDERS = llDeleteSubList(COLLIDERS, pos, pos);
+			
+	}
+
+end
 
 
 
@@ -128,7 +160,7 @@ onListen( chan, msg )
 		if( BFL&BFL_TRIG )
 			return;
 			
-		trigger();
+		trigger( FALSE );
 		
 	}
 
@@ -172,7 +204,6 @@ handleTimer( "A" )
 			data += KFM_TRANSLATION;
 		
 	}
-	 
     llSetKeyframedMotion(KFM, data);
     
 end
@@ -192,6 +223,15 @@ end
 handleTimer( "C" )
 	
 	BFL = BFL&~BFL_TRIG;
+	
+	Level$raiseEvent( 
+		LevelCustomType$TRAPDOOR, 
+		LevelCustomEvt$TRAPDOOR$reset,
+		ID
+	);
+	
+	if( FLAGS & TrapdoorConst$FLAG_RETRIGGER && count(COLLIDERS) )
+		trigger( TRUE );
 
 end
 

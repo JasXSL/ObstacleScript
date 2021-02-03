@@ -60,8 +60,13 @@ list _kfmConv( list input ){
 		if( llGetSubString(l2s(input, i), 0, 0) == "<" ){
 			
 			list spl = split(l2s(input, i), ",");
-			if( count(spl) == 4 )
-				input = llListReplaceList(input, (list)[(rotation)l2s(input, i)], i, i);
+			if( count(spl) == 4 ){
+			
+				rotation Q = (rotation)l2s(input, i);
+				float MagQ = llSqrt(Q.x*Q.x + Q.y*Q.y +Q.z*Q.z + Q.s*Q.s);
+				input = llListReplaceList(input, (list)<Q.x/MagQ, Q.y/MagQ, Q.z/MagQ, Q.s/MagQ>, i, i);
+				
+			}
 			else
 				input = llListReplaceList(input, (list)[(vector)l2s(input, i)], i, i);
 			

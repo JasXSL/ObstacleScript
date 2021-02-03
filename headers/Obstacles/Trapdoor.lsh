@@ -8,6 +8,7 @@
 	#define TrapdoorConst$FLAG_BLINK 0x1		// Blink when triggering
 	#define TrapdoorConst$FLAG_ROT 0x2			// Use rotation in KFM
 	#define TrapdoorConst$FLAG_POS 0x4			// Use position in KFM. If none of these 2 are set, both are assumed.
+	#define TrapdoorConst$FLAG_RETRIGGER 0x8	// Retrigger if a player is still colliding with it after resetting
 	
 #define TrapdoorDesc$predelay 3		// Time in sec before triggering after walking over it
 #define TrapdoorDesc$holdtime 4		// Time to hold before resetting. The KFM times are automatically calculated, and this is added to it
