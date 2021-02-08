@@ -1,15 +1,5 @@
 Next:
 	- Some catch up for players behind on everyone runs mode
-	- Make arena not have to load level if it's already spawned
-	- Add tips on the walls:
-		- Crusher walls: Use third person and left click
-
-Meshes needed:
-	- Arch tumbler for the trapdoor center
-	- Game start texture for big platform
-	- Arch for the game start block
-	- Wall tip board
-	- 
 
 
 - Stripping
