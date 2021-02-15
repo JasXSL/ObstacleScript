@@ -92,10 +92,13 @@ onListen( ch, msg )
     if( ch == PUB_CHAN ){
         
         list parse = llJson2List(msg);
-        if( 
-            l2s(parse, 0) == llGetScriptName() && 
-            (l2i(parse, 1)&0xFF) == LevelMethod$acceptInvite 
-        ){
+		if( l2s(parse, 0) != llGetScriptName() )
+			return;
+			
+			
+		int method = (l2i(parse, 1)&0xFF);
+				
+        if( method == LevelMethod$acceptInvite ){
             
             
             integer pos = llListFindList(INVITES, (list)llGetOwnerKey(SENDER_KEY));
@@ -105,8 +108,10 @@ onListen( ch, msg )
                 if( time+60 < llGetTime() )
                     llRegionSayTo(llGetOwnerKey(SENDER_KEY), 0, "Invite timed out, ask for a new one!");
                 else{
-                    
-                    PLAYERS += (str)llGetOwnerKey(SENDER_KEY);
+				
+					key owner = llGetOwnerKey(SENDER_KEY);
+					if( llListFindList(PLAYERS, [(str)owner]) == -1 )
+						PLAYERS += (str)owner;
                     Com$inviteSuccess(SENDER_KEY);
                     updatePlayers();
                     
@@ -116,6 +121,13 @@ onListen( ch, msg )
                 llRegionSayTo(llGetOwnerKey(SENDER_KEY), 0, "Invite missing");
             
         }
+		else if( method == LevelMethod$autoJoin ){
+		
+			key owner = llGetOwnerKey(SENDER_KEY);
+			if( ~llListFindList(PLAYERS, [(str)owner]) )
+				invite(owner);				
+		
+		}
         
     }
 end
@@ -152,8 +164,6 @@ onTouchStart( total )
     
 
 end
-
-
 
 
 

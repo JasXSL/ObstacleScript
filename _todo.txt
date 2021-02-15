@@ -1,8 +1,7 @@
 Next:
-	- Some catch up for players behind on everyone runs mode
-
+	- Build a level and document the process
+		- Todo: Write down the different parts of level making here
 
 - Stripping
-- Gender integration
 - Level manager
 

@@ -10,10 +10,12 @@
 	#define LevelMethod$getHudAssets 6			// void - After setting inventory drop, the HUD prim sends this to Level to get all HUD assets. HUD assets names should start with "HUD:"
 	#define LevelMethod$updateAllHudAssets 7	// void - Sends a request to all active players to request new HUD assets
 	#define LevelMethod$scriptInit 8			// (str)script - A script has been remoteloaded. Only needed by scripts in LevelConst$REMOTE_SCRIPTS
+	#define LevelMethod$autoJoin 9			// Sent by the HUD to try to auto reconnect to a level
 	
 	#define LevelEvt$mainMenu 1				// Raised when the owner clicks the level controller
 	#define LevelEvt$custom 2				// (key)sender, (str)script, (int)evt, (var)data1, (var)data2... These events are defined in resources/LevelCustomEvents
 	#define LevelEvt$init 3					// Level initialized
+	
 
 	#define LevelConst$REMOTE_SCRIPTS (list)\
 		"Rezzer" + \
@@ -59,7 +61,9 @@
 		runMethod(target, "Level", LevelMethod$getHudAssets, [])
 	#define Level$updateAllHudAssets( target ) \
 		runMethod(target, "Level", LevelMethod$updateAllHudAssets, [])
-
+	#define Level$autoJoin() \
+		runOmniMethod("Level", LevelMethod$autoJoin, [])
+	
 	
 
 
