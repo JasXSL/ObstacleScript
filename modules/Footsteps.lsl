@@ -157,7 +157,7 @@ handleTimer( TIMER_RECHECK)
         
         string desc = prDesc(llList2Key(ray,0));
         list data = getDescTaskData( desc, Desc$TASK_FOOTSTEPS  );
-        
+		
         if( count(data) ){
             setWalkable(llList2String(data,0));
             if( llGetListLength(data) >= 2 )

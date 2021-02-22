@@ -44,6 +44,8 @@
 		bool live = argInt(1); \
 		list groups = llDeleteSubList(METHOD_ARGS, 0, 1);
 		
+#define onSpawnerGameLoad() \
+	if( SENDER_SCRIPT IS "Spawner" AND EVENT_TYPE IS SpawnerEvt$loadStart AND ~llListFindList(llDeleteSubList(METHOD_ARGS, 0, 1), (list)"") ){
 
 
 #endif

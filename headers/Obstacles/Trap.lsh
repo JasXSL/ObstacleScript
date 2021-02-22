@@ -17,7 +17,36 @@
 #define Trap$attack( targ, label, args ) \
 	llRegionSayTo(targ, TrapConst$CHAN, mkarr(label + TrapTask$attack + args))
 
+#define Trap$attackAll( label, args ) \
+	llRegionSay(TrapConst$CHAN, mkarr(label + TrapTask$attack + args))
 
+
+
+
+// Useful templates
+
+// Put this into onTrapHit to auto seat a viable player when a trap is triggered
+// Auto seats with a filter function, the filter function is passed the arguments key trap, key player
+#define _TRAPS_autoSeat(filterFunction){ \
+	\
+	players = llListRandomize(players, 1); \
+	integer i; \
+	for(; i < count(players); ++i ){ \
+		 \
+		key p = l2k(players, i); \
+		if( ~llListFindList(PLAYERS, [(str)p])  ){ \
+			 \
+			if( filterFunction(trap, p) ){ \
+			 \
+				Trap$seat(trap, "*", p); \
+				i = count(players); \
+				 \
+			}	\
+			\
+		} \
+	 \
+	} \
+}
 
 
 #endif

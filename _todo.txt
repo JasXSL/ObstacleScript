@@ -1,6 +1,10 @@
 Next:
+	- Fix up updateText() in #Dialog
 	- Build a level and document the process
 		- Todo: Write down the different parts of level making here
+	
+Meshes:
+	- Catwalks
 
 - Stripping
 - Level manager

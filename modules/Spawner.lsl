@@ -207,9 +207,11 @@ handleOwnerMethod( SpawnerMethod$setSpawnValue )
         
         list data = getTableData(l2i(ASSET_TABLES, i));
         // The object is in this table
-        if( index+count(data) >= targ ){
+        if( index+count(data) > targ ){
             
             integer de = targ-index;
+			
+			llOwnerSay("Updating ("+(str)(index+i)+") "+l2s(data, de)+" field "+(str)param+" with '"+desc+"'");
 			
 			// Get object settings
 			list settings = llJson2List(l2s(data, de));
@@ -218,7 +220,7 @@ handleOwnerMethod( SpawnerMethod$setSpawnValue )
 			
 			data = llListReplaceList(data, (list)mkarr(settings), de, de);
             setTableData(l2i(ASSET_TABLES, i), data);
-            llOwnerSay("Object updated");
+            
             return;
             
         }

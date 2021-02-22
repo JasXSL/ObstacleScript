@@ -12,7 +12,7 @@
 
 	Naming:
 	- USE : Enables new functionality in the code. Syntax: USE_<SCRIPTNAME>
-	- event & method handlers : on/handle<scriptName><evtName> - Ex: onInteractiveInteract. local evts don't have a scriptname so they use onStateEntry or onTimer etc
+	- event & method handlers : on/handle<scriptName><evtName> - Ex: onInteractiveInteract. local evts don't have a scriptname so they use onStateEntry or onTimer etc. Custom local events should consider using "$NAME" as the sender script
 		- on is used when defining the argument as a variable. Such as onTimer(id) - Creates str id with the ID of the timer that was triggered
 		- handle is used when the argument is used as a filter. Such as handleTimer(id) - Only triggers when the id of the timer is the same as the argument
 	

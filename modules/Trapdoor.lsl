@@ -22,6 +22,77 @@ vector startPos;
 
 list COLLIDERS;
 
+// After predelay
+stageA(){
+	
+	 if( FLAGS & TrapdoorConst$FLAG_BLINK )
+        llSetLinkPrimitiveParamsFast(LINK_ALL_OTHERS, (list)
+            PRIM_FULLBRIGHT + ALL_SIDES + FALSE
+        );
+    
+	integer both = TrapdoorConst$FLAG_ROT|TrapdoorConst$FLAG_POS;
+	integer stride = 2+((FLAGS & both) == both);
+	
+    float timeout;
+    integer i;
+    for(; i < count(KFM); i += stride )
+        timeout += l2f(KFM, i+stride-1);
+        
+	
+     
+	list data;
+	
+	 
+	if( (FLAGS & both) != both ){
+	
+		data += KFM_DATA;
+		if( FLAGS& TrapdoorConst$FLAG_ROT )
+			data += KFM_ROTATION;
+		else
+			data += KFM_TRANSLATION;
+		
+	}
+    llSetKeyframedMotion(KFM, data);
+	
+	float b = timeout+HOLDTIME;
+	if( b > 0 )
+		setTimeout("B", b);
+	else
+		stageB();
+
+}
+
+// Reset
+stageB(){
+	
+	// Reset
+    llSetKeyframedMotion([], [KFM_COMMAND, KFM_CMD_STOP]);
+    llSleep(.2);
+    llSetRegionPos(startPos);
+    llSetRot(startRot);
+    
+	if( CD > 0 )
+		setTimeout("C", CD);
+	else
+		stageC();
+
+}
+
+stageC(){
+	
+	BFL = BFL&~BFL_TRIG;
+	
+	Level$raiseEvent( 
+		LevelCustomType$TRAPDOOR, 
+		LevelCustomEvt$TRAPDOOR$reset,
+		ID
+	);
+	
+	if( FLAGS & TrapdoorConst$FLAG_RETRIGGER && count(COLLIDERS) )
+		trigger( TRUE );
+
+}
+
 
 trigger( bool evt ){
 
@@ -43,9 +114,9 @@ trigger( bool evt ){
     
     float pre = PREDELAY;
     if( pre < 0.1 )
-        pre = .1;
-        
-    setTimeout("A", pre);
+		stageA();
+    else 
+		setTimeout("A", pre);
 	
 }
 
@@ -73,14 +144,15 @@ onPortalLoadComplete( desc )
     float hold = l2f(data, TrapdoorDesc$holdtime);
 	float cd = l2f(data, TrapdoorDesc$cooldown);
 	
-    if( flags != -1 && count(data) > 1 )
+    if( flags != -1 )
 		FLAGS = flags;
-    if( pre > 0 )
-        PREDELAY = pre;
-    if( hold > 0 )
-        HOLDTIME = hold;
-	if( cd > 0 )
-        CD = cd;
+		
+	if( (int)pre != -1 )
+		PREDELAY = pre;
+	if( (int)hold != -1 )
+		HOLDTIME = hold;
+	if( (int)CD != -1 )
+		CD = cd;
 
 	integer both = TrapdoorConst$FLAG_ROT|TrapdoorConst$FLAG_POS;
 	if( !(FLAGS&both) )
@@ -177,61 +249,19 @@ end
 // Trigger
 handleTimer( "A" )
 
-    if( FLAGS & TrapdoorConst$FLAG_BLINK )
-        llSetLinkPrimitiveParamsFast(LINK_ALL_OTHERS, (list)
-            PRIM_FULLBRIGHT + ALL_SIDES + FALSE
-        );
-    
-	integer both = TrapdoorConst$FLAG_ROT|TrapdoorConst$FLAG_POS;
-	integer stride = 2+((FLAGS & both) == both);
-	
-    float timeout;
-    integer i;
-    for(; i < count(KFM); i += stride )
-        timeout += l2f(KFM, i+stride-1);
-        
-	setTimeout("B", timeout+HOLDTIME);
-     
-	list data;
-	
-	 
-	if( (FLAGS & both) != both ){
-	
-		data += KFM_DATA;
-		if( FLAGS& TrapdoorConst$FLAG_ROT )
-			data += KFM_ROTATION;
-		else
-			data += KFM_TRANSLATION;
-		
-	}
-    llSetKeyframedMotion(KFM, data);
+   stageA();
     
 end
 
 handleTimer( "B" )
 
-    // Reset
-    llSetKeyframedMotion([], [KFM_COMMAND, KFM_CMD_STOP]);
-    llSleep(.2);
-    llSetRegionPos(startPos);
-    llSetRot(startRot);
-    
-    setTimeout("C", CD);
+    stageB();
 
 end
 
 handleTimer( "C" )
 	
-	BFL = BFL&~BFL_TRIG;
-	
-	Level$raiseEvent( 
-		LevelCustomType$TRAPDOOR, 
-		LevelCustomEvt$TRAPDOOR$reset,
-		ID
-	);
-	
-	if( FLAGS & TrapdoorConst$FLAG_RETRIGGER && count(COLLIDERS) )
-		trigger( TRUE );
+	stageC();
 
 end
 
