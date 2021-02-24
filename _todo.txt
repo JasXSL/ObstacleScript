@@ -3,6 +3,15 @@ Next:
 	- Build a level and document the process
 		- Todo: Write down the different parts of level making here
 	
+
+Needed stuff in #Game
+	- Handle checkpoints
+	- Handle teams
+	- Handle game finished
+
+
+	
+	
 Meshes:
 	- Catwalks
 

@@ -5,8 +5,9 @@
 	// call dialogHelperSetup() in onStateEntry
 	// call dialogHelperHandler() anywhere in the event handler
 	// Then create the following functions:
-	// list onDialogOpen( menu ) - Should return a list where the first entry is the text, and any additional entries are the buttons
-	// onDialogButton( menu, button )
+	// list onDialogOpen( int menu ) - Should return a list where the first entry is the text, and any additional entries are the buttons
+	// onDialogButton( int menu, string button )
+	// string onTextUpdate() - Lets you override the hover text over the game starter. Just return "" if you want to automate it
 	// To open a new dialog, use openDialog( menu )
 	// Custom menus need to use a positive integer
 	
@@ -15,6 +16,9 @@
 	#define GS_GAME_STARTED 0x1
 	#define GS_RECENT_GAME_END 0x2
 	#define GS_GAME_LOADED 0x4
+	
+	list GSCORE;
+	list GCONF;		// Sent alongside the game start command. Store your game mode etc here
 
 	int _dMENU;		// Tracks the menu
 	
@@ -50,7 +54,6 @@
 					"INV. ALL" + 
 					"INV. Player" + 
 					"Rem Players" +
-					"Mode" +
 					"Maintenance" +
 					"Clean Up" +
 					"START GAME"
@@ -73,9 +76,9 @@
 			if( text == "" ){
 				
 				text = "Maintenance:\n";
-				text = "  Assets: Re-fetches built-in assets from your HUD.\n";
-				text = "  Scripts: Re-fetches scripts AND asssets from your HUD. (This will remove all players)\n";
-				text = "  Players: Updates custom assets in your players huds.";
+				text += "  Assets: Re-fetches built-in assets from your HUD.\n";
+				text += "  Scripts: Re-fetches scripts AND asssets from your HUD. (This will remove all players)\n";
+				text += "  Players: Updates custom assets in your players huds.";
 			
 			}
 			
@@ -121,7 +124,7 @@
 			else if( msg == "START GAME" ){
 			 
 				GSETTINGS = GSETTINGS|GS_GAME_STARTED;
-				raiseEvent(0, "START_GAME" ); // Todo: Might wanna send along some ruleset flags when starting the game
+				raiseEvent(0, "START_GAME" + GCONF );
 				
 				if( ~GSETTINGS & GS_GAME_LOADED )
 					Spawner$spawnGame();
@@ -154,7 +157,43 @@
 		onDialogButton(_dMENU, msg);
 	}
 
+	_dtxt(){
+		
+		integer i;
+		string txt = onTextUpdate();
+		
+		if( txt == "" ){
+		
+			// You probably want to override this
+			if( GSETTINGS & GS_RECENT_GAME_END )
+				txt = "Winner: "+llGetDisplayName(l2s(GSCORE, 0));
+				
+			else if( GSETTINGS & GS_GAME_STARTED ){
+
+				if( ~GSETTINGS & GS_GAME_LOADED )
+					txt += "Loading level...";
+				else{
+					// You probably want to override this too
+					txt += "First to the finish line wins!";
+				}
+			}
+			else{
+				
+				txt = "-- PLAYERS --\n";
+				if( count(PLAYERS) > 4 )
+					txt += (str)count(PLAYERS)+" Joined\n";
+				else{
+					forPlayer( index, player )
+						txt += llGetDisplayName(player)+"\n";
+					end
+				}
+				
+			}
+			
+		}
+		llSetText(txt, <1,1,1>, 1);
 	
+	}
 	
 	#define dialogHelperHandler() \
 		onLevelMainMenu() \
@@ -165,11 +204,50 @@
 				_dmsg(ch, msg); \
 			} \
 		end \
+		onPlayersUpdated() \
+			_dtxt(); \
+		end \
+		handleEvent( "#Game", 0 ) \
+			string type = argStr(0); \
+			if( type == "END_GAME" ){ \
+				 \
+				GSCORE = llDeleteSubList(METHOD_ARGS, 0, 0); \
+				GSETTINGS = GSETTINGS&~GS_GAME_STARTED; \
+				GSETTINGS = GSETTINGS|GS_RECENT_GAME_END; \
+				setTimeout("RECENT", 30); \
+				 \
+			} \
+			else if( type == "START_GAME" ){ \
+				 \
+				unsetTimer("RECENT"); \
+				GSETTINGS = GSETTINGS|GS_GAME_STARTED; \
+				 \
+				GSETTINGS = GSETTINGS&~GS_RECENT_GAME_END; \
+				 \
+			} \
+			_dtxt(); \
+			\
+		end \
+		onRezzerGameLoaded() \
+			 \
+			GSETTINGS = GSETTINGS|GS_GAME_LOADED; \
+			_dtxt(); \
+			raiseEvent(0, "START_ROUND"); \
+			 \
+		end \
+		handleTimer( "RECENT" ) \
+		 \
+			GSETTINGS = GSETTINGS & ~GS_RECENT_GAME_END; \
+			_dtxt(); \
+			 \
+		end \
+
 		
 	
 	#define dialogHelperSetup() \
-		llListen(123123, "", llGetOwner(), "")
-
+		llListen(123123, "", llGetOwner(), ""); \
+		_dtxt();
+		
 		
 	
 
