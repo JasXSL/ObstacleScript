@@ -8,14 +8,15 @@
 	Things you may wanna use:
 	
 	// Required event handlers
-	onGameStart(){} 	// Raised when the game starts
-	onGameEnd(){} 		// Raised when the game ends
-	onRoundStart(){}	// Raised when a new round starts
+	onGameStart(){} 			// Raised when the game starts
+	onGameEnd(){} 				// Raised when the game ends
+	onRoundStart(){}			// Raised when a new round starts
+	onCountdownFinished(){}		// Countdown finished when starting a round
 	
 	// Functions you can use
 	list endGame() 						// Ends the game. This is auto called if you use DialogHelper and end the game through a dialog, but you will want to use this after declaring a winner as well
 										// Should return a list of data to pass to the GSCORE global in DialogHelper, This can then be handled in onTextUpdate in the #Dialog
-	endRound( float delay )			// Call this to end the current round, triggers onRoundEnd. A delay over 0 will automatically call startRound() after that amount of seconds
+	endRound( float delay )			// Call this to end the current round. A delay over 0 will automatically call startRound() after that amount of seconds
 	
 	startGame() 					// (Optional) Force starts the game. This is auto called if you also use DialogHelper
 	startRound() 					// (Optional) Called automatically
@@ -30,7 +31,7 @@ integer GSETTINGS;
 
 #define PD_KEY 0            // Element 1 is the player UUID
 list PLAYER_DATA;
-
+float ROUND_START_TIME;
 list GCONF;	// This is custom data passed from DialogHelper
 
 #define resetPlayerData( id ) _rpd(id)
@@ -42,6 +43,8 @@ list GCONF;	// This is custom data passed from DialogHelper
 #define getPlayerDataFloat( id, index ) l2f(_gpd(id, index), 0)
 #define getPlayerDataKey( id, index ) l2k(_gpd(id, index), 0)
 
+
+	
 
 
 // Add this to your state entry handler
@@ -77,6 +80,34 @@ list GCONF;	// This is custom data passed from DialogHelper
 	end \
 	handleTimer( "_ROUND" ) \
 		startRound(); \
+	end \
+	handleTimer( "_COUNTDOWN" ) \
+		ROUND_START_TIME = llGetTime(); \
+		forPlayer( index, player ) \
+			Rlv$unSit( player, TRUE ); \
+		end \
+		GSETTINGS = GSETTINGS | GS_ROUND_STARTED; \
+		onCountdownFinished(); \
+	end
+
+
+// Put this directly under the event handler to automatically handle sending back to a checkpoint when falling in the water
+// Z is an offset from the root prim. When beneath this, you get sent back to the checkpoint
+// This requires you to have a function or macro called "getPlayerCheckpoint( key player )" that returns a vector position
+#define gameHelperAutoWater( Z ) \
+	onStateEntry() \
+		setInterval("_WATER", 3); \
+	end \
+	handleTimer( "_WATER" ) \
+		vector gpos = llGetRootPosition(); \
+		if( GSETTINGS & GS_ROUND_STARTED ){ \
+			forPlayer( index, player ) \
+				vector pos = prPos(player); \
+				if( pos.z < gpos.z+Z ){ \
+					warpPlayerToSurface( player, getPlayerCheckpoint(player), ZERO_ROTATION, TRUE ); \
+				} \
+			end \
+		} \
 	end
 
 
@@ -160,18 +191,27 @@ endGame(){
 
 startRound(){
 
+	ROUND_START_TIME = llGetTime();
 	onRoundStart();
+	
+	forPlayer( index, player )
+        
+        Gui$startCountdown( player );
+    
+    end
+    setTimeout("_COUNTDOWN", 3);
 	
 }
 
 endRound( float delay ){
 
-	onRoundEnd();
+	GSETTINGS = GSETTINGS &~GS_ROUND_STARTED;
 	if( delay > 0 )
 		setTimeout("_ROUND", delay);
+	else
+		startRound();
 
 }
-
 
 
 
