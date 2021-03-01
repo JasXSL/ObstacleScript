@@ -1,7 +1,8 @@
 #ifndef __ShimmyWall
 #define __ShimmyWall
 
-// Description: [(str)label]
+// Description: [(str)label, (int)flags]
+#define ShimmyWallFlag$reverse 1					// Makes the rightmost spout not trigger instead of leftmost one
 
 #define ShimmyWallConst$CHAN (OBSTACLE_CHAN+0x51)	// Listener
 

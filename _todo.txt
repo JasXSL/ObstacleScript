@@ -6,12 +6,8 @@ Next:
 
 Needed stuff in #Game
 	- Handle teams
-	- Handle game finished
 	- Handle max arousal
-	- Tentacles need to check Z
-	- Shimmy wall needs to have an inverse option where the rightmost one is the one that's never on
-	- Game finish check didn't work
-	
+	- Add balloons
 	
 Meshes:
 	- Catwalks

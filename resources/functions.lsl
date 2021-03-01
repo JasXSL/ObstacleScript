@@ -84,7 +84,7 @@ list _kfmConv( list input ){
 // Telports player to a position. A ray is cast from position to the ground and tries to place the player there
 _w2s( key player, vector checkpoint, rotation r, integer unsit ){
     
-    list ray = llCastRay(checkpoint, checkpoint-<0,0,5>, RC_DEFAULT);
+    list ray = llCastRay(checkpoint, checkpoint-<0,0,25>, RC_DEFAULT);
     vector rp = l2v(ray, 1);
     vector ascale = llGetAgentSize(player);
     checkpoint.z = rp.z+ascale.z/2;
