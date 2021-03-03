@@ -43,7 +43,7 @@
 ]
 
 // Sets clothes in 
-#define RlvMethod$setClothes 1			// 5 2-bit array, little endian. Rlv$SLOT indicates the index. and Rlv$STATE indicates the state to set it to
+#define RlvMethod$setClothes 1			// 5 2-bit array, little endian. Rlv$SLOT indicates the index. and Rlv$STATE indicates the state to set it to. Add 1 to this. So 3 = dressed, 2 = underwear, 1 = bits, 0 = ignore
 #define RlvMethod$setWindlight 2		// (str)windlight preset. Use "" to clear
 
 #define RlvMethod$cubeTask 3			// task1, task2... Sends a task to the RLV supportcube
@@ -60,6 +60,7 @@
 #define RlvMethod$target 11				// (vec)pos=targetPos, (float)speed, (float)duration - Uses llMoveToTarget on a player. Pos is the position of the target. Speed is the llMoveToTarget speed, and duration is how long to keep it.
 
 #define RlvMethod$exitMouselook 12		// void, kicks the player out of mouselook
+
 
 #define RlvEvt$supportCubeSpawn 1		// (key)cube_id
 #define RlvEvt$flags 2					// (int)flags

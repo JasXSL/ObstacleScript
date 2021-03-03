@@ -1,14 +1,15 @@
+Todo:
+- Add an alert system
+- Add a max timer of 2 min after all players on one team has reached the platform
+
+
 Next:
 	- Fix up updateText() in #Dialog
 	- Build a level and document the process
 		- Todo: Write down the different parts of level making here
 	
 
-Needed stuff in #Game
-	- Handle teams
-	- Handle max arousal
-	- Add balloons
-	
+
 Meshes:
 	- Catwalks
 

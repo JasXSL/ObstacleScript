@@ -79,8 +79,12 @@
 	runMethod( target, "Gui", GuiMethod$instruction, instruction + index )
 #define Gui$clearInstruction( target, index ) \
 	runMethod( target, "Gui", GuiMethod$instruction, -1 + index )
-
-
+#define Gui$setSingleInstruction( target, texture, index ) \
+	runMethod( target, "Gui", GuiMethod$instruction, frame + 0 + index + texture + 1 + 1 )
+#define Gui$setInstruction( target, frame, texture, index, x, y ) \
+	runMethod( target, "Gui", GuiMethod$instruction, frame + index + texture + x + y )
+#define Gui$preloadInstruction( target, texture, index ) \
+	runMethod( target, "Gui", GuiMethod$instruction, -1 + index + texture )
 
 
 #endif

@@ -71,6 +71,9 @@
 			
 		}
 		
+		else if( menu == MENU_INVITE_PLAYER && text == "" )
+			text = "Select player to invite";
+		
 		else if( menu == MENU_MAINTENANCE ){
 		
 			if( text == "" ){

@@ -569,21 +569,25 @@ handleMethod( GuiMethod$instruction )
 	int index = argInt(1);
 	int prim = l2i(INSTRUCTIONS, index);
 	
+	key texture = Gui$TEXTURE_INSTRUCTIONS;
+	if( argKey(2) )
+		texture = argKey(2);
+	
 	if( frame == -1 ){
 
 		llSetLinkPrimitiveParamsFast(prim, (list)
-			PRIM_POS_LOCAL + <0,1.5,0.75-.1*index>
+			PRIM_POS_LOCAL + <0,1.5,0.75-.1*index> +
+			PRIM_TEXTURE + 0 + texture + <1,1,0> + ZERO_VECTOR + 0
 		);
 
 		return;
 	}
 	
-	key texture = Gui$TEXTURE_INSTRUCTIONS;
+	
 	int xSize = argInt(3);
 	int ySize = argInt(4);
 	
-	if( argKey(2) )
-		texture = argKey(2);
+	
 	
 	if( !xSize )
 		xSize = 4;
@@ -592,13 +596,13 @@ handleMethod( GuiMethod$instruction )
 		
 	integer y = frame/xSize;
 	integer x = frame-y*xSize;
-		
+	
 	llSetLinkPrimitiveParamsFast(prim, (list)
 		PRIM_TEXTURE + 0 + texture + 
 		<1.0/xSize, 1.0/ySize, 0> + 
 		<
-			-1.0/xSize/2 - 1.0/xSize*(xSize/2-1) + 1.0/xSize*x,
-			1.0/ySize/2 + 1.0/ySize*(ySize/2-1) - 1.0/ySize*y,
+			(-1.0/xSize/2*(!(xSize%2))) - 1.0/xSize*(xSize/2-1) + 1.0/xSize*x,
+			(1.0/ySize/2*(!(ySize%2))) + 1.0/ySize*(ySize/2-1) - 1.0/ySize*y,
 			0
 		> +
 		0 +

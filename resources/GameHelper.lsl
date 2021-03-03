@@ -214,5 +214,36 @@ endRound( float delay ){
 }
 
 
+#define gameHelperHandleBalloonHit( dist, invulCheck ) \
+	onProjectileHit( projectile, obj ) \
+		 \
+		if( llGetAgentSize(obj) != ZERO_VECTOR ){ \
+			 \
+			if( llGetAgentInfo(obj) & AGENT_SITTING || invulCheck(obj) ) \
+				return; \
+				 \
+			vector owner = prPos(llGetOwnerKey(projectile)); \
+			vector spos = prPos(obj); \
+			vector offs = spos-owner; \
+			offs.z = 0; \
+					 \
+			float time = 0.5; \
+			spos += llVecNorm(offs)*dist; \
+			 \
+			Rlv$damageSprint( obj, 1 ); \
+			Rlv$target(  \
+				obj,  \
+				spos,  \
+				.1,  \
+				time \
+			); \
+			  \
+		} \
+		 \
+	end
+
+
+
+
 
 #endif
