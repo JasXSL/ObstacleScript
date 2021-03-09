@@ -1,6 +1,7 @@
 Todo:
-- Add an alert system
-- Add a max timer of 2 min after all players on one team has reached the platform
+- Fix physics shape on shimmy walls
+- Make tentacles not grapple below them
+
 
 
 Next:
@@ -15,4 +16,6 @@ Meshes:
 
 - Stripping
 - Level manager
+
+
 

@@ -20,6 +20,8 @@ key HOST;
         
         _H = (list)llGetKey();
         _P = (list)llGetOwner();
+		
+		Level$autoJoin();
         
     end
     

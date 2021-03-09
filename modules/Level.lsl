@@ -14,11 +14,12 @@ list WAITING_SCRIPTS;
 
 updatePlayers(){
     
-	qd("Updating players");
     globalAction$setPlayers();  
     forPlayer( i, player )
         Com$players( player, PLAYERS );
     end
+	
+	runOmniMethod("Portal", PortalMethod$cbPlayers, PLAYERS);
     
 }
 

@@ -45,7 +45,7 @@
 
 #define GuiMethod$tweenBar 9			// (str)label, (float)start, (float)end, (float)time - Tweens the bar to a percentage
 
-#define GuiMethod$instruction 10		// (int)frame, (int)index=0, (key)texture=default, (int)xSize=4, (int)ySize=16 - Adds an instruction button. Send -1 frame to hide
+#define GuiMethod$instruction 10		// (int)frame, (int)index=0, (key)texture=default, (int)xSize=4, (int)ySize=16, (float)timeout=0 - Adds an instruction button. Send -1 frame to hide
 
 
 
@@ -75,14 +75,14 @@
 #define Gui$tweenBar( target, label, start, end, time ) \
 	runMethod( target, "Gui", GuiMethod$tweenBar, label + start + end +time )
 
-#define Gui$setDefaultInstruction( target, instruction, index ) \
-	runMethod( target, "Gui", GuiMethod$instruction, instruction + index )
+#define Gui$setDefaultInstruction( target, instruction, index, timeout ) \
+	runMethod( target, "Gui", GuiMethod$instruction, instruction + index + "" + 0 + 0 + timeout )
 #define Gui$clearInstruction( target, index ) \
 	runMethod( target, "Gui", GuiMethod$instruction, -1 + index )
-#define Gui$setSingleInstruction( target, texture, index ) \
-	runMethod( target, "Gui", GuiMethod$instruction, frame + 0 + index + texture + 1 + 1 )
-#define Gui$setInstruction( target, frame, texture, index, x, y ) \
-	runMethod( target, "Gui", GuiMethod$instruction, frame + index + texture + x + y )
+#define Gui$setSingleInstruction( target, texture, index, timeout ) \
+	runMethod( target, "Gui", GuiMethod$instruction, frame + 0 + index + texture + 1 + 1 + timeout )
+#define Gui$setInstruction( target, frame, texture, index, x, y, timeout ) \
+	runMethod( target, "Gui", GuiMethod$instruction, frame + index + texture + x + y + timeout )
 #define Gui$preloadInstruction( target, texture, index ) \
 	runMethod( target, "Gui", GuiMethod$instruction, -1 + index + texture )
 

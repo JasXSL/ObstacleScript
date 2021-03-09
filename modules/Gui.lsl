@@ -586,7 +586,7 @@ handleMethod( GuiMethod$instruction )
 	
 	int xSize = argInt(3);
 	int ySize = argInt(4);
-	
+	float timeout = argFloat(5);
 	
 	
 	if( !xSize )
@@ -609,6 +609,10 @@ handleMethod( GuiMethod$instruction )
 		
 		PRIM_POS_LOCAL + <0,.5,.75-.1*index>
 	);
+	
+	unsetTimer("CLR_"+(str)index);
+	if( timeout > 0 )
+		setTimeout("CLR_"+(str)index, timeout);
 	
 	
 end
@@ -640,6 +644,16 @@ handleTimer( "CD" )
     }
 end
 
+onTimer( id )
+	
+	if( llGetSubString(id, 0, 3) == "CLR_" ){
+	
+		integer slot = (int)llGetSubString(id, 4, -1);
+		Gui$clearInstruction( LINK_THIS, slot );
+	
+	}
+
+end
 
 
 
