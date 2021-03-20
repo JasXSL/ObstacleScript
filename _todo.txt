@@ -1,20 +1,14 @@
-Todo:
-- Fix physics shape on shimmy walls
-- Make tentacles not grapple below them
+- Add stripping when reaching max arousal
+- Add rule board
+- New game rules for pandemonium
+	- Reaching end makes you join the winners team
+	- First person reaching end starts a 2m timer
+	- Hitting a player on the winner's team adds a penalty in seconds equal to the ratio on their team and the enemy team. To ALL players on the winner's team
+	- Not finishing within the 2m timer adds a 150 sec penalty
+	- Friendly fire is on, so the winner team needs to be careful
+	- Max arousal adds a 30 sec penalty
 
 
-
-Next:
-	- Fix up updateText() in #Dialog
-	- Build a level and document the process
-		- Todo: Write down the different parts of level making here
-	
-
-
-Meshes:
-	- Catwalks
-
-- Stripping
 - Level manager
 
 

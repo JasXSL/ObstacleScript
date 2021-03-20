@@ -27,6 +27,25 @@
 
 
 
+#define LevelCustomType$TRAPDOOR "oTrapdoor"
+	#define LevelCustomEvt$TRAPDOOR$trigger 1		// (str)trapdoor_label, (key)player - Trapdoor has opened
+	#define LevelCustomEvt$TRAPDOOR$reset 2			// (str)trapdoor_label - Trapdoor has closed
+	
+
+
+		
+#define onTrapdoorTrigger( trap, label, player ) \
+	if( isEventLevelCustom() AND argStr(1) == LevelCustomType$TRAPDOOR AND argInt(2) == LevelCustomEvt$TRAPDOOR$trigger ){ \
+		key trap = argKey(0); \
+		string label = argStr(3); \
+		key player = argKey(4); \
+		
+#define onTrapdoorReset( trap, label ) \
+	if( isEventLevelCustom() AND argStr(1) == LevelCustomType$TRAPDOOR AND argInt(2) == LevelCustomEvt$TRAPDOOR$reset ){ \
+		key trap = argKey(0); \
+		string label = argStr(3);
+		
+		
 
 
 

@@ -21,16 +21,21 @@
 	list GCONF;		// Sent alongside the game start command. Store your game mode etc here
 
 	int _dMENU;		// Tracks the menu
+	int _MP;		// Menu page
 	
 	#define MENU_MAIN 0
 	#define MENU_MAINTENANCE 1
 	#define MENU_INVITE_PLAYER 2
+	#define MENU_REMOVE_PLAYER 3
 	
 	#define openDialog( menu ) \
 		_dMENU = menu; \
 		_dopen(_dMENU);
 		
 	list onDialogOpen(){return [];}
+	
+	#define gcSet( index, val ) \
+		GCONF = llListReplaceList(GCONF, (list)val, index, index)
 
 	_dopen( integer menu ){
 
@@ -52,12 +57,15 @@
 				
 				buttons += (list)
 					"INV. ALL" + 
-					"INV. Player" + 
-					"Rem Players" +
+					"INV. Player" +
+					"REM. Player"+
+					"Rst Players" +
 					"Maintenance" +
-					"Clean Up" +
-					"START GAME"
+					"Clean Up"
 				;
+				
+				if( count(PLAYERS) )
+					buttons += "START GAME";
 				
 			}
 			else{
@@ -94,6 +102,24 @@
 		
 		}
 		
+		else if( menu == MENU_REMOVE_PLAYER ){
+			
+			integer i = _MP*11;
+			if( i >= count(PLAYERS) )
+				i = _MP = 0;
+				
+			for(; i < count(PLAYERS) && i < _MP*11+11; ++i ){
+				
+				text += "["+(str)i+"] "+llGetSubString(llGetDisplayName(l2k(PLAYERS, i)), 0, 12)+"\n";
+				buttons += (str)i;
+			
+			}
+			
+			if( count(PLAYERS) > 11 )
+				buttons += ">>";
+		
+		}
+		
 		if( buttons == [] )
 			llTextBox(llGetOwner(), text, 123123);
 		else
@@ -109,9 +135,17 @@
 			if( msg == "INV. ALL" )
 				Level$inviteNearby();
 			else if( msg == "INV. Player"){
+				
 				openDialog(MENU_INVITE_PLAYER);
+				
 			}
-			else if( msg == "Rem Players" )
+			else if( msg == "REM. Player"){
+				
+				_MP = 0;
+				openDialog(MENU_REMOVE_PLAYER);
+				
+			}
+			else if( msg == "Rst Players" )
 				Level$resetPlayers();
 			else if( msg == "Maintenance" ){
 				openDialog(MENU_MAINTENANCE);
@@ -138,6 +172,20 @@
 		}
 		else if( _dMENU == MENU_INVITE_PLAYER ){
 			Level$invite(msg);
+		}
+		else if( _dMENU == MENU_REMOVE_PLAYER ){
+		
+			if( msg == ">>" ){
+				
+				++_MP;
+				openDialog(_dMENU);
+				return;
+				
+			}
+			
+			integer n = (int)msg;
+			Level$removePlayer( l2k(PLAYERS, n) );
+		
 		}
 		else if( _dMENU == MENU_MAINTENANCE ){
 			
@@ -199,6 +247,9 @@
 	}
 	
 	#define dialogHelperHandler() \
+		onRez( nr ) \
+			llResetScript(); \
+		end \
 		onLevelMainMenu() \
 			openDialog(MENU_MAIN); \
 		end \

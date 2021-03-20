@@ -5,6 +5,11 @@
 #define AttachmentMethod$reqPerm 1			// void - Sent from LevelRepo to let the attachment know that it can now request permissions
 #define AttachmentMethod$detach 2			// (str)name/"*" - Detaches one or all objects for the user
 
+
+#define AttachmentEvt$onAttach 1			// (key)id - Raised when the object is attached. Saves some memory vs using #define ON_ATTACH
+
+
+
 #define Attachment$reqPerm( target ) \
 	runMethod(target, "Attachment", AttachmentMethod$reqPerm, [])
 #define Attachment$detachAll( target ) \
@@ -16,6 +21,9 @@
 
 
 
+#define onAttachmentAttached( id ) \
+	if( SENDER_SCRIPT IS "Attachment" AND EVENT_TYPE IS AttachmentEvt$onAttach ){ \
+		key id = argKey(0);
 
 
 #endif

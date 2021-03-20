@@ -30,7 +30,7 @@
 
 #define mkarr(input) llList2Json(JSON_ARRAY, (list)input)
 
-#define trim(input) llStringTrim(input, STRING_TRIM)
+#define trim(input) llStringTrim((str)(input), STRING_TRIM)
 	
 // Making it more readable for newbs
 #define AND &&

@@ -7,6 +7,8 @@ float ACC_HOST;     // Timer
 key PENDING_HOST;
 key HOST;
 
+#define COM_ADDITIONAL (list)((str)llGetOwnerKey(HOST))
+
 #include "ObstacleScript/begin.lsl"
     
     handleDebug()

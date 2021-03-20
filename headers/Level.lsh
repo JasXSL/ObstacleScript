@@ -11,6 +11,8 @@
 	#define LevelMethod$updateAllHudAssets 7	// void - Sends a request to all active players to request new HUD assets
 	#define LevelMethod$scriptInit 8			// (str)script - A script has been remoteloaded. Only needed by scripts in LevelConst$REMOTE_SCRIPTS
 	#define LevelMethod$autoJoin 9			// Sent by the HUD to try to auto reconnect to a level
+	#define LevelMethod$removePlayer 10		// (key)player
+	#define LevelMethod$toggleGame 11		// (bool)game_in_progress - Locks invites
 	
 	#define LevelEvt$mainMenu 1				// Raised when the owner clicks the level controller
 	#define LevelEvt$custom 2				// (key)sender, (str)script, (int)evt, (var)data1, (var)data2... These events are defined in resources/LevelCustomEvents
@@ -63,8 +65,10 @@
 		runMethod(target, "Level", LevelMethod$updateAllHudAssets, [])
 	#define Level$autoJoin() \
 		runOmniMethod("Level", LevelMethod$autoJoin, [])
-	
-	
+	#define Level$removePlayer( player ) \
+		runMethod(LINK_THIS, "Level", LevelMethod$removePlayer, player)
+	#define Level$toggleGame( gameActive ) \
+		runMethod(LINK_THIS, "Level", LevelMethod$toggleGame, gameActive)
 
 
 #endif

@@ -2,15 +2,16 @@
 #define USE_STATE_ENTRY
 #define USE_TOUCH_START
 #define USE_LISTEN
+#define USE_TIMER
 #include "ObstacleScript/index.lsl"
 
-// Todo: remoteloading
 
 integer BFL;
 #define BFL_GAME_ACTIVE 0x1
 
 list INVITES;   // key player, int time
 list WAITING_SCRIPTS;
+
 
 updatePlayers(){
     
@@ -49,11 +50,13 @@ invite( key player ){
 
 updateCode(){
 
-	llOwnerSay("Updating level...");
+	
 	WAITING_SCRIPTS = LevelConst$REMOTE_SCRIPTS;
 	integer pin = (int)llFrand(0xFFFFFFF);
 	llSetRemoteScriptAccessPin(pin);
 	Screpo$get( pin, 1, WAITING_SCRIPTS );
+	
+	setInterval("UPDATE", 2);
 	
 }
 
@@ -62,9 +65,11 @@ updateCode(){
 
 onRez( start )
 	
-	if( !start )
+	_P = [(str)llGetOwner()];
+	if( !start ){
+		llOwnerSay("Updating level, please wear your HUD...");
 		updateCode();
-
+	}
 end
 
 onStateEntry()
@@ -102,6 +107,8 @@ onListen( ch, msg )
 				
         if( method == LevelMethod$acceptInvite ){
             
+			if( BFL & BFL_GAME_ACTIVE )
+				return;
             
             integer pos = llListFindList(INVITES, (list)llGetOwnerKey(SENDER_KEY));
             if( ~pos ){
@@ -124,6 +131,9 @@ onListen( ch, msg )
             
         }
 		else if( method == LevelMethod$autoJoin ){
+		
+			if( BFL & BFL_GAME_ACTIVE )
+				return;
 		
 			key owner = llGetOwnerKey(SENDER_KEY);
 			if( ~llListFindList(PLAYERS, [(str)owner]) )
@@ -255,6 +265,29 @@ handleInternalMethod( LevelMethod$invite )
     
 end
 
+handleInternalMethod( LevelMethod$removePlayer )
+	
+	if( BFL&BFL_GAME_ACTIVE )
+		return;
+		
+		
+	integer pos = llListFindList(PLAYERS, (list)argStr(0));
+	if( pos == -1 )
+		return;
+		
+	PLAYERS = llDeleteSubList(PLAYERS, pos, pos);
+	updatePlayers();
+
+end
+
+handleInternalMethod( LevelMethod$toggleGame )
+	
+	BFL = BFL&~BFL_GAME_ACTIVE;
+	if( argInt(0) )
+		BFL = BFL|BFL_GAME_ACTIVE;
+
+end
+
 handleOwnerMethod( LevelMethod$updateAllHudAssets )
 
 	forPlayer( index, player )
@@ -284,6 +317,7 @@ handleMethod( LevelMethod$getHudAssets )
 end
 
 handleOwnerMethod( LevelMethod$update )
+	llOwnerSay("Updating level...");
 	updateCode();
 end
 
@@ -293,6 +327,7 @@ handleInternalMethod( LevelMethod$scriptInit )
 	if( pos == -1 )
 		return;
 		
+	unsetTimer("UPDATE");
 	WAITING_SCRIPTS = llDeleteSubList(WAITING_SCRIPTS, pos, pos);
 	if( WAITING_SCRIPTS == [] ){
 		
@@ -302,6 +337,10 @@ handleInternalMethod( LevelMethod$scriptInit )
 			
 	}
 
+end
+
+handleTimer( "UPDATE" )
+	updateCode();
 end
 
 

@@ -9,7 +9,7 @@
 	
 	// Required event handlers
 	onGameStart(){} 			// Raised when the game starts
-	onGameEnd(){} 				// Raised when the game ends
+	list onGameEnd(){} 				// Raised when the game ends
 	onRoundStart(){}			// Raised when a new round starts
 	onCountdownFinished(){}		// Countdown finished when starting a round
 	
@@ -50,6 +50,7 @@ list GCONF;	// This is custom data passed from DialogHelper
 // Add this to your state entry handler
 #define gameHelperStateEntry() \
 	//resetPlayerData(llGetOwner())
+	
 
 #define gameHelperEventHandler() \
 	onPlayersUpdated() \
@@ -151,6 +152,8 @@ _spd( key id, integer index, list val ){
     
 }
 
+#define shufflePlayerData() \
+	PLAYER_DATA = llListRandomize(PLAYER_DATA, PD_STRIDE)
 
 
 
@@ -173,6 +176,8 @@ startGame(){
 	GSETTINGS = GSETTINGS &~ GS_ROUND_STARTED;
     GSETTINGS = GSETTINGS | GS_GAME_STARTED;
 	
+	Level$toggleGame(TRUE);
+	
 	onGameStart();
 	
 	raiseEvent(0, "START_GAME");
@@ -181,6 +186,7 @@ startGame(){
 
 endGame(){
 
+	Level$toggleGame(FALSE);
 	GSETTINGS = GSETTINGS &~ GS_GAME_STARTED;
     GSETTINGS = GSETTINGS &~ GS_ROUND_STARTED;
 	
@@ -199,6 +205,7 @@ startRound(){
         Gui$startCountdown( player );
     
     end
+	raiseEvent(0, "ROUND_START");
     setTimeout("_COUNTDOWN", 3);
 	
 }

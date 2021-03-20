@@ -4,7 +4,10 @@
 
 // #define USE_TIMER to include
 #ifdef USE_LISTEN
-
+	
+	#ifndef COM_ADDITIONAL	// Lets you add additional keys that should be allowed to call methods
+		#define COM_ADDITIONAL []
+	#endif
 	
 	// Automatic globals
 	int _CHDBG;	// Debug channel
@@ -30,7 +33,7 @@
 			if( ch == PUB_CHAN ){ \
 				 \
 				str o = llGetOwnerKey(SENDER_KEY); \
-				if( ~llListFindList(_P, (list)o) || o == llGetOwner() ){ \
+				if( ~llListFindList(_P+COM_ADDITIONAL, (list)o) || o == llGetOwner() ){ \
 					\
 					list parse = llJson2List(msg); \
 					sendLinkMessage( LINK_SET, l2s(parse, 0), os$lmtype$method, l2i(parse, 1)&0xFF, llJson2List(l2s(parse, 2)), SENDER_KEY ); \

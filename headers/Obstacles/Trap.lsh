@@ -1,14 +1,12 @@
 #ifndef __Trap
 #define __Trap
 
-
-
 #define TrapConst$CHAN (OBSTACLE_CHAN+0x7)	// Listener
 
 
 #define TrapTask$seat 1						// (key)player
 #define TrapTask$attack 2					// 
-
+#define TrapTask$unSeat 3					// 
 
 
 #define Trap$seat( targ, label, player ) \
@@ -19,6 +17,31 @@
 
 #define Trap$attackAll( label, args ) \
 	llRegionSay(TrapConst$CHAN, mkarr(label + TrapTask$attack + args))
+
+
+
+// Level event bindings
+#define LevelCustomType$TRAP "oTrap"				// Generic type for traps like the lasher
+	#define LevelCustomEvt$TRAP$hit 1					// (key)player1, (key)player2... - Trap has hit a player
+	#define LevelCustomEvt$TRAP$seated 2				// (key)player1, (key)player2... - Trap has been sat on by one or more players
+	#define LevelCustomEvt$TRAP$unseated 3				// (key)player1, (key)player2... - Trap has been unsat by one or more players
+
+
+
+#define onTrapHit( trap, players ) \
+	if( isEventLevelCustom() AND argStr(1) == LevelCustomType$TRAP AND argInt(2) == LevelCustomEvt$TRAP$hit ){ \
+		key trap = argKey(0); \
+		list players = llDeleteSubList(METHOD_ARGS, 0, 2);
+
+#define onTrapSeated( trap, players ) \
+	if( isEventLevelCustom() AND argStr(1) == LevelCustomType$TRAP AND argInt(2) == LevelCustomEvt$TRAP$seated ){ \
+		key trap = argKey(0); \
+		list players = llDeleteSubList(METHOD_ARGS, 0, 2);
+
+#define onTrapUnseated( trap, players ) \
+	if( isEventLevelCustom() AND argStr(1) == LevelCustomType$TRAP AND argInt(2) == LevelCustomEvt$TRAP$unseated ){ \
+		key trap = argKey(0); \
+		list players = llDeleteSubList(METHOD_ARGS, 0, 2);
 
 
 
@@ -47,6 +70,8 @@
 	 \
 	} \
 }
+
+
 
 
 #endif

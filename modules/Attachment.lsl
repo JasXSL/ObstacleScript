@@ -1,15 +1,14 @@
 #define USE_STATE_ENTRY
 #define USE_RUN_TIME_PERMISSIONS
+#define USE_ATTACH
 #define USE_TIMER
+
 #include "ObstacleScript/index.lsl"
 
 bool DETACH;
-
 reqAttach(){
     LevelRepo$canAttach();
 }
-
-
 detach(){
 
 	DETACH = TRUE;
@@ -39,6 +38,12 @@ onStateEntry()
         
     } 
     
+end
+
+onAttach( id )
+	
+	raiseEvent(AttachmentEvt$onAttach, id);
+
 end
 
 onRunTimePermissions( perm )

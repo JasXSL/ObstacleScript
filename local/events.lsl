@@ -114,7 +114,7 @@ Note: Checking if something is an event is enough to check _sc == something othe
 			int nr = argInt(0); 
 			
 #else
-	#define onRez( id ) #error Add #define USE_ON_REZ to the top of your script
+	#define onRez( nr ) #error Add #define USE_ON_REZ to the top of your script
 #endif
 
 

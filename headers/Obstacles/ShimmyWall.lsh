@@ -16,6 +16,26 @@
 
 
 
-#endif
- 
+// Level event bindings
+#define LevelCustomType$SHIMMY_WALL "oShimmyWall"
+	#define LevelCustomEvt$SHIMMY_WALL$hitStart 1		// (key)player1, (key)player2...
+	#define LevelCustomEvt$SHIMMY_WALL$hitEnd 2		// (key)player1, (key)player2...
 
+
+
+#define onShimmyWallHit( object, start, players ) \
+	if( isEventLevelCustom() AND argStr(1) == LevelCustomType$SHIMMY_WALL AND (argInt(2) == LevelCustomEvt$SHIMMY_WALL$hitStart OR argInt(2) == LevelCustomEvt$SHIMMY_WALL$hitEnd) ){ \
+		key object = argKey(0); \
+		int start = argInt(2) == LevelCustomEvt$SHIMMY_WALL$hitStart; \
+		list players = llDeleteSubList(METHOD_ARGS, 0, 2);
+		
+
+
+
+
+
+
+
+
+
+#endif
