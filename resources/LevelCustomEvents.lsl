@@ -29,8 +29,10 @@
 	#define LevelCustomEvt$QTE$start 1 				// (int)type, (str)callback
 	#define LevelCustomEvt$QTE$end 2				// (bool)success, (str)callback
 
-
-
+#define LevelCustomType$INTERACT "avInt"
+	#define LevelCustomEvt$INTERACT$start 1			// void - Key pressed
+	#define LevelCustomEvt$INTERACT$end 2			// void - Key released
+	
 
 
 		
@@ -61,5 +63,15 @@
 		str callback = argStr(4);
 		
 
+#define onLevelInteractStarted( hud ) \
+	if( isEventLevelCustom() AND argStr(1) == LevelCustomType$INTERACT AND argInt(2) == LevelCustomEvt$INTERACT$start ){ \
+		key hud = argKey(0);
+		
+#define onLevelInteractEnded( hud ) \
+	if( isEventLevelCustom() AND argStr(1) == LevelCustomType$INTERACT AND argInt(2) == LevelCustomEvt$INTERACT$end ){ \
+		key hud = argKey(0);
+		
+
+		
 
 #endif

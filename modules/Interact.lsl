@@ -285,16 +285,21 @@ end
 
 onControlsKeyPress( pressed, released )
 
-    if(
-        released & (CONTROL_UP
+	integer controls = (
+		CONTROL_UP
         #ifdef InteractCfg$ALLOW_ML_LCLICK
             | CONTROL_ML_LBUTTON
         #endif
-        )
+        );
+		
+	
+
+    if(
+        pressed & controls		
     ){
         if( BFL&BFL_RECENT_CLICK )
             return;
-            
+
         BFL = BFL|BFL_RECENT_CLICK;
         float rate = 
         #ifdef InteractCfg$MAX_RATE
@@ -381,6 +386,19 @@ onControlsKeyPress( pressed, released )
                 );
                 
             } 
+			// Todo: Send interact to level
+			else if( task == Desc$TASK_INTERACT ){
+				
+				bool direct = l2i(spl, 0);	// If true, send to object, otherwise raise a level event
+				if( direct )
+					Portal$raiseEvent( targ, PortalCustomType$INTERACT, PortalCustomEvt$INTERACT$start, [] );
+				else
+					Level$raiseEvent( LevelCustomType$INTERACT, LevelCustomEvt$INTERACT$start, [] );
+				
+				// Todo: Stash and handle keyup as well
+				
+				
+			}
             #ifdef InteractCfg$CUSTOM_CLICK
             else
                 success = InteractCfg$CUSTOM_CLICK(targ, task, spl);

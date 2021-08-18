@@ -5,7 +5,7 @@
 	#define LevelMethod$invite 1			// (key)player - Invites a specific player to your game. Using * will invite all players within 10m of the game starter
 	#define LevelMethod$resetPlayers 2		// Resets players to owner only
 	#define LevelMethod$acceptInvite 3		// void - Accepts an invite
-	#define LevelMethod$raiseEvent 4		// (str)script, (int)evt, (var)data1, (var)data2... - Owner only
+	#define LevelMethod$raiseEvent 4		// (str)script, (int)evt, (var)data1, (var)data2... - Owner only depending on prefix
 	#define LevelMethod$getPlayers 5		// (int)callbackMethod, (str)callbackScript - Sends callbackMethod to callbackScript with data (str)player1, (str)player2...
 	#define LevelMethod$getHudAssets 6			// void - After setting inventory drop, the HUD prim sends this to Level to get all HUD assets. HUD assets names should start with "HUD:"
 	#define LevelMethod$updateAllHudAssets 7	// void - Sends a request to all active players to request new HUD assets

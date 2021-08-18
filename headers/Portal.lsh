@@ -31,7 +31,7 @@
 
 
 #define PortalEvt$loadComplete 1		// (str)desc - All scripts have finished loading
-
+#define PortalEvt$custom 2				// (key)sender, (str)script, (int)evt, (var)data1, (var)data2... - Used for custom portal events
 
 #define PortalMethod$reset 0		// Resets all scripts
 #define PortalMethod$fetch 1		// Fetches all scripts from DB
@@ -47,6 +47,7 @@
 
 #define PortalMethod$cbPlayers 7		// Callback binding for getting players
 
+#define PortalMethod$raiseEvent 8		// 
 
 
 
@@ -70,5 +71,27 @@
 
 #define Portal$init( target, pos, desc, group ) \
 	runMethod( target, "Portal", PortalMethod$init, pos + desc + group )
+	
+	
+#define Portal$raiseEvent( targ, customType, evt, data ) \
+	runMethod(targ, "Portal", PortalMethod$raiseEvent, customType + evt + data )
+	
+	
+	
+	
+	
+	
+#define isEventPortalCustom() \
+	(SENDER_SCRIPT IS "Portal" AND EVENT_TYPE IS PortalEvt$custom)
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 
 #endif

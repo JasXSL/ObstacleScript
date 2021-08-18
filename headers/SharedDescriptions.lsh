@@ -8,18 +8,17 @@
 	
 */
 
-#define Desc$TASK_TELEPORT "T"			// (vec)pos_offset - Uses the supportcube to teleport to a pos offset relative to the object's position and rotation
-#define Desc$TASK_DESC "D"				// (str)text - Text that shows on your HUD
-#define Desc$TASK_INTERACT "I"			// (var)data - Sends an interact com to the level
-#define Desc$TASK_CLIMB "CL"			// (rot)rotation_offset, (str)anim_passive, (str)anim_active, (str)anim_active_down, (str)anim_dismount_top, (str)anim_dismount_bottom, (CSV)nodes, (float)climbspeed
-#define Desc$TASK_WATER "WT"			// (vec)stream, (float)cyclone, (float)swimspeed_modifier, (str)windlight_preset
-#define Desc$TASK_SOUNDSPACE "SS"		// (str)name, (float)vol
-#define Desc$TASK_WL_PRESET "WL"		// (str)preset
-#define Desc$TASK_FOOTSTEPS "tFS"		// 
-#define Desc$TASK_TRIGGER_SOUND "TS"	// (key)sound, (float)vol=1
-#define Desc$TASK_PLAY_SOUND "PS"		// (key)sound, (float)vol=1
-#define Desc$TASK_SIT_ON "S"			// 
-
+#define Desc$TASK_TELEPORT "T"			// (vec)pos_offset - Uses the supportcube to teleport to a pos offset relative to the object's position and rotation. Triggered on keydown.
+#define Desc$TASK_DESC "D"				// (str)text - Text that shows on your HUD. Passive.
+#define Desc$TASK_INTERACT "I"			// (bool)direct - Sends an interact event to the level. Triggered on keydown AND keyup.
+#define Desc$TASK_CLIMB "CL"			// (rot)rotation_offset, (str)anim_passive, (str)anim_active, (str)anim_active_down, (str)anim_dismount_top, (str)anim_dismount_bottom, (CSV)nodes, (float)climbspeed. Triggered on keydown.
+#define Desc$TASK_WATER "WT"			// (vec)stream, (float)cyclone, (float)swimspeed_modifier, (str)windlight_preset. Passive.
+#define Desc$TASK_SOUNDSPACE "SS"		// (str)name, (float)vol. Passive.
+#define Desc$TASK_WL_PRESET "WL"		// (str)preset. Passive
+#define Desc$TASK_FOOTSTEPS "tFS"		// (str)preset/(uuid)sound, Passive.
+#define Desc$TASK_TRIGGER_SOUND "TS"	// (key)sound, (float)vol=1. Keydown
+#define Desc$TASK_PLAY_SOUND "PS"		// (key)sound, (float)vol=1. Keydown.
+#define Desc$TASK_SIT_ON "S"			// Keydown.
 
 /*
 

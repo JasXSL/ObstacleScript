@@ -16,13 +16,13 @@
 		- on is used when defining the argument as a variable. Such as onTimer(id) - Creates str id with the ID of the timer that was triggered
 		- handle is used when the argument is used as a filter. Such as handleTimer(id) - Only triggers when the id of the timer is the same as the argument
 	
-	- event idents: ScriptEvt$<evtName> - Ex: ComEvt$receive. Local evts are defined in this script with only evt. These event identifiers are usually abstracted away into the handler above
+	- event idents : ScriptEvt$<evtName> - Ex: ComEvt$receive. Local evts are defined in this script with only evt. These event identifiers are usually abstracted away into the handler above
 	- event conditions : <scriptName>Cond$<conditionName> - Ex: ComCond$listenIsOwner(). Local events don't use the script name. Ex Cond$listenIsOwner
 	- methods : <scriptName>Method$<methodName> - Ex ComMethod$send
 	- method macros : <scriptName>$<methodName> - Ex Com$send()
-	- config defines: <scriptName>Cfg$confName - Ex ComCfg$something 
-	- script constants: <scriptName>$CONST_NAME Ex Rlv$BITS
-	- helpers: <scriptName>Helper$methodName - Ex PortalHelper$getConf()
+	- config defines : <scriptName>Cfg$confName - Ex ComCfg$something 
+	- script constants : <scriptName>$CONST_NAME Ex Rlv$BITS
+	- helpers : <scriptName>Helper$methodName - Ex PortalHelper$getConf()
 	
 	Link message definition:
 	nr : (int)event
@@ -245,6 +245,7 @@ for(; index < count(_P); ++index ){ \
 #include "./local/players.lsl"
 
 #include "./resources/LevelCustomEvents.lsl"
+#include "./resources/PortalCustomEvents.lsl"
 
 #include "./headers/SharedDescriptions.lsh"
 #include "./headers/Controls.lsh"

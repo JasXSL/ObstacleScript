@@ -41,11 +41,12 @@ onCollisionStart( total )
 	Level$raiseEvent( LevelCustomType$TRIGGER, LevelCustomEvt$TRIGGER$trigger, llDetectedKey(0) );
 	
 	if( FLAGS & TriggerConst$F_TRIGGER_ONCE ){
+	
 		llSleep(2);
 		llDie();
 		llSleep(3);
+		
 	}
-
 
 end
 
