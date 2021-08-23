@@ -1,0 +1,32 @@
+#ifndef __Door
+#define __Door
+
+
+#define DoorDesc$id 0			// (str)id
+#define DoorDesc$minRot 1		// (float)minRot	- Use a negative value to reverse
+#define DoorDesc$maxRot 2		// (float)maxRot
+#define DoorDesc$snapShut 3		// (float)radius 	- TODO Distance to snap to the "shut" state
+#define DoorDesc$maxRange 4		// (float)meters	- TODO Drop interact after the player moves this far away
+
+// TODO: Add events
+#define DoorEvt$open 1			// Raised when it moves away from its open state
+#define DoorEvt$close 2			// Raised when it snaps into closed state
+#define DoorEvt$interactStart 3			// Raised when a player interacts with it in idle state
+#define DoorEvt$interactEnd 4			// Raised when returning to idle state
+
+
+
+#define DoorConst$CHAN (OBSTACLE_CHAN+0xD00)	// Listener
+
+#define DoorTask$setRot 1						// (float)z - Sets Z rotation of door. Offset from rez rotation
+#define DoorTask$lock 2							// (bool)locked - Prevents interactions with the door
+
+// Sets Z rotation of the door
+#define Door$setRot( label, z ) \
+	llRegionSay(DoorConst$CHAN, mkarr(label + DoorTask$setRot + z))
+#define Door$lock( label, z ) \
+	llRegionSay(DoorConst$CHAN, mkarr(label + DoorTask$lock + z))
+
+
+
+#endif

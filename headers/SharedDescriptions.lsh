@@ -19,6 +19,7 @@
 #define Desc$TASK_TRIGGER_SOUND "TS"	// (key)sound, (float)vol=1. Keydown
 #define Desc$TASK_PLAY_SOUND "PS"		// (key)sound, (float)vol=1. Keydown.
 #define Desc$TASK_SIT_ON "S"			// Keydown.
+#define Desc$TASK_RC_ONLY "RC"			// TODO Meta task that tells the interact script to only allow targeting this with raycasts
 
 /*
 

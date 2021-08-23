@@ -30,8 +30,8 @@
 	#define LevelCustomEvt$QTE$end 2				// (bool)success, (str)callback
 
 #define LevelCustomType$INTERACT "avInt"
-	#define LevelCustomEvt$INTERACT$start 1			// void - Key pressed
-	#define LevelCustomEvt$INTERACT$end 2			// void - Key released
+	#define LevelCustomEvt$INTERACT$start 1			// (key)obj, (vec)pos - Key pressed
+	#define LevelCustomEvt$INTERACT$end 2			// (key)obj - Key released
 	
 
 

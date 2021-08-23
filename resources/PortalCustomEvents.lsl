@@ -11,18 +11,22 @@
 	
 	"o" type events should be defined in their obstacle header file.
 	This file is for av type event.
+	
+	Note that Portal adds 3 args at the start of the event: (key)hud, (str)customType, (int)customTypeEventType(defined below)
+	As such the first argument is arg<type>(3)
 */
 
 #define PortalCustomType$INTERACT "avInt"
-	#define PortalCustomEvt$INTERACT$start 1			// void - Key pressed
+	#define PortalCustomEvt$INTERACT$start 1			// (vec)pos - Key pressed
 	#define PortalCustomEvt$INTERACT$end 2			// void - Key released
 
 
 
 
-#define onPortalInteractStarted( hud ) \
+#define onPortalInteractStarted( hud, pos ) \
 	if( isEventPortalCustom() AND argStr(1) == PortalCustomType$INTERACT AND argInt(2) == PortalCustomEvt$INTERACT$start ){ \
-		key hud = argKey(0);
+		key hud = argKey(0); \
+		vector pos = argVec(3);
 		
 #define onPortalInteractEnded( hud ) \
 	if( isEventPortalCustom() AND argStr(1) == PortalCustomType$INTERACT AND argInt(2) == PortalCustomEvt$INTERACT$end ){ \

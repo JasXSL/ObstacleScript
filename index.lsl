@@ -284,6 +284,8 @@ for(; index < count(_P); ++index ){ \
 #include "./headers/Obstacles/SlideBeam.lsh"
 #include "./headers/Obstacles/Trap.lsh"
 #include "./headers/Obstacles/Trapdoor.lsh"
+#include "./headers/Obstacles/Door.lsh"
+
 
 
 

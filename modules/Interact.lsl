@@ -42,72 +42,81 @@ string targDesc;
 key targ;
 key real_key;                        // If ROOT is used, then this is the sublink. You can use this global in onInteract
 integer held;
+vector targPos;
 
 list NEARBY;
 
+// Caches for release on interact
+key INTERACT_TARG;
+int INTERACT_LOCAL;
 
+// Gets start position of raycast. ZERO_VECTOR on fail
+vector getRaycastStartPosition(){
+	
+	integer ainfo = llGetAgentInfo(llGetOwner());
+	if( ainfo&AGENT_MOUSELOOK )
+		return llGetCameraPos();
 
+	vector apos = prPos(llGetOwner());
+	rotation arot = prRot(llGetOwner());
+	vector cpos = llGetCameraPos();
+	rotation crot = llGetCameraRot();
+	vector cV = llRot2Euler(crot);
+	vector aV = llRot2Euler(arot);
+	
+	// Prevents picking up items behind you
+	if( llFabs(cV.z-aV.z) > PI_BY_TWO )
+		return ZERO_VECTOR;
+	
+	
+	// If camera is behind the avatar. Then we must calculate where the avatar is and cast the ray from there
+	vector temp = (cpos-apos)/arot; 
+	if( llFabs(llAtan2(temp.y,temp.x))>PI_BY_TWO ){
+	
+		// Owner Position
+		vector C = apos;
+		// Owner Fwd (Z rotation only) ( aV = llRot2Euler( arot ); )
+		vector B = llRot2Fwd(llEuler2Rot(<0,0,aV.z>));
+		// Camera position
+		vector A = cpos;
+		// Camera fwd
+		vector av = llRot2Fwd(crot);
+		
+		// Prevent division by 0
+		if( B == av )
+			return ZERO_VECTOR;
+			
+		// Calculation
+		float div = (av*B);
+		if( div == 0 )
+			return ZERO_VECTOR;
+		return (C-A)*B / div * av + A;
+		
+	}
+	
+	// We can use cpos if camera is in front of avatar
+	return cpos;
+
+}
 
 // Loads targ and targDesc into the global
 fetchFromCamera(){
 
     targ = "";
     targDesc = "";
+	targPos = ZERO_VECTOR;
 
     if( llGetPermissions() & PERMISSION_TRACK_CAMERA ){
     
         integer ainfo = llGetAgentInfo(llGetOwner());
-        if(~ainfo&AGENT_SITTING || BFL&BFL_ALLOW_SITTING){
+        if( ~ainfo&AGENT_SITTING || BFL&BFL_ALLOW_SITTING ){
 
-            vector start;
+            vector start = getRaycastStartPosition();
             vector fwd = llRot2Fwd(llGetCameraRot())*3;
             
-            if( ainfo&AGENT_MOUSELOOK )
-                start = llGetCameraPos();
-                
-            else{
+			if( start == ZERO_VECTOR )
+				return;
             
-                vector apos = prPos(llGetOwner());
-                rotation arot = prRot(llGetOwner());
-                vector cpos = llGetCameraPos();
-                rotation crot = llGetCameraRot();
-                vector cV = llRot2Euler(crot);
-                vector aV = llRot2Euler(arot);
-                
-                // Prevents picking up items behind you
-                if( llFabs(cV.z-aV.z) > PI_BY_TWO )
-                    return;
-                
-                // We can use cpos if camera is in front of avatar
-                start = cpos;
-                
-                // If camera is behind the avatar. Then we must calculate where the avatar is and cast the ray from there
-                vector temp = (cpos-apos)/arot; 
-                if(llFabs(llAtan2(temp.y,temp.x))>PI_BY_TWO){
-                
-                    // Owner Position
-                    vector C = apos;
-                    // Owner Fwd (Z rotation only) ( aV = llRot2Euler( arot ); )
-                    vector B = llRot2Fwd(llEuler2Rot(<0,0,aV.z>));
-                    // Camera position
-                    vector A = cpos;
-                    // Camera fwd
-                    vector av = llRot2Fwd(crot);
-                    
-                    // Prevent division by 0
-                    if(B == av)
-                        return;
-                        
-                    // Calculation
-                    float div = (av*B);
-                    if( div == 0 )
-                        return;
-                    start = (C-A)*B / div * av + A;
-                    
-                }
-                
-                //start = llGetRootPosition()+<0,0,ascale.z*.25>;
-            }
             
             list ray = llCastRay(start, start+fwd, []);
 
@@ -122,6 +131,7 @@ fetchFromCamera(){
                 
                     targ = llList2Key(ray,0);
                     targDesc = "CUSTOM";
+					targPos = l2v(ray, 1); 
                     return;
                     
                 }
@@ -137,18 +147,21 @@ fetchFromCamera(){
                 }
                 #endif
 
-                if(prRoot(llGetOwner()) != prRoot(k)){
+                if( prRoot(llGetOwner()) != prRoot(k) ){
 
                     list descparse = llParseString2List(td, ["$$"], []);
     
                     list_shift_each(descparse, val, {
                     
                         list parse = llParseString2List(val, ["$"], []);
-                        if(llList2String(parse,0) == Desc$TASK_DESC){
+                        if( llList2String(parse,0) == Desc$TASK_DESC ){
+						
                             targDesc = td;
                             targ = k;
                             real_key = real;
+							targPos = l2v(ray, 1);
                             return;
+							
                         }
                         
                     })
@@ -171,7 +184,6 @@ seek( list sensed ){
     
     // Try raycast in camera direction first
     fetchFromCamera();
-    
     
 
     // Fail
@@ -254,7 +266,7 @@ onStateEntry()
     llSetMemoryLimit(llGetUsedMemory()*2);
     if( llGetAttached() )
         llRequestPermissions(llGetOwner(), PERMISSION_TRACK_CAMERA);
-    llSensorRepeat("","",ACTIVE|PASSIVE,2.5,PI,0.25);
+    llSensorRepeat("","",ACTIVE|PASSIVE,2.5,PI,0.2);
     //llSensor("","",ACTIVE|PASSIVE,3,PI);
     
 end
@@ -292,7 +304,18 @@ onControlsKeyPress( pressed, released )
         #endif
         );
 		
+		
+
+	if( released & controls && INTERACT_TARG != "" ){
 	
+		if( INTERACT_LOCAL )
+			Portal$raiseEvent( INTERACT_TARG, PortalCustomType$INTERACT, PortalCustomEvt$INTERACT$end, [] );
+		else
+			Level$raiseEvent( LevelCustomType$INTERACT, LevelCustomEvt$INTERACT$end, INTERACT_TARG );
+	
+		INTERACT_TARG = "";
+	
+	}
 
     if(
         pressed & controls		
@@ -303,7 +326,7 @@ onControlsKeyPress( pressed, released )
         BFL = BFL|BFL_RECENT_CLICK;
         float rate = 
         #ifdef InteractCfg$MAX_RATE
-            rate = InteractCfg$MAX_RATE
+            InteractCfg$MAX_RATE
         #else
             1
         #endif
@@ -320,9 +343,8 @@ onControlsKeyPress( pressed, released )
         }
         #endif
         
-        
+        // Check actions
         list actions = llParseString2List(targDesc, ["$$"], []);
-                
         if( !count(actions) ){
             
             #ifdef InteractCfg$SOUND_ON_FAIL
@@ -331,7 +353,18 @@ onControlsKeyPress( pressed, released )
             return;
             
         }
+		
+		// Attempt to update position via raycast, for higher accuracy of the interaction point vector
+		vector start = getRaycastStartPosition();           
+		if( start != ZERO_VECTOR ){
+			
+			vector fwd = llRot2Fwd(llGetCameraRot())*3;
+			list ray = llCastRay(start, start+fwd, []);
+			if( l2k(ray, 0) == targ || l2k(ray, 0) == real_key )
+				targPos = l2v(ray, 1);
         
+		}
+		
         integer successes;
         while( count(actions) ){
             
@@ -386,16 +419,16 @@ onControlsKeyPress( pressed, released )
                 );
                 
             } 
-			// Todo: Send interact to level
 			else if( task == Desc$TASK_INTERACT ){
 				
 				bool direct = l2i(spl, 0);	// If true, send to object, otherwise raise a level event
 				if( direct )
-					Portal$raiseEvent( targ, PortalCustomType$INTERACT, PortalCustomEvt$INTERACT$start, [] );
+					Portal$raiseEvent( targ, PortalCustomType$INTERACT, PortalCustomEvt$INTERACT$start, targPos );
 				else
-					Level$raiseEvent( LevelCustomType$INTERACT, LevelCustomEvt$INTERACT$start, [] );
+					Level$raiseEvent( LevelCustomType$INTERACT, LevelCustomEvt$INTERACT$start, targ + targPos );
 				
-				// Todo: Stash and handle keyup as well
+				INTERACT_LOCAL = direct;
+				INTERACT_TARG = targ;
 				
 				
 			}
