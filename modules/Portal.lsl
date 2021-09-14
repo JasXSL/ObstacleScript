@@ -42,6 +42,7 @@ fetchSelf(){
 // Got all the scripts, request players
 loadComplete(){
     
+	// Note: If the spawnID is 0 here, you may be overriding llSetText in your asset script
     // Fetch desc
 	Rezzer$rezzed( mySpawner(), PortalHelper$getSpawnId() );
     llSetRemoteScriptAccessPin(0);

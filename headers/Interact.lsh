@@ -1,6 +1,8 @@
 #ifndef __Interact
 #define __Interact
 
+// Interaction descriptions are in ./SharedDescriptions.lsh
+
 // #define InteractCfg$ON_DESC				// Define this to a function name you want called when a description is detected, usually setting a text on your HUD. Make your function like fnName( key id, string desc )
 // #define InteractCfg$CUSTOM_CLICK 		// Define this to a function name you want to trigger before allowing the interact. The function should be defined as integer fnName( key id, string type, list data ) and return TRUE on success
 // #define InteractCfg$USE_ROOT				// Uses root prim instead

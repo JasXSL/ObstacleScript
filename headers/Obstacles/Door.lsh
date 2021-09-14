@@ -5,14 +5,14 @@
 #define DoorDesc$id 0			// (str)id
 #define DoorDesc$minRot 1		// (float)minRot	- Use a negative value to reverse
 #define DoorDesc$maxRot 2		// (float)maxRot
-#define DoorDesc$snapShut 3		// (float)radius 	- TODO Distance to snap to the "shut" state
-#define DoorDesc$maxRange 4		// (float)meters	- TODO Drop interact after the player moves this far away
+#define DoorDesc$snapShut 3		// (float)radius 	- Distance to snap to the "shut" state
+#define DoorDesc$maxRange 4		// (float)meters	- Drop interact after the player moves this far away
 
-// TODO: Add events
-#define DoorEvt$open 1			// Raised when it moves away from its open state
+
+#define DoorEvt$open 1			// Raised when it moves out of closed snap
 #define DoorEvt$close 2			// Raised when it snaps into closed state
-#define DoorEvt$interactStart 3			// Raised when a player interacts with it in idle state
-#define DoorEvt$interactEnd 4			// Raised when returning to idle state
+#define DoorEvt$interactStart 3			// (key)player - Raised when a player interacts with it in idle state, or when the player is changed
+#define DoorEvt$interactStop 4			// Raised when returning to idle state
 
 
 
@@ -20,13 +20,30 @@
 
 #define DoorTask$setRot 1						// (float)z - Sets Z rotation of door. Offset from rez rotation
 #define DoorTask$lock 2							// (bool)locked - Prevents interactions with the door
+#define DoorTask$setRotPerc 3					// (float)perc - Sets a door rotation to a percentage of its min max (0-1)
 
 // Sets Z rotation of the door
 #define Door$setRot( label, z ) \
 	llRegionSay(DoorConst$CHAN, mkarr(label + DoorTask$setRot + z))
 #define Door$lock( label, z ) \
 	llRegionSay(DoorConst$CHAN, mkarr(label + DoorTask$lock + z))
+#define Door$setRotPerc( label, perc ) \
+	llRegionSay(DoorConst$CHAN, mkarr(label + DoorTask$setRotPerc + perc))
+#define Door$setRotPercTarg( targ, label, perc ) \
+	llRegionSayTo(targ, DoorConst$CHAN, mkarr(label + DoorTask$setRotPerc + perc))
 
+
+#define onDoorOpen() \
+	if( SENDER_SCRIPT IS "Door" AND EVENT_TYPE IS DoorEvt$open ){
+#define onDoorClose() \
+	if( SENDER_SCRIPT IS "Door" AND EVENT_TYPE IS DoorEvt$close ){
+	
+#define onDoorInteractStart( player ) \
+	if( SENDER_SCRIPT IS "Door" AND EVENT_TYPE IS DoorEvt$interactStart ){ \
+		key player = argKey(0);
+#define onDoorInteractStop() \
+	if( SENDER_SCRIPT IS "Door" AND EVENT_TYPE IS DoorEvt$interactStop ){
+	
 
 
 #endif

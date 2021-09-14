@@ -47,7 +47,7 @@ rez(){
     if( l2i(data, 5) )
         startParam = PortalConst$SP_LIVE;
         
-    startParam = startParam | ((IDX<<5)&0xFFFF);
+    startParam = startParam | ((IDX&0xFFFF)<<5);
     
     descQueue += (list)
         IDX + 
@@ -107,7 +107,8 @@ handleOwnerMethod( RezzerMethod$rezzed )
     integer pos = llListFindList(descQueue, (list)id);
     if( pos == -1 ){
         
-        llOwnerSay("Error: Asset trying to fetch desc, but desc not found "+(str)id);
+        llOwnerSay("Rezzer.lsl : Error: Asset trying to fetch desc, but desc not found "+(str)id + " in queue: " + mkarr(descQueue));
+		llOwnerSay("Make sure you're not overriding llSetText until the portal is initialized");
         return;
         
     }

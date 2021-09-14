@@ -50,6 +50,9 @@ list NEARBY;
 key INTERACT_TARG;
 int INTERACT_LOCAL;
 
+// Keys that can be interacted with
+list CACHE_INTERACTIVE;
+
 // Gets start position of raycast. ZERO_VECTOR on fail
 vector getRaycastStartPosition(){
 	
@@ -118,7 +121,14 @@ fetchFromCamera(){
 				return;
             
             
-            list ray = llCastRay(start, start+fwd, []);
+            list ray = llCastRay(start, start+fwd, [RC_MAX_HITS, 2]);
+			// Prevent owner hits
+			if( l2k(ray, 0) == llGetOwner() ){
+				
+				ray = llDeleteSubList(ray, 0, 1);
+				ray = llListReplaceList(ray, (list)(l2i(ray, -1)-1), -1, -1);
+				
+			}
 
             if( llList2Integer(ray,-1) > 0 && llVecDist(llGetRootPosition(), l2v(ray, 1)) < 2.5 ){
                 
@@ -176,16 +186,13 @@ fetchFromCamera(){
     
 }
 
-seek( list sensed ){
+seek(){
     
+    list sensed = CACHE_INTERACTIVE + additionalAllow;
     
-
-    sensed += additionalAllow;    // Add additionalAllow to sensed
-    
-    // Try raycast in camera direction first
+    // Try raycast in camera direction first. This sets the targ global. If targ global is set, it ignores the rest.
     fetchFromCamera();
     
-
     // Fail
     if( !count(sensed) && targ == "" ){
         
@@ -246,7 +253,18 @@ seek( list sensed ){
 
 }
 
+// Creates a list of tasks a description has. Doesn't contain data, only the task identifiers.
+list descTasks( string desc ){
 
+	list d = split(desc, "$$");
+	list out;
+	integer i;
+	for(; i < count(d); ++i )	
+		out += llGetSubString(l2s(d, i), 0, llSubStringIndex(l2s(d, i), "$"));
+	
+	return out;
+	
+}
 
 
 
@@ -266,32 +284,41 @@ onStateEntry()
     llSetMemoryLimit(llGetUsedMemory()*2);
     if( llGetAttached() )
         llRequestPermissions(llGetOwner(), PERMISSION_TRACK_CAMERA);
-    llSensorRepeat("","",ACTIVE|PASSIVE,2.5,PI,0.2);
+    llSensorRepeat("","",ACTIVE|PASSIVE,2.5,PI,.5);
     //llSensor("","",ACTIVE|PASSIVE,3,PI);
+	
+	setInterval("CH", 0.1);
     
+end
+
+handleTimer( "CH" )
+
+	seek();
+
 end
 
 onSensor( total )
     
     integer i;
-    list near = [];
+    CACHE_INTERACTIVE = [];
     for( ; i<total; ++i ){
         
         key id = llDetectedKey(i);
+		list tasks = descTasks(prDesc(id));
         if( 
-            llGetSubString(prDesc(id), 0, 1) == "D$" && 
+            ~llListFindList(tasks, (list)Desc$TASK_DESC) &&
+			llListFindList(tasks, (list)Desc$TASK_RC_ONLY) == -1 &&
             !l2i(llGetObjectDetails(id, (list)OBJECT_PHANTOM), 0) 
-        )near += id;
+        )CACHE_INTERACTIVE += id;
                         
     }
     
-    seek(near);
-
 end
 
 onNoSensor()
     
-    seek([]);
+	CACHE_INTERACTIVE = [];
+    seek();
 
 end
 

@@ -1,4 +1,11 @@
 /*
+	Event constants:
+	- METHOD_ARGS : All arguments passed to the event
+	- SENDER_SCRIPT : Script that raised the event (if applicable)
+	- EVENT_TYPE : Type of event raised
+	- SENDER_KEY : Key of sender, or "" if internal
+	
+
 	Folder structure:
 	- headers : Contains headers and event definitions for modules
 				The script name in SL should be the same as the script name in the directory
