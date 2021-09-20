@@ -6,6 +6,12 @@
 #define FACE_SIZE 1016
 #define TABLE_SIZE (FACE_SIZE*2-1)
 
+#define E_NAME 0
+#define E_POS 1
+#define E_ROT 2
+#define E_DESC 3
+#define E_GROUP 4
+
 // DB tables are structured as [TABLE_NAME, data1, data2...]
 integer P_DB;   // Database prim
 list DB_TABLES = [-1, -1];  // contains faces, index mapped to TABLE_* below
@@ -345,11 +351,11 @@ handleOwnerMethod( SpawnerMethod$load )
             if( ~llListFindList(METHOD_ARGS, (list)l2s(spawn, 4)) )
                 Rezzer$rez( 
                     LINK_THIS, 
-                    l2s(spawn, 0),
-                    (llGetRootPosition()+(vector)l2s(spawn, 1)), 
-                    l2s(spawn, 2),
-                    l2s(spawn, 3),
-                    l2s(spawn, 4), 
+                    l2s(spawn, E_NAME),
+                    (llGetRootPosition()+(vector)l2s(spawn, E_POS)), 
+                    l2s(spawn, E_ROT),
+                    l2s(spawn, E_DESC),
+                    l2s(spawn, E_GROUP), 
                     live
                 );
             
@@ -382,11 +388,11 @@ handleOwnerMethod( SpawnerMethod$spawnByIndex )
 			
                 Rezzer$rez( 
                     LINK_THIS, 
-                    l2s(spawn, 0),
-                    (llGetRootPosition()+(vector)l2s(spawn, 1)), 
-                    l2s(spawn, 2),
-                    l2s(spawn, 3),
-                    l2s(spawn, 4), 
+                    l2s(spawn, E_NAME),
+                    (llGetRootPosition()+(vector)l2s(spawn, E_POS)), 
+                    l2s(spawn, E_ROT),
+                    l2s(spawn, E_DESC),
+                    l2s(spawn, E_GROUP), 
                     live
                 );
 			}
@@ -405,6 +411,31 @@ handleOwnerMethod( SpawnerMethod$fetchFromHud )
 	fetchAssets();
 end
 
+
+handleInternalMethod( SpawnerMethod$getGroups )
+	
+	str callback = argStr(0);
+	METHOD_ARGS = llDeleteSubList(METHOD_ARGS, 0, 0);
+	
+	list out;
+	integer i;
+    for( ; i < count(ASSET_TABLES); ++i ){
+        
+        list data = getTableData(l2i(ASSET_TABLES, i));
+        integer idx;
+        for( ; idx < count(data); ++idx ){
+            
+            list spawn = llJson2List(l2s(data, idx));
+            if( ~llListFindList(METHOD_ARGS, (list)l2s(spawn, E_GROUP)) )
+				out += l2s(data, idx);
+			
+        }
+        
+    }
+	
+	raiseEvent(SpawnerEvt$getGroups, callback + out);
+
+end
 
 
 

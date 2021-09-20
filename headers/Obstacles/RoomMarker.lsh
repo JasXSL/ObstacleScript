@@ -1,0 +1,13 @@
+#ifndef __RoomMarker
+#define __RoomMarker
+
+// Used to denote rooms in ghost hunting games.
+// Save these to spawn group 'rooms'
+
+// Desc is an array
+#define RoomMarkerDesc$size 0			// (vec)size
+#define RoomMarkerDesc$label 1			// (str)label
+
+#endif
+
+

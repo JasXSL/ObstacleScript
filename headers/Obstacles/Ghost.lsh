@@ -1,0 +1,42 @@
+#ifndef __Ghost
+#define __Ghost
+
+// Ghost uses standard methods
+#define GhostMethod$followNodes 1		// portal1, portal2... - Follow path nodes
+#define GhostMethod$toggleHunt 2		// (bool)hunting - Start or stop hunting players
+#define GhostMethod$setType 3			// (int)ghost_type - Sets a ghost type, affecting its behavior
+#define GhostMethod$smudge 4			// void  - Player has used a smudge stick
+#define GhostMethod$interact 5			// void - Interact with a nearby item
+#define GhostMethod$stop 6				// (bool)stop - Stops the ghost. Useful for debugging
+
+
+#define GhostConst$type$succubus 0			// Gets more active as player arousal increases. Will prefer interacting with a particular player if they're nearby. During a hunt, target that player in particular.
+#define GhostConst$type$yuri 1				// Special ability warps between rooms with plumbing. Will not leave rooms with plumbing except during a hunt. Prefers female investigators.
+#define GhostConst$type$asswang 2			// Only active if nobody's looking at it. Moves twice as fast during a hunt unless observed.
+#define GhostConst$type$powoltergeist 3		// Prefers interacting with items over players, and will interact more often. Gives players 1 sec less head start during a hunt.
+#define GhostConst$type$yaoikai 4			// Can hunt much earlier if players are typing in the ghost room. Cannot hear footsteps. Prefers male investigators.
+#define GhostConst$type$imp 5				// Prefers touching players over interacting with items. No arousal penalty when successfully using a luigi board.
+#define GhostConst$type$hantuwu 6			// Moves faster and gets more active when the temperature is high.
+#define GhostConst$type$inugami 7			// Being in the ghost room increases arousal faster. If nobody's in the ghost room it becomes more active.
+#define GhostConst$type$hauntai 8			// Hunts earlier and more often when the lgiht is off in the ghost room. Will only turn lights off, not on.
+
+
+
+
+#define Ghost$followNodes( nodes ) \
+	runOmniMethod("Ghost", GhostMethod$followNodes, nodes)
+#define Ghost$stop( stop ) \
+	runOmniMethod("Ghost", GhostMethod$stop, stop)
+#define Ghost$toggleHunt( on ) \
+	runOmniMethod("Ghost", GhostMethod$toggleHunt, on)
+#define Ghost$setType( type ) \
+	runOmniMethod("Ghost", GhostMethod$setType, type)
+#define Ghost$smudge() \
+	runOmniMethod("Ghost", GhostMethod$smudged, [])
+#define Ghost$interact() \
+	runOmniMethod("Ghost", GhostMethod$interact, [])
+
+
+	
+
+#endif

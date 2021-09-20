@@ -16,13 +16,14 @@
 #define SpawnerMethod$setSpawnValue 16		// (int)spawnIndex, (int)paramIndex, (var)value - Updates a spawn value
 #define SpawnerMethod$spawnByIndex 17		// (int)live, (int)index1, index2... - Spawns one or many items by index
 #define SpawnerMethod$fetchFromHud 18		// void - Fetches new assets from HUD
+#define SpawnerMethod$getGroups 19			// (str)callback, group1, group2... - Raises the getGroups event with table data
 
 
 #define SpawnerConst$CB_GAME_START "_G_"
 
 
 #define SpawnerEvt$loadStart 1				// (str)callback, (bool)live, (str)group1, (str)group2... - A group of spawns has started. Use RezzerEvt$cb for detecting when the group is done.
-
+#define SpawnerEvt$getGroups 2				// (str)callback, data...
 
 #define Spawner$add( targ ) \
 	runMethod(targ, "Spawner", SpawnerMethod$add, [])
@@ -33,6 +34,9 @@
 
 #define Spawner$spawnGame() \
 	Spawner$load( LINK_THIS, "", TRUE, SpawnerConst$CB_GAME_START )
+
+#define Spawner$getGroups( callback, groups ) \
+	runMethod(LINK_THIS, "Spawner", SpawnerMethod$getGroups, callback + groups)
 
 #define Spawner$fetchFromHud( targ ) \
 	runMethod(targ, "Spawner", SpawnerMethod$fetchFromHud, [])
@@ -47,5 +51,10 @@
 #define onSpawnerGameLoad() \
 	if( SENDER_SCRIPT IS "Spawner" AND EVENT_TYPE IS SpawnerEvt$loadStart AND ~llListFindList(llDeleteSubList(METHOD_ARGS, 0, 1), (list)"") ){
 
+#define onSpawnerGetGroups( callback, spawns ) \
+	if( SENDER_SCRIPT IS "Spawner" AND EVENT_TYPE IS SpawnerEvt$getGroups ){ \
+		string callback = l2s(METHOD_ARGS, 0); \
+		list spawns = llDeleteSubList(METHOD_ARGS, 0, 0);
+		
 
 #endif
