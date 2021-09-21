@@ -1,5 +1,16 @@
 Phasmo:
 
+	Metadata needed for descs:
+	Any interactive:
+		- CSV of labels they're in
+		- Interactive tag
+	Ghost:
+		- State the ghost is currently in
+	
+	Ghost needed data from host:
+		- Ghost room position, rotation, and scale
+		- Some way to prevent the ghost from leaving the house
+	
 
 	m = model
 	u = uv mapped

@@ -9,6 +9,7 @@
 #define GhostMethod$interact 5			// void - Interact with a nearby item
 #define GhostMethod$stop 6				// (bool)stop - Stops the ghost. Useful for debugging
 
+#define GhostMethod$cbNodes 100			// Callback for Nodes.lsh getNodes method
 
 #define GhostConst$type$succubus 0			// Gets more active as player arousal increases. Will prefer interacting with a particular player if they're nearby. During a hunt, target that player in particular.
 #define GhostConst$type$yuri 1				// Special ability warps between rooms with plumbing. Will not leave rooms with plumbing except during a hunt. Prefers female investigators.

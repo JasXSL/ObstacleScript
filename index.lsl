@@ -1,7 +1,7 @@
 /*
 	Event constants:
 	- METHOD_ARGS : All arguments passed to the event
-	- SENDER_SCRIPT : Script that raised the event (if applicable)
+	- SENDER_SCRIPT : Script that raised the event (event only)
 	- EVENT_TYPE : Type of event raised
 	- SENDER_KEY : Key of sender, or "" if internal
 	
@@ -277,6 +277,7 @@ for(; index < count(_P); ++index ){ \
 #include "./headers/Portal.lsh"
 #include "./headers/Rezzer.lsh"
 #include "./headers/LevelRepo.lsh"
+#include "./headers/Nodes.lsh"
 
 #include "./headers/Attachment.lsh"
 

@@ -8,6 +8,10 @@
 #include "ObstacleScript/headers/Obstacles/Ghost.lsh"
 #include "ObstacleScript/index.lsl"
 
+list cNodes;	// Cache of pathing nodes, fetched from Nodes script
+#define cacheNodes() cNodes = []; Nodes$getRooms( GhostMethod$cbNodes )
+
+
 /* CONFIG */
 // Hover height when walking
 float hover = 1.33;
@@ -39,7 +43,10 @@ integer STATE;
 
 vector roamTarget;          // Position we're roaming towards
 key chaseTarget;            // Player we're chasting
-float nextRoam;       // llGetTime() of when we finished the last roam
+float nextRoam;       		// llGetTime() of when we finished the last roam
+float lastWarp;				// llGetTime of when we last went to the ghost room
+
+vector spawnPos;
 
 setState( int st ){
 	
@@ -60,10 +67,17 @@ integer BFL;
 #define BFL_HUNTING 0x2		// Currently hunting for players
 #define BFL_SMUDGE 0x4		// Can only idle. Deaf and blind.
 
+#define BFL_HUNT_HAS_LOS 0x10	// We currently have line of sight to our target
 
 
 warpToGhostRoom(){
-	// Todo: Warp back to ghost room
+
+	lastWarp = llGetTime();
+	toggleWalking(FALSE);
+	llSetKeyframedMotion([], [KFM_COMMAND, KFM_CMD_STOP]);
+	llSleep(.5);
+	llSetRegionPos(spawnPos);
+	
 }
 
 // toggles walking animation
@@ -118,9 +132,11 @@ integer walkTowards( vector pos ){
 	// Find where to step
 	vector fwd = llVecNorm(<pp.x, pp.y, 0>-<gp.x, gp.y, 0>)*.5;
 	// Can step up on heights hip level or 1m below
-	ray = llCastRay(gp+fwd, gp+fwd-<0,0,1+hover>, RC_DEFAULT);
+	ray = llCastRay(gp+fwd, gp+fwd-<0,0,1+hover>, RC_DEFAULT + RC_DATA_FLAGS + RC_GET_NORMAL);
+	
+	vector v = l2v(ray, 2);
 	list stepRay = llCastRay(gp, gp+fwd, RC_DEFAULT);
-	if( l2i(ray, -1) < 1 || l2i(stepRay, -1) )
+	if( l2i(ray, -1) < 1 || l2i(stepRay, -1) || v.z < .2 )
 		return FALSE;
 		
 	vector goto = l2v(ray, 1) + <0,0, hover>;
@@ -135,7 +151,52 @@ integer walkTowards( vector pos ){
 }
 
 
+startHunt(){
+	
+	playerFootsteps = [];
+	forPlayer(index, player)
+		playerFootsteps += 0;
+	end
+	huntTarget = "";
+	huntLastSeenPos = ZERO_VECTOR;
+	
+}
+
+
+// Checks if point is inside a room marker. Prevents the ghost from leaving the house
+integer pointInRoom( vector point ){
+
+	integer i;
+	for(; i < count(cNodes); i += NodesConst$rmStride ){
+	
+		vector bbPos = l2v(cNodes, i+1);
+		rotation bbRot = l2r(cNodes, i+2);
+		vector bbSize = l2v(cNodes, i+3);       
+		bbPos /= bbRot;
+		vector pos = point / bbRot;
+		
+		if(
+			pos.x < bbPos.x+bbSize.x/2 && pos.x > bbPos.x-bbSize.x/2 &&
+			pos.y < bbPos.y+bbSize.y/2 && pos.y > bbPos.y-bbSize.y/2 &&
+			pos.z < bbPos.z+bbSize.z/2 && pos.z > bbPos.z-bbSize.z/2
+		){
+		
+			return TRUE;
+			
+		}
+	}
+	
+	return FALSE;
+
+}
+
+key huntTarget;				// Target we're currently tracking
+vector huntLastSeenPos;		// Position we last saw them
+list playerFootsteps;
+float huntLastFootstepReq;
+
 #include "ObstacleScript/begin.lsl"
+
 handleTimer( "A" )
 
 	if( BFL & BFL_PAUSE ){
@@ -146,8 +207,89 @@ handleTimer( "A" )
 		
 	}
 	
-	// Todo: handle hunt tracking
-	if( BFL&BFL_HUNTING ){}
+	if( BFL&BFL_HUNTING ){
+		
+		// listen for player footsteps
+		forPlayer( index, player )
+			
+			integer ainfo = llGetAgentInfo(player);
+			if( ainfo & AGENT_WALKING && ~ainfo & AGENT_CROUCHING )
+				playerFootsteps = llListReplaceList(playerFootsteps, (list)prPos(player), index, index);
+		
+		end
+			
+		
+		vector g = llGetPos();
+		
+		// First see if we can still see our tracked target
+		if( llKey2Name(huntTarget) != "" ){
+		
+			vector as = llGetAgentSize(huntTarget);
+			integer ainfo = llGetAgentInfo(huntTarget);
+			float z = as.z/2-.1;
+			if( ainfo & AGENT_CROUCHING )
+				z = 0;
+			vector tp = prPos(huntTarget);
+			list ray = llCastRay(llGetPos(), tp+<0,0,z>, RC_DEFAULT);
+			if( l2i(ray, -1) == 0 && pointInRoom(tp) ){
+				
+				BFL = BFL|BFL_HUNT_HAS_LOS;
+				huntLastSeenPos = tp;
+				
+			}
+			else{
+			
+				BFL = BFL &~BFL_HUNT_HAS_LOS;
+				
+			}
+		
+		}
+		
+		// We didn't see the target
+		if( ~BFL&BFL_HUNT_HAS_LOS ){
+			
+			// Check if we still have a chase position to go to
+			if( huntTarget != "" && llVecDist(<huntLastSeenPos.x, huntLastSeenPos.y, 0>, <g.x, g.y, 0>) < .5 )
+				huntTarget = "";			
+		
+		}
+		
+		// We didn't see the target, and we don't have a position to go to. See if we have any footsteps.
+		if( huntTarget == "" ){
+			
+			// Check if we have any visible footsteps
+			integer i;
+			for(; i < count(playerFootsteps); ++i ){
+			
+				vector step = l2v(playerFootsteps, i);
+				if( step != ZERO_VECTOR && pointInRoom(step) ){
+				
+					list ray = llCastRay(llGetPos(), step, RC_DEFAULT);
+					if( l2i(ray, -1) == 0 ){
+						
+						huntLastSeenPos = step;
+						i = 9001;
+					
+					}
+				
+				}
+				
+			}
+			
+			
+			if( i != 9001 && llGetTime() < huntLastFootstepReq ){
+				
+				
+				// Todo: Search for viable footsteps
+				setState(STATE_IDLE);
+				
+				
+			}
+		
+		}
+	
+	
+	}
 
 	if( STATE == STATE_IDLE ){
 
@@ -155,8 +297,15 @@ handleTimer( "A" )
 		if( llGetTime() > nextRoam || BFL&BFL_HUNTING ){
 			
 			vector dir = llRot2Fwd(llEuler2Rot(<0,0,llFrand(TWO_PI)>));
-			float dist = 2+llFrand(5);
+			
+			// Exponentially grow the area it can roam
+			float maxDist = llPow(0.02*(llGetTime()-lastWarp), 1.3)+1;
+			float dist = maxDist;
+			if( dist > 5 )
+				dist = 5;
+				
 			vector gp = llGetPos()-<0,0,.5>;
+			
 			list ray = llCastRay(gp, gp+dir*dist, RC_DEFAULT);
 			if( l2i(ray, -1) == 1 ){
 				
@@ -168,6 +317,8 @@ handleTimer( "A" )
 			}
 			
 			roamTarget = llGetPos()+dir*dist;
+			if( llVecDist(spawnPos, roamTarget) > maxDist || !pointInRoom(roamTarget) )
+				return;
 			setState(STATE_ROAM);
 		
 		}
@@ -178,7 +329,7 @@ handleTimer( "A" )
 	
 		// Reached destination
 		vector gp = llGetPos();
-		if( llVecDist(<gp.x, gp.y, 0>, <roamTarget.x, roamTarget.y, 0>) < .5 ){
+		if( llVecDist(<gp.x, gp.y, 0>, <roamTarget.x, roamTarget.y, 0>) < .25 ){
 		
 			toggleWalking(false);
 			setState(STATE_IDLE);
@@ -192,6 +343,7 @@ handleTimer( "A" )
 		// Failed walking, return to idle
 		if( !att ){
 		
+			llSetKeyframedMotion([], [KFM_COMMAND, KFM_CMD_STOP]);
 			toggleWalking(false);
 			setState(STATE_IDLE);
 			return;
@@ -245,8 +397,6 @@ handleTimer( "A" )
 			
 		}
 		
-		
-		
 		integer att = walkTowards(pp);
 		
 		if( !att ){
@@ -264,7 +414,6 @@ handleTimer( "A" )
 			}
 		
 		}
-	
 	
 	}
 	
@@ -286,13 +435,22 @@ handleTimer( "A" )
 
 end
 
+
+
+onPortalLoadComplete( desc )
+	spawnPos = llGetPos();
+	cacheNodes();
+end
+
 onStateEntry()
         
+	spawnPos = llGetPos();
     stopAllObjectAnimations()
     llStartObjectAnimation("hugeman_idle");
     //llStartObjectAnimation("hugeman_walk");
     llSitTarget(<.6,0,-.6>, llEuler2Rot(<0,0,PI>));
     setInterval("A", 0.25);
+	cacheNodes();
     
 end
 
@@ -379,7 +537,11 @@ handleOwnerMethod( GhostMethod$stop )
 	
 end
 
-
+handleOwnerMethod( GhostMethod$cbNodes )
+	
+	Nodes$handleGetRooms(cNodes);
+			
+end
 
 #include "ObstacleScript/end.lsl"
 
