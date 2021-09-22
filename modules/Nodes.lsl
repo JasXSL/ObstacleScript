@@ -1,7 +1,7 @@
 #define USE_STATE_ENTRY
 #include "ObstacleScript/index.lsl"
 
-string DEBUG_TARG = "";
+
 
 key ghost = "1af76701-c79b-57d8-c41c-8efe2ab1c8f9";
 
@@ -180,10 +180,10 @@ string getPosRoom( vector point ){
 }
 
 onGroupsCached(){
-
+	/*
 	if( DEBUG_TARG )
 		sendGhostToRoom(DEBUG_TARG);
-    
+    */
 }
 
 // Returns absolute indexes from the portals list of portals in the room marker
@@ -229,42 +229,6 @@ string getClosestRoom( vector pos ){
         
     }
     return closest;
-    
-}
-
-sendGhostToRoom( string room ){
-    
-    // Get the index of the room the ghost is in
-    string currentRoom = getPosRoom(prPos(ghost));
-    // Already there!
-    if( currentRoom == room )
-        return;
-    
-    // Out of bounds, we'll have to improvise
-    if( currentRoom == "" )
-        currentRoom = getClosestRoom(prPos(ghost));
-
-    integer ri = getRoomIndexByName(currentRoom);
-    // Start by trying to find a node in the current room
-    if( ~ri ){
-
-        list path = findShortestPath(currentRoom, room, []);
-        qd("Trying to path from "+currentRoom+"to"+room);
-        list nodes = pathToNodes(path);
-        qd(path);
-        //qd(nodes);
-        
-        
-        Ghost$followNodes(nodes);
-        
-    }
-    
-    /*
-        list path = findShortestPath(FROM, TO, []);
-    list nodes = pathToNodes(path);
-
-    llRegionSay(13, mkarr("PORTALS" + nodes));
-    */
     
 }
 
@@ -379,6 +343,41 @@ handleMethod( NodesMethod$getRooms )
 		runMethod(SENDER_KEY, argStr(0), argInt(1), i + slice);
 		
 	}
+end
+
+handleMethod( NodesMethod$getPath )
+
+	string ss = argStr(0);
+	int cb = argInt(1);
+	vector startPos = argVec(2);
+	string room = argStr(3);
+	if( (vector)room != ZERO_VECTOR )
+		room = getPosRoom((vector)room);
+		
+	// Get the index of the room the ghost is in
+    string currentRoom = getPosRoom(startPos);
+    // Already there!
+    if( currentRoom == room )
+        return;
+    
+    // Out of bounds, we'll have to improvise
+    if( currentRoom == "" )
+        currentRoom = getClosestRoom(startPos);
+
+    integer ri = getRoomIndexByName(currentRoom);
+    // Start by trying to find a node in the current room
+    if( ~ri ){
+
+        list path = findShortestPath(currentRoom, room, []);
+        qd("Trying to path from "+currentRoom+"to"+room);
+        list nodes = pathToNodes(path);
+        qd(path);
+        
+        runMethod(SENDER_KEY, ss, cb, nodes);
+        
+    }
+    
+
 end
 
 

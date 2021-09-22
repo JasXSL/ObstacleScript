@@ -15,8 +15,6 @@ list cNodes;	// Cache of pathing nodes, fetched from Nodes script
 /* CONFIG */
 // Hover height when walking
 float hover = 1.33;
-// Speed when walking
-float speed = 1.5;
 
 /* PATH NODES */
 // List of portals to go to
@@ -56,6 +54,9 @@ setState( int st ){
 	if( STATE == STATE_ROAM && st == STATE_IDLE )
 		nextRoam = llGetTime()+1+llFrand(5);
 
+	if( STATE == STATE_CHASING )
+		chaseFailed = 0;
+
 	STATE = st;
 	
 }
@@ -68,10 +69,11 @@ integer BFL;
 #define BFL_SMUDGE 0x4		// Can only idle. Deaf and blind.
 
 #define BFL_HUNT_HAS_LOS 0x10	// We currently have line of sight to our target
-
+#define BFL_HUNT_HAS_POS 0x20	// LOS lost, but we have their last visible coordinates
 
 warpToGhostRoom(){
 
+	setState(STATE_IDLE);
 	lastWarp = llGetTime();
 	toggleWalking(FALSE);
 	llSetKeyframedMotion([], [KFM_COMMAND, KFM_CMD_STOP]);
@@ -111,39 +113,55 @@ integer walkTowards( vector pos ){
 
 	vector gp = llGetPos();
 	vector pp = pos;
+	list ray;
+	// Door detection when pathing or hunting towards a position
+	if( STATE == STATE_PATHING || huntLastSeenPos != ZERO_VECTOR ){
 	
-	// Door detection
-	list ray = llCastRay(gp, pp, RC_DEFAULT);
-	if( l2i(ray, -1) ){
-		
-		key door = l2k(ray, 0);
-		list desc = split(prDesc(prRoot(door)), "$$");
-		integer i;
-		for(; i < count(desc); ++i ){
+		ray = llCastRay(gp, gp+llVecNorm(pp-gp), RC_DEFAULT);
+		if( l2i(ray, -1) ){
 			
-			list spl = split(l2s(desc, i), "$");
-			if( l2s(spl, 0) == Desc$TASK_DOOR_STAT && l2i(spl, 1) < 2 )
-				Door$setRotPercTarg( prRoot(door), "*", 1 );
+			key door = l2k(ray, 0);
+			list desc = split(prDesc(prRoot(door)), "$$");
+			integer i;
+			for(; i < count(desc); ++i ){
+				
+				list spl = split(l2s(desc, i), "$");
+				if( l2s(spl, 0) == Desc$TASK_DOOR_STAT && l2i(spl, 1) < 2 )
+					Door$setRotPercTarg( prRoot(door), "*", 1 );
 
+			}
+			
 		}
 		
 	}
+	
+	float speed = 1.0;
+	if( BFL & BFL_HUNTING && BFL & BFL_HUNT_HAS_LOS ){
+		
+		
+		speed = 0.75+(llGetTime()-timeLOS)/3;
+		if( speed > 2.5 )
+			speed = 2.5;
+	
+	}
 
 	// Find where to step
-	vector fwd = llVecNorm(<pp.x, pp.y, 0>-<gp.x, gp.y, 0>)*.5;
+	vector fwd = llVecNorm(<pp.x, pp.y, 0>-<gp.x, gp.y, 0>)*speed;
 	// Can step up on heights hip level or 1m below
-	ray = llCastRay(gp+fwd, gp+fwd-<0,0,1+hover>, RC_DEFAULT + RC_DATA_FLAGS + RC_GET_NORMAL);
-	
+	ray = llCastRay(gp, gp+fwd-<0,0,2+hover>, RC_DEFAULT + RC_DATA_FLAGS + RC_GET_NORMAL);
 	vector v = l2v(ray, 2);
-	list stepRay = llCastRay(gp, gp+fwd, RC_DEFAULT);
-	if( l2i(ray, -1) < 1 || l2i(stepRay, -1) || v.z < .2 )
+	list fwdRay = llCastRay(gp, gp+fwd*.5, RC_DEFAULT);
+	if( l2i(ray, -1) < 1 || l2i(fwdRay, -1) || v.z < .2 )
 		return FALSE;
 		
 	vector goto = l2v(ray, 1) + <0,0, hover>;
 	rotation lookAt = llRotBetween(<1,0,0>, llVecNorm(<goto.x, goto.y, 0>-<gp.x, gp.y, 0>));
 	
 	float dist = llVecDist(gp, goto);
-	llSetKeyframedMotion([goto-gp, lookAt/llGetRot(), dist/speed], []);
+	float time = dist/(1.5*speed);
+	if( time < 0.12 )
+		time = 0.12;
+	llSetKeyframedMotion([goto-gp, lookAt/llGetRot(), time], []);
 	toggleWalking(true);
 	
 	return TRUE;
@@ -157,13 +175,21 @@ startHunt(){
 	forPlayer(index, player)
 		playerFootsteps += 0;
 	end
+	BFL = BFL&~BFL_HUNT_HAS_LOS;
+	BFL = BFL&~BFL_HUNT_HAS_POS;
 	huntTarget = "";
 	huntLastSeenPos = ZERO_VECTOR;
+	
+	BFL = BFL|BFL_HUNTING;
+	setState(STATE_HUNT_PRE);
+	toggleWalking(FALSE);
+	llSetKeyframedMotion([], [KFM_COMMAND, KFM_CMD_STOP]);
+	setTimeout("HUNT", 3);
 	
 }
 
 
-// Checks if point is inside a room marker. Prevents the ghost from leaving the house
+// Returns the index in the cNodes array a point is, or -1 if not found
 integer pointInRoom( vector point ){
 
 	integer i;
@@ -181,12 +207,12 @@ integer pointInRoom( vector point ){
 			pos.z < bbPos.z+bbSize.z/2 && pos.z > bbPos.z-bbSize.z/2
 		){
 		
-			return TRUE;
+			return i;
 			
 		}
 	}
 	
-	return FALSE;
+	return -1;
 
 }
 
@@ -194,6 +220,48 @@ key huntTarget;				// Target we're currently tracking
 vector huntLastSeenPos;		// Position we last saw them
 list playerFootsteps;
 float huntLastFootstepReq;
+float chaseFailed;			// Time when ghost got stuck with LOS
+float lastFootstepsUpdate;	// Limits how often we can run the footstep check
+float timeLOS;				// Time when we got line of sight
+
+vector getPlayerVisibilityPos( key player ){
+	
+	vector as = llGetAgentSize(player);
+	integer ainfo = llGetAgentInfo(player);
+	float z = as.z/2-.1;
+	if( ainfo & AGENT_CROUCHING )
+		z = 0;
+	return prPos(player)+<0,0,z>;
+
+}
+
+// Player walked or talked
+addFootsteps( key player, float trackChance ){
+	
+	vector pos = prPos(player);
+	integer index = llListFindList(PLAYERS, (list)((str)player));
+	playerFootsteps = llListReplaceList(playerFootsteps, (list)pos, index, index);
+
+	// Random modifier to track down a hiding player in the room when they talk or move
+	if( llFrand(1.0) < trackChance || ~BFL&BFL_HUNTING || STATE == STATE_HUNT_PRE )
+		return;
+
+	// If there's a hunt target and it's not this player, ignore
+	if( huntTarget != "" && huntTarget != player )
+		return;
+
+	// If footsteps are in the same room, we'll want to go there
+	if( pointInRoom(pos) != pointInRoom(llGetPos()) )
+		return;
+			
+	//qd("Updating POS by footsteps");
+	// If player is in the same room, we want to force the ghost to go there
+	huntLastSeenPos = pos;
+	huntTarget = player;
+	BFL = BFL|BFL_HUNT_HAS_POS;
+	setState(STATE_CHASING);
+		
+}
 
 #include "ObstacleScript/begin.lsl"
 
@@ -208,86 +276,133 @@ handleTimer( "A" )
 	}
 	
 	if( BFL&BFL_HUNTING ){
-		
+
 		// listen for player footsteps
-		forPlayer( index, player )
-			
-			integer ainfo = llGetAgentInfo(player);
-			if( ainfo & AGENT_WALKING && ~ainfo & AGENT_CROUCHING )
-				playerFootsteps = llListReplaceList(playerFootsteps, (list)prPos(player), index, index);
 		
-		end
-			
+		if( llGetTime()-lastFootstepsUpdate > 1.0 ){
 		
-		vector g = llGetPos();
-		
-		// First see if we can still see our tracked target
-		if( llKey2Name(huntTarget) != "" ){
-		
-			vector as = llGetAgentSize(huntTarget);
-			integer ainfo = llGetAgentInfo(huntTarget);
-			float z = as.z/2-.1;
-			if( ainfo & AGENT_CROUCHING )
-				z = 0;
-			vector tp = prPos(huntTarget);
-			list ray = llCastRay(llGetPos(), tp+<0,0,z>, RC_DEFAULT);
-			if( l2i(ray, -1) == 0 && pointInRoom(tp) ){
+			lastFootstepsUpdate = llGetTime();
+			forPlayer( index, player )
 				
-				BFL = BFL|BFL_HUNT_HAS_LOS;
-				huntLastSeenPos = tp;
-				
-			}
-			else{
+				integer ainfo = llGetAgentInfo(player);
+				if( (ainfo & AGENT_WALKING && ~ainfo & AGENT_CROUCHING) || ainfo & AGENT_TYPING )
+					addFootsteps(player, 0.5);
 			
-				BFL = BFL &~BFL_HUNT_HAS_LOS;
-				
-			}
+			end
 		
 		}
-		
-		// We didn't see the target
-		if( ~BFL&BFL_HUNT_HAS_LOS ){
 			
-			// Check if we still have a chase position to go to
-			if( huntTarget != "" && llVecDist(<huntLastSeenPos.x, huntLastSeenPos.y, 0>, <g.x, g.y, 0>) < .5 )
-				huntTarget = "";			
 		
-		}
+		// Start chasing after the setup phase
+		if( STATE != STATE_HUNT_PRE ){
 		
-		// We didn't see the target, and we don't have a position to go to. See if we have any footsteps.
-		if( huntTarget == "" ){
+			vector g = llGetPos();
 			
-			// Check if we have any visible footsteps
-			integer i;
-			for(; i < count(playerFootsteps); ++i ){
+			// First see if we can still see our tracked target
+			if( llKey2Name(huntTarget) != "" ){
 			
-				vector step = l2v(playerFootsteps, i);
-				if( step != ZERO_VECTOR && pointInRoom(step) ){
+				vector tp = getPlayerVisibilityPos(huntTarget);
+				list ray = llCastRay(llGetPos(), tp, RC_DEFAULT);
+				if( l2i(ray, -1) == 0 && ~pointInRoom(tp) ){
+					
+					if( ~BFL&BFL_HUNT_HAS_LOS ){
+						
+						timeLOS = llGetTime();
+						BFL = BFL|BFL_HUNT_HAS_LOS;
+						BFL = BFL|BFL_HUNT_HAS_POS;
+						huntLastSeenPos = tp;
+						
+						//qd("Now have LOS and last seen pos" + huntLastSeenPos);
+						setState(STATE_CHASING);
+					
+					}
+					
+				}
+				else if( BFL & BFL_HUNT_HAS_LOS ){
 				
-					list ray = llCastRay(llGetPos(), step, RC_DEFAULT);
+					BFL = BFL &~BFL_HUNT_HAS_LOS;
+					//qd("No longer have LOS, but we have POS");
+					
+				}
+			
+			}
+			
+
+			// We don't have position or line of sight. But do we have footsteps? 
+			if( huntTarget != "" && !(BFL&(BFL_HUNT_HAS_POS|BFL_HUNT_HAS_POS)) && STATE != STATE_PATHING ){
+			
+				integer loc = llListFindList(PLAYERS, (list)((string)huntTarget));
+				vector pos = l2v(playerFootsteps, loc);
+				
+				if( pos ){
+					
+					// We're in the room, search it for a while
+					if( pointInRoom(pos) == pointInRoom(llGetPos()) ){
+						
+						//qd("Searching room");
+						huntTarget = "";
+						huntLastFootstepReq = llGetTime()+10;	// Give him 10 sec before going elsewhere
+						
+					}else{
+					
+						//qd("We have TARGET footsteps");
+						Nodes$Path( GhostMethod$followNodes, llGetPos(), pos );
+						huntLastFootstepReq = llGetTime()+4;	// Give it 4 sec to request the path before assuming a failure
+						
+					}
+				}
+			
+			}
+			
+			// We're not chasing after anyone. We can try a LOS check
+			if( !(BFL&(BFL_HUNT_HAS_POS|BFL_HUNT_HAS_LOS)) ){
+			
+				vector gp = llGetPos();
+				forPlayer( index, player )
+					
+					vector pp = getPlayerVisibilityPos(player);
+					list ray = llCastRay(gp, pp, RC_DEFAULT);
 					if( l2i(ray, -1) == 0 ){
 						
-						huntLastSeenPos = step;
-						i = 9001;
+						huntTarget = player;
+						//qd("Now hunting " + player);
+						index = 9001;
+						
+					}
+				
+				end
+				
+			}
+					
+			// Nothing nearby. We could try going to some footsteps
+			if( llGetTime() > huntLastFootstepReq+2 && STATE != STATE_PATHING && huntTarget == "" ){
+				
+				huntLastFootstepReq = llGetTime();
+				vector gp = llGetPos();
+				integer r = pointInRoom(gp);
+				
+				float closest; vector pathTo;
+				integer i;
+				for(; i < count(playerFootsteps); ++i ){
+					
+					vector v = l2v(playerFootsteps, i);
+					float dist = llVecDist(gp, v);
+					// Look for the shortest place not in this room
+					if( v != ZERO_VECTOR && (dist < closest || pathTo == ZERO_VECTOR) && r != pointInRoom(v) ){
+						
+						pathTo = v;
+						closest = dist;
 					
 					}
 				
 				}
 				
-			}
-			
-			
-			if( i != 9001 && llGetTime() < huntLastFootstepReq ){
-				
-				
-				// Todo: Search for viable footsteps
-				setState(STATE_IDLE);
-				
+				if( pathTo )
+					Nodes$Path( GhostMethod$followNodes, llGetPos(), pathTo );
 				
 			}
 		
 		}
-	
 	
 	}
 
@@ -300,9 +415,13 @@ handleTimer( "A" )
 			
 			// Exponentially grow the area it can roam
 			float maxDist = llPow(0.02*(llGetTime()-lastWarp), 1.3)+1;
+			if( BFL&BFL_HUNTING )
+				maxDist = 50;
+				
 			float dist = maxDist;
 			if( dist > 5 )
 				dist = 5;
+			
 				
 			vector gp = llGetPos()-<0,0,.5>;
 			
@@ -317,7 +436,7 @@ handleTimer( "A" )
 			}
 			
 			roamTarget = llGetPos()+dir*dist;
-			if( llVecDist(spawnPos, roamTarget) > maxDist || !pointInRoom(roamTarget) )
+			if( llVecDist(spawnPos, roamTarget) > maxDist || pointInRoom(roamTarget) == -1 )
 				return;
 			setState(STATE_ROAM);
 		
@@ -385,6 +504,16 @@ handleTimer( "A" )
 				portalState = PS_ALIGNING;
 				alignPos = -alignPos;
 				
+				// Go deeper into the room when hunting if possible
+				if( BFL&BFL_HUNTING ){
+					
+					vector raw = l2v(data, 0);
+					list ray = llCastRay(raw, raw+alignPos*3, RC_DEFAULT);
+					if( l2i(ray, -1) == 0 )
+						alignPos *= 3;
+					
+				}
+				
 			}
 			else{
 				
@@ -419,16 +548,104 @@ handleTimer( "A" )
 	
 	else if( STATE == STATE_CHASING ){
 	
-	
+		// Chasing a player target
+		vector pp = prPos(huntTarget);
+		if( ~BFL&BFL_HUNT_HAS_LOS )
+			pp = huntLastSeenPos;
+			
+		vector gp = llGetPos();
+
+		list ray = llCastRay(gp, pp, RC_DEFAULT);
+		
+		// Player catch distance is greater than range to reach their last seen position
+		float catchDist = 0.5;
+		if( BFL & BFL_HUNT_HAS_LOS )
+			catchDist = 0.75;
+		if( llVecDist(<gp.x, gp.y, 0>, <pp.x, pp.y, 0>) < catchDist && l2i(ray, -1) == 0 ){
+		
+			
+			if( BFL&BFL_HUNT_HAS_LOS ){
+				
+				qd("Todo: Catch player");
+				qd("Todo: Tell level that player was caught");
+				toggleWalking(FALSE);
+				setState(STATE_EVENT);
+				return;
+				
+			}
+			
+			BFL = BFL&~BFL_HUNT_HAS_POS;
+			//qd("POS has been reached");
+			setState(STATE_IDLE);	// Go idle again
+			toggleWalking(FALSE);
+			return;
+			
+		}
+		
+		// Try walking
+		integer att = walkTowards(pp);
+		
+		// Failed walking, return to idle
+		if( !att ){
+			
+			// Start the warp timer
+			if( chaseFailed <= 0 ){
+			
+				chaseFailed = llGetTime();
+				return;
+				
+			}
+			
+			// Warp timer hit, start warping
+			else if( llGetTime()-chaseFailed > 1.5 ){
+			
+				llSetKeyframedMotion([], [KFM_COMMAND, KFM_CMD_STOP]);
+				//qd("Cheese it!");
+				list ray = llCastRay(pp, pp-<0,0,4>, RC_DEFAULT);
+				vector ppFloor = pp;
+				if( l2i(ray, -1) == 1 )
+					ppFloor = l2v(ray, 1)+<0,0,hover>;
+
+				
+				integer i;
+				for( ; i < 100 && !walkTowards(pp); ++i ){
+					
+					float dist = llVecDist(llGetPos(), ppFloor);
+					if( dist > .25 )
+						dist = .25;
+					
+					llSetRegionPos(gp+(ppFloor-gp)*dist);
+					llSleep(.2);
+					if( dist <= .25 ){
+					
+						chaseFailed = 0;
+						return;		// We have warped to the position
+						
+					}
+					
+				}
+				
+				// If we got to this point, nothing else can be done. Just return to idle.
+				BFL = BFL&~BFL_HUNT_HAS_LOS;
+				BFL = BFL&~BFL_HUNT_HAS_POS;
+				setState(STATE_IDLE);
+				
+			}
+						
+			
+		}
+		else
+			chaseFailed = 0;
+		
+		
+		
 	}
 	else if( STATE == STATE_EVENT ){
 	
 	}
 	
 	else if( STATE == STATE_HUNT_PRE ){
-	
-		// Todo
-		
+		// Do nothing
 	}
 
     
@@ -451,7 +668,22 @@ onStateEntry()
     llSitTarget(<.6,0,-.6>, llEuler2Rot(<0,0,PI>));
     setInterval("A", 0.25);
 	cacheNodes();
+	addListen(0);
     
+end
+
+onListen( chan, message )
+	
+	if( ~BFL&BFL_HUNTING )
+		return;
+	
+	integer pos = llListFindList(PLAYERS, (list)((str)SENDER_KEY));
+	if( pos == -1 )
+		return;
+	
+	addFootsteps(SENDER_KEY, 0.75);
+
+
 end
 
 onChanged( change )
@@ -489,8 +721,7 @@ handleOwnerMethod( GhostMethod$toggleHunt )
 	
 	if( argInt(0) ){
 	
-		BFL = BFL|BFL_HUNTING;
-		setState(STATE_HUNT_PRE);
+		startHunt();
 		
 	}	
 	else{
@@ -501,6 +732,10 @@ handleOwnerMethod( GhostMethod$toggleHunt )
 		
 	}
 
+end
+
+handleTimer( "HUNT" )
+	setState(STATE_IDLE);
 end
 
 handleOwnerMethod( GhostMethod$setType )

@@ -6,10 +6,12 @@
 
 
 #define NodesMethod$getRooms 1		// (str)senderScript, (int)callbackMethod - Causes the callback method to run with each slice of a room marker, prepended with the index in the array. Ex: [index, roomIndex, pos, rot, scale]. pos is converted to global coordinates when running this
-
+#define NodesMethod$getPath 2		// (str)senderScript, (int)callbackMethod, (vec)startPos, (str/vec)endRoom - Select an end room by LABEL or POS
 
 #define Nodes$getRooms( cbMethod ) \
 	runOmniMethod( "Nodes", NodesMethod$getRooms, llGetScriptName() + cbMethod )
+#define Nodes$Path( cbMethod, startPos, endRoom ) \
+	runOmniMethod( "Nodes", NodesMethod$getPath, llGetScriptName() + cbMethod + startPos + endRoom )
 
 
 #define NodesConst$rmStride 4		// Since the roomMarkers is shared with getRooms, stride is a const here
