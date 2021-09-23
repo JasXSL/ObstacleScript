@@ -126,8 +126,10 @@ integer walkTowards( vector pos ){
 			for(; i < count(desc); ++i ){
 				
 				list spl = split(l2s(desc, i), "$");
-				if( l2s(spl, 0) == Desc$TASK_DOOR_STAT && l2i(spl, 1) < 2 )
+				if( l2s(spl, 0) == Desc$TASK_DOOR_STAT && l2i(spl, 1) < 2 ){
+					qd("Opening door");
 					Door$setRotPercTarg( prRoot(door), "*", 1 );
+				}
 
 			}
 			
@@ -505,7 +507,7 @@ handleTimer( "A" )
 				alignPos = -alignPos;
 				
 				// Go deeper into the room when hunting if possible
-				if( BFL&BFL_HUNTING ){
+				if( BFL&BFL_HUNTING && count(gotoPortals) < 2 ){
 					
 					vector raw = l2v(data, 0);
 					list ray = llCastRay(raw, raw+alignPos*3, RC_DEFAULT);
@@ -669,7 +671,11 @@ onStateEntry()
     setInterval("A", 0.25);
 	cacheNodes();
 	addListen(0);
-    
+	
+	#ifdef FETCH_PLAYERS_ON_COMPILE
+	Level$forceRefreshPortal();
+    #endif
+	
 end
 
 onListen( chan, message )

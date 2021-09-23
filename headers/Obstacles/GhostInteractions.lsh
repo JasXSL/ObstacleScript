@@ -1,0 +1,29 @@
+/*
+	
+	This is an auxillary script that helps the ghost interacting with things
+
+*/
+#ifndef __GhostInteractions
+#define __GhostInteractions
+
+#define GhostInteractionsMethod$interact 1		// int maxItems=1 - Trigger an interaction in your local area
+
+
+#define GhostInteractions$interact() \
+	runOmniMethod("GhostInteractions", GhostInteractionsMethod$interact, [])
+
+
+
+// Level events
+#define LevelCustomType$GHOSTINT "oGhostInt"
+	#define LevelCustomEvt$GHOSTINT$interacted 1		// (key)id - Ghost has interacted with something. May wanna give an EMF reading etc.
+			
+#define onGhostInteraction( ghost, asset ) \
+	if( isEventLevelCustom() AND argStr(1) == LevelCustomType$GHOSTINT AND argInt(2) == LevelCustomEvt$GHOSTINT$interacted ){ \
+		key ghost = argKey(0); \
+		key asset = argStr(3); 
+		
+
+
+
+#endif

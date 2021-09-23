@@ -13,6 +13,7 @@
 	#define LevelMethod$autoJoin 9			// Sent by the HUD to try to auto reconnect to a level
 	#define LevelMethod$removePlayer 10		// (key)player
 	#define LevelMethod$toggleGame 11		// (bool)game_in_progress - Locks invites
+	#define LevelMethod$forceRefreshPortal 12	// void - Force refreshes the portal with up to date players on the linkset sending the command
 	
 	#define LevelEvt$mainMenu 1				// Raised when the owner clicks the level controller
 	#define LevelEvt$custom 2				// (key)sender, (str)script, (int)evt, (var)data1, (var)data2... These events are defined in resources/LevelCustomEvents
@@ -43,6 +44,8 @@
 		runMethod(LINK_THIS, "Level", LevelMethod$update, [])
 	#define Level$update() \
 		runOmniMethod("Level", LevelMethod$update, [])
+	#define Level$forceRefreshPortal() \
+		runOmniMethod("Level", LevelMethod$forceRefreshPortal, [])
 
 	#define Level$getPlayers( callbackMethod ) \
 		runOmniMethod("Level", LevelMethod$getPlayers, callbackMethod + llGetScriptName() )

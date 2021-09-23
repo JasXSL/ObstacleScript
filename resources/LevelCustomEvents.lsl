@@ -34,7 +34,6 @@
 	#define LevelCustomEvt$INTERACT$end 2			// (key)obj - Key released
 	
 
-
 		
 		
 #define onProjectileHit( projectile, object ) \

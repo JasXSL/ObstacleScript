@@ -316,6 +316,10 @@ handleMethod( LevelMethod$getHudAssets )
 	
 end
 
+handleMethod( LevelMethod$forceRefreshPortal )
+	runMethod(SENDER_KEY, "Portal", PortalMethod$cbPlayers, PLAYERS);
+end
+
 handleOwnerMethod( LevelMethod$update )
 	llOwnerSay("Updating level...");
 	updateCode();
@@ -336,7 +340,7 @@ handleInternalMethod( LevelMethod$scriptInit )
 		Screpo$get( pin, 1, llGetScriptName() );
 			
 	}
-
+	
 end
 
 handleTimer( "UPDATE" )

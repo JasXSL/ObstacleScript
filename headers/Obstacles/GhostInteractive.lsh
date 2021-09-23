@@ -1,0 +1,22 @@
+/*
+	Script put into assets that can be interacted with
+*/
+#ifndef __GhostInteractive
+#define __GhostInteractive
+
+
+#define GhostInteractiveMethod$interact 1
+
+
+#define GhostInteractive$interact( targ ) \
+	runMethod( targ, "GhostInteractive", GhostInteractiveMethod$interact, [])
+
+
+#define GhostInteractiveEvent$trigger 1		// void - An interaction has triggered
+
+
+#define onGhostInteractiveTrigger() \
+	if( SENDER_SCRIPT IS "Door" AND EVENT_TYPE IS GhostInteractiveEvent$trigger ){
+
+
+#endif

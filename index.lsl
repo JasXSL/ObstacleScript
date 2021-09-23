@@ -295,7 +295,8 @@ for(; index < count(_P); ++index ){ \
 #include "./headers/Obstacles/Door.lsh"
 #include "./headers/Obstacles/RoomMarker.lsh"
 #include "./headers/Obstacles/Ghost.lsh"
-
+#include "./headers/Obstacles/GhostInteractions.lsh"
+#include "./headers/Obstacles/GhostInteractive.lsh"
 
 
 

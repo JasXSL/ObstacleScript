@@ -5,8 +5,21 @@
 #define USE_LISTEN
 #include "ObstacleScript/index.lsl"
 
-float minRot = 0;
-float maxRot = 2.35;   // ~90+45 deg
+float minRot = 
+#ifdef MIN_ROT
+	MIN_ROT
+#else
+	0
+#endif
+;
+
+float maxRot = 
+#ifdef MAX_ROT
+	MAX_ROT
+#else
+	2.35
+#endif
+;   // ~90+45 deg
 float snap = 0.2;			// Radius where it snaps shut
 float maxRange = 5;
 /*
@@ -18,8 +31,6 @@ rotation startRot;
 
 key interactor;
 integer locked;
-
-float tmpZ;
 
 integer doorState = 0;		// closed, 1 = partially open, 2 = fully open
 setDoorState( integer ds ){
@@ -222,7 +233,12 @@ onListen( chan, msg )
 	}
 	else if( task == DoorTask$setRotPerc ){
 	
-		setRot(l2f(data, 0)*(maxRot+minRot)-minRot);
+		float perc = l2f(data, 0);
+		if( llFabs(maxRot) < llFabs(minRot) )
+			perc = 1.0-perc;
+		
+		float r = perc*(maxRot-minRot) + minRot;
+		setRot(r);
 		stopInteract();
 		
 	}
