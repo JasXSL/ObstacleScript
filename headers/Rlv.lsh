@@ -13,6 +13,19 @@
 #define RlvFlags$IMMOBILE 0x1			// Unable to move. Todo: Currently this only affects climbing
 
 
+#define RlvConst$DESC$sex 0				// Sex flags from the JasX HUD
+#define RlvConst$DESC$clothes 1			// 2-bit array, little endian. 0 = naked, 1 = underwear, 2 = dressed. Corresponds to RlvConst$SLOTS	
+
+#define Rlv$getDesc$sex( hud ) \
+	l2i(split(prDesc(hud), "$"), RlvConst$DESC$sex)
+#define Rlv$getDesc$clothes( hud ) \
+	l2i(split(prDesc(hud), "$"), RlvConst$DESC$clothes)
+
+#define GENITALS_PENIS 0x1
+#define GENITALS_VAGINA 0x2
+#define GENITALS_BREASTS 0x4
+
+
 
 // STATE
 #define RlvConst$DRESSED 3
@@ -43,7 +56,7 @@
 ]
 
 // Sets clothes in 
-#define RlvMethod$setClothes 1			// 5 2-bit array, little endian. Rlv$SLOT indicates the index. and Rlv$STATE indicates the state to set it to. Add 1 to this. So 3 = dressed, 2 = underwear, 1 = bits, 0 = ignore
+#define RlvMethod$setClothes 1			// 5x 2-bit array, little endian. Rlv$SLOT indicates the index. and Rlv$STATE indicates the state to set it to. Add 1 to this. So 3 = dressed, 2 = underwear, 1 = bits, 0 = ignore
 #define RlvMethod$setWindlight 2		// (str)windlight preset. Use "" to clear
 
 #define RlvMethod$cubeTask 3			// task1, task2... Sends a task to the RLV supportcube
@@ -60,6 +73,9 @@
 #define RlvMethod$target 11				// (vec)pos=targetPos, (float)speed, (float)duration - Uses llMoveToTarget on a player. Pos is the position of the target. Speed is the llMoveToTarget speed, and duration is how long to keep it.
 
 #define RlvMethod$exitMouselook 12		// void, kicks the player out of mouselook
+
+#define RlvMethod$triggerSound 13		// (key)sound, (float)vol, (bool)ownerOnly
+
 
 
 #define RlvEvt$supportCubeSpawn 1		// (key)cube_id
@@ -78,7 +94,13 @@
 
 #define Rlv$setClothSlot( target, slot, state ) \
 	runMethod( target, "Rlv", RlvMethod$setClothes, (state<<(slot*2)))
-	
+
+#define Rlv$triggerSound( target, sound, vol ) \
+	runMethod( target, "Rlv", RlvMethod$triggerSound, sound + vol)
+// Plays a sound from target that only (key)listener can hear
+#define Rlv$triggerSoundOn( target, sound, vol, listener ) \
+	runMethod( target, "Rlv", RlvMethod$triggerSound, sound + vol + listener)
+
 	
 #define Rlv$cubeTask( target, tasks ) \
 	runMethod( target, "Rlv", RlvMethod$cubeTask, tasks)

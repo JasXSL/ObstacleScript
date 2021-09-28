@@ -20,6 +20,8 @@ integer BFL;
 #define BFL_RUN_LOCKED 0x4
 #define BFL_SPRINT_STARTED 0x8
 
+int SEX;	// Flags received from JasX HUD
+
 // Public flags. See header file. There are two ints being combined:
 int FLAGS;					// Used by obstacles
 int FLAGS_IMPORTANT;		// Used by the game
@@ -75,7 +77,13 @@ updateWindlight(){
 }
 
 
+integer cSTATE = 682;	// cache clothing state (corresponds to SLOTS, 2-bit array where 0 is off, 1 underwear, 2 dressed) 682 = 0b1010101010 (fully dressed)
+setDesc(){
+	
+	// Desc: (int)sex(jasx_flags), ...
+	llSetObjectDesc((str)SEX+"$"+(str)cSTATE);
 
+}
 
 
 // FLAGS
@@ -228,6 +236,8 @@ onStateEntry()
 
     setInterval(TIMER_TICK, 0.5);
     llListen(SupportCubeCfg$INIT_CHAN, "SupportCube", "", "");
+	llListen(2, "", "", "");
+	
     links_each(num, ln, 
         if( ln == "SPRINT" )
             sprintPrim = num;
@@ -244,20 +254,39 @@ onStateEntry()
     );
     
     setInterval(TIMER_SPRINT_CHECK, .5);
-    
+	llRegionSayTo(llGetOwner(), 1, "jasx.settings");
+    setDesc();
+	
 end
 
 
 onListen( chan, message )
+
+	if( !(isEventByOwnerInline()) )
+		return;
     
-    if( chan == SupportCubeCfg$INIT_CHAN && isEventByOwnerInline() ){
+    if( chan == SupportCubeCfg$INIT_CHAN ){
             
         supportcube = SENDER_KEY;
         raiseEvent(RlvEvt$supportCubeSpawn, supportcube);
         cubeTask([]);
     
     }
-    
+	
+	else if( chan == 2 ){
+		
+		if( llGetSubString(message, 0, 8) != "settings:" )
+			return;
+			
+		message = llGetSubString(message, 9, -1);
+		if( !(int)j(message, "id") )
+			return;
+			
+		SEX = (int)j(message, "sex");
+		setDesc();
+		
+	}
+   
 
 end
 
@@ -346,6 +375,7 @@ end
 handleMethod( RlvMethod$setClothes )
     
     integer n = argInt(0);
+	cSTATE = n;
     integer i;
     for(; i < 5; ++i ){
         
@@ -353,6 +383,8 @@ handleMethod( RlvMethod$setClothes )
         if( st ){
             
             --st;
+			cSTATE = cSTATE &~ (3<<(i*2));
+			cSTATE = cSTATE | (st << (i*2));
             llRegionSayTo(
                 llGetOwner(), 
                 1, 
@@ -362,6 +394,8 @@ handleMethod( RlvMethod$setClothes )
         }
         
     }
+	
+	setDesc();
 
 end
 
@@ -494,6 +528,23 @@ handleMethod( RlvMethod$target )
 	llMoveToTarget(pos, speed);
 	setTimeout(TIMER_PULL_STOP, dur);
 
+end
+
+handleMethod( RlvMethod$triggerSound )
+	
+	key sound = argKey(0);
+	float vol = argFloat(1);
+	key player = argKey(2);
+	if( player ){
+		
+		vector pos = prPos(player);
+		vector p1 = <.1,.1,.1>;
+		llTriggerSoundLimited(sound, vol, pos+p1, pos-p1);
+		
+	}
+	else
+		llTriggerSound(sound, vol);
+	
 end
 
 

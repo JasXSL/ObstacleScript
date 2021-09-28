@@ -3,6 +3,9 @@
 #define USE_TOUCH_START
 #define USE_LISTEN
 #define USE_TIMER
+#define USE_PLAYERS
+#define USE_HUDS
+#define SCRIPT_IS_PLAYER_MANAGER
 #include "ObstacleScript/index.lsl"
 
 
@@ -16,12 +19,16 @@ list WAITING_SCRIPTS;
 updatePlayers(){
     
     globalAction$setPlayers();  
+	globalAction$setHUDs();  
+	
     forPlayer( i, player )
         Com$players( player, PLAYERS );
+		Com$huds( player, HUDS );
     end
 	
 	runOmniMethod("Portal", PortalMethod$cbPlayers, PLAYERS);
-    
+	runOmniMethod("Portal", PortalMethod$cbHUDs, HUDS);
+	
 }
 
 invite( key player ){
@@ -64,17 +71,16 @@ updateCode(){
 #include "ObstacleScript/begin.lsl"
 
 onRez( start )
-	
-	_P = [(str)llGetOwner()];
+
 	if( !start ){
 		llOwnerSay("Updating level, please wear your HUD...");
 		updateCode();
 	}
+	
 end
 
-onStateEntry()
-    
-    _P = [(str)llGetOwner()];  
+onStateEntry() 
+	
     updatePlayers();
     setupListenTunnel();
     setupDebug(0); 
@@ -119,8 +125,20 @@ onListen( ch, msg )
                 else{
 				
 					key owner = llGetOwnerKey(SENDER_KEY);
-					if( llListFindList(PLAYERS, [(str)owner]) == -1 )
+					integer pos = llListFindList(PLAYERS, [(str)owner]);
+					if( pos == -1 ){
+					
 						PLAYERS += (str)owner;
+						HUDS += (str)SENDER_KEY;
+						
+					}
+					// Player already in the game, but we need to update their HUD
+					else{
+						
+						HUDS = llListReplaceList(HUDS, (list)((str)SENDER_KEY), pos, pos);
+						
+					}
+					
                     Com$inviteSuccess(SENDER_KEY);
                     updatePlayers();
                     
@@ -130,6 +148,7 @@ onListen( ch, msg )
                 llRegionSayTo(llGetOwnerKey(SENDER_KEY), 0, "Invite missing");
             
         }
+		// Player is already in the game, but have detached their HUD
 		else if( method == LevelMethod$autoJoin ){
 		
 			if( BFL & BFL_GAME_ACTIVE )
@@ -137,8 +156,8 @@ onListen( ch, msg )
 		
 			key owner = llGetOwnerKey(SENDER_KEY);
 			if( ~llListFindList(PLAYERS, [(str)owner]) )
-				invite(owner);				
-		
+				invite(owner);
+
 		}
         
     }
@@ -165,6 +184,7 @@ onTouchStart( total )
 	
 		/* Todo: menu to leave game
 			PLAYERS = llDeleteSubList(PLAYERS, pos, pos);
+			HUDS = ...
 			updatePlayers();
 			llSay(0, "secondlife:///app/agent/"+targ+"/about has left the game.");
 		*/
@@ -186,11 +206,24 @@ handleMethod( LevelMethod$getPlayers )
 	runMethod(SENDER_KEY, senderScript, cbMethod, PLAYERS);
 
 end
+handleMethod( LevelMethod$getHUDs )
+	
+	string senderScript = argStr(1);
+	int cbMethod = argInt(0);
+	runMethod(SENDER_KEY, senderScript, cbMethod, HUDS);
+
+end
+
 
 // Method
 handleInternalMethod( LevelMethod$resetPlayers )
     
-    PLAYERS = [(str)llGetOwner()];
+	forPlayer( index, player )
+		Com$uninvite( player );
+	end
+	
+    PLAYERS = [];
+	HUDS = [];
     updatePlayers();
     
 end
@@ -270,12 +303,13 @@ handleInternalMethod( LevelMethod$removePlayer )
 	if( BFL&BFL_GAME_ACTIVE )
 		return;
 		
-		
 	integer pos = llListFindList(PLAYERS, (list)argStr(0));
 	if( pos == -1 )
 		return;
 		
 	PLAYERS = llDeleteSubList(PLAYERS, pos, pos);
+	HUDS = llDeleteSubList(HUDS, pos, pos);
+	Com$uninvite( argStr(0) );
 	updatePlayers();
 
 end
@@ -318,6 +352,7 @@ end
 
 handleMethod( LevelMethod$forceRefreshPortal )
 	runMethod(SENDER_KEY, "Portal", PortalMethod$cbPlayers, PLAYERS);
+	runMethod(SENDER_KEY, "Portal", PortalMethod$cbHUDs, HUDS);
 end
 
 handleOwnerMethod( LevelMethod$update )

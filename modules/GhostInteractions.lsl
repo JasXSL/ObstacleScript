@@ -2,6 +2,7 @@
 #define USE_SENSOR
 #define USE_NO_SENSOR
 #define USE_PLAYERS
+#define USE_HUDS
 #include "ObstacleScript/index.lsl"
 
 list cObjs; // (key)id
@@ -9,15 +10,14 @@ list cObjs; // (key)id
 // Searches desc for a specific type
 list getDescType( key id, str type ){
 	
-	str test = type+"$";
-	integer len = llStringLength(test)-1;
-	
 	list d = split(prDesc(id), "$$");
+	
     integer s;
     for(; s < count(d); ++s ){
         
-        if( llGetSubString(l2s(d, s), 0, len) == test )
-			return split(l2s(d, s), "$");
+		list sub = split(l2s(d, s), "$");
+        if( l2s(sub, 0) == type )
+			return sub;
 			
     }
 	return [];
@@ -36,12 +36,94 @@ integer isInteractive( key id ){
 
 }
 
+#define INTERACT_BUTT 0
+#define INTERACT_GROIN 1
+#define INTERACT_BREASTS_PINCH 2
+#define INTERACT_BREASTS_GRAB 3
+interactPlayer( key hud ){
+    	
+    integer sex = Rlv$getDesc$sex( hud );
+    list allowed = [INTERACT_BUTT, INTERACT_GROIN];
+    if( sex & GENITALS_BREASTS )
+        allowed += (list)INTERACT_BREASTS_PINCH + INTERACT_BREASTS_GRAB;
+    
+    integer type = (int)randElem(allowed);
+    
+    string anim = "buttslap_full";
+    key sound = "29a4fcd0-88c2-45d1-8173-c0a84a0c8917";
+    float dur = 1.4;
+    if( type == INTERACT_GROIN ){
+        
+        anim = "groingrope_full";
+        dur = 1.3;
+        
+    }
+    else if( type == INTERACT_BREASTS_PINCH ){
+        
+        anim = "breastpinch";
+        sound = "c6a3ff56-0e88-00af-5256-0a4d25302dd5";
+        dur = 0.0;
+        
+    }
+    else if( type == INTERACT_BREASTS_GRAB ){
+        
+        anim = "breastsqueeze";
+        dur = 1.7;
+        
+    }
+    
+    AnimHandler$anim(
+        hud, 
+        anim, 
+        TRUE, 
+        0, 
+        0
+    );
+    
+    if( sound )
+        Rlv$triggerSound( hud, sound, .5 );
+    
+    if( dur ){
+    
+        Rlv$setFlags( hud, RlvFlags$IMMOBILE, FALSE );
+        llSleep(dur);
+        Rlv$unsetFlags( hud, RlvFlags$IMMOBILE, FALSE );
+        
+    }
+	
+	
+    
+    
+}
+stripPlayer( key targ, integer slot ){
+    
+    AnimHandler$anim(
+        targ, 
+        "decloth", 
+        TRUE, 
+        0, 
+        0
+    );
+	++slot;	// 0 is ignore, so we gotta add 1
+    Rlv$setFlags( targ, RlvFlags$IMMOBILE, FALSE );
+    Rlv$triggerSound( targ, "620fe5e8-9223-10fc-3a5c-0f5e0edc3a35", .5 );
+    Rlv$setClothes( targ, slot, slot, slot, slot, slot );
+    llSleep(2.2);
+    Rlv$unsetFlags( targ, RlvFlags$IMMOBILE, FALSE );
+    
+}
+
+
 
 #include "ObstacleScript/begin.lsl"
 
 onStateEntry()
 
     llSensorRepeat("", "", ACTIVE|PASSIVE, 3, PI, 2);
+	
+	#ifdef FETCH_PLAYERS_ON_COMPILE
+	Level$forceRefreshPortal();
+    #endif
     
 end
 
@@ -75,7 +157,7 @@ handleMethod( GhostInteractionsMethod$interact )
 	int maxItems = argInt(0);
 	if( maxItems < 1 )
 		maxItems = 1;
-	
+		
 	list viable = cObjs;
 	vector gp = llGetPos();
 	forPlayer( index, player )
@@ -90,6 +172,7 @@ handleMethod( GhostInteractionsMethod$interact )
 	
 	viable = llListRandomize(viable, 1);
 	
+	
 	integer i;
 	for(; i < count(viable) && i < maxItems; ++i ){
 	
@@ -99,7 +182,22 @@ handleMethod( GhostInteractionsMethod$interact )
 		// Player interactions
 		if( llGetAgentSize(targ) != ZERO_VECTOR ){
 		
-			qd("Todo: Interact with player");
+			integer pos = llListFindList(PLAYERS, (list)((str)targ));
+			if( ~pos ){
+			
+				key hud = l2k(HUDS, pos);
+				int clothes = Rlv$getDesc$clothes( hud )&1023;	// 1023 = 10 bit
+				if( llFrand(1.0) < 0.15 && clothes ){
+					
+					// 682 = fully dressed. +1 because 0 is ignore
+					stripPlayer(hud, clothes >= 682);
+					
+				}
+				else
+					interactPlayer(hud);
+
+			}
+		
 			return;
 			
 		}
@@ -119,7 +217,7 @@ handleMethod( GhostInteractionsMethod$interact )
 			
 		}
 			
-		GhostInteractive$interact( targ );
+		GhostInteractive$interact( targ, [] );
 	
 	}
 	

@@ -76,13 +76,21 @@
 #define globalAction$resetAll() \
 	llMessageLinked(LINK_SET, globalAction$RESET_ALL, "", llGetScriptName())
 
-#define globalAction$SET_PLAYERS 0x7FFFFFFD		// Contains a JSON array of players
+#define globalAction$SET_PLAYERS 0x7FFFFFFD		// Contains a JSON array of players. Requires USE_PLAYERS
+#define globalAction$SET_HUDS 0x7FFFFFFC		// Contains a JSON array of HUDs. Requires USE_HUDS
+
 #define globalAction$setPlayers() \
 	llMessageLinked(LINK_SET, globalAction$SET_PLAYERS, mkarr(_P), "")
+#define globalAction$setHUDs() \
+	llMessageLinked(LINK_SET, globalAction$SET_HUDS, mkarr(_H), "")
+
 
 #define globalEvent$players 1				// Raised when players have changed and you are using USE_PLAYERS
 #define onPlayersUpdated() \
 	if( _ty == globalEvent$players && _sc == ":" ){
+#define globalEvent$huds 2				// Raised when players have changed and you are using USE_PLAYERS
+#define onHudsUpdated() \
+	if( _ty == globalEvent$huds && _sc == ":" ){
 
 
 // Channel to communicate on by default
@@ -229,19 +237,6 @@ _me( str ta, str sc, int me, list da ){
 
 
 
-// Player list
-list _P;	// Use #define USE_PLAYERS to include these. In levels they're handled by Level, in HUDs by Com, and assets Portal
-#define PLAYERS _P
-#define isPlayer( targ ) \
-	(~llListFindList(PLAYERS, (list)((str)targ)))
-
-
-#define forPlayer( index, player ) \
-int index; \
-for(; index < count(_P); ++index ){ \
-	key player = l2k(_P, index); 
-
-
 
 
 
@@ -286,6 +281,7 @@ for(; index < count(_P); ++index ){ \
 #include "./headers/PrimSwim.lsh"
 
 #include "./headers/Obstacles/Trigger.lsh"
+#include "./headers/Obstacles/Lamp.lsh"
 #include "./headers/Obstacles/CrusherWall.lsh"
 #include "./headers/Obstacles/Button.lsh"
 #include "./headers/Obstacles/ShimmyWall.lsh"

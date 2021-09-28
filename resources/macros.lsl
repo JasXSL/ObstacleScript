@@ -129,7 +129,13 @@
 // Iterate over links with link nr and link name
 	#define links_each(linknum, linkname, fnAction)  {integer linknum; for(linknum=llGetNumberOfPrims()>1; linknum<=llGetNumberOfPrims(); linknum++){ string linkname=llGetLinkName(linknum); fnAction}}
 	// Ex: links_each(num, name, {llSay(0, "Link #"+(string)num+" is called: "+name);});
-	
+
+// More OS friendly variant
+#define forLink( linkNum, linkName ) \
+	int linkNum; \
+	for(linkNum = 1; linkNum <= llGetNumberOfPrims(); ++linkNum ){ \
+		string linkName = llGetLinkName(linkNum); 
+
 
 
 #endif	

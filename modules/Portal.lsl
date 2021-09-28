@@ -1,7 +1,9 @@
 #define USE_STATE_ENTRY
 #define USE_ON_REZ
 #define USE_LISTEN
-
+#define USE_PLAYERS
+#define USE_HUDS
+#define SCRIPT_IS_PLAYER_MANAGER
 #include "ObstacleScript/index.lsl"
 
 int BFL;
@@ -47,7 +49,8 @@ loadComplete(){
 	Rezzer$rezzed( mySpawner(), PortalHelper$getSpawnId() );
     llSetRemoteScriptAccessPin(0);
 	// Get players
-	Level$getPlayers(PortalMethod$cbPlayers);
+	Level$forceRefreshPortal();
+	
     
 }
 
@@ -110,6 +113,14 @@ handleOwnerMethod( PortalMethod$cbPlayers )
 	globalAction$setPlayers();
 
 end
+handleOwnerMethod( PortalMethod$cbHUDs )
+
+	HUDS = METHOD_ARGS;
+	globalAction$setHUDs();
+
+end
+
+
 
 handleOwnerMethod( PortalMethod$setLive )
     

@@ -52,6 +52,7 @@
 
 #define PortalMethod$raiseEvent 8		// 
 
+#define PortalMethod$cbHUDs 9			// Callback binding for getting HUDs
 
 
 #define onPortalLoadComplete( desc ) \

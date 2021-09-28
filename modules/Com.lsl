@@ -1,7 +1,9 @@
 #define USE_TIMER
 #define USE_LISTEN
 #define USE_PLAYERS
+#define USE_HUDS
 #define USE_STATE_ENTRY
+#define SCRIPT_IS_PLAYER_MANAGER
 
 float ACC_HOST;     // Timer
 key PENDING_HOST;
@@ -110,10 +112,32 @@ key HOST;
             
             PLAYERS = METHOD_ARGS;
             globalAction$setPlayers();
+			
+        }
+        
+    end
+	handleMethod( ComMethod$huds )
+        
+        if( SENDER_KEY == HOST ){
+            
+            HUDS = METHOD_ARGS;
+            globalAction$setHUDs();
             
         }
         
     end
+	handleMethod( ComMethod$uninvite )
+		
+		if( SENDER_KEY == HOST ){
+			
+			PLAYERS = [];
+			HUDS = [];
+			globalAction$setPlayers();
+			globalAction$setHUDs();
+		
+		}
+	
+	end
 
 #include "ObstacleScript/end.lsl"
 

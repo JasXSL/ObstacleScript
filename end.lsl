@@ -5,10 +5,6 @@ default{
 	
 	
 	state_entry(){
-		// Set players to owner by default
-		#ifdef USE_PLAYERS
-		_P = [(string)llGetOwner()];
-		#endif
 		onEvent(evt$STATE_ENTRY, "", "", []);
 	} 
 	
@@ -33,14 +29,23 @@ default{
 		if( nr == globalAction$RESET_ALL && (str)id != llGetScriptName() )
 			llResetScript();
 			
-		#ifdef USE_PLAYERS
-		if( nr == globalAction$SET_PLAYERS ){
-			_P = llJson2List(s);
-			onEvent(globalEvent$players, ":", "", []);
-			return;
-		}
+		#ifndef SCRIPT_IS_PLAYER_MANAGER
+			#ifdef USE_PLAYERS
+			if( nr == globalAction$SET_PLAYERS ){
+				_P = llJson2List(s);
+				onEvent(globalEvent$players, ":", "", []);
+				return;
+			}
+			#endif
+			#ifdef USE_HUDS
+			if( nr == globalAction$SET_HUDS ){
+				_H = llJson2List(s);
+				onEvent(globalEvent$huds, ":", "", []);
+				return;
+			}
+			#endif
 		#endif
-			
+		
 		int type = (nr>>8)&3;
 		str ids = (string)id;
 		

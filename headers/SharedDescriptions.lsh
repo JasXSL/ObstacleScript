@@ -21,7 +21,7 @@
 #define Desc$TASK_SIT_ON "S"			// Keydown.
 #define Desc$TASK_RC_ONLY "RC"			// Meta task that tells the interact script to only allow targeting this with raycasts
 #define Desc$TASK_DOOR_STAT "DO"		// Stores door state. 0 = closed, 1 = partially open, 2 = fully open
-#define Desc$TASK_GHOST_INTERACTIVE "GI"	// (int)flags(1=auto_push), (vec)push_dir - Used in ghost games to indicate that ghosts can interact with something
+#define Desc$TASK_GHOST_INTERACTIVE "GI"	// (int)flags(1=auto_push, 2=tunnel_to_level), (vec)push_dir - Used in ghost games to indicate that ghosts can interact with something
 
 
 /*
@@ -43,6 +43,7 @@ Nice presets I've found:
 
 */
 
+// Legacy, consider using getDescTask instead since this will return [] if the type exists but has no data
 // Fetches data for the first task of this type
 list _dtd( str _d, str _t ){
 
@@ -60,6 +61,24 @@ list _dtd( str _d, str _t ){
 }
 #define getDescTaskData( desc, type ) \
 	_dtd(desc, type)
+	
+	
+list _dt( str _d, str _t ){
+
+	list spl = split(_d, "$$");
+	integer i;
+	for(; i < count(spl); ++i ){
+		
+		list data = split(l2s(spl, i), "$");
+		if( l2s(data, 0) == _t )
+			return data;
+		
+	}
+	return [];
+	
+}
+#define getDescTask( desc, type ) \
+	_dt(desc, type)
 
 // Fetches description for id, respects "ROOT"
 string _fdsc( key id ){

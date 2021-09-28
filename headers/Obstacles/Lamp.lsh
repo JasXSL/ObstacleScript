@@ -1,0 +1,25 @@
+#ifndef __Lamp
+#define __Lamp
+
+// Desc: [(str)label]
+
+#define LampConst$CHAN (OBSTACLE_CHAN+0x14)	// Listener (3144)
+
+#define LampTask$toggle 1						// (bool)on
+#define LampTask$flicker 2						// (bool)flicker
+#define LampTask$togglePower 3					// (bool)power
+
+
+
+#define Lamp$toggle( label, on ) \
+	llRegionSay(LampConst$CHAN, mkarr(label + LampTask$toggle + (on)))
+#define Lamp$flicker( label, on ) \
+	llRegionSay(LampConst$CHAN, mkarr(label + LampTask$flicker + (on)))
+#define Lamp$togglePower( label, on ) \
+	llRegionSay(LampConst$CHAN, mkarr(label + LampTask$togglePower + (on)))
+
+
+
+
+#endif
+ 

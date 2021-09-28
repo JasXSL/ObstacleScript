@@ -14,22 +14,7 @@ key ghost = "1af76701-c79b-57d8-c41c-8efe2ab1c8f9";
 #define RM_STRIDE NodesConst$rmStride
 list ROOM_MARKERS = [];
 
-// Label -> User readable name
-// Labels are unique, but user readable names can be used to combine rooms into one. Such as the junction above the stairs
-// Roomindex is based on the left column of this array
-list ROOMS = [
-    "LROOM", "Living Room",
-    "KITCHEN", "Kitchen",
-    "STAIR", "Stair",
-    "UP", "Stair",
-    "DOWN", "Stair",
-    "BASEMENT", "Basement",
-    "HALL", "Hallway",
-    "BATHROOM", "Bathroom",
-    "BEDROOMB", "Front Bedroom",
-    "BEDROOMA", "Back Bedroom",
-    "HALLJ", "Hallway"
-];
+
 
 list portals;      // 8bArray roomIndexes, uuid
 

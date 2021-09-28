@@ -1,5 +1,9 @@
 /*
 	Script put into assets that can be interacted with
+	
+	Descriptions vary by type:
+	light switch : [(str)room_name]
+	
 */
 #ifndef __GhostInteractive
 #define __GhostInteractive
@@ -8,15 +12,26 @@
 #define GhostInteractiveMethod$interact 1
 
 
-#define GhostInteractive$interact( targ ) \
-	runMethod( targ, "GhostInteractive", GhostInteractiveMethod$interact, [])
+#define GhostInteractive$interact( targ, data ) \
+	runMethod( targ, "GhostInteractive", GhostInteractiveMethod$interact, data)
 
 
 #define GhostInteractiveEvent$trigger 1		// void - An interaction has triggered
 
 
+// Level event bindings
+#define LevelCustomType$GINTERACTIVE "oGint"				// Generic type for traps like the lasher
+	#define LevelCustomEvt$GINTERACTIVE$lightSwitch 1					// (str)room, (bool)on - Tells the level the light switch state
+	
+#define onLevelCustomLightSwitch( lightSwitch, room, on ) \
+	if( isEventLevelCustom() AND argStr(1) == LevelCustomType$GINTERACTIVE AND argInt(2) == LevelCustomEvt$GINTERACTIVE$lightSwitch ){ \
+		key lightSwitch = argKey(0); \
+		string room = argStr(3); \
+		bool on = argInt(4);
+
+
 #define onGhostInteractiveTrigger() \
-	if( SENDER_SCRIPT IS "Door" AND EVENT_TYPE IS GhostInteractiveEvent$trigger ){
+	if( SENDER_SCRIPT IS "GhostInteractive" AND EVENT_TYPE IS GhostInteractiveEvent$trigger ){
 
 
 #endif

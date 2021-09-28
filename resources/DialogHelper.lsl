@@ -58,14 +58,13 @@
 				buttons += (list)
 					"INV. ALL" + 
 					"INV. Player" +
-					"REM. Player"+
 					"Rst Players" +
 					"Maintenance" +
 					"Clean Up"
 				;
 				
 				if( count(PLAYERS) )
-					buttons += "START GAME";
+					buttons += (list)"REM. Player" + "START GAME";
 				
 			}
 			else{
@@ -107,7 +106,7 @@
 			integer i = _MP*11;
 			if( i >= count(PLAYERS) )
 				i = _MP = 0;
-				
+			
 			for(; i < count(PLAYERS) && i < _MP*11+11; ++i ){
 				
 				text += "["+(str)i+"] "+llGetSubString(llGetDisplayName(l2k(PLAYERS, i)), 0, 12)+"\n";

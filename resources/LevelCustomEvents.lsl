@@ -62,13 +62,18 @@
 		str callback = argStr(4);
 		
 
-#define onLevelInteractStarted( hud ) \
+#define onLevelInteractStarted( obstacle, pos ) \
 	if( isEventLevelCustom() AND argStr(1) == LevelCustomType$INTERACT AND argInt(2) == LevelCustomEvt$INTERACT$start ){ \
-		key hud = argKey(0);
+		SENDER_KEY = argKey(0); \
+		key obstacle = argKey(3); \
+		vector pos = argVec(4);
 		
-#define onLevelInteractEnded( hud ) \
+		
+#define onLevelInteractEnded( obstacle, pos ) \
 	if( isEventLevelCustom() AND argStr(1) == LevelCustomType$INTERACT AND argInt(2) == LevelCustomEvt$INTERACT$end ){ \
-		key hud = argKey(0);
+		SENDER_KEY = argKey(0); \
+		key obstacle = argKey(3); \
+		vector pos = argVec(4);
 		
 
 		

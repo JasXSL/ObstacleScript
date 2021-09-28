@@ -3,19 +3,17 @@
 #include "ObstacleScript/index.lsl"
 
 list getDescType( key id, str type ){
-    
-    str test = type+"$";
-    integer len = llStringLength(test)-1;
-    
-    list d = split(prDesc(id), "$$");
+	
+	list d = split(prDesc(id), "$$");
     integer s;
     for(; s < count(d); ++s ){
         
-        if( llGetSubString(l2s(d, s), 0, len) == test )
-            return split(l2s(d, s), "$");
-            
+		list sub = split(l2s(d, s), "$");
+        if( l2s(sub, 0) == type )
+			return sub;
+			
     }
-    return [];
+	return [];
 
 }
 
@@ -53,7 +51,6 @@ handleOwnerMethod( GhostInteractiveMethod$interact )
 
     list dt = getDescType(llGetKey(), Desc$TASK_GHOST_INTERACTIVE);
     
-	
     // Auto
     if( l2i(dt, 1) & 1 ){
         
@@ -71,8 +68,13 @@ handleOwnerMethod( GhostInteractiveMethod$interact )
         still = FALSE;
         
     }
+	
+	// Tunnel to level
+	if( l2i(dt, 1) & 2 ){
+		qd("Todo: Tunnel to level");
+	}
     
-    raiseEvent(GhostInteractiveEvent$trigger, []);
+    raiseEvent(GhostInteractiveEvent$trigger, METHOD_ARGS);
     
     
 
