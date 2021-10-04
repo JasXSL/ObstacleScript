@@ -1,0 +1,22 @@
+#ifndef __GhostStatusBoard
+#define __GhostStatusBoard
+
+// Desc: [(str)label]
+
+#define GhostStatusBoardConst$CHAN (OBSTACLE_CHAN+0x5057)	// Listener (23691)
+
+#define GhostStatusTask$updatePlayers 1						// arousal0, arousal1... - A value of -1 = dead
+#define GhostStatusTask$triggerSoundSensor 2				// index, perc
+#define GhostStatusTask$updateSoundSensors 3				// name0, name1, name2, name3
+
+
+
+#define GhostStatus$updatePlayers( label, arousals ) \
+	llRegionSay(LampConst$CHAN, mkarr(label + GhostStatusTask$updatePlayers + arousals))
+#define GhostStatus$updateSoundSensors( label, data ) \
+	llRegionSay(LampConst$CHAN, mkarr(label + GhostStatusTask$updateSoundSensors + data))
+
+
+
+#endif
+ 

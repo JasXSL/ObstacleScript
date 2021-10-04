@@ -249,6 +249,7 @@ _me( str ta, str sc, int me, list da ){
 #include "./resources/LevelCustomEvents.lsl"
 #include "./resources/PortalCustomEvents.lsl"
 
+
 #include "./headers/SharedDescriptions.lsh"
 #include "./headers/Controls.lsh"
 
@@ -260,6 +261,7 @@ _me( str ta, str sc, int me, list da ){
 #include "./headers/Footsteps.lsh"
 #include "./headers/AnimHandler.lsh"
 #include "./headers/Qte.lsh"
+#include "./headers/ToolSet.lsh"
 
 
 #include "./headers/Com.lsh"
@@ -293,6 +295,7 @@ _me( str ta, str sc, int me, list da ){
 #include "./headers/Obstacles/Ghost.lsh"
 #include "./headers/Obstacles/GhostInteractions.lsh"
 #include "./headers/Obstacles/GhostInteractive.lsh"
+#include "./headers/Obstacles/GhostStatusBoard.lsh"
 
 
 

@@ -1,0 +1,19 @@
+/*
+	Toolset is a standard way of having an attachment with different tools, allowing you to switch between them
+*/
+#ifndef __ToolSet
+#define __ToolSet
+
+// Configuration
+#ifndef ToolSetConst$MAX_ACTIVE
+	#define ToolSetConst$MAX_ACTIVE 3			// Max tools that can be held and swapped by the player
+#endif
+
+
+// Note: Define your tool IDs in a local project file
+// For ghost game, they're defined in resources/SubHelpers/GhostHelper.lsl
+// Example: ToolsetConst$types$ghost$owometer
+// Must start from 1
+
+
+#endif
