@@ -17,21 +17,28 @@
 */
 
 #define PortalCustomType$INTERACT "avInt"
-	#define PortalCustomEvt$INTERACT$start 1			// (vec)pos - Key pressed
+	#define PortalCustomEvt$INTERACT$start 1		// (vec)pos - Key pressed
 	#define PortalCustomEvt$INTERACT$end 2			// void - Key released
-
-
+#define PortalCustomType$LCLICK "avLclick"			// Only raised on owner attachments
+	#define PortalCustomEvt$LCLICK$start 1			// void - Lclick pressed
+	#define PortalCustomEvt$LCLICK$end 2			// void - Lclick released
 
 
 #define onPortalInteractStarted( hud, pos ) \
 	if( isEventPortalCustom() AND argStr(1) == PortalCustomType$INTERACT AND argInt(2) == PortalCustomEvt$INTERACT$start ){ \
 		key hud = argKey(0); \
 		vector pos = argVec(3);
-		
 #define onPortalInteractEnded( hud ) \
 	if( isEventPortalCustom() AND argStr(1) == PortalCustomType$INTERACT AND argInt(2) == PortalCustomEvt$INTERACT$end ){ \
 		key hud = argKey(0);
 		
-
+#define onPortalLclickStarted( hud ) \
+	if( isEventPortalCustom() AND argStr(1) == PortalCustomType$LCLICK AND argInt(2) == PortalCustomEvt$LCLICK$start ){ \
+		key hud = argKey(0);
+#define onPortalLclickEnded( hud ) \
+	if( isEventPortalCustom() AND argStr(1) == PortalCustomType$LCLICK AND argInt(2) == PortalCustomEvt$LCLICK$end ){ \
+		key hud = argKey(0);
+		
+	
 
 #endif

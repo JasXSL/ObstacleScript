@@ -70,8 +70,16 @@ onControl( level, edge )
         return;
         
     raiseEvent(ControlsEvt$keypress, (level&edge) + (~level&edge));
-    
-    
+	
+	if( edge & CONTROL_ML_LBUTTON ){
+		
+		int evt = PortalCustomEvt$LCLICK$start;
+		if( ~level & CONTROL_ML_LBUTTON )
+			evt = PortalCustomEvt$LCLICK$end;
+			
+		Portal$raiseEvent( llGetOwner(), PortalCustomType$LCLICK, evt, [] );
+		
+    }
 end
 
 onPrimSwimWaterEntered( speed, position )

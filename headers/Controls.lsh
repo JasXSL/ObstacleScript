@@ -17,8 +17,7 @@
 
 
 
-#define ControlsMethod$toggle 1		// (bool)on - Lets you turn control handling on/off again. Useful for traps and items that should override controls.
-
+#define ControlsMethod$toggle 1				// (bool)on - Lets you turn control handling on/off again. Useful for traps and items that should override controls.
 
 
 

@@ -39,6 +39,10 @@
 	Macros with lists can usually accept multiple arguments concatenated as list entries with +
 	Use a space before and after the + to indicate this, such as mkarr(a + b) = [a,b]
 	
+	Some obstacles will listen to their own channels instead of using xMod comms, this is used when:
+	- The obstacle needs to send/receive frequent or large amounts of data. Using its own channel makes it faster.
+	- The obstacle only needs to communicate with the owner
+	- The obstacle needs the ability to trigger by a label
 	
 */
 
@@ -295,7 +299,9 @@ _me( str ta, str sc, int me, list da ){
 #include "./headers/Obstacles/Ghost.lsh"
 #include "./headers/Obstacles/GhostInteractions.lsh"
 #include "./headers/Obstacles/GhostInteractive.lsh"
-#include "./headers/Obstacles/GhostStatusBoard.lsh"
+#include "./headers/Obstacles/Owometer.lsh"
+#include "./headers/Obstacles/Spiritbox.lsh"
+#include "./headers/Obstacles/GhostTool.lsh"
 
 
 

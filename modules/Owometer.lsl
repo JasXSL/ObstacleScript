@@ -1,0 +1,219 @@
+#include "ObstacleScript/resources/SubHelpers/GhostHelper.lsl"
+#define USE_STATE_ENTRY
+#define USE_PLAYERS
+#define USE_TIMER
+#include "ObstacleScript/index.lsl"
+string ID;
+
+key GHOST;  // Set to the ghost key when the ghost starts hunting
+integer P_EMF;
+integer BFL = 0x4;
+#define BFL_ON 0x1
+#define BFL_HUNTING 0x2
+#define BFL_DROPPED 0x4
+
+list EMF_POINTS;    // key id, int strength(1-5), (float)time
+
+#define isDropped() (BFL&BFL_DROPPED && !llGetAttached())
+
+integer C_EMF = -1;
+// EMF changed
+setEMF( integer emf ){
+        
+    if( BFL&BFL_ON && emf < 1 )
+        emf = 1;
+    if( emf > 5 )
+        emf = 5;
+        
+    if( ~BFL&BFL_ON || isDropped() )
+        emf = 0;
+        
+    if( C_EMF == emf )
+        return;
+        
+    C_EMF = emf;
+
+    float vol = 0.001;
+    if( emf > 1 )
+        vol = llPow((1.0/4*(emf-1))*.6+.2, 2);
+    
+    list set;
+    integer i;
+    for(; i < 5; ++i ){
+        
+        integer face = i+1;
+        integer on = emf > i;
+        set += (list)
+            PRIM_FULLBRIGHT + face + on +
+            PRIM_GLOW + face + on*.1
+        ;
+        
+    }
+    
+    llSetLinkPrimitiveParamsFast(P_EMF, set);
+    llAdjustSoundVolume(vol);
+    
+}
+
+toggleOn( integer on ){
+    
+    if( on ){
+        
+        BFL = BFL|BFL_ON;
+        llStopSound();
+        llLoopSound("ca52dde3-1c21-d380-442b-aa4b245e7522", 0.0001);
+        setInterval("EMF", .5);
+        
+    }
+    else{
+        
+        BFL = BFL&~BFL_ON;
+        llAdjustSoundVolume(0);
+        unsetInterval("EMF");
+        
+    }
+    
+    setEMF(0);
+           
+}
+
+onDataChanged( integer data ){
+    
+    toggleOn(data);
+    
+}
+
+
+
+
+#include "ObstacleScript/begin.lsl"
+
+onStateEntry()
+       
+    forLink( nr, name )
+    
+        if( name == "OWOMETER" )
+            P_EMF = nr;
+    
+    end
+    
+    toggleOn(FALSE);
+    
+    if( llGetAttached() )
+        llRequestPermissions(llGetOwner(), PERMISSION_TRACK_CAMERA);
+        
+end
+
+handleMethod( OwometerMethod$addPoint )
+    
+    key point = argKey(0);
+    integer emf = argInt(1)%5;
+    
+    integer pos = llListFindList(EMF_POINTS, (list)point);
+    if( ~pos )
+        EMF_POINTS = llDeleteSubList(EMF_POINTS, pos, pos+2);
+    
+    EMF_POINTS += (list)point + (emf+1) + llGetTime();
+
+end
+
+onToolSetActiveTool( tool, data )
+
+    if( tool != ToolsetConst$types$ghost$owometer )
+        toggleOn(FALSE);
+    else
+        onDataChanged((int)data);
+
+end
+
+onGhostToolHunt( hunting, ghost )
+    
+    GHOST = ghost;
+    BFL = BFL&~BFL_HUNTING;
+    if( hunting )
+        BFL = BFL|BFL_HUNTING;
+
+end
+
+// Raised only if rezzed and not picked up. This is raised when placing the asset under the level. Can be used to hide it etc.
+onGhostToolPickedUp()
+
+    if( llGetInventoryType("ToolSet") != INVENTORY_NONE )
+        return;
+        
+    toggleOn(FALSE);
+    
+end
+
+// Raised after positioning this on the floor (if the asset is NOT attached)
+onGhostToolDropped( data )
+
+    if( llGetInventoryType("ToolSet") != INVENTORY_NONE )
+        return;
+    
+    onDataChanged((int)data);
+    
+end
+
+handleTimer( "EMF" )
+
+    if( BFL & BFL_HUNTING ){
+        
+        integer n;
+        if( llVecDist(llGetPos(), prPos(GHOST)) < 4 )
+            n = llCeil(llFrand(3))+1;
+        setEMF(n);
+        return;
+        
+    }
+    
+    float dist;
+    integer index = -1;
+    
+    vector front = llGetPos()+llRot2Fwd(llGetRootRotation());
+    if( llGetPermissions() & PERMISSION_TRACK_CAMERA )
+        front = llGetCameraPos()+llRot2Fwd(llGetCameraRot());
+    
+    integer i;
+    for( ; i < count(EMF_POINTS) && count(EMF_POINTS); i += 3 ){
+        
+        // Expiry check
+        float time = l2f(EMF_POINTS, i+2);
+        if( llGetTime()-time > 10 ){
+            
+            EMF_POINTS = llDeleteSubList(EMF_POINTS, i, i+2);
+            i -= 3;
+            
+        }
+        // Check EMF
+        else{
+            
+            key id = l2k(EMF_POINTS, i);
+            float d = llVecDist(front, prPos(id));
+            
+            // 2.5m EMF bubble
+            if( (index == -1 || d < dist) && d < 1.5 ){
+                
+                dist = d;
+                index = i;
+                
+            }
+            
+        }
+                
+    }
+    
+    if( index == -1 )
+        setEMF(0);
+    else
+        setEMF(l2i(EMF_POINTS, index+1));
+    
+    
+
+end
+
+
+#include "ObstacleScript/end.lsl"
+
+
+

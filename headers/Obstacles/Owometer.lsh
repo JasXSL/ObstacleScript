@@ -1,0 +1,20 @@
+/*
+	Unifies the owometer behavior in the ghost hunting game
+*/
+#ifndef __Owometer
+#define __Owometer
+
+
+#define OwometerMethod$addPoint 1			// (key)asset, (int)intensity - Adds an EMF asset that can be detected. Intensity is 0 to 4, where 4 is EMF 5.
+
+
+
+#define Owometer$addPoint( asset, intensity ) \
+	runOmniMethod("Owometer", OwometerMethod$addPoint, (asset) + (intensity))
+
+
+
+
+#endif
+
+

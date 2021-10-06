@@ -76,11 +76,10 @@
 #define Portal$init( target, pos, desc, group ) \
 	runMethod( target, "Portal", PortalMethod$init, pos + desc + group )
 	
-	
 #define Portal$raiseEvent( targ, customType, evt, data ) \
 	runMethod(targ, "Portal", PortalMethod$raiseEvent, customType + evt + data )
 	
-	
+
 	
 	
 	

@@ -33,7 +33,8 @@
 	#define LevelCustomEvt$INTERACT$start 1			// (key)obj, (vec)pos - Key pressed
 	#define LevelCustomEvt$INTERACT$end 2			// (key)obj - Key released
 	
-
+#define LevelCustomType$HOTKEY "avHotkey"			// Receives messages on channel 3
+	#define LevelCustomEvt$HOTKEY$press 1			// (str)key
 		
 		
 #define onProjectileHit( projectile, object ) \
@@ -74,6 +75,11 @@
 		SENDER_KEY = argKey(0); \
 		key obstacle = argKey(3); \
 		vector pos = argVec(4);
+		
+#define onPlayerHotkey( hud, hotkey ) \
+	if( isEventLevelCustom() AND argStr(1) == LevelCustomType$HOTKEY AND argInt(2) == LevelCustomEvt$HOTKEY$press ){ \
+		key hud = argKey(0); \
+		str hotkey = argStr(3);
 		
 
 		

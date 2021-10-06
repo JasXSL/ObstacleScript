@@ -26,10 +26,20 @@ key HOST;
         _P = (list)llGetOwner();
 		
 		Level$autoJoin();
+		
+		llListen(3, "", llGetOwner(), "");
         
     end
     
     onListen( ch, msg )
+	
+		// Listening for hotkeys
+		if( ch == 3 ){
+			
+			Level$raiseEventTarg( HOST, LevelCustomType$HOTKEY, LevelCustomEvt$HOTKEY$press, msg );
+			
+			return;
+		}
     
         if( ch == PUB_CHAN ){
             

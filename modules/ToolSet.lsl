@@ -1,8 +1,10 @@
 #include "ObstacleScript/resources/SubHelpers/GhostHelper.lsl"
+
 #define USE_RUN_TIME_PERMISSIONS
 #define USE_STATE_ENTRY
 #define USE_ATTACH
 #define USE_TIMER
+#define USE_LISTEN
 #include "ObstacleScript/index.lsl"
 
 integer P_OWOMETER;
@@ -26,7 +28,13 @@ list EMF_SPOTS; // uuid, strength, time
 
 #define getActiveToolInt() l2i(TOOLS, ACTIVE_TOOL*2+1)
 #define getActiveToolStr() l2s(TOOLS, ACTIVE_TOOL*2+1)
+#define getActiveToolList() llList2List(TOOLS, ACTIVE_TOOL*2+1, ACTIVE_TOOL*2+1)
 
+// Raises active tool event
+#define sendActiveTool() raiseEvent(ToolSetEvt$activeTool, tool + getActiveToolList())
+
+// Accepts one argument, can be any type. Lists passed must be JSON encoded
+#define setActiveToolVal( val ) TOOLS = llListReplaceList(TOOLS, (list)(val), ACTIVE_TOOL*2+1, ACTIVE_TOOL*2+1)
 
 // Draws the currently active tool
 drawActiveTool(){
@@ -37,31 +45,29 @@ drawActiveTool(){
 
     // Owometer
     AL(P_OWOMETER, tool == ToolsetConst$types$ghost$owometer, ALL_SIDES);
-    if( tool == ToolsetConst$types$ghost$owometer )
-        setInterval("EMF", .5);
-    else{
-        
-        PP(P_OWOMETER, remFullbright);
-        unsetTimer("EMF");
-        
-    }
+	if( tool != ToolsetConst$types$ghost$owometer )
+		PP(P_OWOMETER, remFullbright);
     
     // Flashlight
     AL(P_FLASHLIGHT, tool == ToolsetConst$types$ghost$flashlight, ALL_SIDES);
-    if( tool != ToolsetConst$types$ghost$flashlight ){
-        
-        PP(P_FLASHLIGHT, remFullbright);
-        PP(P_FLASHLIGHTBEAM, remLight);
-        
-    }
-    
+	PP(P_FLASHLIGHT, remFullbright);
+	PP(P_FLASHLIGHTBEAM, remLight);
+
     // HOTS
     AL(P_HOTS, tool == ToolsetConst$types$ghost$hots, ALL_SIDES);
     AL(P_HOTSBALL, tool == ToolsetConst$types$ghost$hots , ALL_SIDES);
     AL(P_ECCHISKETCH, tool == ToolsetConst$types$ghost$ecchisketch, ALL_SIDES);
+    AL(P_SPIRITBOX, tool == ToolsetConst$types$ghost$spiritbox, ALL_SIDES);
+	AL(P_SPIRITBOX, 0, 4);
+	PP(P_SPIRITBOX, (list)PRIM_FULLBRIGHT + 3 + FALSE);
 
     onDataUpdate();
-    
+	
+	if( tool )
+		llStartAnimation("default_hold");
+	else
+		llStopAnimation("default_hold");
+	
 }
 
 // Attachment data received for the active asset
@@ -69,10 +75,7 @@ onDataUpdate(){
     
     integer tool = activeType();
     integer on = getActiveToolInt();
-    if( tool == ToolsetConst$types$ghost$owometer )
-        PP(P_OWOMETER, (list)PRIM_FULLBRIGHT + 1 + on + PRIM_GLOW + 1 + on*.25);
-        
-    else if( tool == ToolsetConst$types$ghost$flashlight ){
+    if( tool == ToolsetConst$types$ghost$flashlight ){
 
         PP(
             P_FLASHLIGHTBEAM, 
@@ -98,6 +101,13 @@ onDataUpdate(){
         }
         
     }
+	else if( tool == ToolsetConst$types$ghost$spiritbox ){
+	
+		// Todo: interface with spirit box script
+	
+	}
+	
+	sendActiveTool();
     
 }
 
@@ -133,20 +143,6 @@ removeActiveTool(){
 }
 
 #include "ObstacleScript/begin.lsl"
-
-handleTimer( "EMF" )
-
-    // off
-    if( !getActiveToolInt() )
-        return;
-
-end
-
-
-
-
-
-
 
 
 onAttach( id )
@@ -186,19 +182,59 @@ onStateEntry()
     PP(P_FLASHLIGHT, (list)PRIM_POINT_LIGHT + 1 + <1.000, 0.928, 0.710> + .1 + 1.5 + 2);
     
     llSetAlpha(0, ALL_SIDES);
-    //addTool(ToolsetConst$types$ghost$ecchisketch, (list)2);
+    //addTool(ToolsetConst$types$ghost$flashlight, (list)0);
+	addTool(ToolsetConst$types$ghost$owometer, (list)0);
+	//addTool(ToolsetConst$types$ghost$spiritbox, (list)0);
+	
     drawActiveTool();
+	llListen(3, "", llGetOwner(), "");
     
 end
 
+onPortalLclickStarted( hud )
+    
+	integer tool = activeType();
+	list toggled = (list)
+		ToolsetConst$types$ghost$owometer +
+		ToolsetConst$types$ghost$flashlight +
+		ToolsetConst$types$ghost$spiritbox
+	;
+	if( ~llListFindList(toggled, (list)tool) ){
+	
+		setActiveToolVal(!getActiveToolInt());
+		onDataUpdate();
+		
+		llTriggerSound("691cc796-7ed6-3cab-d6a6-7534aa4f15a9", .5);
+		// Todo: Tell level
+		return;
+		
+	}
+	
+
+end
 
 
 onRunTimePermissions( perm )
 
     if( perm & PERMISSION_TRIGGER_ANIMATION )
-        llStartAnimation("default_hold");
+        drawActiveTool();
     
-    
+end
+
+// Hotkeys
+onListen( ch, msg )
+	
+	if( ch != 3 )
+		return;
+	
+	// Cycle asset
+	if( msg == "sheathe" ){
+		
+		ACTIVE_TOOL = (ACTIVE_TOOL+1) % ToolSetConst$MAX_ACTIVE;
+		
+		drawActiveTool();
+		
+	}
 
 end
 

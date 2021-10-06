@@ -10,6 +10,15 @@
 #endif
 
 
+#define ToolSetEvt$activeTool 1					// (int)active_tool, (var)data - Active tool has changed
+
+
+#define onToolSetActiveTool( tool, data ) \
+	if( SENDER_SCRIPT IS "ToolSet" AND EVENT_TYPE IS GhostToolEvt$hunting ){ \
+		int tool = argInt(0); \
+		str data = argStr(1);
+
+
 // Note: Define your tool IDs in a local project file
 // For ghost game, they're defined in resources/SubHelpers/GhostHelper.lsl
 // Example: ToolsetConst$types$ghost$owometer
