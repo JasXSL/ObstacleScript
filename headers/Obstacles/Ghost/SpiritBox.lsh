@@ -1,0 +1,25 @@
+/*
+	Unifies the spirit box behavior in the ghost hunting game
+*/
+#ifndef __SpiritBox
+#define __SpiritBox
+
+
+#define SpiritBoxMethod$start 1		// (bool)success - Starts a spirit box sweep.
+
+
+#define SpiritBox$start( targ, success ) \
+	runMethod(targ, "SpiritBox", SpiritBoxMethod$start, success)
+
+
+// Level event bindings
+#define LevelCustomType$SPIRITBOX "oSpiritbOx"				// Generic type for traps like the lasher
+	#define LevelCustomEvt$SPIRITBOX$trigger 1				// void - Asks the level to calculate a spirit box success or fail and send the spirit box start method
+	
+#define onLevelCustomSpiritBoxTrigger( spiritBox ) \
+	if( isEventLevelCustom() AND argStr(1) == LevelCustomType$SPIRITBOX AND argInt(2) == LevelCustomEvt$SPIRITBOX$trigger ){ \
+		key spiritBox = argKey(0);
+
+
+
+#endif

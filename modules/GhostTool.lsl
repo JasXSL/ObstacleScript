@@ -1,10 +1,24 @@
 #define USE_STATE_ENTRY
+#define USE_TIMER
 #include "ObstacleScript/index.lsl"
+
+vector spawnPos;
 
 #include "ObstacleScript/begin.lsl"
 
 onStateEntry()
+
+	if( llGetInventoryType("ToolSet") == INVENTORY_NONE )
+		Level$raiseEvent( LevelCustomType$GTOOL, LevelCustomEvt$GTOOL$spawned, [] );
     
+	spawnPos = llGetPos();
+    
+end
+
+onPortalLoadComplete( desc )
+	
+	spawnPos = llGetPos();
+
 end
 
 handleMethod( GhostToolMethod$hunting )
@@ -21,9 +35,9 @@ handleOwnerMethod( GhostToolMethod$pickedUp )
     if( llGetAttached() )
         return;
         
-    // Todo: Move to pos
-    raiseEvent(GhostToolEvt$pickedUp, []);
-    
+	raiseEvent(GhostToolEvt$pickedUp, []);
+	llSetRegionPos(spawnPos-<0,0,10>);
+	
 end
 
 handleOwnerMethod( GhostToolMethod$dropped )
@@ -31,13 +45,18 @@ handleOwnerMethod( GhostToolMethod$dropped )
     if( llGetAttached() )
         return;
         
-    key player = argKey(0);
-    str data = argStr(1);
-    
-    // Todo: Calculate where this should be placed
-    raiseEvent(GhostToolEvt$dropped, data);
+	vector pos = argVec(0);
+	rotation rot = argRot(1);
+    str data = argStr(2);
+	raiseEvent(GhostToolEvt$dropped, data);
+	
+	llSetLinkPrimitiveParamsFast(LINK_THIS, (list)PRIM_ROTATION + rot);
+	llSetRegionPos(pos);
+	
     
 end
+
+
 
 
 #include "ObstacleScript/end.lsl"

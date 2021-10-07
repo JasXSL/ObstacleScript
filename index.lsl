@@ -296,12 +296,12 @@ _me( str ta, str sc, int me, list da ){
 #include "./headers/Obstacles/Trapdoor.lsh"
 #include "./headers/Obstacles/Door.lsh"
 #include "./headers/Obstacles/RoomMarker.lsh"
-#include "./headers/Obstacles/Ghost.lsh"
-#include "./headers/Obstacles/GhostInteractions.lsh"
-#include "./headers/Obstacles/GhostInteractive.lsh"
-#include "./headers/Obstacles/Owometer.lsh"
-#include "./headers/Obstacles/Spiritbox.lsh"
-#include "./headers/Obstacles/GhostTool.lsh"
+#include "./headers/Obstacles/Ghost/Ghost.lsh"
+#include "./headers/Obstacles/Ghost/GhostInteractions.lsh"
+#include "./headers/Obstacles/Ghost/GhostInteractive.lsh"
+#include "./headers/Obstacles/Ghost/Owometer.lsh"
+#include "./headers/Obstacles/Ghost/Spiritbox.lsh"
+#include "./headers/Obstacles/Ghost/GhostTool.lsh"
 
 
 

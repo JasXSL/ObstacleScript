@@ -1,0 +1,70 @@
+/*
+	This script is put into ghost tools that can be dropped/placed or held and handles standard methods like tracking when the ghost is hunting, positioning if dropped, etc
+	Otherwise acting as a relay
+*/
+#ifndef __GhostTool
+#define __GhostTool
+
+	
+	#define GhostToolMethod$hunting 1		// (bool)hunting, (key)ghost - Tracks whether the ghost is hunting
+	#define GhostToolMethod$pickedUp 2		// void - The tool has been picked up, turn off and hide if detached
+	#define GhostToolMethod$dropped 3		// (vec)pos, (vec)fwd, (var)data - The item has been dropped by user, place it on the floor if possible.
+	
+
+	#define GhostToolEvt$hunting 1			// (bool)hunting, (key)ghost - Can be captured by the rest of the linkset to do something
+	#define GhostToolEvt$pickedUp 2			// void
+	#define GhostToolEvt$dropped 3			// (var)data
+	
+	
+	#define GhostTool$dropped( targ, pos, rot, data ) \
+		runMethod(targ, "GhostTool", GhostToolMethod$dropped, pos + rot + data)
+	#define GhostTool$hunting( targ, on, ghost ) \
+		runMethod(targ, "GhostTool", GhostToolMethod$hunting, on + ghost)
+	#define GhostTool$pickedUp( targ ) \
+		runMethod(targ, "GhostTool", GhostToolMethod$pickedUp, [])
+	
+	
+	#define onGhostToolHunt( hunting, ghost ) \
+		if( SENDER_SCRIPT IS "GhostTool" AND EVENT_TYPE IS GhostToolEvt$hunting ){ \
+			bool hunting = argInt(0); \
+			key ghost = argKey(1);
+			
+			
+	#define onGhostToolPickedUp() \
+		if( SENDER_SCRIPT IS "GhostTool" AND EVENT_TYPE IS GhostToolEvt$pickedUp ){
+			
+	#define onGhostToolDropped( data ) \
+		if( SENDER_SCRIPT IS "GhostTool" AND EVENT_TYPE IS GhostToolEvt$dropped ){ \
+			str data = argStr(0);
+			
+	
+	
+	// Level event bindings
+	#define LevelCustomType$GTOOL "oGtool"				// Generic type for traps like the lasher
+		#define LevelCustomEvt$GTOOL$spawned 1				// void - Ghost tool has been spawned
+		#define LevelCustomEvt$GTOOL$data 2					// key worldID, str data - Ghost tool data has changed
+		
+	#define onLevelCustomGtoolSpawned( tool ) \
+		if( isEventLevelCustom() AND argStr(1) == LevelCustomType$GTOOL AND argInt(2) == LevelCustomEvt$GTOOL$spawned ){ \
+			key tool = argKey(0);
+	#define onLevelCustomGtoolData( sender, tool, data ) \
+		if( isEventLevelCustom() AND argStr(1) == LevelCustomType$GTOOL AND argInt(2) == LevelCustomEvt$GTOOL$data ){ \
+			key sender = argKey(0); \
+			key tool = argKey(3); \
+			str data = argStr(4);
+	
+
+ 
+#define LevelCustomType$GHASSETDATA "avProj"
+	#define LevelCustomEvt$GHASSETDATA$set 1			// key tooluuid, var data - Updates asset data in #Tools using the sender key as the asset
+
+#define onGhAssetData( sender, tooluuid, data ) \
+	if( isEventLevelCustom() AND argStr(1) == LevelCustomType$GHASSETDATA AND argInt(2) == LevelCustomEvt$GHASSETDATA$set ){ \
+		key sender = argKey(0); \
+		key tooluuid = argKey(3); \
+		str data = argStr(4);
+
+
+	
+		
+#endif

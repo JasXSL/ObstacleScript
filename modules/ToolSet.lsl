@@ -17,24 +17,28 @@ integer P_SPIRITBOX;
 
 // Equipped tools
 integer ACTIVE_TOOL;    // index of stride in TOOLS. Use activeType for type
-// (int)tool, (var)setting
+// (int)tool, (var)setting, (key)id
 list TOOLS;
-#define activeType() l2i(TOOLS, ACTIVE_TOOL*2)
+#define TOOLSTRIDE 3
+#define TTEMPLATE (list)0 + 0 +0	// Empty slot
+#define activeType() l2i(TOOLS, ACTIVE_TOOL*TOOLSTRIDE)
 
 list EMF_SPOTS; // uuid, strength, time
 
 #define PP llSetLinkPrimitiveParamsFast
 #define AL llSetLinkAlpha
 
-#define getActiveToolInt() l2i(TOOLS, ACTIVE_TOOL*2+1)
-#define getActiveToolStr() l2s(TOOLS, ACTIVE_TOOL*2+1)
-#define getActiveToolList() llList2List(TOOLS, ACTIVE_TOOL*2+1, ACTIVE_TOOL*2+1)
+#define getActiveToolInt() l2i(TOOLS, ACTIVE_TOOL*TOOLSTRIDE+1)
+#define getActiveToolStr() l2s(TOOLS, ACTIVE_TOOL*TOOLSTRIDE+1)
+#define getActiveToolWorldId() l2k(TOOLS, ACTIVE_TOOL*TOOLSTRIDE+2)
+
+#define getActiveToolList() llList2List(TOOLS, ACTIVE_TOOL*TOOLSTRIDE+1, ACTIVE_TOOL*TOOLSTRIDE+1)
 
 // Raises active tool event
-#define sendActiveTool() raiseEvent(ToolSetEvt$activeTool, tool + getActiveToolList())
+#define sendActiveTool( tool ) raiseEvent(ToolSetEvt$activeTool, tool + getActiveToolList())
 
 // Accepts one argument, can be any type. Lists passed must be JSON encoded
-#define setActiveToolVal( val ) TOOLS = llListReplaceList(TOOLS, (list)(val), ACTIVE_TOOL*2+1, ACTIVE_TOOL*2+1)
+#define setActiveToolVal( val ) TOOLS = llListReplaceList(TOOLS, (list)(val), ACTIVE_TOOL*TOOLSTRIDE+1, ACTIVE_TOOL*TOOLSTRIDE+1)
 
 // Draws the currently active tool
 drawActiveTool(){
@@ -67,6 +71,7 @@ drawActiveTool(){
 		llStartAnimation("default_hold");
 	else
 		llStopAnimation("default_hold");
+		
 	
 }
 
@@ -107,27 +112,27 @@ onDataUpdate(){
 	
 	}
 	
-	sendActiveTool();
+	sendActiveTool(tool);
     
 }
 
-integer addTool( integer tool, list data ){
+integer addTool( integer tool, list data, key id ){
     
     if( !count(data) )
         data = [0];
     
     integer i;
-    for( ; i < count(TOOLS); i += 2 ){
+    for( ; i < count(TOOLS); i += TOOLSTRIDE ){
         
-        integer n = (i+ACTIVE_TOOL*2) % count(TOOLS);
+        integer n = (i+ACTIVE_TOOL*TOOLSTRIDE) % count(TOOLS);
         
         integer type = l2i(TOOLS, n);
         if( !type ){
             
             // Attach it here
-            TOOLS = llListReplaceList(TOOLS, (list)tool + llList2List(data, 0, 0), n, n+1);
+            TOOLS = llListReplaceList(TOOLS, (list)tool + llList2List(data, 0, 0) + id, n, n+TOOLSTRIDE-1);
             
-            if( n == ACTIVE_TOOL*2 )
+            if( n == ACTIVE_TOOL*TOOLSTRIDE )
                 drawActiveTool();
             return TRUE;
             
@@ -138,7 +143,14 @@ integer addTool( integer tool, list data ){
     return FALSE;
 }
 
-removeActiveTool(){
+removeToolById( key id ){
+	
+	integer pos = llListFindList(TOOLS, (list)id);
+	if( pos == -1 )
+		return;
+		
+	TOOLS = llListReplaceList(TOOLS, TTEMPLATE, pos-(TOOLSTRIDE-1), pos);
+	drawActiveTool();
     
 }
 
@@ -153,7 +165,7 @@ onStateEntry()
 
     integer i;
     for(; i < ToolSetConst$MAX_ACTIVE; ++i )
-        TOOLS += (list)0 + 0;
+        TOOLS += TTEMPLATE;
     
     forLink( nr, name )
         
@@ -176,18 +188,20 @@ onStateEntry()
     end
     
     if( llGetAttached() )
-        llRequestPermissions(llGetOwner(), PERMISSION_TRIGGER_ANIMATION);
+        llRequestPermissions(llGetOwner(), PERMISSION_TRIGGER_ANIMATION|PERMISSION_TRACK_CAMERA);
     
     // Facelight
     PP(P_FLASHLIGHT, (list)PRIM_POINT_LIGHT + 1 + <1.000, 0.928, 0.710> + .1 + 1.5 + 2);
     
     llSetAlpha(0, ALL_SIDES);
     //addTool(ToolsetConst$types$ghost$flashlight, (list)0);
-	addTool(ToolsetConst$types$ghost$owometer, (list)0);
-	//addTool(ToolsetConst$types$ghost$spiritbox, (list)0);
+	//addTool(ToolsetConst$types$ghost$owometer, (list)0);
+	//addTool(ToolsetConst$types$ghost$spiritbox, (list)1);
 	
     drawActiveTool();
 	llListen(3, "", llGetOwner(), "");
+	
+	
     
 end
 
@@ -201,11 +215,12 @@ onPortalLclickStarted( hud )
 	;
 	if( ~llListFindList(toggled, (list)tool) ){
 	
-		setActiveToolVal(!getActiveToolInt());
+		integer v = !getActiveToolInt();
+		setActiveToolVal(v);
 		onDataUpdate();
-		
 		llTriggerSound("691cc796-7ed6-3cab-d6a6-7534aa4f15a9", .5);
-		// Todo: Tell level
+		// Tell level
+		Level$raiseEvent( LevelCustomType$GTOOL, LevelCustomEvt$GTOOL$data, getActiveToolWorldId() + v );
 		return;
 		
 	}
@@ -235,7 +250,56 @@ onListen( ch, msg )
 		drawActiveTool();
 		
 	}
+	
+	else if( msg == "Q" ){
+	
+		key id = getActiveToolWorldId();	
+		if( id == "" )
+			return;
+			
+		rotation fwd = llGetRootRotation();
+		vector base = llGetRootPosition()+<0,0,.5>;
+		if( llGetPermissions() & PERMISSION_TRACK_CAMERA ){
+			
+			fwd = llGetCameraRot();
+			if( llGetAgentInfo(llGetOwner()) & AGENT_MOUSELOOK )
+				base = llGetCameraPos();
+			
+		}
+		
+		list ray = llCastRay(base, base+llRot2Fwd(fwd)*2.5, RC_DEFAULT + RC_DATA_FLAGS + RC_GET_NORMAL );
+		if( l2i(ray, -1) < 1 )
+			return;
+			
+		vector n = l2v(ray, 2);
+		
+		// Todo: Handle wall placed assets
+		if( n.z < .9 )
+			return;
+		
+		vector vr = llRot2Euler(fwd);
+		vr = <0,0,vr.z>;
+		
+		Level$raiseEvent( 
+			LevelCustomType$TOOLSET, 
+			LevelCustomEvt$TOOLSET$drop, 
+			id + l2v(ray, 1) + llEuler2Rot(vr)
+		);
+	
+	}
 
+end
+
+handleMethod( ToolSetMethod$addTool )
+	
+	addTool(argInt(0), llList2List(METHOD_ARGS, 1, 1), argKey(2));
+	
+end
+
+handleMethod( ToolSetMethod$remTool )
+	
+	removeToolById(argKey(0));
+	
 end
 
 

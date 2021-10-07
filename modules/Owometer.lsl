@@ -7,27 +7,31 @@ string ID;
 
 key GHOST;  // Set to the ghost key when the ghost starts hunting
 integer P_EMF;
-integer BFL = 0x4;
+integer BFL;
 #define BFL_ON 0x1
 #define BFL_HUNTING 0x2
 #define BFL_DROPPED 0x4
 
 list EMF_POINTS;    // key id, int strength(1-5), (float)time
 
-#define isDropped() (BFL&BFL_DROPPED && !llGetAttached())
+#define isDropped() (BFL&BFL_DROPPED && )
 
 integer C_EMF = -1;
 // EMF changed
 setEMF( integer emf ){
-        
+
     if( BFL&BFL_ON && emf < 1 )
         emf = 1;
     if( emf > 5 )
         emf = 5;
         
-    if( ~BFL&BFL_ON || isDropped() )
+    if( ~BFL&BFL_ON )
         emf = 0;
+		
+	if( llGetInventoryType("ToolSet") == INVENTORY_NONE && ~BFL&BFL_DROPPED )
+		emf = 0;
         
+		
     if( C_EMF == emf )
         return;
         
@@ -49,7 +53,7 @@ setEMF( integer emf ){
         ;
         
     }
-    
+	    
     llSetLinkPrimitiveParamsFast(P_EMF, set);
     llAdjustSoundVolume(vol);
     
@@ -140,8 +144,10 @@ onGhostToolPickedUp()
 
     if( llGetInventoryType("ToolSet") != INVENTORY_NONE )
         return;
-        
+    
+	BFL = BFL&~BFL_DROPPED;
     toggleOn(FALSE);
+	
     
 end
 
@@ -151,6 +157,8 @@ onGhostToolDropped( data )
     if( llGetInventoryType("ToolSet") != INVENTORY_NONE )
         return;
     
+	C_EMF = -1;
+	BFL = BFL | BFL_DROPPED;
     onDataChanged((int)data);
     
 end
@@ -170,10 +178,15 @@ handleTimer( "EMF" )
     float dist;
     integer index = -1;
     
-    vector front = llGetPos()+llRot2Fwd(llGetRootRotation());
-    if( llGetPermissions() & PERMISSION_TRACK_CAMERA )
-        front = llGetCameraPos()+llRot2Fwd(llGetCameraRot());
-    
+	vector front = llGetPos();
+	
+	if( llGetAttached() ){
+	
+		front = llGetPos()+llRot2Fwd(llGetRootRotation());
+		if( llGetPermissions() & PERMISSION_TRACK_CAMERA )
+			front = llGetCameraPos()+llRot2Fwd(llGetCameraRot());
+			
+    }
     integer i;
     for( ; i < count(EMF_POINTS) && count(EMF_POINTS); i += 3 ){
         

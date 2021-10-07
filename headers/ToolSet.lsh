@@ -10,8 +10,18 @@
 #endif
 
 
-#define ToolSetEvt$activeTool 1					// (int)active_tool, (var)data - Active tool has changed
+#define ToolSetMethod$addTool 1					// int type, var data, key worldToolID - Adds a tool
+#define ToolSetMethod$remTool 2					// key worldToolID - Removes a tool by world ID
 
+#define ToolSet$addTool( targ, type, data, worldID ) \
+	runMethod(targ, "ToolSet", ToolSetMethod$addTool, type + data + worldID)
+#define ToolSet$remTool( targ, worldID ) \
+	runMethod(targ, "ToolSet", ToolSetMethod$remTool, worldID)
+
+	
+
+
+#define ToolSetEvt$activeTool 1					// (int)active_tool, (var)data - Active tool has changed
 
 #define onToolSetActiveTool( tool, data ) \
 	if( SENDER_SCRIPT IS "ToolSet" AND EVENT_TYPE IS GhostToolEvt$hunting ){ \
@@ -24,5 +34,16 @@
 // Example: ToolsetConst$types$ghost$owometer
 // Must start from 1
 
+
+// Level event bindings
+	#define LevelCustomType$TOOLSET "oToolset"				// Generic type for traps like the lasher
+		#define LevelCustomEvt$TOOLSET$drop 1				// key worldID, vec pos, rotation rot - Drop an item
+		
+	#define onLevelCustomToolsetDrop( toolsetuuid, worldID, pos, rot ) \
+		if( isEventLevelCustom() AND argStr(1) == LevelCustomType$TOOLSET AND argInt(2) == LevelCustomEvt$TOOLSET$drop ){ \
+			key toolsetuuid = argKey(0); \
+			key worldID = argKey(3); \
+			vector pos = argVec(4); \
+			rotation rot = argRot(5);
 
 #endif
