@@ -56,6 +56,11 @@ handleOwnerMethod( GhostToolMethod$dropped )
     
 end
 
+handleOwnerMethod( GhostToolMethod$trigger )
+	
+	raiseEvent(GhostToolEvt$trigger, METHOD_ARGS);
+
+end
 
 
 

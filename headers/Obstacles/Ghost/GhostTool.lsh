@@ -9,11 +9,12 @@
 	#define GhostToolMethod$hunting 1		// (bool)hunting, (key)ghost - Tracks whether the ghost is hunting
 	#define GhostToolMethod$pickedUp 2		// void - The tool has been picked up, turn off and hide if detached
 	#define GhostToolMethod$dropped 3		// (vec)pos, (vec)fwd, (var)data - The item has been dropped by user, place it on the floor if possible.
-	
+	#define GhostToolMethod$trigger 4		// ... - Has the level trigger this tool. Generally used for "placed" things such as HOTS, writing, etc
 
 	#define GhostToolEvt$hunting 1			// (bool)hunting, (key)ghost - Can be captured by the rest of the linkset to do something
 	#define GhostToolEvt$pickedUp 2			// void
 	#define GhostToolEvt$dropped 3			// (var)data
+	#define GhostToolEvt$trigger 4			// ...
 	
 	
 	#define GhostTool$dropped( targ, pos, rot, data ) \
@@ -22,6 +23,8 @@
 		runMethod(targ, "GhostTool", GhostToolMethod$hunting, on + ghost)
 	#define GhostTool$pickedUp( targ ) \
 		runMethod(targ, "GhostTool", GhostToolMethod$pickedUp, [])
+	#define GhostTool$trigger( targ, args ) \
+		runMethod(targ, "GhostTool", GhostToolMethod$pickedUp, args)
 	
 	
 	#define onGhostToolHunt( hunting, ghost ) \
@@ -36,7 +39,10 @@
 	#define onGhostToolDropped( data ) \
 		if( SENDER_SCRIPT IS "GhostTool" AND EVENT_TYPE IS GhostToolEvt$dropped ){ \
 			str data = argStr(0);
+	#define onGhostToolTrigger() \
+		if( SENDER_SCRIPT IS "GhostTool" AND EVENT_TYPE IS GhostToolEvt$trigger ){
 			
+	
 	
 	
 	// Level event bindings
