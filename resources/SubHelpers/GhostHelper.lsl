@@ -1,6 +1,6 @@
 #include "../GameHelper.lsl"
 
-// ToolSet.lsh tool types. Commented is the data
+// ToolSet.lsh tool types. Commented is the data, followed by call to either ToolSet$trigger or GhostToolMethod$trigger
 #define ToolsetConst$types$ghost$owometer 1			// (bool)on
 #define ToolsetConst$types$ghost$flashlight 2		// (bool)on
 #define ToolsetConst$types$ghost$hots 3				// 0
@@ -9,7 +9,7 @@
 #define ToolsetConst$types$ghost$camera 6			// (int)free_pics
 #define ToolsetConst$types$ghost$salt 7				// (int)charges
 #define ToolsetConst$types$ghost$candle 8			// NOT USED IN GAME
-#define ToolsetConst$types$ghost$parabolic 9		// (bool)on
+#define ToolsetConst$types$ghost$parabolic 9		// (bool)on | ToolSet: pos
 #define ToolsetConst$types$ghost$motionDetector 10	// 0
 #define ToolsetConst$types$ghost$glowstick 11		// (int)utime_turned_on
 #define ToolsetConst$types$ghost$pills 12			// 0

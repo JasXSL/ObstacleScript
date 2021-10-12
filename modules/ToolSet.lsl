@@ -1,17 +1,232 @@
-/*
 #define USE_RUN_TIME_PERMISSIONS
 #define USE_STATE_ENTRY
 #define USE_ATTACH
 #define USE_TIMER
 #define USE_LISTEN
-*/
-//#include "ObstacleScript/index.lsl"
+#include "ObstacleScript/resources/SubHelpers/GhostHelper.lsl"
+#include "ObstacleScript/index.lsl"
+
+
+integer BFL;
+#define BFL_USING 0x1   // Using an item
+
+// Equipped tools
+integer ACTIVE_TOOL;    // index of stride in TOOLS. Use activeType for type
+// (int)tool, (var)setting, (key)id
+list TOOLS;
+#define TOOLSTRIDE 3
+#define TTEMPLATE (list)0 + 0 + 0    // Empty slot
+
+#define activeType() l2i(TOOLS, ACTIVE_TOOL*TOOLSTRIDE)
+
+#define PP llSetLinkPrimitiveParamsFast
+#define AL llSetLinkAlpha
+
+#define getActiveToolInt() l2i(TOOLS, ACTIVE_TOOL*TOOLSTRIDE+1)
+#define getActiveToolStr() l2s(TOOLS, ACTIVE_TOOL*TOOLSTRIDE+1)
+#define getActiveToolWorldId() l2k(TOOLS, ACTIVE_TOOL*TOOLSTRIDE+2)
+#define getActiveToolList() llList2List(TOOLS, ACTIVE_TOOL*TOOLSTRIDE+1, ACTIVE_TOOL*TOOLSTRIDE+1)
+// Raises active tool event
+#define sendActiveTool( tool ) raiseEvent(ToolSetEvt$activeTool, tool + getActiveToolList())
+// Accepts one argument, can be any type. Lists passed must be JSON encoded
+#define setActiveToolVal( val ) TOOLS = llListReplaceList(TOOLS, (list)(val), ACTIVE_TOOL*TOOLSTRIDE+1, ACTIVE_TOOL*TOOLSTRIDE+1)
+
+integer P_OWOMETER;
+integer P_FLASHLIGHT;
+integer P_FLASHLIGHTBEAM;
+integer P_HOTS;
+integer P_HOTSBALL;
+integer P_ECCHISKETCH;
+integer P_SPIRITBOX;
+integer P_SALT;
+integer P_VAPE;
+integer P_OUIJA;
+integer P_PILLS;
+integer P_PIR;
+integer P_PIR_CAN;
+integer P_BAT;
+integer P_GSTICK;
+integer P_PARA;
+integer P_PARAMON;
+integer P_CAM;
+integer P_THERMO;
+
+vector SOUND_SPOT;
+float SOUND_TIME;
+
+string curAnim;
 
 
 
 
+// Attachment data received for the active asset
+onDataUpdate(){
+    
+    integer tool = activeType();
+    integer on = getActiveToolInt();
+    if( tool == ToolsetConst$types$ghost$flashlight ){
+
+        PP(
+            P_FLASHLIGHTBEAM, 
+            GhostHelper$flashlightSettings
+        );
+        PP(
+            P_FLASHLIGHT,
+            (list)PRIM_FULLBRIGHT + 2 + on + PRIM_GLOW + 2 + on*0.5
+        );
+        
+    }
+    else if( tool == ToolsetConst$types$ghost$ecchisketch ){
+        
+        AL(P_ECCHISKETCH, on, 4);
+        if( on ){
+            
+            --on;
+            PP(
+                P_ECCHISKETCH, 
+                (list)PRIM_TEXTURE + 4 + "9b2f4cf3-2796-4a6a-e5f4-0b93693c86aa" + <.5, .5, 0> + <-.25+(on%2)*.5, .25-(on/2)*.5, 0> + 0
+            );
+            
+        }
+        
+    }
+    else if( tool == ToolsetConst$types$ghost$glowstick )
+        onTick();
+    else if( tool == ToolsetConst$types$ghost$parabolic ){
+        
+        PP( P_PARAMON, (list)
+            PRIM_COLOR + 4 + ZERO_VECTOR + on +
+            PRIM_COLOR + 5 + ZERO_VECTOR + on +
+            PRIM_COLOR + 6 + ZERO_VECTOR + on +
+            PRIM_COLOR + 7 + ZERO_VECTOR + on +
+            PRIM_FULLBRIGHT + 3 + on
+        );
+        onTick();
+        
+    }
+        
+    
+    sendActiveTool(tool);
+    
+}
 
 
+// Draws the currently active tool
+drawActiveTool(){
+    
+    integer tool = activeType();
+    list remFullbright = (list)PRIM_GLOW + ALL_SIDES + 0 + PRIM_FULLBRIGHT + ALL_SIDES + 0;
+    list remLight = (list)PRIM_POINT_LIGHT + FALSE + <1.000, 0.928, 0.710> + 1 + 4 + 1;
+
+    // Owometer
+    AL(P_OWOMETER, tool == ToolsetConst$types$ghost$owometer, ALL_SIDES);
+    if( tool != ToolsetConst$types$ghost$owometer )
+        PP(P_OWOMETER, remFullbright);
+    
+    // Flashlight
+    AL(P_FLASHLIGHT, tool == ToolsetConst$types$ghost$flashlight, ALL_SIDES);
+    PP(P_FLASHLIGHT, remFullbright);
+    PP(P_FLASHLIGHTBEAM, remLight);
+
+    // HOTS
+    AL(P_HOTS, tool == ToolsetConst$types$ghost$hots, ALL_SIDES);
+    AL(P_HOTSBALL, tool == ToolsetConst$types$ghost$hots , ALL_SIDES);
+    AL(P_ECCHISKETCH, tool == ToolsetConst$types$ghost$ecchisketch, ALL_SIDES);
+    AL(P_SPIRITBOX, tool == ToolsetConst$types$ghost$spiritbox, ALL_SIDES);
+    AL(P_SPIRITBOX, 0, 4);
+    AL(P_SALT, tool == ToolsetConst$types$ghost$salt, ALL_SIDES);
+    AL(P_VAPE, tool == ToolsetConst$types$ghost$vape, ALL_SIDES);
+    AL(P_OUIJA, tool == ToolsetConst$types$ghost$weegieboard, ALL_SIDES);
+    AL(P_PILLS, tool == ToolsetConst$types$ghost$pills, ALL_SIDES);
+    AL(P_PIR, tool == ToolsetConst$types$ghost$motionDetector, ALL_SIDES);
+    AL(P_PIR_CAN, tool == ToolsetConst$types$ghost$motionDetector, ALL_SIDES);
+    AL(P_BAT, tool == ToolsetConst$types$ghost$hornybat, ALL_SIDES);
+    AL(P_GSTICK, tool == ToolsetConst$types$ghost$glowstick, ALL_SIDES);
+    PP(P_GSTICK, remFullbright + remLight);
+    
+    AL(P_PARAMON, tool == ToolsetConst$types$ghost$parabolic, ALL_SIDES);
+    AL(P_PARA, tool == ToolsetConst$types$ghost$parabolic, ALL_SIDES);
+    AL(P_PARA, (tool == ToolsetConst$types$ghost$parabolic)*.5, 1);
+    AL(P_CAM, tool == ToolsetConst$types$ghost$camera, ALL_SIDES);
+    AL(P_THERMO, tool == ToolsetConst$types$ghost$thermometer, ALL_SIDES);
+    
+
+    onDataUpdate();
+    
+    string anim;
+    if( llGetPermissions()&PERMISSION_TRIGGER_ANIMATION ){
+        
+        if( tool ){
+            anim = "default_hold";
+            
+            if( tool == ToolsetConst$types$ghost$parabolic )
+                anim = "paramic_hold";
+            else if( tool == ToolsetConst$types$ghost$camera )
+                anim = "camera_hold";
+            else if( tool == ToolsetConst$types$ghost$thermometer )
+                anim = "thermometer_hold";
+            
+        }
+            
+        
+        if( curAnim != anim ){
+            
+            if( curAnim )
+                llStopAnimation(curAnim);
+            if( anim )
+                llStartAnimation(anim);
+            
+            curAnim = anim;
+        } 
+
+    }
+        
+    
+}
+
+
+onTick(){
+    
+    integer type = activeType();
+    integer toolInt = getActiveToolInt();
+    if( type == ToolsetConst$types$ghost$glowstick && toolInt )
+        PP(P_GSTICK, GhostHelper$getGlowstickSettings( toolInt ));
+    else if( type == ToolsetConst$types$ghost$parabolic ){
+        
+        key texture = "87aea93e-75df-8a53-a016-7e0497530e19";
+        float between;
+        
+        if( SOUND_TIME > 0 && llGetTime()-SOUND_TIME < 6 ){
+            
+            vector pos = SOUND_SPOT;
+            
+            vector temp = (pos-llGetCameraPos())/llGetCameraRot(); 
+            between = 1.0 - llFabs(llAtan2(temp.y,temp.x))/PI;
+            between = llPow(between, 3);
+            float dist = llVecDist(pos, llGetRootPosition());
+            between *= (1.0-dist/10.0);
+            if( between < 0 )
+                between = 0;
+            
+            between *= 70;
+            
+        }
+        
+        string text = (string)between;
+        integer p = llSubStringIndex(text, ".");
+        text = llGetSubString(text, 0, p+1);
+        if( between < 10 )
+            text = "0"+text;
+        
+        PP( P_PARAMON, (list)
+            PRIM_TEXTURE + 4 + texture + <0.0625,1,0> + <-0.46875+0.0625*(float)llGetSubString(text,0,0),0,0> + 0 +
+            PRIM_TEXTURE + 5 + texture + <0.0625,1,0> + <-0.46875+0.0625*(float)llGetSubString(text,1,1),0,0> + 0 +
+            PRIM_TEXTURE + 7 + texture + <0.0625,1,0> + <-0.46875+0.0625*(float)llGetSubString(text,-1,-1),0,0> + 0
+        );
+        
+    }
+        
+}
 
 
 integer addTool( integer tool, list data, key id ){
@@ -52,6 +267,12 @@ removeToolById( key id ){
     
 }
 
+
+
+
+
+
+
 #include "ObstacleScript/begin.lsl"
 
 
@@ -69,7 +290,50 @@ onStateEntry()
     for(; i < ToolSetConst$MAX_ACTIVE; ++i )
         TOOLS += TTEMPLATE;
     
-    ini();
+    forLink( nr, name )
+        
+        if( name == "OWOMETER" )
+            P_OWOMETER = nr;
+        else if( name == "FLASHLIGHT" )
+            P_FLASHLIGHT = nr;
+        else if( name == "FLASHLIGHTBEAM" )
+            P_FLASHLIGHTBEAM = nr;
+        else if( name == "HOTS" )
+            P_HOTS = nr;
+        else if( name == "HOTSBALL" )
+            P_HOTSBALL = nr;
+        else if( name == "ECCHISKETCH" )
+            P_ECCHISKETCH = nr;
+        else if( name == "SPIRITBOX" )
+            P_SPIRITBOX = nr;
+        else if( name == "SALT" )
+            P_SALT = nr;
+        else if( name == "VAPE" )
+            P_VAPE = nr;
+        else if( name == "OUIJA" )
+            P_OUIJA = nr;
+        else if( name == "PILLS" )
+            P_PILLS = nr;
+        else if( name == "PIR" )
+            P_PIR = nr;
+        else if( name == "PIR_CAN" )
+            P_PIR_CAN = nr;
+        else if( name == "BAT" )
+            P_BAT = nr;
+        else if( name == "GSTICK" )
+            P_GSTICK = nr;
+        else if( name == "PARA" )
+            P_PARA = nr;
+        else if( name == "PARAMON" )
+            P_PARAMON = nr;
+        else if( name == "CAM" )
+            P_CAM = nr;
+        else if( name == "THERMO" )
+            P_THERMO = nr;
+        
+    end
+    
+    setInterval("T", 1);
     
     if( llGetAttached() )
         llRequestPermissions(llGetOwner(), PERMISSION_TRIGGER_ANIMATION|PERMISSION_TRACK_CAMERA);
@@ -97,41 +361,53 @@ onStateEntry()
 	llListen(3, "", llGetOwner(), "");
 	
 	Level$raiseEvent( LevelCustomType$TOOLSET, LevelCustomEvt$TOOLSET$get, [] );    
-	
+
 end
 
+// USE
 onPortalLclickStarted( hud )
-    
+
 	integer tool = activeType();
-	list toggled = (list)
-		ToolsetConst$types$ghost$owometer +
-		ToolsetConst$types$ghost$flashlight +
-		ToolsetConst$types$ghost$spiritbox
-	;
-	if( tool == ToolsetConst$types$ghost$glowstick ){
+    list toggled = (list)
+        ToolsetConst$types$ghost$owometer +
+        ToolsetConst$types$ghost$flashlight +
+        ToolsetConst$types$ghost$spiritbox +
+        ToolsetConst$types$ghost$parabolic
+    ;
+    if( tool == ToolsetConst$types$ghost$glowstick ){
+        
+        if( getActiveToolInt() )
+            return;
+            
+        setActiveToolVal(llGetUnixTime());
+        onDataUpdate();
+        // Todo: Animation and sound
+        Level$raiseEvent( LevelCustomType$GTOOL, LevelCustomEvt$GTOOL$data, getActiveToolWorldId() + llGetUnixTime() );
+        return;
+    }
+    
+    if( ~llListFindList(toggled, (list)tool) ){
+    
+        integer v = !getActiveToolInt();
+        setActiveToolVal(v);
+        onDataUpdate();
+        llTriggerSound("691cc796-7ed6-3cab-d6a6-7534aa4f15a9", .5);
+        // Tell level
+        Level$raiseEvent( LevelCustomType$GTOOL, LevelCustomEvt$GTOOL$data, getActiveToolWorldId() + v );
+        return;
+        
+    }
+	
+	if( tool == ToolsetConst$types$ghost$vape ){
+        
+        BFL = BFL|BFL_USING;
+        setTimeout("USE", 3);
+		setTimeout("DESTROY", 2.5);
 		
-		if( getActiveToolInt() )
-			return;
-			
-		setActiveToolVal(llGetUnixTime());
-		onDataUpdate();
-		// Todo: Animation and sound
-		Level$raiseEvent( LevelCustomType$GTOOL, LevelCustomEvt$GTOOL$data, getActiveToolWorldId() + llGetUnixTime() );
-		return;
-	}
-	
-	if( ~llListFindList(toggled, (list)tool) ){
-	
-		integer v = !getActiveToolInt();
-		setActiveToolVal(v);
-		onDataUpdate();
-		llTriggerSound("691cc796-7ed6-3cab-d6a6-7534aa4f15a9", .5);
-		// Tell level
-		Level$raiseEvent( LevelCustomType$GTOOL, LevelCustomEvt$GTOOL$data, getActiveToolWorldId() + v );
-		return;
+        raiseEvent(ToolSetEvt$visual, tool);
+		llStartAnimation("vape_use");
 		
-	}
-	
+    }
 
 end
 
@@ -161,7 +437,7 @@ onListen( ch, msg )
 	else if( msg == "Q" ){
 	
 		key id = getActiveToolWorldId();	
-		if( id == "" )
+		if( id == "" || BFL&BFL_USING )
 			return;
 			
 		rotation fwd = llGetRootRotation();
@@ -207,6 +483,42 @@ handleMethod( ToolSetMethod$remTool )
 	
 	removeToolById(argKey(0));
 	
+end
+
+handleTimer( "USE" )
+
+    BFL = BFL&~BFL_USING;
+
+end
+
+handleTimer( "DESTROY" )
+
+	Level$raiseEvent( 
+		LevelCustomType$TOOLSET, 
+		LevelCustomEvt$TOOLSET$destroy, 
+		getActiveToolWorldId()
+	);
+
+end
+
+// External interactions on our handheld items
+handleMethod( ToolSetMethod$trigger )
+	
+	if( BFL&BFL_USING )
+        return;
+		
+	int tool = argInt(0);
+	METHOD_ARGS = llDeleteSubList(METHOD_ARGS, 0, 0);
+    
+    if( tool == ToolsetConst$types$ghost$parabolic ){
+        
+        SOUND_SPOT = argVec(0);
+        SOUND_TIME = llGetTime();
+        if( activeType() == ToolsetConst$types$ghost$parabolic )
+            Ghost$playSoundOnMe(SENDER_KEY);
+        
+    }
+    
 end
 
 

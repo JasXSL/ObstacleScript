@@ -8,6 +8,7 @@
 #define GhostMethod$smudge 4			// void  - Player has used a smudge stick
 #define GhostMethod$interact 5			// void - Interact with a nearby item
 #define GhostMethod$stop 6				// (bool)stop - Stops the ghost. Useful for debugging
+#define GhostMethod$playSoundOnMe 7		// void - Callback for when the ghost sends ToolSet$trigger with parabolic
 
 #define GhostMethod$cbNodes 100			// Callback for Nodes.lsh getNodes method
 
@@ -33,9 +34,11 @@
 #define Ghost$setType( type ) \
 	runOmniMethod("Ghost", GhostMethod$setType, type)
 #define Ghost$smudge() \
-	runOmniMethod("Ghost", GhostMethod$smudged, [])
+	runOmniMethod("Ghost", GhostMethod$smudge, [])
 #define Ghost$interact() \
 	runOmniMethod("Ghost", GhostMethod$interact, [])
+#define Ghost$playSoundOnMe( targ ) \
+	runMethod(targ, "Ghost", GhostMethod$playSoundOnMe, [])
 
 
 	

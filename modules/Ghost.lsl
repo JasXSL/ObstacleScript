@@ -784,6 +784,12 @@ handleOwnerMethod( GhostMethod$cbNodes )
 			
 end
 
+handleMethod( GhostMethod$playSoundOnMe )
+	
+	// Todo: Want to play a sound on the owner
+
+end
+
 #include "ObstacleScript/end.lsl"
 
 

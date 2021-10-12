@@ -12,6 +12,8 @@ onStateEntry()
 		Level$raiseEvent( LevelCustomType$GTOOL, LevelCustomEvt$GTOOL$spawned, [] );
     
 	spawnPos = llGetPos();
+	
+	
     
 end
 

@@ -17,6 +17,7 @@
 	#define GhostToolEvt$trigger 4			// ...
 	
 	
+	
 	#define GhostTool$dropped( targ, pos, rot, data ) \
 		runMethod(targ, "GhostTool", GhostToolMethod$dropped, pos + rot + data)
 	#define GhostTool$hunting( targ, on, ghost ) \
