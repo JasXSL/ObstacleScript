@@ -6,8 +6,8 @@
 #define ToolsetConst$types$ghost$hots 3				// 0
 #define ToolsetConst$types$ghost$ecchisketch 4		// (int)drawing
 #define ToolsetConst$types$ghost$spiritbox 5		// (bool)on
-#define ToolsetConst$types$ghost$camera 6			// (int)free_pics
-#define ToolsetConst$types$ghost$salt 7				// (int)charges
+#define ToolsetConst$types$ghost$camera 6			// (int)pics_taken
+#define ToolsetConst$types$ghost$salt 7				// (int)charges_used
 #define ToolsetConst$types$ghost$candle 8			// NOT USED IN GAME
 #define ToolsetConst$types$ghost$parabolic 9		// (bool)on | ToolSet: pos
 #define ToolsetConst$types$ghost$motionDetector 10	// 0
@@ -17,7 +17,11 @@
 #define ToolsetConst$types$ghost$weegieboard 14		// 0
 #define ToolsetConst$types$ghost$vape 15			// 0
 #define ToolsetConst$types$ghost$hornybat 16		// 0
+#define ToolsetConst$types$ghost$saltpile 17		// (bool)stepped
 
+
+#define GhostHelper$CAM_MAX_PICS 5
+#define GhostHelper$SALT_MAX_CHARGES 3
 
 #define GhostHelper$flashlightSettings (list)PRIM_POINT_LIGHT + on + <1.000, 0.928, 0.710> + 1 + 4 + 1
 #define GhostHelper$ecchisketchTexture "9b2f4cf3-2796-4a6a-e5f4-0b93693c86aa"

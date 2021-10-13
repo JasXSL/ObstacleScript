@@ -64,6 +64,7 @@ onDataUpdate(){
     
     integer tool = activeType();
     integer on = getActiveToolInt();
+	
     if( tool == ToolsetConst$types$ghost$flashlight ){
 
         PP(
@@ -104,6 +105,17 @@ onDataUpdate(){
         onTick();
         
     }
+	else if( tool == ToolsetConst$types$ghost$camera ){
+		
+		integer pics = GhostHelper$CAM_MAX_PICS-on;
+		if( pics < 0 )
+			pics = 0;
+			
+		PP( P_CAM, (list)
+			PRIM_TEXTURE + 4 + "2aaf7eb6-4ebb-52da-b32a-7e2d4d45c73d" + <0.06250,0.7,0> + <-0.46875+0.0625*pics,0,0> + 0
+		);
+		
+	}
         
     
     sendActiveTool(tool);
@@ -268,7 +280,33 @@ removeToolById( key id ){
 }
 
 
+// Raycasts for a placement pos, returns empty on fail
+// If wall is TRUE it only allows placement on vertical objects
+// Otherwise it only allows horizontal
+// Returns (vec)pos, (vec)normal
+list getRcPlacement( integer wall ){
+	
+	rotation fwd = llGetRootRotation();
+	vector base = llGetRootPosition()+<0,0,.5>;
+	if( llGetPermissions() & PERMISSION_TRACK_CAMERA ){
+		
+		fwd = llGetCameraRot();
+		if( llGetAgentInfo(llGetOwner()) & AGENT_MOUSELOOK )
+			base = llGetCameraPos();
+		
+	}
+	
+	list ray = llCastRay(base, base+llRot2Fwd(fwd)*2.5, RC_DEFAULT + RC_DATA_FLAGS + RC_GET_NORMAL );
+	if( l2i(ray, -1) < 1 )
+		return [];
+		
+	vector n = l2v(ray, 2);
+	if( (n.z < .95 && !wall) || (wall && llFabs(n.z) > .05) )
+		return [];
+		
+	return (list)l2v(ray, 1) + n;
 
+}
 
 
 
@@ -404,10 +442,56 @@ onPortalLclickStarted( hud )
         setTimeout("USE", 3);
 		setTimeout("DESTROY", 2.5);
 		
-        raiseEvent(ToolSetEvt$visual, tool);
 		llStartAnimation("vape_use");
 		
     }
+	
+	if( tool == ToolsetConst$types$ghost$camera ){
+		
+		int pics = getActiveToolInt();
+		if( pics >= GhostHelper$CAM_MAX_PICS )
+			return;
+	
+		++pics;
+		setActiveToolVal(pics);
+        onDataUpdate();
+		
+		Level$raiseEvent( LevelCustomType$GTOOL, LevelCustomEvt$GTOOL$data, getActiveToolWorldId() + pics );
+		Level$raiseEvent(LevelCustomType$TOOLSET, LevelCustomEvt$TOOLSET$camera, llGetCameraPos() + llGetCameraRot());
+		
+		BFL = BFL|BFL_USING;
+		setTimeout("USE", 1);
+	
+	}
+	
+	if( tool == ToolsetConst$types$ghost$salt ){
+			
+		int ch = getActiveToolInt();
+		if( ch >= GhostHelper$SALT_MAX_CHARGES )
+			return;
+			
+		list rc = getRcPlacement(FALSE);
+		if( rc == [] )
+			return;
+		
+		vector norm = l2v(rc, 1);
+		rotation r = llRotBetween(<0,0,1>, norm);
+
+		++ch;
+		setActiveToolVal(ch);
+        onDataUpdate();
+		Level$raiseEvent( LevelCustomType$GTOOL, LevelCustomEvt$GTOOL$data, getActiveToolWorldId() + ch );
+		Level$raiseEvent(LevelCustomType$TOOLSET, LevelCustomEvt$TOOLSET$salt, l2v(rc, 0) + r);
+		
+		BFL = BFL|BFL_USING;
+		setTimeout("USE", 1);
+		if( ch >= GhostHelper$SALT_MAX_CHARGES )
+			setTimeout("DESTROY", 0.2);
+			
+		
+	}
+	
+	raiseEvent(ToolSetEvt$visual, tool);
 
 end
 
@@ -436,37 +520,21 @@ onListen( ch, msg )
 	
 	else if( msg == "Q" ){
 	
-		key id = getActiveToolWorldId();	
+		key id = getActiveToolWorldId();
 		if( id == "" || BFL&BFL_USING )
 			return;
 			
-		rotation fwd = llGetRootRotation();
-		vector base = llGetRootPosition()+<0,0,.5>;
-		if( llGetPermissions() & PERMISSION_TRACK_CAMERA ){
-			
-			fwd = llGetCameraRot();
-			if( llGetAgentInfo(llGetOwner()) & AGENT_MOUSELOOK )
-				base = llGetCameraPos();
-			
-		}
-		
-		list ray = llCastRay(base, base+llRot2Fwd(fwd)*2.5, RC_DEFAULT + RC_DATA_FLAGS + RC_GET_NORMAL );
-		if( l2i(ray, -1) < 1 )
-			return;
-			
-		vector n = l2v(ray, 2);
-		
-		// Todo: Handle wall placed assets
-		if( n.z < .9 )
+		list rc = getRcPlacement(FALSE);
+		if( rc == [] )
 			return;
 		
-		vector vr = llRot2Euler(fwd);
+		vector vr = llRot2Euler(llGetRootRotation());
 		vr = <0,0,vr.z>;
-		
+				
 		Level$raiseEvent( 
 			LevelCustomType$TOOLSET, 
 			LevelCustomEvt$TOOLSET$drop, 
-			id + l2v(ray, 1) + llEuler2Rot(vr)
+			id + l2v(rc, 0) + llEuler2Rot(vr)
 		);
 	
 	}

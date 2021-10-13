@@ -8,7 +8,8 @@
 	"Attachment" + \
 	"Trapdoor" + \
 	"Door" + \
-	"GhostInteractive"
+	"GhostInteractive" + \
+	"GhostTool"
 	
 
 // prim text contains some information about the portal

@@ -38,6 +38,7 @@
 		int tool = argInt(0);
 
 
+
 // Note: Define your tool IDs in a local project file
 // For ghost game, they're defined in resources/SubHelpers/GhostHelper.lsl
 // Example: ToolsetConst$types$ghost$owometer
@@ -49,6 +50,8 @@
 		#define LevelCustomEvt$TOOLSET$drop 1				// key worldID, vec pos, rotation rot - Drop an item
 		#define LevelCustomEvt$TOOLSET$get 2				// Updates your toolset with any items you're wearing. Useful if your toolset got disconnected.
 		#define LevelCustomEvt$TOOLSET$destroy 3			// key worldID, Removes an item from avatar and deletes the world asset
+		#define LevelCustomEvt$TOOLSET$camera 4				// (vec)camPos, (rot)camRot - Camera used
+		#define LevelCustomEvt$TOOLSET$salt 5				// (vec)floorpos, (rot)floorrot - Salt used
 		
 	#define onLevelCustomToolsetDrop( toolsetuuid, worldID, pos, rot ) \
 		if( isEventLevelCustom() AND argStr(1) == LevelCustomType$TOOLSET AND argInt(2) == LevelCustomEvt$TOOLSET$drop ){ \
@@ -62,6 +65,14 @@
 	#define onLevelCustomToolsetDestroy( worldID ) \
 		if( isEventLevelCustom() AND argStr(1) == LevelCustomType$TOOLSET AND argInt(2) == LevelCustomEvt$TOOLSET$destroy ){ \
 			key worldID = argKey(3);
+	#define onLevelCustomToolsetCamera( pos, rot ) \
+		if( isEventLevelCustom() AND argStr(1) == LevelCustomType$TOOLSET AND argInt(2) == LevelCustomEvt$TOOLSET$camera ){ \
+			vector pos = argVec(3); \
+			rotation rot = argRot(4);
+	#define onLevelCustomToolsetSalt( pos, rot ) \
+		if( isEventLevelCustom() AND argStr(1) == LevelCustomType$TOOLSET AND argInt(2) == LevelCustomEvt$TOOLSET$salt ){ \
+			vector pos = argVec(3); \
+			rotation rot = argRot(4);
 	
 
 #endif

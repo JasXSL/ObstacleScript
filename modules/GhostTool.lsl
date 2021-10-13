@@ -14,6 +14,9 @@ onStateEntry()
 	spawnPos = llGetPos();
 	
 	
+	Level$raiseEvent(LevelCustomType$GTOOL, LevelCustomEvt$GTOOL$getGhost, []);
+	Portal$scriptOnline();
+	
     
 end
 
@@ -46,7 +49,7 @@ handleOwnerMethod( GhostToolMethod$dropped )
     
     if( llGetAttached() )
         return;
-        
+    
 	vector pos = argVec(0);
 	rotation rot = argRot(1);
     str data = argStr(2);
@@ -56,6 +59,12 @@ handleOwnerMethod( GhostToolMethod$dropped )
 	llSetRegionPos(pos);
 	
     
+end
+
+handleOwnerMethod( GhostToolMethod$ghost )
+
+	raiseEvent(GhostToolEvt$ghost, METHOD_ARGS);
+
 end
 
 handleOwnerMethod( GhostToolMethod$trigger )
