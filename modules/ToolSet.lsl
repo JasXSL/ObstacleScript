@@ -259,6 +259,10 @@ integer addTool( integer tool, list data, key id ){
             
             if( n == ACTIVE_TOOL*TOOLSTRIDE )
                 drawActiveTool();
+				
+			if( tool == ToolsetConst$types$ghost$motionDetector ){
+				Level$raiseEvent( LevelCustomType$GTOOL, LevelCustomEvt$GTOOL$data, id + 0 );
+			}
             return TRUE;
             
         }
@@ -419,9 +423,8 @@ onPortalLclickStarted( hud )
             
         setActiveToolVal(llGetUnixTime());
         onDataUpdate();
-        // Todo: Animation and sound
         Level$raiseEvent( LevelCustomType$GTOOL, LevelCustomEvt$GTOOL$data, getActiveToolWorldId() + llGetUnixTime() );
-        return;
+
     }
     
     if( ~llListFindList(toggled, (list)tool) ){
@@ -432,7 +435,7 @@ onPortalLclickStarted( hud )
         llTriggerSound("691cc796-7ed6-3cab-d6a6-7534aa4f15a9", .5);
         // Tell level
         Level$raiseEvent( LevelCustomType$GTOOL, LevelCustomEvt$GTOOL$data, getActiveToolWorldId() + v );
-        return;
+
         
     }
 	
@@ -441,9 +444,16 @@ onPortalLclickStarted( hud )
         BFL = BFL|BFL_USING;
         setTimeout("USE", 3);
 		setTimeout("DESTROY", 2.5);
-		
-		llStartAnimation("vape_use");
-		
+				
+    }
+	
+	if( tool == ToolsetConst$types$ghost$pills ){
+        
+        BFL = BFL|BFL_USING;
+        setTimeout("USE", 3.5);
+		Level$raiseEvent( LevelCustomType$TOOLSET, LevelCustomEvt$TOOLSET$pills, []);
+		setTimeout("DESTROY", 3);
+				
     }
 	
 	if( tool == ToolsetConst$types$ghost$camera ){
@@ -489,6 +499,26 @@ onPortalLclickStarted( hud )
 			setTimeout("DESTROY", 0.2);
 			
 		
+	}
+	
+	if( tool == ToolsetConst$types$ghost$motionDetector ){
+		
+		list rc = getRcPlacement(TRUE);
+		if( rc == [] )
+			return;
+			
+		vector norm = l2v(rc, 1);
+		rotation r = llRotBetween(<0,0,1>, norm);
+		Level$raiseEvent( LevelCustomType$GTOOL, LevelCustomEvt$GTOOL$data, getActiveToolWorldId() + 1 );
+		BFL = BFL|BFL_USING;
+		setTimeout("USE", 1);
+		
+		Level$raiseEvent( 
+			LevelCustomType$TOOLSET, 
+			LevelCustomEvt$TOOLSET$drop, 
+			getActiveToolWorldId() + l2v(rc, 0) + r
+		);
+	
 	}
 	
 	raiseEvent(ToolSetEvt$visual, tool);

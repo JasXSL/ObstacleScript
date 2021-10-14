@@ -30,20 +30,22 @@ default{
 			llResetScript();
 			
 		#ifndef SCRIPT_IS_PLAYER_MANAGER
-			#ifdef USE_PLAYERS
+			
 			if( nr == globalAction$SET_PLAYERS ){
+				#ifdef USE_PLAYERS
 				_P = llJson2List(s);
 				onEvent(globalEvent$players, ":", "", []);
+				#endif
 				return;
 			}
-			#endif
-			#ifdef USE_HUDS
 			if( nr == globalAction$SET_HUDS ){
+				#ifdef USE_HUDS
 				_H = llJson2List(s);
 				onEvent(globalEvent$huds, ":", "", []);
+				#endif
 				return;
 			}
-			#endif
+			
 		#endif
 		
 		int type = (nr>>8)&3;

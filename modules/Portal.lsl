@@ -81,6 +81,8 @@ onStateEntry()
         fetchScripts();
         
     }
+	else
+		Level$forceRefreshPortal();
     
 end
 

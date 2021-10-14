@@ -52,6 +52,9 @@
 		#define LevelCustomEvt$TOOLSET$destroy 3			// key worldID, Removes an item from avatar and deletes the world asset
 		#define LevelCustomEvt$TOOLSET$camera 4				// (vec)camPos, (rot)camRot - Camera used
 		#define LevelCustomEvt$TOOLSET$salt 5				// (vec)floorpos, (rot)floorrot - Salt used
+		#define LevelCustomEvt$TOOLSET$motionDetector 6		// (bool)ghost - Motion detector triggered
+		#define LevelCustomEvt$TOOLSET$pills 7				// void - Pills used
+		
 		
 	#define onLevelCustomToolsetDrop( toolsetuuid, worldID, pos, rot ) \
 		if( isEventLevelCustom() AND argStr(1) == LevelCustomType$TOOLSET AND argInt(2) == LevelCustomEvt$TOOLSET$drop ){ \
@@ -73,6 +76,12 @@
 		if( isEventLevelCustom() AND argStr(1) == LevelCustomType$TOOLSET AND argInt(2) == LevelCustomEvt$TOOLSET$salt ){ \
 			vector pos = argVec(3); \
 			rotation rot = argRot(4);
+	#define onLevelCustomToolsetMotionDetector( ghost ) \
+		if( isEventLevelCustom() AND argStr(1) == LevelCustomType$TOOLSET AND argInt(2) == LevelCustomEvt$TOOLSET$motionDetector ){ \
+			bool ghost = argInt(3);
+	#define onLevelCustomToolsetPills() \
+		if( isEventLevelCustom() AND argStr(1) == LevelCustomType$TOOLSET AND argInt(2) == LevelCustomEvt$TOOLSET$pills ){
+			
 	
 
 #endif

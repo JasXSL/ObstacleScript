@@ -61,6 +61,7 @@
 		#define LevelCustomEvt$GTOOL$data 2					// key worldID, str data - Ghost tool data has changed
 		#define LevelCustomEvt$GTOOL$getGhost 3				// void - Sends ghost uuid back as GhostToolMethod$ghost
 		
+		
 	#define onLevelCustomGtoolSpawned( tool ) \
 		if( isEventLevelCustom() AND argStr(1) == LevelCustomType$GTOOL AND argInt(2) == LevelCustomEvt$GTOOL$spawned ){ \
 			key tool = argKey(0);

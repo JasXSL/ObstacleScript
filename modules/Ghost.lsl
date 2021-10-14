@@ -5,7 +5,7 @@
 #define USE_LISTEN
 #define USE_PLAYERS
 #define USE_TOUCH_START
-#include "ObstacleScript/headers/Obstacles/Ghost.lsh"
+#include "ObstacleScript/headers/Obstacles/Ghost/Ghost.lsh"
 #include "ObstacleScript/index.lsl"
 
 list cNodes;	// Cache of pathing nodes, fetched from Nodes script
@@ -669,6 +669,7 @@ onStateEntry()
     //llStartObjectAnimation("hugeman_walk");
     llSitTarget(<.6,0,-.6>, llEuler2Rot(<0,0,PI>));
     setInterval("A", 0.25);
+	
 	cacheNodes();
 	addListen(0);
 	
@@ -717,7 +718,7 @@ onRunTimePermissions( perm )
         llStartAnimation("hugeman_av_grapple_idle");
         
     }
-        
+
 end
 
 
@@ -777,6 +778,7 @@ handleOwnerMethod( GhostMethod$stop )
 	qd("Players:" + PLAYERS);
 	
 end
+
 
 handleOwnerMethod( GhostMethod$cbNodes )
 	

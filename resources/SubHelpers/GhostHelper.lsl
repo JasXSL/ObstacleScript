@@ -27,7 +27,6 @@
 #define GhostHelper$ecchisketchTexture "9b2f4cf3-2796-4a6a-e5f4-0b93693c86aa"
 
 
-#define GhostHelper$glowStickPerc( utimeLit ) 
 #define GhostHelper$getGlowstickSettings( utimeLit ) _ghGGS(utimeLit)
 list _ghGGS( integer utimeLit ){
 	
