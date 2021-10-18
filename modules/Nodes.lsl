@@ -1,9 +1,12 @@
 #define USE_STATE_ENTRY
+#define USE_TIMER
+#define USE_PLAYERS
 #include "ObstacleScript/index.lsl"
 
 
-
-key ghost = "1af76701-c79b-57d8-c41c-8efe2ab1c8f9";
+// Todo: Track these
+key GHOST = "59556ee0-6fe3-ecbb-f28e-be357ac62685";
+int HAS_TEMPS = TRUE;	// Ghost has sweaty temps
 
 // Note that the same index can appear multiple times
 #define RM_INDEX 0      // (Position in ROOMS list divided by ROOMS stride)
@@ -14,7 +17,8 @@ key ghost = "1af76701-c79b-57d8-c41c-8efe2ab1c8f9";
 #define RM_STRIDE NodesConst$rmStride
 list ROOM_MARKERS = [];
 
-
+list roomTemps;		// Temperatures of a room. Each index corresponds to an index in ROOMS
+float lastSweat;
 
 list portals;      // 8bArray roomIndexes, uuid
 
@@ -265,6 +269,7 @@ onStateEntry()
     // Get room markers
     Spawner$getGroups("init", "rooms");
     
+	PLAYERS = [(str)llGetOwner()];
     
     list unfoundRooms = llList2ListStrided(ROOMS, 0, -1, 2);
     // Sanity check our portals
@@ -314,9 +319,78 @@ onStateEntry()
         
     )
     
+	integer i;
+	for(; i < count(ROOMS); i += 2 )
+		roomTemps += 20;
+		
+	setInterval("TICK", 4);
 
 end
 
+handleTimer( "TICK" )
+	
+	// Check for ghost
+	vector ghostPos = prPos(GHOST);
+	string room = getPosRoom(ghostPos);
+	integer pos = llListFindList(ROOMS, (list)room);
+	if( pos > -1 )
+		pos /= 2;
+	
+	int cap = 27;
+	if( HAS_TEMPS )
+		cap = 40;
+	
+	integer i;
+	for( ; i < count(roomTemps); ++i ){
+		
+		integer val = l2i(roomTemps, i);
+		if( i == pos )
+			++val;
+		else 
+			--val;
+			
+			
+		if( val < 20 )
+			val = 20;
+		else if( val > cap )
+			val = cap;
+		
+		roomTemps = llListReplaceList(roomTemps, (list)val, i, i);
+		
+	}
+	
+	if( llGetTime()-lastSweat > 6 ){
+		
+		lastSweat = llGetTime();
+		
+		if( llFrand(1) < .5 )
+			return;
+			
+		list rand = llListRandomize(PLAYERS, 1);
+		integer i;
+		for(; i < count(rand); ++i ){
+			
+			key player = l2k(rand, i);
+			str room = getPosRoom(prPos(player));
+			int pos = llListFindList(ROOMS, (list)room);
+			if( ~pos ){
+				
+				int temp = l2i(roomTemps, pos/2);
+				if( temp >= 35 ){
+					
+					raiseEvent(NodesEvt$sweatyTemps, player);
+				
+					// EXIT HERE
+					return;
+				}
+				
+			}
+		
+		}
+		
+	}
+	
+end
 
 handleMethod( NodesMethod$getRooms )
 	
@@ -363,6 +437,50 @@ handleMethod( NodesMethod$getPath )
         
     }
     
+
+end
+
+handleMethod( NodesMethod$getRoomName )
+	
+	str cbString = argStr(0);
+	vector ppos = argVec(1);
+	str ss = argStr(2);
+	int cb = argInt(3);
+	
+	string room = getPosRoom(ppos);
+	integer pos = llListFindList(ROOMS, (list)room);
+	list out;
+	if( ~pos )
+		out = llList2List(ROOMS, pos, pos+1);
+		
+	list re = (list)SENDER_KEY;
+	if( SENDER_KEY == "" )
+		re = (list)LINK_THIS;
+	runMethod(re, ss, cb, cbString + out );
+	
+
+end
+
+// Sends a temperature reading based on position
+handleMethod( NodesMethod$getTemp )
+
+	vector vpos = argVec(0);
+	key targ = argKey(1);
+	str targScript = argStr(2);
+	int targMethod = argInt(3);
+	
+	int temp = 15;
+	string room = getPosRoom(vpos);
+	integer pos = llListFindList(ROOMS, (list)room);
+	if( ~pos ){
+		
+		integer nr = pos/2;
+		temp = l2i(roomTemps, nr);
+	
+	}
+		
+	runMethod(targ, targScript, targMethod, temp);
+	
 
 end
 

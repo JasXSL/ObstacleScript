@@ -7,18 +7,30 @@
 
 #define NodesMethod$getRooms 1		// (str)senderScript, (int)callbackMethod - Causes the callback method to run with each slice of a room marker, prepended with the index in the array. Ex: [index, roomIndex, pos, rot, scale]. pos is converted to global coordinates when running this
 #define NodesMethod$getPath 2		// (str)senderScript, (int)callbackMethod, (vec)startPos, (str/vec)endRoom - Select an end room by LABEL or POS
+#define NodesMethod$getTemp 3		// (vec)pos, (key)targ, (str)script, (int)method - Sends method to script on targ with the arg being temperature in celsius
+#define NodesMethod$getRoomName 4	// (str)cbString, (vec)pos, (str)senderScript, (int)callbackMethod - Callbacks callbackMethod with [cbString, roomLabel, roomName] of pos or no args if not found
 
 #define Nodes$getRooms( cbMethod ) \
 	runOmniMethod( "Nodes", NodesMethod$getRooms, llGetScriptName() + cbMethod )
-#define Nodes$Path( cbMethod, startPos, endRoom ) \
+#define Nodes$getPath( cbMethod, startPos, endRoom ) \
 	runOmniMethod( "Nodes", NodesMethod$getPath, llGetScriptName() + cbMethod + startPos + endRoom )
+#define Nodes$getTemp( pos, cbTarg, cbScript, cbMethod ) \
+	runOmniMethod( "Nodes", NodesMethod$getTemp, pos + cbTarg + cbScript + cbMethod )
+#define Nodes$getTempQuick( cbMethod ) \
+	runOmniMethod( "Nodes", NodesMethod$getTemp, llGetPos() + llGetKey() + llGetScriptName() + cbMethod )
+#define Nodes$getRoomName( targ, cbString, pos, cbMethod ) \
+	runMethod( targ, "Nodes", NodesMethod$getRoomName, cbString + pos + llGetScriptName() + cbMethod )
 
+
+#define NodesEvt$sweatyTemps 1		// (key)player - Sweaty temps has triggered on a player
 
 #define NodesConst$rmStride 4		// Since the roomMarkers is shared with getRooms, stride is a const here
 #define NodesConst$defaultRmSlice \
 	(list)0 + ZERO_VECTOR + ZERO_ROTATION + ZERO_VECTOR			// Needs to be a prototype for what's stored in the room marker list
 
-
+#define onNodesSweatyTemps( player ) \
+	if( SENDER_SCRIPT IS "Nodes" AND EVENT_TYPE IS NodesEvt$sweatyTemps ){ \
+		key player = argKey(0);
 
 // Helper macro that can be put in your method handler for getRooms to automatically populate a global list with the args
 #define Nodes$handleGetRooms( globalVar ) \

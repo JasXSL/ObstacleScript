@@ -259,7 +259,6 @@ _me( str ta, str sc, int me, list da ){
 #include "./headers/Footsteps.lsh"
 #include "./headers/AnimHandler.lsh"
 #include "./headers/Qte.lsh"
-#include "./headers/ToolSet.lsh"
 
 
 #include "./headers/Com.lsh"
@@ -296,6 +295,7 @@ _me( str ta, str sc, int me, list da ){
 #include "./headers/Obstacles/Ghost/Owometer.lsh"
 #include "./headers/Obstacles/Ghost/Spiritbox.lsh"
 #include "./headers/Obstacles/Ghost/GhostTool.lsh"
+#include "./headers/Obstacles/Ghost/ToolSet.lsh"
 
 
 

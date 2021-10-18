@@ -43,6 +43,7 @@ vector roamTarget;          // Position we're roaming towards
 key chaseTarget;            // Player we're chasting
 float nextRoam;       		// llGetTime() of when we finished the last roam
 float lastWarp;				// llGetTime of when we last went to the ghost room
+float lastReturn;
 
 vector spawnPos;
 
@@ -348,7 +349,7 @@ handleTimer( "A" )
 					}else{
 					
 						//qd("We have TARGET footsteps");
-						Nodes$Path( GhostMethod$followNodes, llGetPos(), pos );
+						Nodes$getPath( GhostMethod$followNodes, llGetPos(), pos );
 						huntLastFootstepReq = llGetTime()+4;	// Give it 4 sec to request the path before assuming a failure
 						
 					}
@@ -400,7 +401,7 @@ handleTimer( "A" )
 				}
 				
 				if( pathTo )
-					Nodes$Path( GhostMethod$followNodes, llGetPos(), pathTo );
+					Nodes$getPath( GhostMethod$followNodes, llGetPos(), pathTo );
 				
 			}
 		
@@ -409,6 +410,16 @@ handleTimer( "A" )
 	}
 
 	if( STATE == STATE_IDLE ){
+	
+		// Every 30 sec go back to ghost room
+		if( ~BFL&BFL_HUNTING && llGetTime()-lastReturn > 30 ){
+			
+			lastReturn = llGetTime();
+			
+			
+			Nodes$getPath( GhostMethod$followNodes, llGetPos(), spawnPos );
+		
+		}
 
 		// Find a new target
 		if( llGetTime() > nextRoam || BFL&BFL_HUNTING ){
@@ -416,7 +427,7 @@ handleTimer( "A" )
 			vector dir = llRot2Fwd(llEuler2Rot(<0,0,llFrand(TWO_PI)>));
 			
 			// Exponentially grow the area it can roam
-			float maxDist = llPow(0.02*(llGetTime()-lastWarp), 1.3)+1;
+			float maxDist = llPow(0.05*(llGetTime()-lastWarp), 1.3)+1;
 			if( BFL&BFL_HUNTING )
 				maxDist = 50;
 				

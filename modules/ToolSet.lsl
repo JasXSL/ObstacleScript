@@ -41,6 +41,7 @@ integer P_SPIRITBOX;
 integer P_SALT;
 integer P_VAPE;
 integer P_OUIJA;
+integer P_PLANCHETTE;
 integer P_PILLS;
 integer P_PIR;
 integer P_PIR_CAN;
@@ -51,8 +52,11 @@ integer P_PARAMON;
 integer P_CAM;
 integer P_THERMO;
 
+
 vector SOUND_SPOT;
 float SOUND_TIME;
+float TEMP_TIME;
+integer TEMPERATURE;
 
 string curAnim;
 
@@ -116,7 +120,16 @@ onDataUpdate(){
 		);
 		
 	}
-        
+    else if( tool == ToolsetConst$types$ghost$thermometer ){
+	
+		integer f = getActiveToolInt();
+		llSetLinkPrimitiveParamsFast(P_THERMO, (list)
+			PRIM_TEXTURE + 6 + "2aaf7eb6-4ebb-52da-b32a-7e2d4d45c73d" + <1.0/16, 1, 0> + <-0.46875+.0625*(14-f*2), 0, 0> + 0
+		);
+		TEMP_TIME = 0;
+		onTick();
+		
+	}    
     
     sendActiveTool(tool);
     
@@ -149,6 +162,7 @@ drawActiveTool(){
     AL(P_SALT, tool == ToolsetConst$types$ghost$salt, ALL_SIDES);
     AL(P_VAPE, tool == ToolsetConst$types$ghost$vape, ALL_SIDES);
     AL(P_OUIJA, tool == ToolsetConst$types$ghost$weegieboard, ALL_SIDES);
+	AL(P_PLANCHETTE, 0, ALL_SIDES);
     AL(P_PILLS, tool == ToolsetConst$types$ghost$pills, ALL_SIDES);
     AL(P_PIR, tool == ToolsetConst$types$ghost$motionDetector, ALL_SIDES);
     AL(P_PIR_CAN, tool == ToolsetConst$types$ghost$motionDetector, ALL_SIDES);
@@ -177,6 +191,8 @@ drawActiveTool(){
                 anim = "camera_hold";
             else if( tool == ToolsetConst$types$ghost$thermometer )
                 anim = "thermometer_hold";
+			else if( tool == ToolsetConst$types$ghost$hornybat )
+				anim = "bat_idle";
             
         }
             
@@ -237,6 +253,13 @@ onTick(){
         );
         
     }
+	else if( type == ToolsetConst$types$ghost$thermometer && llGetTime()-TEMP_TIME > 2 ){
+	
+		// Request a reading
+		TEMP_TIME = llGetTime();
+		Nodes$getTempQuick( ToolSetMethod$temp );
+	
+	}
         
 }
 
@@ -372,6 +395,8 @@ onStateEntry()
             P_CAM = nr;
         else if( name == "THERMO" )
             P_THERMO = nr;
+        else if( name == "PLANCHETTE" )
+            P_PLANCHETTE = nr;
         
     end
     
@@ -414,7 +439,8 @@ onPortalLclickStarted( hud )
         ToolsetConst$types$ghost$owometer +
         ToolsetConst$types$ghost$flashlight +
         ToolsetConst$types$ghost$spiritbox +
-        ToolsetConst$types$ghost$parabolic
+        ToolsetConst$types$ghost$parabolic +
+		ToolsetConst$types$ghost$thermometer
     ;
     if( tool == ToolsetConst$types$ghost$glowstick ){
         
@@ -607,7 +633,7 @@ handleMethod( ToolSetMethod$trigger )
 		
 	int tool = argInt(0);
 	METHOD_ARGS = llDeleteSubList(METHOD_ARGS, 0, 0);
-    
+
     if( tool == ToolsetConst$types$ghost$parabolic ){
         
         SOUND_SPOT = argVec(0);
@@ -616,7 +642,41 @@ handleMethod( ToolSetMethod$trigger )
             Ghost$playSoundOnMe(SENDER_KEY);
         
     }
+	// Negative ouija meant it was used
+	else if( tool == -ToolsetConst$types$ghost$weegieboard )
+		raiseEvent(ToolSetEvt$visual, tool + METHOD_ARGS);
+
     
+end
+
+handleMethod( ToolSetMethod$temp )
+
+	float t = argFloat(0);
+	t += llFrand(8)-6;
+	
+	if( getActiveToolInt() )
+		t = (t * 9.0/5.0) + 32;
+	str nr = (str)floor(t);
+	while( llStringLength(nr) < 3 )
+		nr = "0"+nr;
+		
+		
+	list set;
+	integer i;
+	for(; i < 3; ++i ){
+		
+		set += (list)
+			PRIM_TEXTURE +
+			(3+i) +
+			"2aaf7eb6-4ebb-52da-b32a-7e2d4d45c73d" +
+			<1.0/16, 1, 0> + 
+			<-0.46875+.0625*(int)llGetSubString(nr, i, i), 0, 0> + 
+			0
+		;
+		
+	}
+	llSetLinkPrimitiveParamsFast(P_THERMO, set);
+	
 end
 
 

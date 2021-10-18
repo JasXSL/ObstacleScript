@@ -13,7 +13,7 @@
 #define ToolSetMethod$addTool 1					// int type, var data, key worldToolID - Adds a tool
 #define ToolSetMethod$remTool 2					// key worldToolID - Removes a tool by world ID
 #define ToolSetMethod$trigger 3					// int toolType, data... - Do something
-
+#define ToolSetMethod$temp 4					// int temperature - Callback for a temperature reading
 
 #define ToolSet$addTool( targ, type, data, worldID ) \
 	runMethod(targ, "ToolSet", ToolSetMethod$addTool, type + data + worldID)
@@ -54,6 +54,7 @@
 		#define LevelCustomEvt$TOOLSET$salt 5				// (vec)floorpos, (rot)floorrot - Salt used
 		#define LevelCustomEvt$TOOLSET$motionDetector 6		// (bool)ghost - Motion detector triggered
 		#define LevelCustomEvt$TOOLSET$pills 7				// void - Pills used
+		#define LevelCustomEvt$TOOLSET$ouija 8				// str type(pos, age, sex, name) - Ouija board question asked
 		
 		
 	#define onLevelCustomToolsetDrop( toolsetuuid, worldID, pos, rot ) \
@@ -79,8 +80,9 @@
 	#define onLevelCustomToolsetMotionDetector( ghost ) \
 		if( isEventLevelCustom() AND argStr(1) == LevelCustomType$TOOLSET AND argInt(2) == LevelCustomEvt$TOOLSET$motionDetector ){ \
 			bool ghost = argInt(3);
-	#define onLevelCustomToolsetPills() \
-		if( isEventLevelCustom() AND argStr(1) == LevelCustomType$TOOLSET AND argInt(2) == LevelCustomEvt$TOOLSET$pills ){
+	#define onLevelCustomToolsetOuija( type ) \
+		if( isEventLevelCustom() AND argStr(1) == LevelCustomType$TOOLSET AND argInt(2) == LevelCustomEvt$TOOLSET$ouija ){ \
+			str type = argStr(3); \
 			
 	
 

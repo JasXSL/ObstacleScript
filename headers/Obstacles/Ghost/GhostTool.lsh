@@ -26,7 +26,7 @@
 	#define GhostTool$pickedUp( targ ) \
 		runMethod(targ, "GhostTool", GhostToolMethod$pickedUp, [])
 	#define GhostTool$trigger( targ, args ) \
-		runMethod(targ, "GhostTool", GhostToolMethod$pickedUp, args)
+		runMethod(targ, "GhostTool", GhostToolMethod$trigger, args)
 	#define GhostTool$setGhost( ghost ) \
 		runOmniMethod("GhostTool", GhostToolMethod$ghost, ghost)
 	#define GhostTool$setGhostTarg( targ, ghost ) \
