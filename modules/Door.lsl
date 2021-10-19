@@ -29,6 +29,8 @@ float maxRot = 0;
 string ID;
 rotation startRot;
 
+int P_STAIN;
+
 key interactor;
 integer locked;
 
@@ -207,6 +209,14 @@ onStateEntry()
 	Portal$scriptOnline();
 	
 	llListen(DoorConst$CHAN, "", "", "");
+	
+	forLink( nr, name )
+		
+		if( name == "STAIN" )
+			P_STAIN = nr;
+	
+	end
+	llSetLinkAlpha(P_STAIN, 0, ALL_SIDES);
     
 end
 
@@ -247,6 +257,11 @@ onListen( chan, msg )
 		locked = l2i(data, 0);
 		if( locked )
 			stopInteract();
+		
+	}
+	else if( task == DoorTask$setStains ){
+		
+		llSetLinkAlpha(P_STAIN, l2i(data, 0), ALL_SIDES);
 		
 	}
 

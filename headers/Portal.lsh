@@ -9,7 +9,9 @@
 	"Trapdoor" + \
 	"Door" + \
 	"GhostInteractive" + \
-	"GhostTool"
+	"GhostTool" + \
+	"Ghost" + \
+	"GhostInteractions"
 	
 
 // prim text contains some information about the portal

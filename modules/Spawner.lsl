@@ -14,12 +14,14 @@
 
 // DB tables are structured as [TABLE_NAME, data1, data2...]
 integer P_DB;   // Database prim
-list DB_TABLES = [-1, -1];  // contains faces, index mapped to TABLE_* below
-list DB_MAP = ["SPA","SPB"];    // Shorthand labels for above
+list DB_TABLES = [-1, -1, -1];  // contains faces, index mapped to TABLE_* below
+list DB_MAP = ["SPA","SPB", "SPC"];    // Shorthand labels for above
 #define TABLE_SPAWNS_A 0
 #define TABLE_SPAWNS_B 1
+#define TABLE_SPAWNS_C 2
+
 list ASSET_TABLES = [
-    TABLE_SPAWNS_A, TABLE_SPAWNS_B
+    TABLE_SPAWNS_A, TABLE_SPAWNS_B, TABLE_SPAWNS_C
 ];
 
 string SAVE_ROUND;      // When calling a save, this is the label
@@ -129,6 +131,11 @@ onStateEntry()
         
         if( l2i(DB_TABLES, i) == -1 ){
             
+			if( emptyFaces == [] ){
+				llOwnerSay("Fatal error: Out of DB faces");
+				return;
+			}
+			
             integer face = l2i(emptyFaces, 0);
             emptyFaces = llDeleteSubList(emptyFaces, 0, 0);
             string table = l2s(DB_MAP, i);

@@ -29,6 +29,7 @@ integer walking;
 
 // Behavior
 integer ghostType = GhostConst$type$succubus;
+integer evidenceType;
 
 // State manager
 integer STATE; 
@@ -127,10 +128,9 @@ integer walkTowards( vector pos ){
 			for(; i < count(desc); ++i ){
 				
 				list spl = split(l2s(desc, i), "$");
-				if( l2s(spl, 0) == Desc$TASK_DOOR_STAT && l2i(spl, 1) < 2 ){
-					qd("Opening door");
+				if( l2s(spl, 0) == Desc$TASK_DOOR_STAT && l2i(spl, 1) < 2 )
 					Door$setRotPercTarg( prRoot(door), "*", 1 );
-				}
+				
 
 			}
 			
@@ -411,13 +411,26 @@ handleTimer( "A" )
 
 	if( STATE == STATE_IDLE ){
 	
-		// Every 30 sec go back to ghost room
+		// Every 30 sec go back to ghost room or try to go to a completely random room if not at home
 		if( ~BFL&BFL_HUNTING && llGetTime()-lastReturn > 30 ){
 			
 			lastReturn = llGetTime();
 			
+			int startRoom = pointInRoom( spawnPos );
+			int curRoom = pointInRoom( llGetPos() );
+
+			// Go back
+			if( startRoom != curRoom )
+				Nodes$getPath( GhostMethod$followNodes, llGetPos(), spawnPos );
+			else{
+				
+				vector rng = llGetPos()+<llFrand(20)-10,llFrand(20)-10,llFrand(15)-5>;
+				
+				int gRoom = pointInRoom(rng);
+				if( ~gRoom && gRoom != curRoom )
+					Nodes$getPath( GhostMethod$followNodes, llGetPos(), rng );
 			
-			Nodes$getPath( GhostMethod$followNodes, llGetPos(), spawnPos );
+			}
 		
 		}
 
@@ -668,8 +681,12 @@ end
 
 
 onPortalLoadComplete( desc )
+
 	spawnPos = llGetPos();
+	Level$raiseEvent(LevelCustomType$GHOST, LevelCustomEvt$GHOST$spawned, []);
 	cacheNodes();
+	
+	
 end
 
 onStateEntry()
@@ -680,11 +697,11 @@ onStateEntry()
     //llStartObjectAnimation("hugeman_walk");
     llSitTarget(<.6,0,-.6>, llEuler2Rot(<0,0,PI>));
     setInterval("A", 0.25);
-	
-	cacheNodes();
 	addListen(0);
+	Portal$scriptOnline();
 	
 	#ifdef FETCH_PLAYERS_ON_COMPILE
+	cacheNodes();
 	Level$forceRefreshPortal();
     #endif
 	
@@ -757,7 +774,11 @@ handleTimer( "HUNT" )
 end
 
 handleOwnerMethod( GhostMethod$setType )
+
 	ghostType = argInt(0);
+	evidenceType = argInt(1);
+	raiseEvent(GhostEvt$type, ghostType + evidenceType);
+	
 end
 
 handleOwnerMethod( GhostMethod$smudge )

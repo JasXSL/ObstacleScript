@@ -4,7 +4,7 @@
 // Ghost uses standard methods
 #define GhostMethod$followNodes 1		// portal1, portal2... - Follow path nodes
 #define GhostMethod$toggleHunt 2		// (bool)hunting - Start or stop hunting players
-#define GhostMethod$setType 3			// (int)ghost_type - Sets a ghost type, affecting its behavior
+#define GhostMethod$setType 3			// (int)ghost_type, (int)evidenceTypes - Sets a ghost type and evidence, affecting its behavior
 #define GhostMethod$smudge 4			// void  - Player has used a smudge stick
 #define GhostMethod$interact 5			// void - Interact with a nearby item
 #define GhostMethod$stop 6				// (bool)stop - Stops the ghost. Useful for debugging
@@ -23,7 +23,45 @@
 #define GhostConst$type$inugami 7			// Being in the ghost room increases arousal faster. If nobody's in the ghost room it becomes more active.
 #define GhostConst$type$hauntai 8			// Hunts earlier and more often when the lgiht is off in the ghost room. Will only turn lights off, not on.
 
+#define GhostEvt$type 1						// int type - Ghost type received
 
+#define onGhostType( type, evidence ) \
+	if( SENDER_SCRIPT IS "Ghost" AND EVENT_TYPE IS GhostEvt$type ){ \
+		int type = argInt(0); \
+		int evidence = argInt(1);
+
+
+#define GhostConst$evidence$owometer 0x1
+#define GhostConst$evidence$writing 0x2
+#define GhostConst$evidence$stains 0x4
+#define GhostConst$evidence$spiritbox 0x8
+#define GhostConst$evidence$temps 0x10
+#define GhostConst$evidence$hots 0x20
+
+// Corresponds to the ghost type indexes
+#define GhostConst$evidenceTypes [\
+	GhostConst$evidence$owometer|GhostConst$evidence$spiritbox|GhostConst$evidence$temps, \
+	GhostConst$evidence$owometer|GhostConst$evidence$stains|GhostConst$evidence$hots, \
+	GhostConst$evidence$owometer|GhostConst$evidence$stains|GhostConst$evidence$temps, \
+	GhostConst$evidence$owometer|GhostConst$evidence$writing|GhostConst$evidence$hots, \
+	GhostConst$evidence$owometer|GhostConst$evidence$writing|GhostConst$evidence$spiritbox, \
+	GhostConst$evidence$owometer|GhostConst$evidence$spiritbox|GhostConst$evidence$stains, \
+	GhostConst$evidence$writing|GhostConst$evidence$spiritbox|GhostConst$evidence$temps, \
+	GhostConst$evidence$stains|GhostConst$evidence$temps|GhostConst$evidence$hots, \
+	GhostConst$evidence$stains|GhostConst$evidence$spiritbox|GhostConst$evidence$hots \
+]
+#define getEvidenceTypes( ghostType ) \
+	l2i(GhostConst$evidenceTypes, ghostType)
+
+
+
+
+#define LevelCustomType$GHOST "oGhost"				// Generic type for traps like the lasher
+	#define LevelCustomEvt$GHOST$spawned 1			// void - The ghost has been spawned
+
+#define onLevelCustomGhostSpawned( ghost ) \
+	if( isEventLevelCustom() AND argStr(1) == LevelCustomType$GHOST AND argInt(2) == LevelCustomEvt$GHOST$spawned ){ \
+		key ghost = argKey(0);
 
 
 #define Ghost$followNodes( nodes ) \
@@ -32,8 +70,8 @@
 	runOmniMethod("Ghost", GhostMethod$stop, stop)
 #define Ghost$toggleHunt( on ) \
 	runOmniMethod("Ghost", GhostMethod$toggleHunt, on)
-#define Ghost$setType( type ) \
-	runOmniMethod("Ghost", GhostMethod$setType, type)
+#define Ghost$setType( type, evidence ) \
+	runOmniMethod("Ghost", GhostMethod$setType, type + evidence)
 #define Ghost$smudge() \
 	runOmniMethod("Ghost", GhostMethod$smudge, [])
 #define Ghost$interact() \

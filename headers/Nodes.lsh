@@ -1,5 +1,7 @@
 /*
 	Nodes maintains pathing nodes for navigation
+	!! Use #Nodes for the script name !!
+	Todo: Make this a template
 */
 #ifndef __Nodes
 #define __Nodes
@@ -11,15 +13,15 @@
 #define NodesMethod$getRoomName 4	// (str)cbString, (vec)pos, (str)senderScript, (int)callbackMethod - Callbacks callbackMethod with [cbString, roomLabel, roomName] of pos or no args if not found
 
 #define Nodes$getRooms( cbMethod ) \
-	runOmniMethod( "Nodes", NodesMethod$getRooms, llGetScriptName() + cbMethod )
+	runOmniMethod( "#Nodes", NodesMethod$getRooms, llGetScriptName() + cbMethod )
 #define Nodes$getPath( cbMethod, startPos, endRoom ) \
-	runOmniMethod( "Nodes", NodesMethod$getPath, llGetScriptName() + cbMethod + startPos + endRoom )
+	runOmniMethod( "#Nodes", NodesMethod$getPath, llGetScriptName() + cbMethod + startPos + endRoom )
 #define Nodes$getTemp( pos, cbTarg, cbScript, cbMethod ) \
-	runOmniMethod( "Nodes", NodesMethod$getTemp, pos + cbTarg + cbScript + cbMethod )
+	runOmniMethod( "#Nodes", NodesMethod$getTemp, pos + cbTarg + cbScript + cbMethod )
 #define Nodes$getTempQuick( cbMethod ) \
-	runOmniMethod( "Nodes", NodesMethod$getTemp, llGetPos() + llGetKey() + llGetScriptName() + cbMethod )
+	runOmniMethod( "#Nodes", NodesMethod$getTemp, llGetPos() + llGetKey() + llGetScriptName() + cbMethod )
 #define Nodes$getRoomName( targ, cbString, pos, cbMethod ) \
-	runMethod( targ, "Nodes", NodesMethod$getRoomName, cbString + pos + llGetScriptName() + cbMethod )
+	runMethod( targ, "#Nodes", NodesMethod$getRoomName, cbString + pos + llGetScriptName() + cbMethod )
 
 
 #define NodesEvt$sweatyTemps 1		// (key)player - Sweaty temps has triggered on a player
@@ -29,7 +31,7 @@
 	(list)0 + ZERO_VECTOR + ZERO_ROTATION + ZERO_VECTOR			// Needs to be a prototype for what's stored in the room marker list
 
 #define onNodesSweatyTemps( player ) \
-	if( SENDER_SCRIPT IS "Nodes" AND EVENT_TYPE IS NodesEvt$sweatyTemps ){ \
+	if( SENDER_SCRIPT IS "#Nodes" AND EVENT_TYPE IS NodesEvt$sweatyTemps ){ \
 		key player = argKey(0);
 
 // Helper macro that can be put in your method handler for getRooms to automatically populate a global list with the args

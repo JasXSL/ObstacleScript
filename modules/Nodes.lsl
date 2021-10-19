@@ -4,7 +4,6 @@
 #include "ObstacleScript/index.lsl"
 
 
-// Todo: Track these
 key GHOST = "59556ee0-6fe3-ecbb-f28e-be357ac62685";
 int HAS_TEMPS = TRUE;	// Ghost has sweaty temps
 
@@ -323,7 +322,7 @@ onStateEntry()
 	for(; i < count(ROOMS); i += 2 )
 		roomTemps += 20;
 		
-	setInterval("TICK", 4);
+	setInterval("TICK", 5);
 
 end
 
@@ -347,7 +346,7 @@ handleTimer( "TICK" )
 		if( i == pos )
 			++val;
 		else 
-			--val;
+			val -= 3;
 			
 			
 		if( val < 20 )
@@ -484,6 +483,8 @@ handleMethod( NodesMethod$getTemp )
 
 end
 
-
+onLevelCustomGhostSpawned( ghost )
+    GHOST = ghost;
+end
 
 #include "ObstacleScript/end.lsl"

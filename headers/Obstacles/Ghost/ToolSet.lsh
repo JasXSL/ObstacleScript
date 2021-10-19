@@ -66,6 +66,8 @@
 	#define onLevelCustomToolsetGet( toolsetuuid ) \
 		if( isEventLevelCustom() AND argStr(1) == LevelCustomType$TOOLSET AND argInt(2) == LevelCustomEvt$TOOLSET$get ){ \
 			key toolsetuuid = argKey(0);
+	#define onLevelCustomToolsetPills() \
+		if( isEventLevelCustom() AND argStr(1) == LevelCustomType$TOOLSET AND argInt(2) == LevelCustomEvt$TOOLSET$pills ){
 	#define onLevelCustomToolsetDestroy( worldID ) \
 		if( isEventLevelCustom() AND argStr(1) == LevelCustomType$TOOLSET AND argInt(2) == LevelCustomEvt$TOOLSET$destroy ){ \
 			key worldID = argKey(3);

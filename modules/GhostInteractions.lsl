@@ -6,6 +6,7 @@
 #include "ObstacleScript/index.lsl"
 
 list cObjs; // (key)id
+int EVIDENCE_TYPES;
 
 // Searches desc for a specific type
 list getDescType( key id, str type ){
@@ -29,8 +30,14 @@ integer isInteractive( key id ){
     
 	if( getDescType(id, Desc$TASK_DOOR_STAT) )
 		return 1;
-	if( getDescType(id, Desc$TASK_GHOST_INTERACTIVE) )
+	if( getDescType(id, Desc$TASK_GHOST_INTERACTIVE) ){
+		
+		// Stains should start with STAIN in order to properly filter out
+		if( llGetSubString(llKey2Name(id), 0, 4) == "STAIN" && ~EVIDENCE_TYPES&GhostConst$evidence$stains )
+			return 0;
 		return 1;
+		
+	}
 	
     return -1;
 
@@ -121,6 +128,8 @@ onStateEntry()
 
     llSensorRepeat("", "", ACTIVE|PASSIVE, 3, PI, 2);
 	
+	Portal$scriptOnline();
+	
 	#ifdef FETCH_PLAYERS_ON_COMPILE
 	Level$forceRefreshPortal();
     #endif
@@ -150,7 +159,11 @@ onNoSensor()
 
 end
 
-
+onGhostType( type, evidence )
+	
+	EVIDENCE_TYPES = evidence;
+	
+end
 
 handleMethod( GhostInteractionsMethod$interact )
 	
@@ -212,6 +225,11 @@ handleMethod( GhostInteractionsMethod$interact )
 			else if( llFrand(1) < 0.5 )
 				perc = 1.0;
 			Door$setRotPercTarg( targ, "*", perc );
+			
+			if( EVIDENCE_TYPES&GhostConst$evidence$stains ){
+				qd("Setting stains on " + llKey2Name(targ));
+				Door$setStainsTarg( targ, "*", TRUE );
+			}
 			
 			return;
 			
