@@ -71,7 +71,7 @@ handleOwnerMethod( GhostInteractiveMethod$interact )
 	
 	// Tunnel to level
 	if( l2i(dt, 1) & 2 ){
-		qd("Todo: Tunnel to level");
+		//qd("Todo: Tunnel to level");
 	}
     
     raiseEvent(GhostInteractiveEvent$trigger, METHOD_ARGS);

@@ -5,7 +5,8 @@
 
 
 key GHOST = "59556ee0-6fe3-ecbb-f28e-be357ac62685";
-int HAS_TEMPS = TRUE;	// Ghost has sweaty temps
+int EVIDENCE_TYPES;
+#define HAS_TEMPS (EVIDENCE_TYPES & GhostConst$evidence$temps)
 
 // Note that the same index can appear multiple times
 #define RM_INDEX 0      // (Position in ROOMS list divided by ROOMS stride)
@@ -326,6 +327,14 @@ onStateEntry()
 
 end
 
+handleEvent( "#Game", 0 )
+
+	str type = argStr(0);
+	if( type == "EVIDENCE" )
+		EVIDENCE_TYPES = argInt(1);
+
+end
+
 handleTimer( "TICK" )
 	
 	// Check for ghost
@@ -335,9 +344,9 @@ handleTimer( "TICK" )
 	if( pos > -1 )
 		pos /= 2;
 	
-	int cap = 27;
+	int cap = 29;
 	if( HAS_TEMPS )
-		cap = 40;
+		cap = 35;
 	
 	integer i;
 	for( ; i < count(roomTemps); ++i ){
@@ -346,7 +355,7 @@ handleTimer( "TICK" )
 		if( i == pos )
 			++val;
 		else 
-			val -= 3;
+			val -= 2;
 			
 			
 		if( val < 20 )

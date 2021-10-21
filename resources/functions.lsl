@@ -107,7 +107,17 @@ _w2s( key player, vector checkpoint, rotation r, integer unsit ){
 #define warpPlayerToSurface( player, pos, rot, allowUnsit ) \
 	_w2s( player, pos, rot, allowUnsit )
 
+// Returns TRUE if player is looking at targ (positive X)
+int _pla( key player, key targ, float angle ){
+	
+	vector temp = (prPos(targ)-prPos(player))/prRot(player); 
+	return llFabs(llAtan2(temp.y,temp.x)) < angle;
 
+}
+#define agentLookingAt( player, targ ) \
+	_pla(player, targ, PI_BY_TWO)
 
+#define agentLookingAtRadius( player, targ, radius ) \
+	_pla(player, targ, radius)
 
 #endif

@@ -704,6 +704,7 @@ onStateEntry()
 	cacheNodes();
 	Level$forceRefreshPortal();
     #endif
+	Level$raiseEvent(LevelCustomType$GHOST, LevelCustomEvt$GHOST$spawned, []);
 	
 end
 
@@ -818,11 +819,6 @@ handleOwnerMethod( GhostMethod$cbNodes )
 			
 end
 
-handleMethod( GhostMethod$playSoundOnMe )
-	
-	// Todo: Want to play a sound on the owner
-
-end
 
 #include "ObstacleScript/end.lsl"
 

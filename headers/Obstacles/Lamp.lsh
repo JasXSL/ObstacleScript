@@ -17,6 +17,7 @@
 
 
 
+
 #define Lamp$toggle( label, on ) \
 	llRegionSay(LampConst$CHAN, mkarr(label + LampTask$toggle + (on)))
 #define Lamp$flicker( label, on ) \

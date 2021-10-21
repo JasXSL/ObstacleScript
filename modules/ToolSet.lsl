@@ -634,13 +634,32 @@ handleMethod( ToolSetMethod$trigger )
 	int tool = argInt(0);
 	METHOD_ARGS = llDeleteSubList(METHOD_ARGS, 0, 0);
 
+	
     if( tool == ToolsetConst$types$ghost$parabolic ){
         
         SOUND_SPOT = argVec(0);
         SOUND_TIME = llGetTime();
-        if( activeType() == ToolsetConst$types$ghost$parabolic )
-            Ghost$playSoundOnMe(SENDER_KEY);
-        
+		int triggerSound = argInt(1);
+		
+		if( triggerSound ){
+		
+			// Check angle between us and that
+			prPosAngX(SOUND_SPOT, ang)
+			
+			// We can hear the sound if it's in front of us
+			if( llFabs(ang) < PI_BY_TWO && activeType() == ToolsetConst$types$ghost$parabolic ){
+				
+				float dist = 1.0-llVecDist(llGetPos(), SOUND_SPOT)/5;
+				if( dist < 0 )
+					dist = 0;
+				
+				float vol = (1.0-llFabs(ang)/PI_BY_TWO)*.5 + dist;
+				GhostInteractions$playSoundOnMe(SENDER_KEY, vol);
+				
+			}
+				
+        }
+		
     }
 	// Negative ouija meant it was used
 	else if( tool == -ToolsetConst$types$ghost$weegieboard )

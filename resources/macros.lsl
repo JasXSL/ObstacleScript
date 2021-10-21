@@ -103,11 +103,13 @@
 #define prPhantom(prim) llList2Integer(llGetObjectDetails(prim, [OBJECT_PHANTOM]), 0)
 #define mySpawner() prSpawner(llGetKey())
 
-// Check if prim is in front of me
+// Check if prim is in front of me. Var is a float variable that gets created
 #define prAngleOn(object, var, rotOffset) vector temp = (prPos(object)-llGetRootPosition())/llGetRootRotation()*rotOffset; var = llAtan2(temp.y,temp.x)
 #define prAngle(object, var, rotOffset) float var; {vector temp = (prPos(object)-llGetRootPosition())/llGetRootRotation()*rotOffset; var = llAtan2(temp.y,temp.x);}
 #define prAngX(object, var) prAngle(object, var, ZERO_ROTATION)
+#define prPosAngX(pos, var) float var; {vector temp = (pos-llGetRootPosition())/llGetRootRotation(); var = llAtan2(temp.y,temp.x);}
 #define prAngZ(object, var) prAngle(object, var, llEuler2Rot(<0,PI_BY_TWO,0>))
+
 // Checks if I am in front of prim
 #define myAng(object, var, rotOffset) float var; {vector temp = (llGetRootPosition()-prPos(object))/prRot(object)*rotOffset; var = llAtan2(temp.y,temp.x);}
 #define myAngX(object, var) myAng(object, var, ZERO_ROTATION)

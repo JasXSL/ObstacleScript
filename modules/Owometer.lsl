@@ -183,7 +183,7 @@ handleTimer( "EMF" )
 	if( llGetAttached() ){
 	
 		front = llGetPos()+llRot2Fwd(llGetRootRotation());
-		if( llGetPermissions() & PERMISSION_TRACK_CAMERA )
+		if( llGetPermissions() & PERMISSION_TRACK_CAMERA && llGetAgentInfo(llGetOwner()) & AGENT_MOUSELOOK )
 			front = llGetCameraPos()+llRot2Fwd(llGetCameraRot());
 			
     }
