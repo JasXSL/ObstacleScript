@@ -20,17 +20,6 @@ Phasmo:
 	
 	
 	
-	
-	Kit:
-		x Walls etc
-		x Stair
-		- Sofa
-		- Rug
-		- Truck
-		- Whiteboard
-		- Computer
-		- Computer monitor
-
 - Level manager
 
 

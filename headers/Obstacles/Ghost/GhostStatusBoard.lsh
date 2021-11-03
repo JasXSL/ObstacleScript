@@ -12,10 +12,21 @@
 
 
 #define GhostStatus$updatePlayers( label, arousals ) \
-	llRegionSay(LampConst$CHAN, mkarr(label + GhostStatusTask$updatePlayers + arousals))
+	llRegionSay(GhostStatusBoardConst$CHAN, mkarr(label + GhostStatusTask$updatePlayers + arousals))
 #define GhostStatus$updateSoundSensors( label, data ) \
-	llRegionSay(LampConst$CHAN, mkarr(label + GhostStatusTask$updateSoundSensors + data))
+	llRegionSay(GhostStatusBoardConst$CHAN, mkarr(label + GhostStatusTask$updateSoundSensors + data))
+#define GhostStatus$triggerSoundSensor( label, index, perc ) \
+	llRegionSay(GhostStatusBoardConst$CHAN, mkarr(label + GhostStatusTask$triggerSoundSensor + (index) + (perc)))
 
+
+
+// Level event bindings
+#define LevelCustomType$GSBOARD "oGsboard"				// Generic type for traps like the lasher
+	#define LevelCustomEvt$GSBOARD$spawned 1			// The board has spawned. Send the latest data.
+	
+#define onLevelCustomGsboardSpawned( board ) \
+	if( isEventLevelCustom() AND argStr(1) == LevelCustomType$GSBOARD AND argInt(2) == LevelCustomEvt$GSBOARD$spawned ){ \
+		key lightSwitch = argKey(0);
 
 
 #endif

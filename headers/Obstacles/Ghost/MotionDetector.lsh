@@ -1,0 +1,13 @@
+#ifndef __MotionDetector
+#define __MotionDetector
+
+
+#define LevelCustomType$MOTIONDET "oMdet"				// Generic type for traps like the lasher
+	#define LevelCustomEvt$MOTIONDET$trig 1				// float perc - Motion detector triggered
+	
+#define onLevelCustomMotiondetTrig( prim, perc ) \
+	if( isEventLevelCustom() AND argStr(1) == LevelCustomType$MOTIONDET AND argInt(2) == LevelCustomEvt$MOTIONDET$trig ){ \
+		key prim = argKey(0); \
+		float perc = argFloat(3);
+
+#endif

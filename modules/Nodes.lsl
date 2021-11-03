@@ -3,6 +3,9 @@
 #define USE_PLAYERS
 #include "ObstacleScript/index.lsl"
 
+#ifndef debugUncommon
+	#define debugUncommon(text)
+#endif
 
 key GHOST = "59556ee0-6fe3-ecbb-f28e-be357ac62685";
 int EVIDENCE_TYPES;
@@ -335,6 +338,28 @@ handleEvent( "#Game", 0 )
 
 end
 
+handleEvent( "#Tools", 0 )
+	
+	str type = argStr(0);
+	if( type == "SEN_NAMES" ){
+		
+		METHOD_ARGS = llList2List(METHOD_ARGS, 1, 4);
+		list positions;
+		integer i;
+		for(; i < count(METHOD_ARGS); ++i ){
+			
+			key id = l2k(METHOD_ARGS, i);
+			str room = getPosRoom(prPos(id));
+			qd(llKey2Name(id) + room);
+			positions += room;
+		}
+		GhostStatus$updateSoundSensors( "*", positions );
+	
+	}
+	
+	
+end
+
 handleTimer( "TICK" )
 	
 	// Check for ghost
@@ -437,9 +462,9 @@ handleMethod( NodesMethod$getPath )
     if( ~ri ){
 
         list path = findShortestPath(currentRoom, room, []);
-        qd("Trying to path from "+currentRoom+"to"+room);
+        debugUncommon("Trying to path from "+currentRoom+"to"+room);
         list nodes = pathToNodes(path);
-        qd(path);
+        debugUncommon(path);
         
         runMethod(SENDER_KEY, ss, cb, nodes);
         

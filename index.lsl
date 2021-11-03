@@ -296,6 +296,8 @@ _me( str ta, str sc, int me, list da ){
 #include "./headers/Obstacles/Ghost/Spiritbox.lsh"
 #include "./headers/Obstacles/Ghost/GhostTool.lsh"
 #include "./headers/Obstacles/Ghost/ToolSet.lsh"
+#include "./headers/Obstacles/Ghost/GhostStatusBoard.lsh"
+#include "./headers/Obstacles/Ghost/MotionDetector.lsh"
 
 
 
