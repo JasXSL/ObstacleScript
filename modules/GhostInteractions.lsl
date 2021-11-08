@@ -42,9 +42,12 @@ integer isInteractive( key id ){
 		return 1;
 	if( getDescType(id, Desc$TASK_GHOST_INTERACTIVE) ){
 		
+		/*
+		Stains were removed because it spread the evidence types too much.
 		// Stains should start with STAIN in order to properly filter out
 		if( llGetSubString(name, 0, 4) == "STAIN" && ~EVIDENCE_TYPES&GhostConst$evidence$stains )
 			return 0;
+		*/
 		return 0;
 		
 	}
@@ -255,7 +258,7 @@ handleMethod( GhostInteractionsMethod$interact )
 	if( llFrand(1.0) < .5 ){
 		forPlayer( index, player )
 			
-			if( llVecDist(prPos(player), gp) < 2.5 )
+			if( llVecDist(prPos(player), gp) < 2.5 && ~llGetAgentInfo(player) & AGENT_SITTING )
 				viable += player;
 			
 		end
@@ -328,10 +331,13 @@ handleMethod( GhostInteractionsMethod$interact )
 				perc = 1.0;
 			Door$setRotPercTarg( targ, "*", perc );
 			
+			/*
+			Stains removed from game
 			if( EVIDENCE_TYPES&GhostConst$evidence$stains ){
 				//qd("Setting stains on " + llKey2Name(targ));
 				Door$setStainsTarg( targ, "*", TRUE );
 			}
+			*/
 			
 			//qd("Door interact" + llKey2Name(targ));
 			triggerParabolic(prPos(targ), FALSE);

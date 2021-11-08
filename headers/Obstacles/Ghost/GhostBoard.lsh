@@ -1,0 +1,19 @@
+/*
+	The ghost board is teh whiteboard that handles the evidence and objectives
+*/
+#ifndef __GhostBoard
+#define __GhostBoard
+
+// Level events
+#define LevelCustomType$GHOSTBOARD "oGhostBoard"
+	#define LevelCustomEvt$GHOSTBOARD$setGhost 1		// (int)ghostIndex - Sets the ghost selected by the player
+	
+			
+#define onGhostBoardSelect( ghost ) \
+	if( isEventLevelCustom() AND argStr(1) == LevelCustomType$GHOSTBOARD AND argInt(2) == LevelCustomEvt$GHOSTBOARD$setGhost ){ \
+		int ghost = argInt(3);
+		
+
+
+#endif
+

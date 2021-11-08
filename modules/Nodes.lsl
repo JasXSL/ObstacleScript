@@ -20,12 +20,17 @@ int EVIDENCE_TYPES;
 #define RM_STRIDE NodesConst$rmStride
 list ROOM_MARKERS = [];
 
+int breaker;		// Breaker on
+list roomLights;	// Lights of a room. Each index corresponds to an index in ROOMS. Note that this relies on readable name, which means only the first entry of that readable is toggled.
 list roomTemps;		// Temperatures of a room. Each index corresponds to an index in ROOMS
 float lastSweat;
 
 list portals;      // 8bArray roomIndexes, uuid
 
+int GAME_ACTIVE;
+
 #define getRoomIndexByName(name) llListFindList(llList2ListStrided(ROOMS, 0, -1, 2), (list)name)
+#define getRoomIndexByReadable(name) llListFindList(llList2ListStrided(llDeleteSubList(ROOMS, 0,0), 0, -1, 2), (list)name)
 #define getRoomNameByIndex(index) l2s(ROOMS, (index)*2)
 
 list portal2names( integer bitArray8 ){
@@ -226,7 +231,18 @@ string getClosestRoom( vector pos ){
 
 
 
+resetTempData(){
 
+	roomLights = [];
+	roomTemps = [];
+	breaker = false;
+	integer i;
+	for(; i < count(ROOMS); i += 2 ){
+		roomTemps += 20;
+		roomLights += FALSE;
+	}
+	
+}
 
 
 
@@ -322,11 +338,9 @@ onStateEntry()
         
     )
     
-	integer i;
-	for(; i < count(ROOMS); i += 2 )
-		roomTemps += 20;
-		
-	setInterval("TICK", 5);
+	
+	resetTempData();
+	setInterval("TICK", 6);
 
 end
 
@@ -335,6 +349,12 @@ handleEvent( "#Game", 0 )
 	str type = argStr(0);
 	if( type == "EVIDENCE" )
 		EVIDENCE_TYPES = argInt(1);
+	else if( type == "ROUND_START" || type == "END_GAME" ){
+		
+		GAME_ACTIVE = (type == "ROUND_START");
+		resetTempData();
+		
+	}		
 
 end
 
@@ -360,7 +380,19 @@ handleEvent( "#Tools", 0 )
 	
 end
 
+
+/*
+	Handles: 
+		Hot temps (30+ temps)
+		Sanity decay
+*/
 handleTimer( "TICK" )
+
+	if( !GAME_ACTIVE )
+		return;
+	
+	if( llKey2Name(GHOST) == "" )
+		return;
 	
 	// Check for ghost
 	vector ghostPos = prPos(GHOST);
@@ -392,6 +424,7 @@ handleTimer( "TICK" )
 		
 	}
 	
+	// Handle animation
 	if( llGetTime()-lastSweat > 6 ){
 		
 		lastSweat = llGetTime();
@@ -422,6 +455,44 @@ handleTimer( "TICK" )
 		}
 		
 	}
+	
+	// Handle sanity decay
+	// Check if player is in a room
+	list decay;	// Corresponds to player index
+	for( i = 0; i < count(PLAYERS); ++i ){
+		
+		int amt;
+		key player = l2k(PLAYERS, i);
+		str room = getPosRoom(prPos(player));
+		if( room != "" ){
+			
+			amt = 1;	// Check if lights are off
+			int room = getRoomIndexByName(room);					// Get the label
+			room = getRoomIndexByReadable(l2s(ROOMS, room*2+1));	// Only the first readable is used, so we need to get the first one here
+			if( !breaker || !l2i(roomLights, room) )
+				amt = 3;											// 3x drain in the dark 
+				
+		}
+		
+		decay += amt;
+		
+	}
+	
+	raiseEvent(0, "DECAY" + decay);
+	
+end
+
+onLevelCustomLightSwitch( lightSwitch, room, on )
+	
+	if( room == "_BREAKER_" ){
+		breaker = on;
+		return;
+	}
+	
+	integer index = getRoomIndexByReadable(room);
+	if( index == -1 )
+		return;
+	roomLights = llListReplaceList(roomLights, (list)on, index, index);
 	
 end
 

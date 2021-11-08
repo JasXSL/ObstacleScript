@@ -1,0 +1,33 @@
+#ifndef __BondageDevice
+#define __BondageDevice
+
+
+#define BondageConst$CHAN (OBSTACLE_CHAN+0xB04)			// 5944 Listener
+	#define BondageTask$getFree 1						// void - Checks if the device is free. Sends 
+	#define BondageTask$seat 2							// key hud, int permanent - Force seats a player. If not permanent, the player is unsat after 20 sec.
+
+
+#define Bondage$getFree() \
+	llRegionSay(BondageConst$CHAN, mkarr("*" + BondageTask$getFree))
+#define Bondage$seat(uuid, hud, permanent) \
+	llRegionSayTo(uuid, BondageConst$CHAN, mkarr("*" + BondageTask$seat + hud + permanent))
+	
+
+#define LevelCustomType$BONDAGE "oBondage"				// Generic type for traps like the lasher
+	#define LevelCustomEvt$BONDAGE$free 1				// void - Reply when receiving BondageTask$getFree	
+	#define LevelCustomEvt$BONDAGE$playerDied 2			// bool dead - Sent when a player is attached to the seat (or detached on easy)	
+	
+
+#define onLevelCustomBondageFree( chair ) \
+	if( isEventLevelCustom() AND argStr(1) == LevelCustomType$BONDAGE AND argInt(2) == LevelCustomEvt$BONDAGE$free ){ \
+		key chair = argKey(0);
+	
+#define onLevelCustomBondagePlayerDied( chair, player, died ) \
+	if( isEventLevelCustom() AND argStr(1) == LevelCustomType$BONDAGE AND argInt(2) == LevelCustomEvt$BONDAGE$playerDied ){ \
+		key chair = argKey(0); \
+		key player = argKey(3); \
+		bool dead = argInt(4);
+	
+
+
+#endif

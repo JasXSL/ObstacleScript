@@ -8,6 +8,7 @@
 #define GhostMethod$smudge 4			// void  - Player has used a smudge stick
 #define GhostMethod$interact 5			// void - Interact with a nearby item
 #define GhostMethod$stop 6				// (bool)stop - Stops the ghost. Useful for debugging
+#define GhostMethod$sendToChair 7		// key chair, key hud, int temp - Tells the ghost to go to a chair and trap the player. If no chair is available, drop the player.
 
 
 
@@ -21,7 +22,7 @@
 #define GhostConst$type$imp 5				// (Preference needed, luigi board needed) Prefers touching players over interacting with items. No arousal penalty when successfully using a luigi board.
 #define GhostConst$type$hantuwu 6			// (Breaker tracking needed) Wanders more often when the breaker is on. Wanders less often when the breaker is off.
 #define GhostConst$type$inugami 7			// (Activity check needed, arousal needed) Being within 2m radius of the ghost increases arousal faster. If nobody's in the ghost room it becomes more active.
-#define GhostConst$type$hauntai 8			// (Activity needed, light switch needed, hunt detect needed) Hunts earlier and more often when the light is off in the ghost room. Will only turn lights off, not on.
+#define GhostConst$type$obukakke 8			// (Activity needed, light switch needed, hunt detect needed) Hunts earlier and more often when the light is off in the ghost room. Will only turn lights off, not on.
 
 #define GhostEvt$type 1						// int type - Ghost type received
 
@@ -33,22 +34,21 @@
 
 #define GhostConst$evidence$owometer 0x1
 #define GhostConst$evidence$writing 0x2
-#define GhostConst$evidence$stains 0x4
-#define GhostConst$evidence$spiritbox 0x8
-#define GhostConst$evidence$temps 0x10
-#define GhostConst$evidence$hots 0x20
+#define GhostConst$evidence$spiritbox 0x4
+#define GhostConst$evidence$temps 0x8
+#define GhostConst$evidence$hots 0x10
 
 // Corresponds to the ghost type indexes
 #define GhostConst$evidenceTypes [\
 	GhostConst$evidence$owometer|GhostConst$evidence$spiritbox|GhostConst$evidence$temps, \
-	GhostConst$evidence$owometer|GhostConst$evidence$stains|GhostConst$evidence$hots, \
-	GhostConst$evidence$owometer|GhostConst$evidence$stains|GhostConst$evidence$temps, \
+	GhostConst$evidence$owometer|GhostConst$evidence$spiritbox|GhostConst$evidence$hots, \
+	GhostConst$evidence$owometer|GhostConst$evidence$temps|GhostConst$evidence$temps, \
 	GhostConst$evidence$owometer|GhostConst$evidence$writing|GhostConst$evidence$hots, \
 	GhostConst$evidence$owometer|GhostConst$evidence$writing|GhostConst$evidence$spiritbox, \
-	GhostConst$evidence$owometer|GhostConst$evidence$spiritbox|GhostConst$evidence$stains, \
+	GhostConst$evidence$writing|GhostConst$evidence$spiritbox|GhostConst$evidence$hots, \
 	GhostConst$evidence$writing|GhostConst$evidence$spiritbox|GhostConst$evidence$temps, \
-	GhostConst$evidence$stains|GhostConst$evidence$temps|GhostConst$evidence$hots, \
-	GhostConst$evidence$stains|GhostConst$evidence$spiritbox|GhostConst$evidence$hots \
+	GhostConst$evidence$writing|GhostConst$evidence$temps|GhostConst$evidence$hots, \
+	GhostConst$evidence$temps|GhostConst$evidence$spiritbox|GhostConst$evidence$hots \
 ]
 #define getEvidenceTypes( ghostType ) \
 	l2i(GhostConst$evidenceTypes, ghostType)
@@ -58,10 +58,17 @@
 
 #define LevelCustomType$GHOST "oGhost"				// Generic type for traps like the lasher
 	#define LevelCustomEvt$GHOST$spawned 1			// void - The ghost has been spawned
+	#define LevelCustomEvt$GHOST$caught 2			// key player - The ghost has caught a player
+	
 
 #define onLevelCustomGhostSpawned( ghost ) \
 	if( isEventLevelCustom() AND argStr(1) == LevelCustomType$GHOST AND argInt(2) == LevelCustomEvt$GHOST$spawned ){ \
 		key ghost = argKey(0);
+#define onLevelCustomGhostCaught( ghost, player ) \
+	if( isEventLevelCustom() AND argStr(1) == LevelCustomType$GHOST AND argInt(2) == LevelCustomEvt$GHOST$caught ){ \
+		key ghost = argKey(0); \
+		key player = argKey(3);
+
 
 
 #define Ghost$followNodes( nodes ) \
@@ -76,6 +83,8 @@
 	runOmniMethod("Ghost", GhostMethod$smudge, [])
 #define Ghost$interact() \
 	runOmniMethod("Ghost", GhostMethod$interact, [])
+#define Ghost$sendToChair( chair, hud, temp ) \
+	runOmniMethod("Ghost", GhostMethod$sendToChair, chair + hud + temp)
 
 
 

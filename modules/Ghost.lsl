@@ -226,6 +226,9 @@ float huntLastFootstepReq;
 float chaseFailed;			// Time when ghost got stuck with LOS
 float lastFootstepsUpdate;	// Limits how often we can run the footstep check
 float timeLOS;				// Time when we got line of sight
+int easyMode = TRUE;
+key caughtSeat;				// UUID of seat to put player on
+key caughtHud;				// HUD of caught player
 
 vector getPlayerVisibilityPos( key player ){
 	
@@ -265,6 +268,7 @@ addFootsteps( key player, float trackChance ){
 	setState(STATE_CHASING);
 		
 }
+
 
 #include "ObstacleScript/begin.lsl"
 
@@ -592,8 +596,8 @@ handleTimer( "A" )
 			
 			if( BFL&BFL_HUNT_HAS_LOS ){
 				
-				qd("Todo: Catch player");
-				qd("Todo: Tell level that player was caught");
+				// Tell level
+				Level$raiseEvent( LevelCustomType$GHOST, LevelCustomEvt$GHOST$caught, huntTarget );
 				toggleWalking(FALSE);
 				setState(STATE_EVENT);
 				return;
@@ -678,6 +682,52 @@ handleTimer( "A" )
 
 end
 
+handleMethod( GhostMethod$sendToChair )
+	
+	caughtSeat = argKey(0);
+	caughtHud = argKey(1);
+	easyMode = argInt(2);
+	
+	// failed
+	if( caughtSeat == "" ){
+		setState(STATE_IDLE);
+		return;
+	}
+	
+	Rlv$sit( caughtHud, llGetKey(), TRUE );
+	setTimeout("IDL", 10);	// Go idle again
+	
+end
+
+handleTimer( "IDL" )
+	setState(STATE_IDLE);
+end
+
+handleTimer( "CH0" )
+	
+	setTimeout("CH1", 2);
+	// Todo: Warp to punishment table
+	rotation rot = prRot(caughtSeat);
+	vector pos = prPos(caughtSeat)+llRot2Fwd(rot);
+	list ray = llCastRay(pos+<0,0,.5>, pos-<0,0,5>, RC_DEFAULT);
+	if( l2i(ray, -1) == 1 ){
+		
+		pos = l2v(ray, 1)+<0,0,hover>;
+		llSetRegionPos(pos);
+		llRotLookAt(llEuler2Rot(<0,0,PI>)*rot, 1, 1);
+	
+	}
+	
+end
+
+handleTimer( "CH1" )
+	
+	llUnSit(llAvatarOnSitTarget());
+	llSleep(.1);
+	Bondage$seat(caughtSeat, caughtHud, easyMode);
+	
+end
+
 
 
 onPortalLoadComplete( desc )
@@ -727,11 +777,21 @@ onChanged( change )
     if( change & CHANGED_LINK ){
         
         key ast = llAvatarOnSitTarget();
-        if( ast )
-            llRequestPermissions(ast, PERMISSION_TRIGGER_ANIMATION);
-        else
-            llResetScript();
-        
+        if( ast ){
+			
+			if( ast == llGetOwnerKey(caughtHud) ){
+				
+				llRequestPermissions(ast, PERMISSION_TRIGGER_ANIMATION);
+				setTimeout("CH0", 2);
+				
+			}
+			else
+				llUnSit(ast);
+		}
+		else{
+			llStopObjectAnimation("hugeman_grab_active");
+			llStopObjectAnimation("hugeman_grab_idle");
+		}
     }
     
 end
@@ -763,8 +823,11 @@ handleOwnerMethod( GhostMethod$toggleHunt )
 	else{
 		
 		BFL = BFL&~BFL_HUNTING;
-		setState(STATE_IDLE);
-		warpToGhostRoom();
+		// Don't warp back if we caught someone
+		if( STATE != STATE_EVENT ){
+			setState(STATE_IDLE);
+			warpToGhostRoom();
+		}
 		
 	}
 
