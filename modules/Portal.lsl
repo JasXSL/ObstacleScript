@@ -3,6 +3,7 @@
 #define USE_LISTEN
 #define USE_PLAYERS
 #define USE_HUDS
+#define USE_TIMER
 #define SCRIPT_IS_PLAYER_MANAGER
 #include "ObstacleScript/index.lsl"
 
@@ -15,6 +16,7 @@ list WAITING_SCRIPTS;
 vector SPAWN_POS;
 str DESC;
 str SPAWN_GROUP;
+int PIN;
 
 fetchScripts(){
     
@@ -30,14 +32,17 @@ fetchScripts(){
     
     if( !count(WAITING_SCRIPTS) ){
         
+		BFL = BFL|BFL_GOT_SCRIPTS;
+		unsetTimer("SC");
         loadComplete();
         return;
         
     }
     
-    integer PIN = llFloor(llFrand(0xFFFFFFF));
+    PIN = llFloor(llFrand(0xFFFFFFF));
     llSetRemoteScriptAccessPin(PIN);
     Screpo$get( PIN, ScrepoConst$SP_LOADED, WAITING_SCRIPTS );
+	setInterval("SC", 10);
     
 }
 fetchSelf(){
@@ -50,6 +55,8 @@ fetchSelf(){
 // Raised when desc is gotten and scripts have loaded
 loadComplete(){
     
+	if( BFL&BFL_GOT_SCRIPTS )
+		unsetTimer("SC");	// Stop retrying scripts
 	
 	if( ~BFL&(BFL_GOT_DESC|BFL_GOT_SCRIPTS) )
 		return;
@@ -83,6 +90,12 @@ loadComplete(){
 
 handleListenTunnel()
 handleDebug()
+
+handleTimer( "SC" )
+	
+	Screpo$get( PIN, ScrepoConst$SP_LOADED, WAITING_SCRIPTS );
+	
+end
 
 onRez( total )
     
@@ -128,6 +141,20 @@ handleOwnerMethod( PortalMethod$reset )
     llSetText(mkarr(text), ZERO_VECTOR, 0);
     globalAction$resetAll();
     llResetScript();
+
+end
+
+handleOwnerMethod( PortalMethod$remoteLoad )
+	
+	qd("Remoteload received");
+	key targ = argKey(0);
+	str script = argStr(1);
+	int pin = argInt(2);
+	int startParam = argInt(3);
+	
+	qd(llGetSubString((str)llGetKey(), 0, 3) + llKey2Name(targ) + script + pin + startParam );
+	if( llGetInventoryType(script) == INVENTORY_SCRIPT )
+		llRemoteLoadScriptPin(targ, script, pin, TRUE, startParam);
 
 end
 
@@ -223,7 +250,6 @@ handleOwnerMethod( PortalMethod$save )
 end
 
 handleOwnerMethod( PortalMethod$init )
-
 
 	if( BFL&BFL_GOT_DESC )
 		return;

@@ -21,8 +21,12 @@ default{
 	
 	
 	link_message( integer link, integer nr, string s, key id ){
+	
+		#ifdef LM_PRE
+		LM_PRE
+		#endif
 
-		// Ignore conditions
+		// Ignore
 		if( nr < 0 )
 			return;
 

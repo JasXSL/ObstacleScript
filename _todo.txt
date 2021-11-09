@@ -1,5 +1,13 @@
 Phasmo:
 
+	
+	Deferred loading:
+	- Scripts that are deferred on should be added to the list of deferrers
+	- Load 2 items in parallel to speed things up?
+	
+
+
+
 	Metadata needed for descs:
 	Any interactive:
 		- CSV of labels they're in

@@ -58,7 +58,7 @@
 #define PortalMethod$raiseEvent 8		// 
 
 #define PortalMethod$cbHUDs 9			// Callback binding for getting HUDs
-
+#define PortalMethod$remoteLoad 10		// (key)targ, (str)script, (int)pin, (int)startParam - Remoteloads a script onto another script
 
 #define onPortalLoadComplete( desc ) \
 	if( SENDER_SCRIPT IS "Portal" AND EVENT_TYPE IS PortalEvt$loadComplete ){ \
@@ -83,7 +83,9 @@
 	
 #define Portal$raiseEvent( targ, customType, evt, data ) \
 	runMethod(targ, "Portal", PortalMethod$raiseEvent, customType + evt + data )
-	
+#define Portal$remoteLoad( targ, scriptTarg, script, pin, startParam ) \
+	runMethod(targ, "Portal", PortalMethod$remoteLoad, scriptTarg + script + pin + startParam )
+
 
 	
 	
