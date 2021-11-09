@@ -9,6 +9,12 @@
 int BFL;
 list WAITING_SCRIPTS;
 #define BFL_GOT_DESC 0x1
+#define BFL_GOT_SCRIPTS 0x2
+
+// Received from rezzer
+vector SPAWN_POS;
+str DESC;
+str SPAWN_GROUP;
 
 fetchScripts(){
     
@@ -41,15 +47,34 @@ fetchSelf(){
     Screpo$get( PIN, ScrepoConst$SP_LOADED, llGetScriptName() );
     
 }
-// Got all the scripts, request players
+// Raised when desc is gotten and scripts have loaded
 loadComplete(){
     
+	
+	if( ~BFL&(BFL_GOT_DESC|BFL_GOT_SCRIPTS) )
+		return;
+	
 	// Note: If the spawnID is 0 here, you may be overriding llSetText in your asset script
-    // Fetch desc
-	Rezzer$rezzed( mySpawner(), PortalHelper$getSpawnId() );
-    llSetRemoteScriptAccessPin(0);
 	// Get players
 	Level$forceRefreshPortal();
+
+	llSetRegionPos(SPAWN_POS);
+	string descOut = DESC;
+	if( !PortalHelper$isLive() && descOut != "" )
+		descOut = "$"+descOut;
+	
+	list text = PortalHelper$getConf();
+	if( count(text) < 2 )
+		text += SPAWN_GROUP;
+	else
+		text = llListReplaceList(text, (list)SPAWN_GROUP, 1, 1);
+		
+	llSetText(mkarr(text), ZERO_VECTOR, 0);	
+	
+	if( descOut != "" )
+		llSetObjectDesc(descOut);
+	
+	raiseEvent(PortalEvt$loadComplete, DESC);
 	
     
 }
@@ -78,6 +103,8 @@ onStateEntry()
         
     if( llGetStartParameter() == ScrepoConst$SP_LOADED ){
         
+		 // Fetch desc
+		Rezzer$rezzed( mySpawner(), PortalHelper$getSpawnId() );
         fetchScripts();
         
     }
@@ -165,8 +192,13 @@ handleInternalMethod( PortalMethod$scriptOnline )
     if( ~pos ){
         
         WAITING_SCRIPTS = llDeleteSubList(WAITING_SCRIPTS, pos, pos);
-        if( WAITING_SCRIPTS == [] )
+        if( WAITING_SCRIPTS == [] ){
+		
+			BFL = BFL | BFL_GOT_SCRIPTS;
+			llSetRemoteScriptAccessPin(0);
             loadComplete();
+			
+		}
         
     }
 
@@ -192,33 +224,20 @@ end
 
 handleOwnerMethod( PortalMethod$init )
 
+
 	if( BFL&BFL_GOT_DESC )
 		return;
-		
+	
+	// Tell the rezzer that it can continue
+	Rezzer$initialized( mySpawner() );
 	BFL = BFL|BFL_GOT_DESC;
 	
-	llSetRegionPos(argVec(0));
 	
-	string desc = argStr(1);
-	string descOut = desc;
-	if( !PortalHelper$isLive() && descOut != "" )
-		descOut = "$"+descOut;
-	
-	string group = argStr(2);
-	list text = PortalHelper$getConf();
-	if( count(text) < 2 )
-		text += group;
-	else
-		text = llListReplaceList(text, (list)group, 1, 1);
-		
-	llSetText(mkarr(text), ZERO_VECTOR, 0);	
-	
-	if( descOut != "" )
-		llSetObjectDesc(descOut);
-	
-	raiseEvent(PortalEvt$loadComplete, desc);
-    Rezzer$initialized( mySpawner() );
-	
+	SPAWN_POS = argVec(0);
+	DESC = argStr(1);
+	SPAWN_GROUP = argStr(2);
+
+	loadComplete();
 
 end
 

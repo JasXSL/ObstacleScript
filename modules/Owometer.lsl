@@ -105,7 +105,9 @@ onStateEntry()
     
     if( llGetAttached() )
         llRequestPermissions(llGetOwner(), PERMISSION_TRACK_CAMERA);
-        
+    
+    Portal$scriptOnline();
+		
 end
 
 handleMethod( OwometerMethod$addPoint )

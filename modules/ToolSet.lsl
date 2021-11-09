@@ -428,7 +428,8 @@ onStateEntry()
 	llListen(3, "", llGetOwner(), "");
 	
 	Level$raiseEvent( LevelCustomType$TOOLSET, LevelCustomEvt$TOOLSET$get, [] );    
-
+	Portal$scriptOnline();
+	
 end
 
 // USE

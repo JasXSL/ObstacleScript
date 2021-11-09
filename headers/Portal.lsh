@@ -12,7 +12,8 @@
 	"GhostTool" + \
 	"Ghost" + \
 	"GhostInteractions" + \
-	"Owometer"
+	"Owometer" + \
+	"SpiritBox"
 	
 
 // prim text contains some information about the portal

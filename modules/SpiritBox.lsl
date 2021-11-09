@@ -198,7 +198,8 @@ onStateEntry()
     llListen(0, "", "", "");
     toggleOn(FALSE);
 	PLAYERS = [(str)llGetOwner()];
-            
+    Portal$scriptOnline();
+			
 end
 
 onToolSetActiveTool( tool, data )
