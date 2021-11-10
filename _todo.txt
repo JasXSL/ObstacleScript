@@ -1,11 +1,15 @@
 Phasmo:
 
+	- Add back fingerprints
+		- Should be attached to things the ghost can interact with. No separate evidence.
+		- The level should be able to tell interacted objects that stains should appear. When the level ghost interact event is received.
 	
-	Deferred loading:
-	- Scripts that are deferred on should be added to the list of deferrers
-	- Load 2 items in parallel to speed things up?
-	
-
+	- Add additional ghost types
+	- Enforce mouselook
+	- Clear all restrictions on game end
+	- Lock door on hunt
+	- Add  more interactive stuff
+	- Attach game tool on start, detach on end
 
 
 	Metadata needed for descs:

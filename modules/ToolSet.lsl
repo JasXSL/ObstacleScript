@@ -335,7 +335,16 @@ list getRcPlacement( integer wall ){
 
 }
 
+resetTools(){
 
+	ACTIVE_TOOL = 0;
+	TOOLS = [];
+	integer i;
+    for(; i < ToolSetConst$MAX_ACTIVE; ++i )
+        TOOLS += TTEMPLATE;
+	drawActiveTool();
+	
+}
 
 
 #include "ObstacleScript/begin.lsl"
@@ -351,9 +360,7 @@ end
 
 onStateEntry()
 
-    integer i;
-    for(; i < ToolSetConst$MAX_ACTIVE; ++i )
-        TOOLS += TTEMPLATE;
+    resetTools();
     
     forLink( nr, name )
         
@@ -424,7 +431,7 @@ onStateEntry()
 	"");
 	#endif
 	
-    drawActiveTool();
+    
 	llListen(3, "", llGetOwner(), "");
 	
 	Level$raiseEvent( LevelCustomType$TOOLSET, LevelCustomEvt$TOOLSET$get, [] );    
@@ -601,6 +608,12 @@ end
 handleMethod( ToolSetMethod$addTool )
 	
 	addTool(argInt(0), llList2List(METHOD_ARGS, 1, 1), argKey(2));
+	
+end
+
+handleMethod( ToolSetMethod$reset )
+	
+	resetTools();
 	
 end
 

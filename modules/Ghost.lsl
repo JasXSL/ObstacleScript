@@ -706,7 +706,7 @@ end
 handleTimer( "CH0" )
 	
 	setTimeout("CH1", 2);
-	// Todo: Warp to punishment table
+	
 	rotation rot = prRot(caughtSeat);
 	vector pos = prPos(caughtSeat)+llRot2Fwd(rot);
 	list ray = llCastRay(pos+<0,0,.5>, pos-<0,0,5>, RC_DEFAULT);
@@ -725,6 +725,7 @@ handleTimer( "CH1" )
 	llUnSit(llAvatarOnSitTarget());
 	llSleep(.1);
 	Bondage$seat(caughtSeat, caughtHud, easyMode);
+	setTimeout("IDL", 2);
 	
 end
 
@@ -825,8 +826,10 @@ handleOwnerMethod( GhostMethod$toggleHunt )
 		BFL = BFL&~BFL_HUNTING;
 		// Don't warp back if we caught someone
 		if( STATE != STATE_EVENT ){
+		
 			setState(STATE_IDLE);
 			warpToGhostRoom();
+			
 		}
 		
 	}

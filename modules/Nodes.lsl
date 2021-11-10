@@ -340,7 +340,7 @@ onStateEntry()
     
 	
 	resetTempData();
-	setInterval("TICK", 6);
+	setInterval("TICK", 10);
 
 end
 
@@ -429,7 +429,7 @@ handleTimer( "TICK" )
 		
 		lastSweat = llGetTime();
 		
-		if( llFrand(1) < .5 )
+		if( llFrand(1) < .35 )
 			return;
 			
 		list rand = llListRandomize(PLAYERS, 1);
@@ -470,7 +470,7 @@ handleTimer( "TICK" )
 			int room = getRoomIndexByName(room);					// Get the label
 			room = getRoomIndexByReadable(l2s(ROOMS, room*2+1));	// Only the first readable is used, so we need to get the first one here
 			if( !breaker || !l2i(roomLights, room) )
-				amt = 3;											// 3x drain in the dark 
+				amt = 2;											// 3x drain in the dark 
 				
 		}
 		
@@ -493,6 +493,7 @@ onLevelCustomLightSwitch( lightSwitch, room, on )
 	if( index == -1 )
 		return;
 	roomLights = llListReplaceList(roomLights, (list)on, index, index);
+	Lamp$toggle( room, on );
 	
 end
 

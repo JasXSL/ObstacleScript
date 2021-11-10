@@ -120,7 +120,7 @@ addDeferredLoaderScript( key targ, string script ){
 	//qd("LOADS:" + LOADS);
 	
 	pruneDeferredLoaders();
-	qd("Deferred loaders: "+getNumDeferred());
+	//qd("Deferred loaders: "+getNumDeferred());
 
 }
 

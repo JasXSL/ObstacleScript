@@ -14,6 +14,8 @@
 #define ToolSetMethod$remTool 2					// key worldToolID - Removes a tool by world ID
 #define ToolSetMethod$trigger 3					// int toolType, data... - Do something
 #define ToolSetMethod$temp 4					// int temperature - Callback for a temperature reading
+#define ToolSetMethod$reset 5					// void - Called when the game starts, resets all tools
+
 
 #define ToolSet$addTool( targ, type, data, worldID ) \
 	runMethod(targ, "ToolSet", ToolSetMethod$addTool, type + data + worldID)
@@ -21,6 +23,8 @@
 	runMethod(targ, "ToolSet", ToolSetMethod$remTool, worldID)
 #define ToolSet$trigger( targ, tooltype, data ) \
 	runMethod(targ, "ToolSet", ToolSetMethod$trigger, tooltype + data)
+#define ToolSet$reset( targ ) \
+	runMethod(targ, "ToolSet", ToolSetMethod$reset, [])
 
 	
 
