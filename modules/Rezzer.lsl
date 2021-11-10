@@ -2,69 +2,70 @@
 #define USE_TIMER
 #include "ObstacleScript/index.lsl"
 
-integer BFL;
-#define BFL_REZZING 0x1
-
+// Nr things to rez simulatenously
+#define PARALLEL 3
 
 integer IDX;
 list descQueue; // (int)idx, (float)time, (vector)pos, (str)desc, (str)group
+#define DQSTRIDE 5
 list objQueue;  // contains JSON strings passed to RezzerMethod$rez
 
+// Removes a slice from dq, idx is the absolute index in the list to start from
+#define removeDqSlice( absoluteIndex ) \
+	descQueue = llDeleteSubList(descQueue, absoluteIndex, absoluteIndex+DQSTRIDE-1)
+
+#define dqFull() \
+	(count(descQueue)/DQSTRIDE >= PARALLEL)
 
 rez(){
     
-    if( BFL & BFL_REZZING )
+    if( dqFull() || objQueue == [] )
         return;
         
-    if( objQueue == [] )
-        return;
-        
-    
-    ++IDX;
-    
-	
-	
+
 	// Callback encountered
 	string s = l2s(objQueue, 0);
-	while( llGetSubString(s, 0, 0) == "$" ){
+	objQueue = llDeleteSubList(objQueue, 0, 0);
+	
+	if( llGetSubString(s, 0, 0) == "$" ){
 		
 		raiseEvent(RezzerEvt$cb, llGetSubString(s, 1, -1));
-		objQueue = llDeleteSubList(objQueue, 0, 0);
-		s = l2s(objQueue, 0);
 		
 	}
+	// Rez something
+	else{
 	
-	if( !count(objQueue) )
-		return;
+		++IDX;
 		
+		// Normal queue
+		list data = llJson2List(s);
+		setTimeout("FAIL:"+(str)IDX, 60);
+		
+		integer startParam;
+		if( l2i(data, 5) )
+			startParam = PortalConst$SP_LIVE;
+			
+		startParam = startParam | ((IDX&0xFFFF)<<5);
+		
+		descQueue += (list)
+			IDX + 
+			llGetTime() +
+			l2s(data, 1) +
+			l2s(data, 3) +
+			l2s(data, 4)
+		;
+		
+		llRezAtRoot(
+			l2s(data, 0), 
+			llGetPos()-<0,0,5>, 
+			ZERO_VECTOR,
+			(rotation)l2s(data, 2), 
+			startParam
+		);
+
+	}
 	
-	// Normal queue
-    list data = llJson2List(s);
-    objQueue = llDeleteSubList(objQueue, 0, 0);
-    setTimeout("FAIL", 5);
-    
-    integer startParam;
-    if( l2i(data, 5) )
-        startParam = PortalConst$SP_LIVE;
-        
-    startParam = startParam | ((IDX&0xFFFF)<<5);
-    
-    descQueue += (list)
-        IDX + 
-        llGetTime() +
-        l2s(data, 1) +
-        l2s(data, 3) +
-        l2s(data, 4)
-    ;
-	
-    llRezAtRoot(
-        l2s(data, 0), 
-        llGetPos()-<0,0,5>, 
-        ZERO_VECTOR,
-        (rotation)l2s(data, 2), 
-        startParam
-    );
-	BFL = BFL|BFL_REZZING;
+	setTimeout("C", .1);	// Unblock for a moment
     
 }
 
@@ -78,6 +79,7 @@ onStateEntry()
 		Level$scriptInit();
 end
 
+
 handleOwnerMethod( RezzerMethod$rez )
 
     objQueue += mkarr(METHOD_ARGS);
@@ -85,10 +87,23 @@ handleOwnerMethod( RezzerMethod$rez )
 
 end
 
-handleTimer( "FAIL" )
+onTimer( label )
 
-    BFL = BFL&~BFL_REZZING;
-    rez();
+	if( label == "C" )
+		rez();
+	else if( llGetSubString(label, 0, 4) == "FAIL:" ){
+
+		integer idx = (int)llGetSubString(label, 5, -1);
+		integer pos = llListFindList(descQueue, (list)idx);
+		if( ~pos ){
+			
+			qd("Failed to rez " + llList2List(descQueue, pos, pos+DQSTRIDE-1) + "Try restarting the sim?");
+			removeDqSlice( pos );
+			rez();
+		
+		}
+	
+	}
 
 end
 
@@ -119,16 +134,9 @@ handleOwnerMethod( RezzerMethod$rezzed )
         l2s(descQueue, pos+3),
         l2s(descQueue, pos+4)    
     );
-    descQueue = llDeleteSubList(descQueue, 0, 4);
-		
-    // Continue
-    if( id == IDX ){
-        
-        BFL = BFL&~BFL_REZZING;
-        unsetTimer("FAIL");
-        rez();
-        
-    }
+	removeDqSlice( pos );
+    unsetTimer("FAIL:"+(str)id);
+	rez();
 
 end
 

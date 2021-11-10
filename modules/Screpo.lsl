@@ -17,8 +17,10 @@ pruneDeferredLoaders(){
 			
 			key id = l2k(LOADS, i);
 			if( llKey2Name(id) == "" ){
+			
 				removeFromLoads(id);
 				--i;
+				
 			}
 			
 		}
@@ -47,22 +49,17 @@ list getDeferredSlice( integer startPos ){
 
 // Gets a deferred loader
 key getDeferredLoader( string script ){
+	
+	pruneDeferredLoaders();	// Needed so we don't try to load from a non-existing deferred
 
-	pruneDeferredLoaders();
-
-	// Check deferred first
-	integer pos = llListFindList(LOADS, (list)script);
-	if( pos == -1 )
-		return "";
+	integer x;
+	for(; x < count(LOADS); ++x ){
 		
-	integer x = pos-1;
-	for(; x >= 0; --x ){
-		
-		if( llGetListEntryType(LOADS, x) == TYPE_KEY ){
+		if( llGetListEntryType(LOADS, x) == TYPE_KEY && llGetTime()-l2f(LOADS, x+1) > 4 ){
 			
 			list slice = getDeferredSlice(x);
 			// Need to wait 4 sec, and have successfully remoteloaded the portal onto this
-			if( llGetTime()-l2f(slice, 1) > 4 && ~llListFindList(slice, (list)"Portal") )
+			if( ~llListFindList(slice, (list)"Portal") && ~llListFindList(slice, (list)script) )
 				return l2k(LOADS, x);
 			
 		}
@@ -99,8 +96,10 @@ removeFromLoads( key id ){
 	for( i = pos+1; i < count(LOADS); ++i ){
 		
 		if( llGetListEntryType(LOADS, i) == TYPE_KEY ){
+		
 			LOADS = llDeleteSubList(LOADS, pos, i-1);
 			return;
+			
 		}
 		
 	}
@@ -109,6 +108,21 @@ removeFromLoads( key id ){
 
 }
 
+
+addDeferredLoaderScript( key targ, string script ){
+
+	integer pos = llListFindList(LOADS, (list)targ);
+	if( ~pos )
+		LOADS = llListInsertList(LOADS, (list)script, pos+2);
+	else
+		LOADS += (list)targ + 0 + script;
+	
+	//qd("LOADS:" + LOADS);
+	
+	pruneDeferredLoaders();
+	qd("Deferred loaders: "+getNumDeferred());
+
+}
 
 
 #define LM_PRE \
@@ -122,16 +136,7 @@ onLm( int link, int nr, string s, key id ){
 		list data = llJson2List((str)id);
 		key targ = l2s(data, 0);
 		string script = l2s(data, 1);
-		integer pos = llListFindList(LOADS, (list)targ);
-		if( ~pos )
-			LOADS = llListInsertList(LOADS, (list)script, pos+2);
-		else
-			LOADS += (list)targ + 0 + script;
-		
-		//qd("LOADS:" + LOADS);
-		
-		pruneDeferredLoaders();
-		qd("Deferred loaders: "+getNumDeferred());
+		addDeferredLoaderScript( targ, script );
 
 	}
 	
@@ -155,6 +160,12 @@ onStateEntry()
         
     }
     
+end
+
+handleOwnerMethod( ScrepoMethod$deferredLoad )
+	
+	addDeferredLoaderScript( argKey(0), argStr(1) );
+	
 end
 
 handleOwnerMethod( ScrepoMethod$get )

@@ -146,16 +146,21 @@ end
 
 handleOwnerMethod( PortalMethod$remoteLoad )
 	
-	qd("Remoteload received");
 	key targ = argKey(0);
 	str script = argStr(1);
 	int pin = argInt(2);
 	int startParam = argInt(3);
 	
-	qd(llGetSubString((str)llGetKey(), 0, 3) + llKey2Name(targ) + script + pin + startParam );
-	if( llGetInventoryType(script) == INVENTORY_SCRIPT )
+	qd(llGetSubString((str)llGetKey(), 0, 3) + llKey2Name(targ) + ("["+llGetSubString((str)targ, 0, 3)+"]") + script + pin + startParam );
+	if( llGetInventoryType(script) == INVENTORY_SCRIPT ){
+		
 		llRemoteLoadScriptPin(targ, script, pin, TRUE, startParam);
-
+		Screpo$deferredLoad( targ, script );
+		
+	}
+	else
+		qd("Requested script not found in "+llGetObjectName() );
+	
 end
 
 handleOwnerMethod( PortalMethod$fetch )
