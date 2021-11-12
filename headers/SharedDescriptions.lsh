@@ -21,8 +21,10 @@
 #define Desc$TASK_SIT_ON "S"			// Keydown.
 #define Desc$TASK_RC_ONLY "RC"			// Meta task that tells the interact script to only allow targeting this with raycasts
 #define Desc$TASK_DOOR_STAT "DO"		// Stores door state. 0 = closed, 1 = partially open, 2 = fully open
-#define Desc$TASK_GHOST_INTERACTIVE "GI"	// (int)flags(1=auto_push, 2=tunnel_to_level), (vec)push_dir - Used in ghost games to indicate that ghosts can interact with something
-
+#define Desc$TASK_GHOST_INTERACTIVE "GI"	// (int)flags, (vec)push_dir - Used in ghost games to indicate that ghosts can interact with something
+	#define DescConst$GI$auto_push 0x1				// Allow GhostInteractive to handle push
+	#define DescConst$GI$auto_stains 0x2			// Sets alpha on any links with the name "STAINS"
+	
 
 /*
 

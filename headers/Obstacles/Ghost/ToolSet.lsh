@@ -50,7 +50,7 @@
 
 
 // Level event bindings
-	#define LevelCustomType$TOOLSET "oToolset"				// Generic type for traps like the lasher
+	#define LevelCustomType$TOOLSET "avToolset"				// AV event
 		#define LevelCustomEvt$TOOLSET$drop 1				// key worldID, vec pos, rotation rot - Drop an item
 		#define LevelCustomEvt$TOOLSET$get 2				// Updates your toolset with any items you're wearing. Useful if your toolset got disconnected.
 		#define LevelCustomEvt$TOOLSET$destroy 3			// key worldID, Removes an item from avatar and deletes the world asset

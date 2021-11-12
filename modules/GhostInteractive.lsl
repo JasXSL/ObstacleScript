@@ -2,6 +2,7 @@
 #define USE_TIMER
 #include "ObstacleScript/index.lsl"
 
+str DESC;
 list getDescType( key id, str type ){
 	
 	list d = split(prDesc(id), "$$");
@@ -17,6 +18,17 @@ list getDescType( key id, str type ){
 
 }
 
+toggleStains( int on ){
+
+	forLink( link, name )
+		
+		if( name == "STAINS" )
+			llSetLinkAlpha(link, on > 0, ALL_SIDES);
+		
+	end
+
+}
+
 integer still;
 
 #include "ObstacleScript/begin.lsl"
@@ -24,6 +36,8 @@ integer still;
 onStateEntry()
     
 	Portal$scriptOnline();
+	
+	toggleStains(FALSE);
     
 end
 
@@ -32,29 +46,33 @@ handleTimer( "phys" )
     float vel = llVecMag(llGetVel());
     if( vel < .05 ){
         
-        if( still ){
+        if( still > 4 ){
             
             unsetTimer("phys");
             llSetStatus(STATUS_PHYSICS, FALSE);
             
         }
         
-        still = TRUE;
+		++still;
         
     }
     else
-        still = FALSE;    
+        still = 0;    
 
 end
 
 handleOwnerMethod( GhostInteractiveMethod$interact )
 
     list dt = getDescType(llGetKey(), Desc$TASK_GHOST_INTERACTIVE);
-    
+    int flags = l2i(dt, 1);		// Tells the script what it can handle automatically
+	vector dir = l2vs(dt, 2);	// Direction of push if push is enabled
+	
+	int intFlags = argInt(0);	// Flags for the method call
+	float pushStrength = argFloat(1);
+	
     // Auto
-    if( l2i(dt, 1) & 1 ){
+    if( flags & DescConst$GI$auto_push && pushStrength > 0 ){
         
-        vector dir = l2v(dt, 2);
         if( dir == ZERO_VECTOR )
             dir = <0,0,1>;
         
@@ -63,21 +81,29 @@ handleOwnerMethod( GhostInteractiveMethod$interact )
         vector offs = llVecNorm(<llFrand(1.0)-.5, llFrand(1.0)-.5, llFrand(1.0)-.5>)*mag;
         llSetStatus(STATUS_PHYSICS, TRUE);
         llSleep(.1);
-        llApplyImpulse(offs*llGetMass()*3, TRUE);
+        llApplyImpulse(offs*llGetMass()*3*pushStrength, TRUE);
         setInterval("phys", 1);
         still = FALSE;
         
     }
-	
-	// Tunnel to level
-	if( l2i(dt, 1) & 2 ){
-		//qd("Todo: Tunnel to level");
+
+	// Handle stains
+	if( flags & DescConst$GI$auto_stains && intFlags & GhostInteractiveConst$INTERACT_ALLOW_STAINS ){
+		
+		toggleStains(TRUE);
+		setTimeout("STAINS", 120);
+		
 	}
     
     raiseEvent(GhostInteractiveEvent$trigger, METHOD_ARGS);
     
     
 
+end
+
+
+handleTimer("STAINS")
+	toggleStains(FALSE);
 end
 
 #include "ObstacleScript/end.lsl"

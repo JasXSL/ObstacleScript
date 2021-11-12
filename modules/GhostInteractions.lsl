@@ -8,6 +8,7 @@
 #include "ObstacleScript/index.lsl"
 
 list cObjs; // (key)id
+int GHOST_TYPE;
 int EVIDENCE_TYPES;
 key lastSound;
 float LAST_SOUND_TIME;
@@ -42,12 +43,6 @@ integer isInteractive( key id ){
 		return 1;
 	if( getDescType(id, Desc$TASK_GHOST_INTERACTIVE) ){
 		
-		/*
-		Stains were removed because it spread the evidence types too much.
-		// Stains should start with STAIN in order to properly filter out
-		if( llGetSubString(name, 0, 4) == "STAIN" && ~EVIDENCE_TYPES&GhostConst$evidence$stains )
-			return 0;
-		*/
 		return 0;
 		
 	}
@@ -190,7 +185,7 @@ triggerParabolic( vector pos, integer sound ){
 
 onStateEntry()
 
-    llSensorRepeat("", "", ACTIVE|PASSIVE, 3, PI, 2);
+    llSensorRepeat("", "", ACTIVE|PASSIVE, 2, PI, 1);
 	
 	Portal$scriptOnline();
 	
@@ -232,6 +227,7 @@ end
 
 onGhostType( type, evidence )
 	
+	GHOST_TYPE = type;
 	EVIDENCE_TYPES = evidence;
 	
 end
@@ -331,13 +327,10 @@ handleMethod( GhostInteractionsMethod$interact )
 				perc = 1.0;
 			Door$setRotPercTarg( targ, "*", perc );
 			
-			/*
-			Stains removed from game
 			if( EVIDENCE_TYPES&GhostConst$evidence$stains ){
 				//qd("Setting stains on " + llKey2Name(targ));
 				Door$setStainsTarg( targ, "*", TRUE );
 			}
-			*/
 			
 			//qd("Door interact" + llKey2Name(targ));
 			triggerParabolic(prPos(targ), FALSE);
@@ -348,8 +341,18 @@ handleMethod( GhostInteractionsMethod$interact )
 		// HOTS is a tool, not an interactive
 		if( llKey2Name(targ) == "HOTS" || llKey2Name(targ) == "Ecchisketch" )
 			GhostTool$trigger( targ, [] );
-		else
-			GhostInteractive$interact( targ, [] );
+		else{
+			
+			integer flags; float speed = 1.0;
+			if( EVIDENCE_TYPES & GhostConst$evidence$stains )
+				flags = flags|GhostInteractiveConst$INTERACT_ALLOW_STAINS;
+				
+			if( GHOST_TYPE == GhostConst$type$powoltergeist )
+				speed += llFrand(2);
+	
+			GhostInteractive$interact( targ, flags, speed );
+			
+		}
 		triggerParabolic(prPos(targ), FALSE);
 		//qd("Normal interact" + llKey2Name(targ));
 	

@@ -348,8 +348,6 @@ resetTools(){
 
 
 #include "ObstacleScript/begin.lsl"
-
-
 onAttach( id )
     llResetScript();
 end

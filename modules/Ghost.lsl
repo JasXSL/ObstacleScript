@@ -171,6 +171,14 @@ integer walkTowards( vector pos ){
 
 }
 
+toggleMesh( float alpha ){
+
+	forLink(nr, name)
+		if( name == "MESH" )
+			llSetLinkAlpha(nr, alpha, ALL_SIDES);
+	end
+	
+}
 
 startHunt(){
 	
@@ -186,6 +194,8 @@ startHunt(){
 	BFL = BFL|BFL_HUNTING;
 	setState(STATE_HUNT_PRE);
 	toggleWalking(FALSE);
+	toggleMesh(1.0);
+	
 	llSetKeyframedMotion([], [KFM_COMMAND, KFM_CMD_STOP]);
 	setTimeout("HUNT", 3);
 	
@@ -750,7 +760,7 @@ onStateEntry()
     setInterval("A", 0.25);
 	addListen(0);
 	Portal$scriptOnline();
-	
+	toggleMesh(0);
 	#ifdef FETCH_PLAYERS_ON_COMPILE
 	cacheNodes();
 	Level$forceRefreshPortal();
@@ -829,6 +839,7 @@ handleOwnerMethod( GhostMethod$toggleHunt )
 		
 			setState(STATE_IDLE);
 			warpToGhostRoom();
+			toggleMesh(0);
 			
 		}
 		
@@ -836,8 +847,10 @@ handleOwnerMethod( GhostMethod$toggleHunt )
 
 end
 
+// Capture timeout
 handleTimer( "HUNT" )
 	setState(STATE_IDLE);
+	toggleMesh(0);
 end
 
 handleOwnerMethod( GhostMethod$setType )

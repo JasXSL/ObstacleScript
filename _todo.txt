@@ -1,16 +1,27 @@
 Phasmo:
-
-	- Add back fingerprints
-		- Should be attached to things the ghost can interact with. No separate evidence.
-		- The level should be able to tell interacted objects that stains should appear. When the level ghost interact event is received.
-	
+	- Spirit box busted (should use plSpiritBox instead of oSpiritBox
+	- Spirit box should only trigger when players are alone
+	- Move fan on back bedroom
+	- Add computer area to front bedroom
+	- Add interactive computer things
+	- Limit touch distance on board
+	- Remove sprint
 	- Add additional ghost types
 	- Enforce mouselook
 	- Clear all restrictions on game end
 	- Lock door on hunt
 	- Add  more interactive stuff
 	- Attach game tool on start, detach on end
+	- Average sanity borked in multiplayer
+	- Objects that trigger sounds should do so limited
+	- Don't hunt if house is empty
+	- Add game over text to show what it was on the monitor
+	- Add rewards
 
+New yeetable meshes:
+	- Tissue box
+	- Toilet paper
+	
 
 	Metadata needed for descs:
 	Any interactive:

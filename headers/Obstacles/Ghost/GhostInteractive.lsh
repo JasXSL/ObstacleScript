@@ -9,10 +9,12 @@
 #define __GhostInteractive
 
 
-#define GhostInteractiveMethod$interact 1
+#define GhostInteractiveMethod$interact 1		// (int)flags, (float)throwStrength
+	#define GhostInteractiveConst$INTERACT_ALLOW_STAINS 0x1		// Add stains if possible
+	
 
-#define GhostInteractive$interact( targ, data ) \
-	runMethod( targ, "GhostInteractive", GhostInteractiveMethod$interact, data)
+#define GhostInteractive$interact( targ, flags, throwStrength ) \
+	runMethod( targ, "GhostInteractive", GhostInteractiveMethod$interact, (flags) + (throwStrength))
 
 
 #define GhostInteractiveEvent$trigger 1		// void - An interaction has triggered

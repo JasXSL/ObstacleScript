@@ -14,15 +14,20 @@
 
 #define GhostMethod$cbNodes 100			// Callback for Nodes.lsh getNodes method
 
-#define GhostConst$type$succubus 0			// (Activity added, need player preference) Gets more active as player arousal increases. Will prefer interacting with a particular player if they're nearby. During a hunt, target that player in particular.
-#define GhostConst$type$yuri 1				// (Female needed, warp needed) Special ability warps between rooms with plumbing. Prefers female investigators.
+#define GhostConst$type$succubus 0			// (Need player preference) Will prefer interacting with a particular player if they're nearby. During a hunt, target that player in particular.
+#define GhostConst$type$yuri 1				// (Female needed, arousal needed) Being close to the ghost increases player arousal.
 #define GhostConst$type$asswang 2			// (Looking at it needed, hunt speed needed) Only active if nobody's looking at it. Moves twice as fast during a hunt unless observed.
-#define GhostConst$type$powoltergeist 3		// (Preference needed, head start needed) Prefers interacting with items over players, and can interact with multiple items at once. Gives players 1 sec less head start during a hunt.
-#define GhostConst$type$yaoikai 4			// (Deafness needed, male needed, hunt earlier needed) Can hunt much earlier if players are typing within 3m of it. Cannot hear footsteps. Prefers male investigators.
+#define GhostConst$type$powoltergeist 3		// (Preference needed) Prefers interacting with items over players, and will throw things twice as hard.
+#define GhostConst$type$yaoikai 4			// (Deafness needed, male needed, hunt earlier needed) Can hunt earlier if players are typing within 3m of it. Cannot hear footsteps. Prefers male investigators.
 #define GhostConst$type$imp 5				// (Preference needed, luigi board needed) Prefers touching players over interacting with items. No arousal penalty when successfully using a luigi board.
-#define GhostConst$type$hantuwu 6			// (Breaker tracking needed) Wanders more often when the breaker is on. Wanders less often when the breaker is off.
-#define GhostConst$type$inugami 7			// (Activity check needed, arousal needed) Being within 2m radius of the ghost increases arousal faster. If nobody's in the ghost room it becomes more active.
-#define GhostConst$type$obukakke 8			// (Activity needed, light switch needed, hunt detect needed) Hunts earlier and more often when the light is off in the ghost room. Will only turn lights off, not on.
+#define GhostConst$type$hantuwu 6			// (Interactivity needed) Starts low interactive and gets more interactive as arousal increases.
+#define GhostConst$type$inugami 7			// (Activity check needed) Gets less interactive when players are near it. More interactive if nobody's near it.
+#define GhostConst$type$obukakke 8			// (Stains needed) Active ability leaves stains on everything nearby without causing EMF or movement.
+#define GhostConst$type$gooryo 9			// (Teleport needed) Can teleport directly between rooms with plumbing.
+#define GhostConst$type$ehee 10				// (EMF needed, hunt needed) Will only give EMF if nobody's nearby. Won't hunt unless a player is nearby.
+#define GhostConst$type$bare 11				// (Hunt needed, light switch needed, strip needed) Will hunt earlier if the light is off. Double chance of stripping players if the lights are off. 
+
+
 
 #define GhostEvt$type 1						// int type - Ghost type received
 
@@ -37,18 +42,23 @@
 #define GhostConst$evidence$spiritbox 0x4
 #define GhostConst$evidence$temps 0x8
 #define GhostConst$evidence$hots 0x10
+#define GhostConst$evidence$stains 0x20
+
 
 // Corresponds to the ghost type indexes
 #define GhostConst$evidenceTypes [\
-	GhostConst$evidence$owometer|GhostConst$evidence$spiritbox|GhostConst$evidence$temps, \
+	GhostConst$evidence$stains|GhostConst$evidence$spiritbox|GhostConst$evidence$temps, \
 	GhostConst$evidence$owometer|GhostConst$evidence$spiritbox|GhostConst$evidence$hots, \
-	GhostConst$evidence$owometer|GhostConst$evidence$temps|GhostConst$evidence$temps, \
+	GhostConst$evidence$owometer|GhostConst$evidence$writing|GhostConst$evidence$temps, \
 	GhostConst$evidence$owometer|GhostConst$evidence$writing|GhostConst$evidence$hots, \
 	GhostConst$evidence$owometer|GhostConst$evidence$writing|GhostConst$evidence$spiritbox, \
-	GhostConst$evidence$writing|GhostConst$evidence$spiritbox|GhostConst$evidence$hots, \
+	GhostConst$evidence$stains|GhostConst$evidence$spiritbox|GhostConst$evidence$hots, \
 	GhostConst$evidence$writing|GhostConst$evidence$spiritbox|GhostConst$evidence$temps, \
 	GhostConst$evidence$writing|GhostConst$evidence$temps|GhostConst$evidence$hots, \
-	GhostConst$evidence$temps|GhostConst$evidence$spiritbox|GhostConst$evidence$hots \
+	GhostConst$evidence$stains|GhostConst$evidence$temps|GhostConst$evidence$hots, \
+	GhostConst$evidence$owometer|GhostConst$evidence$writing|GhostConst$evidence$stains, \
+	GhostConst$evidence$owometer|GhostConst$evidence$temps|GhostConst$evidence$stains, \
+	GhostConst$evidence$writing|GhostConst$evidence$stains|GhostConst$evidence$spiritbox \
 ]
 #define getEvidenceTypes( ghostType ) \
 	l2i(GhostConst$evidenceTypes, ghostType)
