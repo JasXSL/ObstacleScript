@@ -30,11 +30,15 @@
 
 
 #define GhostEvt$type 1						// int type - Ghost type received
+#define GhostEvt$visible 2					// bool visible - Ghost visibility has changed
 
 #define onGhostType( type, evidence ) \
 	if( SENDER_SCRIPT IS "Ghost" AND EVENT_TYPE IS GhostEvt$type ){ \
 		int type = argInt(0); \
 		int evidence = argInt(1);
+#define onGhostVisible( visible ) \
+	if( SENDER_SCRIPT IS "Ghost" AND EVENT_TYPE IS GhostEvt$visible ){ \
+		bool visible = argInt(0);
 
 
 #define GhostConst$evidence$owometer 0x1
@@ -43,6 +47,23 @@
 #define GhostConst$evidence$temps 0x8
 #define GhostConst$evidence$hots 0x10
 #define GhostConst$evidence$stains 0x20
+
+
+// Corresponds to the ghost index above
+#define GhostConst$type$names (list) \
+	"Succubus" + \
+	"Yuri" + \
+	"Asswang" + \
+	"Powoltergeist" + \
+	"Yaoikai" + \
+	"Imp" + \
+	"Hantuwu" + \
+	"Inugami" + \
+	"Obukakke" + \
+	"Gooryo" + \
+	"Ehee" + \
+	"Bare"
+
 
 
 // Corresponds to the ghost type indexes

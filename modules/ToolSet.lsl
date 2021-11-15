@@ -683,7 +683,7 @@ end
 handleMethod( ToolSetMethod$temp )
 
 	float t = argFloat(0);
-	t += llFrand(8)-6;
+	t -= llFrand(6);
 	
 	if( getActiveToolInt() )
 		t = (t * 9.0/5.0) + 32;

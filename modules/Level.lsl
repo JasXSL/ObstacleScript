@@ -5,6 +5,7 @@
 #define USE_TIMER
 #define USE_PLAYERS
 #define USE_HUDS
+#define USE_CHANGED
 #define SCRIPT_IS_PLAYER_MANAGER
 #include "ObstacleScript/index.lsl"
 
@@ -97,6 +98,13 @@ onStateEntry()
 	
 end
 
+onChanged( ch )
+	
+	llSleep(1);
+	globalAction$setPlayers();  
+	globalAction$setHUDs();  
+	
+end
 
 handleListenTunnel()
 handleDebug()
@@ -119,12 +127,13 @@ onListen( ch, msg )
             integer pos = llListFindList(INVITES, (list)llGetOwnerKey(SENDER_KEY));
             if( ~pos ){
                 
+				key owner = llGetOwnerKey(SENDER_KEY);
                 float time = l2f(INVITES, pos+1);
-                if( time+60 < llGetTime() )
+                if( time+60 < llGetTime() && llListFindList(PLAYERS, [(str)owner]) == -1 )
                     llRegionSayTo(llGetOwnerKey(SENDER_KEY), 0, "Invite timed out, ask for a new one!");
                 else{
 				
-					key owner = llGetOwnerKey(SENDER_KEY);
+					
 					integer pos = llListFindList(PLAYERS, [(str)owner]);
 					if( pos == -1 ){
 					

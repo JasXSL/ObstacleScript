@@ -13,7 +13,7 @@
 
 
 // Level event bindings
-#define LevelCustomType$SPIRITBOX "oSpiritbOx"				// Generic type for traps like the lasher
+#define LevelCustomType$SPIRITBOX "avSpiritBox"				// Generic type for traps like the lasher
 	#define LevelCustomEvt$SPIRITBOX$trigger 1				// void - Asks the level to calculate a spirit box success or fail and send the spirit box start method
 	
 #define onLevelCustomSpiritBoxTrigger( spiritBox ) \

@@ -72,10 +72,10 @@
 
 #define RlvMethod$target 11				// (vec)pos=targetPos, (float)speed, (float)duration - Uses llMoveToTarget on a player. Pos is the position of the target. Speed is the llMoveToTarget speed, and duration is how long to keep it.
 
-#define RlvMethod$exitMouselook 12		// void, kicks the player out of mouselook
+#define RlvMethod$exitMouselook 12		// inverse, always - kicks the player out of mouselook. If inverse is true, it instead forces mouselook. Always forces this mode until the next call.
 
 #define RlvMethod$triggerSound 13		// (key)sound, (float)vol, (bool)ownerOnly
-
+#define RlvMethod$loopSound 14			// (key)sound, (float)vol
 
 
 #define RlvEvt$supportCubeSpawn 1		// (key)cube_id
@@ -100,6 +100,13 @@
 // Plays a sound from target that only (key)listener can hear
 #define Rlv$triggerSoundOn( target, sound, vol, listener ) \
 	runMethod( target, "Rlv", RlvMethod$triggerSound, sound + vol + listener)
+
+#define Rlv$loopSoundOn( target, sound, vol ) \
+	runMethod( target, "Rlv", RlvMethod$loopSound, sound + (vol))
+#define Rlv$stopLoopSound( target ) \
+	Rlv$loopSoundOn( target, "", 0 ) \
+
+
 
 	
 #define Rlv$cubeTask( target, tasks ) \
@@ -137,6 +144,8 @@
 
 #define Rlv$exitMouselook( target ) \
 	runMethod( target, "Rlv", RlvMethod$exitMouselook, [] )
+#define Rlv$enforceMouselook( target ) \
+	runMethod( target, "Rlv", RlvMethod$exitMouselook, 1 + 1 )
 
 
 

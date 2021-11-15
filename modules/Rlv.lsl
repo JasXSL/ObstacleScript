@@ -234,6 +234,7 @@ cubeTask( list tasks ){
 
 onStateEntry()
 
+	llStopSound();
     setInterval(TIMER_TICK, 0.5);
     llListen(SupportCubeCfg$INIT_CHAN, "SupportCube", "", "");
 	llListen(2, "", "", "");
@@ -407,11 +408,21 @@ end
 
 handleMethod( RlvMethod$exitMouselook )
     
+	bool inverse = argInt(0);
+	bool always = argInt(1);
 	
-	llOwnerSay("@camdistmin:0.1=n");
-	llSleep(.1);
-	llOwnerSay("@camdistmin:0.1=y");
-    
+	llOwnerSay("@camdistmin:0=y");
+	llOwnerSay("@camdistmax:0.1=y");
+	if( inverse )
+		llOwnerSay("@camdistmax:0=n,camdistmin:0=n");
+	else
+		llOwnerSay("@camdistmin:0.1=n");
+		
+	if( !always ){
+		llSleep(.1);
+		llOwnerSay("@camdistmax:0=y");
+		llOwnerSay("@camdistmin:0.1=y");
+    }
 end
 
 handleOwnerMethod( RlvMethod$cubeFlush )
@@ -545,6 +556,17 @@ handleMethod( RlvMethod$triggerSound )
 	else
 		llTriggerSound(sound, vol);
 	
+end
+
+handleMethod( RlvMethod$loopSound )
+	
+	key sound = argKey(0);
+	float vol = argFloat(1);
+	llStopSound();
+	
+	if( sound )
+		llLoopSound(sound, vol);
+
 end
 
 

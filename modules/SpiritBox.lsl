@@ -162,7 +162,7 @@ toggleOn( integer on ){
         
     }
     
-	llSetLinkPrimitiveParamsFast(P_SPIRITBOX, (list)PRIM_FULLBRIGHT + SCREEN_FACE + on);
+	llSetLinkPrimitiveParamsFast(P_SPIRITBOX, (list)PRIM_FULLBRIGHT + SCREEN_FACE + on + PRIM_GLOW + SCREEN_FACE + (0.1*on));
            
 }
 
@@ -199,6 +199,8 @@ onStateEntry()
     toggleOn(FALSE);
 	PLAYERS = [(str)llGetOwner()];
     Portal$scriptOnline();
+	
+	Level$forceRefreshPortal();
 			
 end
 
@@ -240,16 +242,23 @@ onGhostToolDropped( data )
 end
 
 onListen( ch, msg )
+	
 
-	if( llListFindList(PLAYERS, [(str)SENDER_KEY]) == -1 )
+	// Only owner can use an attached one
+	if( llGetAttached() ){
+		if( SENDER_KEY != llGetOwner() )
+			return;
+	}
+	// Any player can use a dropped on
+	else if( llListFindList(PLAYERS, [(str)SENDER_KEY]) == -1 )
 		return;
 		
 	if( SWEEPING || ~BFL&BFL_ON || BFL&BFL_HUNTING )
 		return;
 		
-	if( checkMessage(msg) )
+	if( checkMessage(msg) ){
         Level$raiseEvent( LevelCustomType$SPIRITBOX, LevelCustomEvt$SPIRITBOX$trigger, [] );
-
+	}
 end
 
 handleTimer( "S" )

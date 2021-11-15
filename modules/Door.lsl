@@ -116,6 +116,14 @@ onPortalInteractStarted( hud, pos )
 	if( pos == ZERO_VECTOR )
 		return;
 
+	if( locked ){
+	
+		raiseEvent(DoorEvt$interactLocked, interactor);
+		return;
+		
+	}
+	
+
     rotation r = prRot(hud);
     interactor = hud;
     setInterval("A", 0.05);
@@ -253,10 +261,14 @@ onListen( chan, msg )
 		
 	}
 	else if( task == DoorTask$lock ){
-			
+		
+		int pre = locked;
 		locked = l2i(data, 0);
 		if( locked )
 			stopInteract();
+			
+		if( pre != locked )
+			raiseEvent(DoorEvt$locked, locked);
 		
 	}
 	else if( task == DoorTask$setStains ){

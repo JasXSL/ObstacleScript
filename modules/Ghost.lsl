@@ -45,6 +45,7 @@ key chaseTarget;            // Player we're chasting
 float nextRoam;       		// llGetTime() of when we finished the last roam
 float lastWarp;				// llGetTime of when we last went to the ghost room
 float lastReturn;
+float lastFootSound;		// Used when hunting to generate footsteps
 
 vector spawnPos;
 
@@ -69,6 +70,7 @@ integer BFL;
 #define BFL_PAUSE 0x1		// Pause the ghost, used for debugging.
 #define BFL_HUNTING 0x2		// Currently hunting for players
 #define BFL_SMUDGE 0x4		// Can only idle. Deaf and blind.
+#define BFL_VISIBLE 0x8		// Player visible
 
 #define BFL_HUNT_HAS_LOS 0x10	// We currently have line of sight to our target
 #define BFL_HUNT_HAS_POS 0x20	// LOS lost, but we have their last visible coordinates
@@ -167,11 +169,37 @@ integer walkTowards( vector pos ){
 	llSetKeyframedMotion([goto-gp, lookAt/llGetRot(), time], []);
 	toggleWalking(true);
 	
+	if( BFL & BFL_HUNTING && llGetTime()-lastFootSound > .7 ){
+		
+		lastFootSound = llGetTime()+llFrand(.4);
+		list sounds = [
+            "fc3df235-c789-08b2-b09a-b45bce26684b", "631af33a-fde3-177c-8303-5e9af620a382",
+            "4ccb842d-4b5d-a7d3-56c6-b6a958ad7881", "c720ce7c-396e-c550-d8c0-1c3e6350debb",
+            "27282b3d-5731-3c9b-5940-09645d33f656", "37c2a5a6-07ed-725b-7425-d19a368bcdff"            
+        ];
+        integer sound = floor(llFrand(count(sounds)/2));
+        key normal = l2k(sounds, sound*2);
+        key cut = l2k(sounds, sound*2+1);
+        vector gp = llGetPos();
+        llTriggerSoundLimited(normal, 1, <255,255,gp.z+2>, <0,0,gp.z-2>);
+        llTriggerSoundLimited(cut, .75, <255,255,gp.z-2>, <0,0,0>);
+        llTriggerSoundLimited(cut, .5, <255,255,gp.z+100>, <0,0,gp.z+2>);
+		
+	}
+	
 	return TRUE;
 
 }
 
 toggleMesh( float alpha ){
+	
+	int pre = BFL&BFL_VISIBLE;
+	BFL = BFL&~BFL_VISIBLE;
+	if( alpha > 0 )
+		BFL = BFL|BFL_VISIBLE;
+		
+	if( pre != (BFL&BFL_VISIBLE) )
+		raiseEvent(GhostEvt$visible, ((BFL&BFL_VISIBLE)>0));
 
 	forLink(nr, name)
 		if( name == "MESH" )
@@ -196,8 +224,9 @@ startHunt(){
 	toggleWalking(FALSE);
 	toggleMesh(1.0);
 	
+	llLoopSound("5a67fa19-3dbb-74c6-3297-8cee2b66e897", .6);
 	llSetKeyframedMotion([], [KFM_COMMAND, KFM_CMD_STOP]);
-	setTimeout("HUNT", 3);
+	setTimeout("HUNT", 3);	// Start walking
 	
 }
 
@@ -266,7 +295,7 @@ addFootsteps( key player, float trackChance ){
 	if( huntTarget != "" && huntTarget != player )
 		return;
 
-	// If footsteps are in the same room, we'll want to go there
+	// If footsteps are in a different room, we'll want to go there
 	if( pointInRoom(pos) != pointInRoom(llGetPos()) )
 		return;
 			
@@ -709,8 +738,11 @@ handleMethod( GhostMethod$sendToChair )
 	
 end
 
+// Hunt ended after capturing someone
 handleTimer( "IDL" )
 	setState(STATE_IDLE);
+	llStopSound();
+	toggleMesh(0);
 end
 
 handleTimer( "CH0" )
@@ -761,6 +793,7 @@ onStateEntry()
 	addListen(0);
 	Portal$scriptOnline();
 	toggleMesh(0);
+	llStopSound();
 	#ifdef FETCH_PLAYERS_ON_COMPILE
 	cacheNodes();
 	Level$forceRefreshPortal();
@@ -777,7 +810,7 @@ onListen( chan, message )
 	integer pos = llListFindList(PLAYERS, (list)((str)SENDER_KEY));
 	if( pos == -1 )
 		return;
-	
+
 	addFootsteps(SENDER_KEY, 0.75);
 
 
@@ -828,6 +861,7 @@ handleOwnerMethod( GhostMethod$toggleHunt )
 	
 	if( argInt(0) ){
 	
+		qd("Starting hunt");
 		startHunt();
 		
 	}	
@@ -836,10 +870,12 @@ handleOwnerMethod( GhostMethod$toggleHunt )
 		BFL = BFL&~BFL_HUNTING;
 		// Don't warp back if we caught someone
 		if( STATE != STATE_EVENT ){
-		
+			
+			toggleMesh(0);
 			setState(STATE_IDLE);
 			warpToGhostRoom();
-			toggleMesh(0);
+			llStopSound();
+			
 			
 		}
 		
@@ -847,10 +883,9 @@ handleOwnerMethod( GhostMethod$toggleHunt )
 
 end
 
-// Capture timeout
+// Start hunting
 handleTimer( "HUNT" )
 	setState(STATE_IDLE);
-	toggleMesh(0);
 end
 
 handleOwnerMethod( GhostMethod$setType )

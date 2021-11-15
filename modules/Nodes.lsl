@@ -22,7 +22,7 @@ list ROOM_MARKERS = [];
 
 int breaker;		// Breaker on
 list roomLights;	// Lights of a room. Each index corresponds to an index in ROOMS. Note that this relies on readable name, which means only the first entry of that readable is toggled.
-list roomTemps;		// Temperatures of a room. Each index corresponds to an index in ROOMS
+list roomTemps;		// Temperatures of a room. Each index corresponds to an index in ROOMS. Same as above, it uses the first entry of readable name.
 float lastSweat;
 
 list portals;      // 8bArray roomIndexes, uuid
@@ -161,20 +161,39 @@ integer isPosInRoomMarker( vector pos, integer i ){
     
 }
 
+
+#define GPR_LABEL 0
+#define GPR_INDEX 1
+#define GPR_READABLE 2
 // Returns the room label
-string getPosRoom( vector point ){
+string _gpr( vector point, int ret ){
     
     integer i;
     for(; i < count(ROOM_MARKERS); i += RM_STRIDE ){
         
-        if( isPosInRoomMarker( point, i) )
-            return l2s(ROOMS, l2i(ROOM_MARKERS, i)*2);
+        if( isPosInRoomMarker( point, i) ){
+		
+			int idx = l2i(ROOM_MARKERS, i);
+			if( ret == GPR_INDEX )
+				return (str)idx;
+			if( ret == GPR_READABLE )
+				return l2s(ROOMS, idx*2+1);
+            return l2s(ROOMS, idx*2);
         
+		}
+		
     }
     
     return "";
     
 }
+
+
+
+#define getPosRoom(point) _gpr(point, GPR_LABEL)
+#define getPosReadable(point) _gpr(point, GPR_READABLE)
+#define getPosIndex(point) ((int)_gpr(point, GPR_INDEX))
+
 
 onGroupsCached(){
 	/*
@@ -282,6 +301,57 @@ onSpawnerGetGroups( callback, spawns )
 end
 
 
+onLevelCustomSpiritBoxTrigger( spiritBox ) 
+	
+	integer success = TRUE;
+	
+	str room = getPosReadable(prPos(spiritBox));
+	if( room == "" )
+		success = FALSE;
+	else{
+	
+		int index = getRoomIndexByReadable(room);
+		// Lights must be off
+		if( l2i(roomLights, index) && breaker ){
+			success = false;
+			qd("SB Fail: Lights on");
+		}
+		// Player must be solo
+		else{
+		
+			int nrPlayers;
+			integer i;
+			for(; i < count(PLAYERS); ++i ){
+				
+				str pl = getPosReadable(prPos(l2k(PLAYERS, i)));
+				if( pl == room )
+					++nrPlayers;
+			
+			}
+			
+			success = nrPlayers < 2 && nrPlayers;
+			if( !success )
+				qd("SB Fail: Too many players" + nrPlayers);
+			
+			
+		}
+		
+	}
+	
+	float dist = llVecDist(prPos(spiritBox), prPos(GHOST));
+	if( 
+		success && (
+			~EVIDENCE_TYPES&GhostConst$evidence$spiritbox || 
+			dist > 2.5
+		)
+    ){
+        success = FALSE;
+		qd("SB Fail: Too far or not this evidence" + EVIDENCE_TYPES + dist);
+    }
+    SpiritBox$start( spiritBox, success );
+
+end
+
 
 onStateEntry()
 
@@ -354,7 +424,15 @@ handleEvent( "#Game", 0 )
 		GAME_ACTIVE = (type == "ROUND_START");
 		resetTempData();
 		
-	}		
+	}	
+	else if( type == "DEBUG" ){
+        
+		qd("Rooms" + ROOMS);
+		qd("Breaker"+breaker);
+		qd("Temps" + roomTemps);
+		qd("Lights" + roomLights);
+		
+    }	
 
 end
 
@@ -374,6 +452,20 @@ handleEvent( "#Tools", 0 )
 			positions += room;
 		}
 		GhostStatus$updateSoundSensors( "*", positions );
+	
+	}
+	else if( type == "CTH" ){
+		
+		forPlayer( idx, player )
+			
+			// Lazy way of checking if player is dead
+			if( getPosRoom(prPos(player)) != "" && ~llGetAgentInfo(player) & AGENT_SITTING ){
+				raiseEvent(0, "START_HUNT");
+				return;
+			}
+
+		end
+
 	
 	}
 	
@@ -396,10 +488,9 @@ handleTimer( "TICK" )
 	
 	// Check for ghost
 	vector ghostPos = prPos(GHOST);
-	string room = getPosRoom(ghostPos);
-	integer pos = llListFindList(ROOMS, (list)room);
-	if( pos > -1 )
-		pos /= 2;
+	string roomLabel = getPosRoom(ghostPos);
+	int room = getRoomIndexByName(roomLabel);					// Get the label
+	room = getRoomIndexByReadable(l2s(ROOMS, room*2+1));	// Only the first readable is used, so we need to get the first one here
 	
 	int cap = 29;
 	if( HAS_TEMPS )
@@ -409,7 +500,7 @@ handleTimer( "TICK" )
 	for( ; i < count(roomTemps); ++i ){
 		
 		integer val = l2i(roomTemps, i);
-		if( i == pos )
+		if( i == room )
 			++val;
 		else 
 			val -= 2;
@@ -576,12 +667,12 @@ handleMethod( NodesMethod$getTemp )
 	
 	int temp = 15;
 	string room = getPosRoom(vpos);
-	integer pos = llListFindList(ROOMS, (list)room);
-	if( ~pos ){
-		
-		integer nr = pos/2;
-		temp = l2i(roomTemps, nr);
+	if( room ){
 	
+		integer ri = getRoomIndexByName(room);
+		ri = getRoomIndexByReadable(l2s(ROOMS, ri*2+1));	// Only the first readable is used, so we need to get the first one here
+		temp = l2i(roomTemps, ri);
+		
 	}
 		
 	runMethod(targ, targScript, targMethod, temp);

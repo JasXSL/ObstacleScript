@@ -1,23 +1,25 @@
 Phasmo:
-	- Spirit box busted (should use plSpiritBox instead of oSpiritBox
-	- Spirit box should only trigger when players are alone
-	- Move fan on back bedroom
-	- Add computer area to front bedroom
-	- Add interactive computer things
-	- Limit touch distance on board
-	- Remove sprint
-	- Add additional ghost types
-	- Enforce mouselook
-	- Clear all restrictions on game end
-	- Lock door on hunt
-	- Add  more interactive stuff
-	- Attach game tool on start, detach on end
+	
+	- Make ghost strip when catching a players
+	- Add sound to machine
+	- add max nr of players
+	- Shorten distance of dots lamps
+	- Make door sounds limited
+	- Add sounds to sprit box
 	- Average sanity borked in multiplayer
-	- Objects that trigger sounds should do so limited
-	- Don't hunt if house is empty
-	- Add game over text to show what it was on the monitor
+	- Add more interactive stuff (see mesh todo)
+	- Add ghost events
+	- Weegie board not working
+	- Motion detector not working when placed by coop
+	- Motion detector raycasting
+	- Fix motion detector board using label instead of readable
+	- Make the ghost leave EMF when touching a door while leaving
+	
+	- Attach game tool on start, detach on end
+	- Enforce mouselook (note: currently broken on firestorm). Method exists tho for when it's fixed.
+	- Add ghost behavior
 	- Add rewards
-
+	
 New yeetable meshes:
 	- Tissue box
 	- Toilet paper

@@ -41,6 +41,7 @@ setEMF( integer emf ){
     if( emf > 1 )
         vol = llPow((1.0/4*(emf-1))*.6+.2, 2);
     
+	vol *= .25;
     list set;
     integer i;
     for(; i < 5; ++i ){

@@ -13,10 +13,12 @@
 #define DoorEvt$close 2			// Raised when it snaps into closed state
 #define DoorEvt$interactStart 3			// (key)player - Raised when a player interacts with it in idle state, or when the player is changed
 #define DoorEvt$interactStop 4			// Raised when returning to idle state
+#define DoorEvt$interactLocked 5		// Raised when interact starts, but it's locked
+#define DoorEvt$locked 6				// (bool)lock - Raised when locked state changes
 
 
 
-#define DoorConst$CHAN (OBSTACLE_CHAN+0xD00)	// Listener
+#define DoorConst$CHAN (OBSTACLE_CHAN+0xD00)	// (6452) Listener
 
 #define DoorTask$setRot 1						// (float)z - Sets Z rotation of door. Offset from rez rotation
 #define DoorTask$lock 2							// (bool)locked - Prevents interactions with the door
@@ -48,6 +50,11 @@
 		key player = argKey(0);
 #define onDoorInteractStop() \
 	if( SENDER_SCRIPT IS "Door" AND EVENT_TYPE IS DoorEvt$interactStop ){
+#define onDoorInteractLocked() \
+	if( SENDER_SCRIPT IS "Door" AND EVENT_TYPE IS DoorEvt$interactLocked ){
+#define onDoorLocked( locked ) \
+	if( SENDER_SCRIPT IS "Door" AND EVENT_TYPE IS DoorEvt$locked ){ \
+		bool locked = argInt(0);
 	
 
 
