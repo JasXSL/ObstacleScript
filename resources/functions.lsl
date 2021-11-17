@@ -4,6 +4,17 @@
 #include "../headers/Rlv.lsh"
 #include "../headers/SupportCube.lsh"
 
+// Actually triggers in a cube
+_tsr( key sound, float vol, float radius ){
+	
+	vector pos = llGetPos();
+	vector v = <radius, radius, radius>;
+	llTriggerSoundLimited(sound, vol, pos+v, pos-v);
+
+}
+#define triggerSoundRadius( sound, vol, radius ) _tsr(sound, vol, radius)
+
+
 
 // Lets you round floats, vectors, and rotations
 #define allRound(input, places) _allRound((list)(input), places)

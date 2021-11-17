@@ -114,7 +114,12 @@ key HOST;
         
     end
     
-    
+    handleOwnerMethod( ComMethod$updatePortal )
+		
+		runMethod(SENDER_KEY, "Portal", PortalMethod$cbPlayers, PLAYERS);
+		runMethod(SENDER_KEY, "Portal", PortalMethod$cbHUDs, HUDS);
+	
+	end
     
     handleMethod( ComMethod$players )
         
@@ -122,6 +127,7 @@ key HOST;
             
             PLAYERS = METHOD_ARGS;
             globalAction$setPlayers();
+			runOmniMethod("Portal", PortalMethod$cbPlayers, PLAYERS);
 			
         }
         
@@ -132,7 +138,8 @@ key HOST;
             
             HUDS = METHOD_ARGS;
             globalAction$setHUDs();
-            
+			runOmniMethod("Portal", PortalMethod$cbHUDs, HUDS);
+	
         }
         
     end
@@ -140,11 +147,13 @@ key HOST;
 		
 		if( SENDER_KEY == HOST ){
 			
-			PLAYERS = [];
-			HUDS = [];
+			PLAYERS = [llGetOwner()];
+			HUDS = [llGetKey()];
 			globalAction$setPlayers();
 			globalAction$setHUDs();
-		
+			runOmniMethod("Portal", PortalMethod$cbPlayers, PLAYERS);
+			runOmniMethod("Portal", PortalMethod$cbHUDs, HUDS);
+			
 		}
 	
 	end

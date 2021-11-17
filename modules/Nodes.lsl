@@ -437,8 +437,10 @@ handleEvent( "#Game", 0 )
 end
 
 handleEvent( "#Tools", 0 )
-	
+		
 	str type = argStr(0);
+	
+	// Motion sensors
 	if( type == "SEN_NAMES" ){
 		
 		METHOD_ARGS = llList2List(METHOD_ARGS, 1, 4);
@@ -447,9 +449,9 @@ handleEvent( "#Tools", 0 )
 		for(; i < count(METHOD_ARGS); ++i ){
 			
 			key id = l2k(METHOD_ARGS, i);
-			str room = getPosRoom(prPos(id));
-			qd(llKey2Name(id) + room);
+			str room = getPosReadable(prPos(id));
 			positions += room;
+			
 		}
 		GhostStatus$updateSoundSensors( "*", positions );
 	

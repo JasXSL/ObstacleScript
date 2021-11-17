@@ -1,6 +1,13 @@
 #ifndef __DialogHelper
 #define __DialogHelper
-
+	
+	#ifndef USE_PLAYERS
+		#define USE_PLAYERS
+	#endif
+	#ifndef MAX_PLAYERS
+		#define MAX_PLAYERS 1000
+	#endif
+	
 	// To use, include DialogHelper in your script #include "ObstacleScript/resources/DialogHelper.lsl"
 	// call dialogHelperSetup() in onStateEntry
 	// call dialogHelperHandler() anywhere in the event handler
@@ -10,12 +17,15 @@
 	// string onTextUpdate() - Lets you override the hover text over the game starter. Just return "" if you want to automate it
 	// To open a new dialog, use openDialog( menu )
 	// Custom menus need to use a positive integer
+	// you can use #define MAX_PLAYERS to limit nr of players
 	
 	// The DialogHelper helps you track game start state
 	int GSETTINGS;
 	#define GS_GAME_STARTED 0x1
 	#define GS_RECENT_GAME_END 0x2
 	#define GS_GAME_LOADED 0x4
+	
+	
 	
 	list GSCORE;
 	list GCONF;		// Sent alongside the game start command. Store your game mode etc here
@@ -54,6 +64,10 @@
 
 				if( text == "" )
 					text = "Main Menu";
+					
+				if( MAX_PLAYERS && MAX_PLAYERS < 100 ){
+					text += "\nMax players: "+(str)MAX_PLAYERS;
+				}
 				
 				buttons += (list)
 					"INV. ALL" + 
@@ -132,7 +146,7 @@
 		if( _dMENU == MENU_MAIN ){
 			 
 			if( msg == "INV. ALL" )
-				Level$inviteNearby();
+				Level$inviteNearby(MAX_PLAYERS);
 			else if( msg == "INV. Player"){
 				
 				openDialog(MENU_INVITE_PLAYER);
@@ -170,7 +184,7 @@
 			}
 		}
 		else if( _dMENU == MENU_INVITE_PLAYER ){
-			Level$invite(msg);
+			Level$invite(msg, MAX_PLAYERS);
 		}
 		else if( _dMENU == MENU_REMOVE_PLAYER ){
 		

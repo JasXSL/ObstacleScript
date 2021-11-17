@@ -1,30 +1,34 @@
+x = should be fixed, ? = not sure if fixed, - todo
 Phasmo:
+	? Weegie board not working
+	? Motion detector not working when placed by coop
+	? Make the ghost leave EMF when touching a door while leaving
 	
-	- Make ghost strip when catching a players
-	- Add sound to machine
-	- add max nr of players
-	- Shorten distance of dots lamps
-	- Make door sounds limited
+	x Make flashlight blink during a hunt
+	x Make lights flicker during a hunt
+	x Make HOTS and writing placed with left click
+	x New animation for spirit box
+	x New animation for EMF
+	x New interactive objects: Paintings, lotion, tissues, soap, toilet roll
+	
+	
+	- Add sound for traveling while loading
+	- Add sound for truck parking when done
+	- Add sound for leaving at the end of the game
+	- Add sound to trap machine
 	- Add sounds to sprit box
-	- Average sanity borked in multiplayer
-	- Add more interactive stuff (see mesh todo)
-	- Add ghost events
-	- Weegie board not working
-	- Motion detector not working when placed by coop
-	- Motion detector raycasting
-	- Fix motion detector board using label instead of readable
-	- Make the ghost leave EMF when touching a door while leaving
+	- Add ghost noise for parabolic
 	
 	- Attach game tool on start, detach on end
-	- Enforce mouselook (note: currently broken on firestorm). Method exists tho for when it's fixed.
 	- Add ghost behavior
 	- Add rewards
+	- Add ghost events
+	
+	- Enforce mouselook (note: currently broken on firestorm). Method exists tho for when it's fixed.
 	
 New yeetable meshes:
 	- Tissue box
-	- Toilet paper
 	
-
 	Metadata needed for descs:
 	Any interactive:
 		- CSV of labels they're in

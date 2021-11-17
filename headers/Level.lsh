@@ -2,7 +2,7 @@
 #define __Level
 
 	#define LevelMethod$update 0			// void - Updates ALL assets
-	#define LevelMethod$invite 1			// (key)player - Invites a specific player to your game. Using * will invite all players within 10m of the game starter
+	#define LevelMethod$invite 1			// (key)player, (int)maxPlayers=inf - Invites a specific player to your game. Using * will invite all players within 10m of the game starter
 	#define LevelMethod$resetPlayers 2		// Resets players to owner only
 	#define LevelMethod$acceptInvite 3		// void - Accepts an invite
 	#define LevelMethod$raiseEvent 4		// (str)script, (int)evt, (var)data1, (var)data2... - Owner only depending on prefix
@@ -53,10 +53,10 @@
 
 	#define Level$scriptInit() \
 		runMethod(LINK_THIS, "Level", LevelMethod$scriptInit, llGetScriptName())
-	#define Level$invite( player ) \
-		runMethod(LINK_THIS, "Level", LevelMethod$invite, player)
-	#define Level$inviteNearby() \
-		runMethod(LINK_THIS, "Level", LevelMethod$invite, "*")
+	#define Level$invite( player, maxPlayers ) \
+		runMethod(LINK_THIS, "Level", LevelMethod$invite, player + maxPlayers)
+	#define Level$inviteNearby( maxPlayers ) \
+		runMethod(LINK_THIS, "Level", LevelMethod$invite, "*" + maxPlayers)
 	#define Level$resetPlayers() \
 		runMethod(LINK_THIS, "Level", LevelMethod$resetPlayers, "*")
 	#define Level$acceptInvite( target ) \

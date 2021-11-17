@@ -48,14 +48,14 @@ list getDeferredSlice( integer startPos ){
 }
 
 // Gets a deferred loader
-key getDeferredLoader( string script ){
+key getDeferredLoader( string script, key target ){
 	
 	pruneDeferredLoaders();	// Needed so we don't try to load from a non-existing deferred
 
 	integer x;
 	for(; x < count(LOADS); ++x ){
 		
-		if( llGetListEntryType(LOADS, x) == TYPE_KEY && llGetTime()-l2f(LOADS, x+1) > 4 ){
+		if( llGetListEntryType(LOADS, x) == TYPE_KEY && llGetTime()-l2f(LOADS, x+1) > 4 && target != l2k(LOADS, x) ){
 			
 			list slice = getDeferredSlice(x);
 			// Need to wait 4 sec, and have successfully remoteloaded the portal onto this
@@ -172,11 +172,18 @@ handleOwnerMethod( ScrepoMethod$get )
     
     integer pin = argInt(0);
     integer startParam = argInt(1);
+	bool noDeferred;
+	list scripts = llJson2List(argStr(2));
+	// Legacy conversion
+	if( llJsonValueType(argStr(2), []) != JSON_ARRAY )
+		scripts = llDeleteSubList(METHOD_ARGS, 0, 1);
+	else
+		noDeferred = argInt(3);
 
     integer i;
-    for( i = 2; i < count(METHOD_ARGS); ++i ){
+    for( ; i < count(scripts); ++i ){
         
-        string script = l2s(METHOD_ARGS, i);
+        string script = l2s(scripts, i);
         if( 
             llGetInventoryType(script) == INVENTORY_SCRIPT &&
             llGetSubString(script, 0, 2) != "SUB" &&
@@ -185,8 +192,8 @@ handleOwnerMethod( ScrepoMethod$get )
 			
 			
 			#ifndef NO_DEFERRED
-			key deferredLoader = getDeferredLoader(script);
-			if( deferredLoader ){
+			key deferredLoader = getDeferredLoader(script, SENDER_KEY);
+			if( deferredLoader != "" && !noDeferred ){
 				
 				Portal$remoteLoad( 
 					deferredLoader, 

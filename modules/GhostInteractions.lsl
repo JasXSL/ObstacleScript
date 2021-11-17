@@ -134,14 +134,12 @@ interactPlayer( key hud, int power ){
         0
     );
     
-    if( sound ){
-	
-		lastSound = sound;
-        Rlv$triggerSoundOn( hud, sound, vol, llGetOwnerKey(hud) );
-		
-    }
-	
-	triggerParabolic(prPos(hud), (sound != ""));
+	if( sound == "" )
+		sound = "29a4fcd0-88c2-45d1-8173-c0a84a0c8917";
+	else
+		Rlv$triggerSoundOn( hud, sound, vol, llGetOwnerKey(hud) ); // Trigger sound on victim
+	// Parabolic
+	lastSound = sound;
 	
     if( dur ){
     
@@ -179,6 +177,27 @@ triggerParabolic( vector pos, integer sound ){
 		ToolSet$trigger( targ, ToolsetConst$types$ghost$parabolic, pos + sound );
 	end
 	
+}
+
+int getGhostPower(){
+	return llFloor(llFrand(2));
+}
+
+// Set the global lastSound before calling this
+onGhostTouch( key targ, int power ){
+	
+	Level$raiseEvent( LevelCustomType$GHOSTINT, LevelCustomEvt$GHOSTINT$interacted, targ + power );
+	
+	if( lastSound ){
+		triggerParabolic(prPos(targ), TRUE);
+		LAST_SOUND_TIME = llGetTime();
+	}
+	// Lazily sent to any target
+	if( EVIDENCE_TYPES&GhostConst$evidence$stains ){
+		//qd("Setting stains on " + llKey2Name(targ));
+		Door$setStainsTarg( targ, "*", TRUE );
+	}
+
 }
 
 
@@ -297,15 +316,25 @@ handleMethod( GhostInteractionsMethod$playSoundOnMe )
 
 end
 
+handleMethod( GhostInteractionsMethod$objectTouched )
+	
+	key obj = argKey(0);
+	lastSound = "8c8a6c69-f859-d559-0498-14cce9510635";	// In the future you may wanna provide the sound for parabolic
+	onGhostTouch(obj, getGhostPower());
+	
+
+end
 
 handleMethod( GhostInteractionsMethod$interact )
-	
+	/*
+	maxItems is no longer used because it causes problems with the microphone
 	int maxItems = argInt(0);
 	if( maxItems < 1 )
 		maxItems = 1;
-		
+	*/
 	list viable = cObjs;
 	vector gp = llGetPos();
+	int power = getGhostPower();
 	
 	if( llFrand(1.0) < .5 ){
 		forPlayer( index, player )
@@ -328,93 +357,78 @@ handleMethod( GhostInteractionsMethod$interact )
 				"49f24b04-fea1-9d3e-ff20-4e5691b72270",
 				"ca631edd-4725-c03f-3fa8-08c0bf6ffbf9"
 			];
-			LAST_SOUND_TIME = llGetTime();
 			lastSound = randElem(sounds);
-			triggerParabolic(llGetPos(), TRUE);
 
 		}
 		
 		return;
 	}
 	
-	viable = llListRandomize(viable, 1);
-	
-	
-	integer i;
-	for(; i < count(viable) && i < maxItems; ++i ){
-	
-		key targ = l2k(viable, i);
-		int power = llFloor(llFrand(2));	// Powerful interact
-		Level$raiseEvent( LevelCustomType$GHOSTINT, LevelCustomEvt$GHOSTINT$interacted, targ + power );
-		
-		// Player interactions
-		if( llGetAgentSize(targ) != ZERO_VECTOR ){
-		
-			integer pos = llListFindList(PLAYERS, (list)((str)targ));
-			if( ~pos ){
-			
-				key hud = l2k(HUDS, pos);
-				//qd(HUDS);
-				int clothes = Rlv$getDesc$clothes( hud )&1023;	// 1023 = 10 bit
-				if( llFrand(1.0) < 0.15 && clothes && power ){
-					
-					// 682 = fully dressed. +1 because 0 is ignore
-					stripPlayer(hud, clothes >= 682);
-					
-				}
-				else
-					interactPlayer(hud, power);
 
-				//qd("Interacted with player" + llKey2Name(llGetOwnerKey(hud)));
-				return;
+	lastSound = "";
+
+	key targ = randElem(viable);
+	list door = getDescType(targ, Desc$TASK_DOOR_STAT);
+	
+	// Player interactions
+	if( llGetAgentSize(targ) != ZERO_VECTOR ){
+	
+		integer pos = llListFindList(PLAYERS, (list)((str)targ));
+		if( ~pos ){
+		
+			key hud = l2k(HUDS, pos);
+			//qd(HUDS);
+			int clothes = Rlv$getDesc$clothes( hud )&1023;	// 1023 = 10 bit
+			if( llFrand(1.0) < 0.15 && clothes && power ){
 				
+				// 682 = fully dressed. +1 because 0 is ignore
+				stripPlayer(hud, clothes >= 682);
+				lastSound = "620fe5e8-9223-10fc-3a5c-0f5e0edc3a35";
+				
+			}
+			else{
+				interactPlayer(hud, power);
 			}
 			
 		}
 		
-		list door = getDescType(targ, Desc$TASK_DOOR_STAT);
-		if( door ){
+	}
+	// Door interactions
+	else if( door ){
+	
+		integer st = l2i(door, 1);
+		float perc = 0;
+		if( !st || st == 2 )
+			perc = 0.5;
+		else if( llFrand(1) < 0.5 )
+			perc = 1.0;
+		Door$setRotPercTarg( targ, "*", perc );
+		//qd("Door interact" + llKey2Name(targ));
+		lastSound = "8c8a6c69-f859-d559-0498-14cce9510635";
 		
-			integer st = l2i(door, 1);
-			float perc = 0;
-			if( !st || st == 2 )
-				perc = 0.5;
-			else if( llFrand(1) < 0.5 )
-				perc = 1.0;
-			Door$setRotPercTarg( targ, "*", perc );
+	}
+	// Tool interactions
+	else if( llKey2Name(targ) == "HOTS" || llKey2Name(targ) == "Ecchisketch" ){
+		GhostTool$trigger( targ, [] );
+	}
+	// Regular interactions
+	else{
+		
+		integer flags; float speed = 1.0;
+		if( EVIDENCE_TYPES & GhostConst$evidence$stains )
+			flags = flags|GhostInteractiveConst$INTERACT_ALLOW_STAINS;
 			
-			if( EVIDENCE_TYPES&GhostConst$evidence$stains ){
-				//qd("Setting stains on " + llKey2Name(targ));
-				Door$setStainsTarg( targ, "*", TRUE );
-			}
-			
-			//qd("Door interact" + llKey2Name(targ));
-			triggerParabolic(prPos(targ), FALSE);
-			return;
-			
-		}
-			
-		// HOTS is a tool, not an interactive
-		if( llKey2Name(targ) == "HOTS" || llKey2Name(targ) == "Ecchisketch" )
-			GhostTool$trigger( targ, [] );
-		else{
-			
-			integer flags; float speed = 1.0;
-			if( EVIDENCE_TYPES & GhostConst$evidence$stains )
-				flags = flags|GhostInteractiveConst$INTERACT_ALLOW_STAINS;
-				
-			if( GHOST_TYPE == GhostConst$type$powoltergeist )
-				speed += llFrand(2);
-	
-			GhostInteractive$interact( targ, flags, speed );
-			
-		}
-		triggerParabolic(prPos(targ), FALSE);
-		//qd("Normal interact" + llKey2Name(targ));
-	
+		if( GHOST_TYPE == GhostConst$type$powoltergeist )
+			speed += llFrand(2);
+
+		GhostInteractive$interact( targ, flags, speed );
+		
 	}
 	
-	
+	// Trigger sound, add EMF etc
+	onGhostTouch(targ, power);
+
+
 	
 end
 

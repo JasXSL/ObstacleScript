@@ -31,6 +31,8 @@
 		runOmniMethod("GhostTool", GhostToolMethod$ghost, ghost)
 	#define GhostTool$setGhostTarg( targ, ghost ) \
 		runMethod(targ, "GhostTool", GhostToolMethod$ghost, ghost)
+	#define GhostTool$toggleHunt( on, ghost ) \
+		runOmniMethod("GhostTool", GhostToolMethod$hunting, on + ghost)
 	
 	
 	#define onGhostToolHunt( hunting, ghost ) \
@@ -56,7 +58,7 @@
 	
 	
 	// Level event bindings
-	#define LevelCustomType$GTOOL "oGtool"				// Generic type for traps like the lasher
+	#define LevelCustomType$GTOOL "avGtool"				// Generic type for traps like the lasher
 		#define LevelCustomEvt$GTOOL$spawned 1				// void - Ghost tool has been spawned
 		#define LevelCustomEvt$GTOOL$data 2					// key worldID, str data - Ghost tool data has changed
 		#define LevelCustomEvt$GTOOL$getGhost 3				// void - Sends ghost uuid back as GhostToolMethod$ghost

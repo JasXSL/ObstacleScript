@@ -10,12 +10,12 @@
 
 
 
-#define ScrepoMethod$get 1				// (int)pin, (int)startParam, (str)script1, (str)script2...
+#define ScrepoMethod$get 1				// (int)pin, (int)startParam, (arr)scripts, (bool)noDeferred
 #define ScrepoMethod$deferredLoad 2		// (key)targ, (str)script - A deferred loader has remoteloaded a script onto another
 
 
-#define Screpo$get( pin, startParam, scripts ) \
-	runMethod(llGetOwner(), "Screpo", ScrepoMethod$get, ((int)pin) + ((int)startParam) + scripts )
+#define Screpo$get( pin, startParam, scripts, noDeferred ) \
+	runMethod(llGetOwner(), "Screpo", ScrepoMethod$get, ((int)pin) + ((int)startParam) + mkarr(scripts) + noDeferred )
 #define Screpo$deferredLoad( loadedOn, script ) \
 	runMethod(llGetOwner(), "Screpo", ScrepoMethod$deferredLoad, (loadedOn) + (script) )
 

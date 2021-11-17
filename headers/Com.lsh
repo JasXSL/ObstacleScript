@@ -7,6 +7,7 @@
 #define ComMethod$players 3				// player1, player2... - Updates players
 #define ComMethod$huds 4				// hud1, hud2... - Updates huds
 #define ComMethod$uninvite 5			// void - When sent from the host, wipes all players
+#define ComMethod$updatePortal 6		// void - Sends callbacks with players and huds. See Portal.lsh for the callbacks
 
 // Events
 #define ComEvt$hostChanged 1			// (key)host - Raised with the host prim whenever you join a game
@@ -28,6 +29,8 @@
 	runMethod(target, "Com", ComMethod$players, players )
 #define Com$huds( target, huds ) \
 	runMethod(target, "Com", ComMethod$huds, huds )
+#define Com$updatePortal() \
+	runMethod(llGetOwner(), "Com", ComMethod$updatePortal, [] )
 
 
 #endif

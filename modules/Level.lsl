@@ -16,6 +16,7 @@ integer BFL;
 list INVITES;   // key player, int time
 list WAITING_SCRIPTS;
 
+int MAX_PLAYERS = 1000;
 
 updatePlayers(){
     
@@ -27,8 +28,7 @@ updatePlayers(){
 		Com$huds( player, HUDS );
     end
 	
-	runOmniMethod("Portal", PortalMethod$cbPlayers, PLAYERS);
-	runOmniMethod("Portal", PortalMethod$cbHUDs, HUDS);
+	// The HUDs update portals, since portals will only fetch users from the owner
 	
 }
 
@@ -62,7 +62,7 @@ updateCode(){
 	WAITING_SCRIPTS = LevelConst$REMOTE_SCRIPTS;
 	integer pin = (int)llFrand(0xFFFFFFF);
 	llSetRemoteScriptAccessPin(pin);
-	Screpo$get( pin, 1, WAITING_SCRIPTS );
+	Screpo$get( pin, 1, WAITING_SCRIPTS, true );
 	
 	setInterval("UPDATE", 2);
 	
@@ -124,6 +124,11 @@ onListen( ch, msg )
 			if( BFL & BFL_GAME_ACTIVE )
 				return;
             
+			if( count(PLAYERS) >= MAX_PLAYERS ){
+				llRegionSayTo(llGetOwnerKey(SENDER_KEY), 0, "Game is full");
+				return;
+			}
+			
             integer pos = llListFindList(INVITES, (list)llGetOwnerKey(SENDER_KEY));
             if( ~pos ){
                 
@@ -250,6 +255,10 @@ end
 handleInternalMethod( LevelMethod$invite )
     
     string player = llToLower(argStr(0));
+	MAX_PLAYERS = argInt(1);
+	if( MAX_PLAYERS < 1 )
+		MAX_PLAYERS = 1000;
+	
     integer l = AGENT_LIST_PARCEL;
     float DIST = 30;
     if( player != "*" ){
@@ -264,10 +273,15 @@ handleInternalMethod( LevelMethod$invite )
     if( player == "" )
         return;
     
+	int nrInvites = MAX_PLAYERS-count(PLAYERS);
+	if( nrInvites < 1 ){
+		qd("Error, trying to invite more than max players allow");
+		return;
+	}
     
     integer invites;
     integer i;
-    for(; i < count(all); ++i ){
+    for(; i < count(all) && i < nrInvites; ++i ){
         
         string pl = l2s(all, i);
         // Not already joined
@@ -360,6 +374,7 @@ handleMethod( LevelMethod$getHudAssets )
 end
 
 handleMethod( LevelMethod$forceRefreshPortal )
+	qd("Replying with players to" + llKey2Name(SENDER_KEY));
 	runMethod(SENDER_KEY, "Portal", PortalMethod$cbPlayers, PLAYERS);
 	runMethod(SENDER_KEY, "Portal", PortalMethod$cbHUDs, HUDS);
 end
@@ -381,7 +396,7 @@ handleInternalMethod( LevelMethod$scriptInit )
 		
 		integer pin = (int)llFrand(0xFFFFFFF);
 		llSetRemoteScriptAccessPin(pin);
-		Screpo$get( pin, 1, llGetScriptName() );
+		Screpo$get( pin, 1, llGetScriptName(), true );
 			
 	}
 	

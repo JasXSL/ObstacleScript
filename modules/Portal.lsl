@@ -41,15 +41,15 @@ fetchScripts(){
     
     PIN = llFloor(llFrand(0xFFFFFFF));
     llSetRemoteScriptAccessPin(PIN);
-    Screpo$get( PIN, ScrepoConst$SP_LOADED, WAITING_SCRIPTS );
+    Screpo$get( PIN, ScrepoConst$SP_LOADED, WAITING_SCRIPTS, false );
 	setInterval("SC", 10);
     
 }
-fetchSelf(){
+fetchSelf( bool noDeferred ){
     
     integer PIN = llFloor(llFrand(0xFFFFFFF));
     llSetRemoteScriptAccessPin(PIN);
-    Screpo$get( PIN, ScrepoConst$SP_LOADED, llGetScriptName() );
+    Screpo$get( PIN, ScrepoConst$SP_LOADED, llGetScriptName(), noDeferred );
     
 }
 // Raised when desc is gotten and scripts have loaded
@@ -57,13 +57,13 @@ loadComplete(){
     
 	if( BFL&BFL_GOT_SCRIPTS )
 		unsetTimer("SC");	// Stop retrying scripts
-	
+
 	if( ~BFL&(BFL_GOT_DESC|BFL_GOT_SCRIPTS) )
 		return;
 	
 	// Note: If the spawnID is 0 here, you may be overriding llSetText in your asset script
 	// Get players
-	Level$forceRefreshPortal();
+	Com$updatePortal();
 
 	llSetRegionPos(SPAWN_POS);
 	string descOut = DESC;
@@ -93,7 +93,7 @@ handleDebug()
 
 handleTimer( "SC" )
 	
-	Screpo$get( PIN, ScrepoConst$SP_LOADED, WAITING_SCRIPTS );
+	Screpo$get( PIN, ScrepoConst$SP_LOADED, WAITING_SCRIPTS, false );
 	
 end
 
@@ -105,7 +105,7 @@ onRez( total )
 	
     // Start by fetching self
     if( total )
-        fetchSelf();
+        fetchSelf(false);
 
 end
 
@@ -121,9 +121,9 @@ onStateEntry()
         fetchScripts();
         
     }
-	else
-		Level$forceRefreshPortal();
-    
+	else{
+		Com$updatePortal();
+    }
 end
 
 
@@ -165,7 +165,7 @@ end
 
 handleOwnerMethod( PortalMethod$fetch )
 	llOwnerSay("Updating code");
-    fetchSelf();
+    fetchSelf(true);
 end
 
 handleOwnerMethod( PortalMethod$cbPlayers )

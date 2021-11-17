@@ -193,7 +193,11 @@ drawActiveTool(){
                 anim = "thermometer_hold";
 			else if( tool == ToolsetConst$types$ghost$hornybat )
 				anim = "bat_idle";
-            
+			else if( tool == ToolsetConst$types$ghost$spiritbox )
+				anim = "readable_hold";
+			else if( tool == ToolsetConst$types$ghost$owometer )
+				anim = "emf_hold";
+			
         }
             
         
@@ -212,6 +216,29 @@ drawActiveTool(){
     
 }
 
+int dropTool(){
+	
+	key id = getActiveToolWorldId();
+	if( id == "" || BFL&BFL_USING )
+		return FALSE;
+		
+	list rc = getRcPlacement(FALSE);
+	if( rc == [] )
+		return FALSE;
+	
+	vector vr = llRot2Euler(llGetRootRotation());
+	vr = <0,0,vr.z>;
+		
+	
+		
+	Level$raiseEvent( 
+		LevelCustomType$TOOLSET, 
+		LevelCustomEvt$TOOLSET$drop, 
+		id + l2v(rc, 0) + llEuler2Rot(vr)
+	);
+	return TRUE;
+	
+}
 
 onTick(){
     
@@ -355,7 +382,11 @@ end
 handleTimer( "T" )
 	onTick();
 end
-
+/*
+onPlayersUpdated()
+	qd("Got players");
+end
+*/
 onStateEntry()
 
     resetTools();
@@ -434,6 +465,8 @@ onStateEntry()
 	
 	Level$raiseEvent( LevelCustomType$TOOLSET, LevelCustomEvt$TOOLSET$get, [] );    
 	Portal$scriptOnline();
+	
+	Level$forceRefreshPortal();
 	
 end
 
@@ -533,6 +566,15 @@ onPortalLclickStarted( hud )
 		
 	}
 	
+	if( tool == ToolsetConst$types$ghost$hots || tool == ToolsetConst$types$ghost$ecchisketch ){
+		
+		if( tool == ToolsetConst$types$ghost$hots ){
+			Level$raiseEvent( LevelCustomType$GTOOL, LevelCustomEvt$GTOOL$data, getActiveToolWorldId() + 1 );
+		}
+		dropTool();
+		
+	}
+	
 	if( tool == ToolsetConst$types$ghost$motionDetector ){
 		
 		list rc = getRcPlacement(TRUE);
@@ -581,23 +623,13 @@ onListen( ch, msg )
 	}
 	
 	else if( msg == "Q" ){
-	
-		key id = getActiveToolWorldId();
-		if( id == "" || BFL&BFL_USING )
-			return;
-			
-		list rc = getRcPlacement(FALSE);
-		if( rc == [] )
-			return;
 		
-		vector vr = llRot2Euler(llGetRootRotation());
-		vr = <0,0,vr.z>;
-				
-		Level$raiseEvent( 
-			LevelCustomType$TOOLSET, 
-			LevelCustomEvt$TOOLSET$drop, 
-			id + l2v(rc, 0) + llEuler2Rot(vr)
-		);
+		key id = getActiveToolWorldId();
+		int type = activeType();
+		if( type == ToolsetConst$types$ghost$hots )
+			Level$raiseEvent( LevelCustomType$GTOOL, LevelCustomEvt$GTOOL$data, id + 0 );	
+			
+		dropTool();
 	
 	}
 
@@ -708,6 +740,34 @@ handleMethod( ToolSetMethod$temp )
 	}
 	llSetLinkPrimitiveParamsFast(P_THERMO, set);
 	
+end
+
+handleTimer( "HUNT" )
+	
+	integer tool = activeType();
+	if( tool == ToolsetConst$types$ghost$flashlight ){
+	
+		int on = floor(llFrand(2));
+		PP(
+			P_FLASHLIGHTBEAM, 
+			GhostHelper$flashlightSettings
+		);
+		PP(
+			P_FLASHLIGHT,
+			(list)PRIM_FULLBRIGHT + 2 + on + PRIM_GLOW + 2 + on*0.5
+		);
+	}
+	
+end
+
+onGhostToolHunt( hunting, ghost )
+	
+	if( hunting )
+		setInterval("HUNT", 0.1);
+	else{
+		unsetTimer("HUNT");
+		drawActiveTool();
+	}
 end
 
 

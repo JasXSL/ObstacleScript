@@ -130,8 +130,12 @@ integer walkTowards( vector pos ){
 			for(; i < count(desc); ++i ){
 				
 				list spl = split(l2s(desc, i), "$");
-				if( l2s(spl, 0) == Desc$TASK_DOOR_STAT && l2i(spl, 1) < 2 )
+				if( l2s(spl, 0) == Desc$TASK_DOOR_STAT && l2i(spl, 1) < 2 ){
+					
+					GhostInteractions$objectTouched( door );
 					Door$setRotPercTarg( prRoot(door), "*", 1 );
+					
+				}
 				
 
 			}
