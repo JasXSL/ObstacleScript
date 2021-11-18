@@ -172,7 +172,9 @@ onDataChanged( integer data ){
     
 }
 
-
+int canSweep(){
+	return !SWEEPING && BFL&BFL_ON && ~BFL&BFL_HUNTING;
+}
 
 
 #include "ObstacleScript/begin.lsl"
@@ -201,7 +203,42 @@ onStateEntry()
     Portal$scriptOnline();
 	
 	Level$forceRefreshPortal();
+	
+	if( llGetInventoryType("ToolSet") != INVENTORY_NONE ){
+		setInterval("VO", 1);
+	}
 			
+end
+
+// Trigger through speaking loudly
+handleTimer( "VO" )
+	
+	if( !canSweep() )
+		return;
+		
+	// Memory saving hex conversion
+	list anims = (list)
+		0xa71890f1 +
+		0x593e9a3d +
+		0x55fe6788 +
+		0xc1802201 +
+		0x69d5a8ed
+	;
+	list pl = llGetAnimationList(llGetOwner());
+	int i;
+	for(; i < count(pl); ++i ){
+	
+		integer n = (int)("0x"+llGetSubString(l2s(pl, i), 0, 7));
+		if( ~llListFindList(anims, (list)n) ){
+		
+			Level$raiseEvent( LevelCustomType$SPIRITBOX, LevelCustomEvt$SPIRITBOX$trigger, [] );
+			return;
+			
+		}
+		
+	}
+	
+
 end
 
 onToolSetActiveTool( tool, data )
@@ -250,15 +287,21 @@ onListen( ch, msg )
 			return;
 	}
 	// Any player can use a dropped on
-	else if( llListFindList(PLAYERS, [(str)SENDER_KEY]) == -1 )
+	else{
+		if( llListFindList(PLAYERS, [(str)SENDER_KEY]) == -1 )
+			return;
+			
+		if( llVecDist(llGetPos(), prPos(SENDER_KEY)) > 3 )
+			return;
+			
+	}
+	if( !canSweep() )
 		return;
-		
-	if( SWEEPING || ~BFL&BFL_ON || BFL&BFL_HUNTING )
-		return;
-		
+				
 	if( checkMessage(msg) ){
         Level$raiseEvent( LevelCustomType$SPIRITBOX, LevelCustomEvt$SPIRITBOX$trigger, [] );
 	}
+	
 end
 
 handleTimer( "S" )

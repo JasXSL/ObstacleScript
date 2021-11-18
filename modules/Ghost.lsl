@@ -66,7 +66,6 @@ setState( int st ){
 
 
 // Settings
-integer BFL;
 #define BFL_PAUSE 0x1		// Pause the ghost, used for debugging.
 #define BFL_HUNTING 0x2		// Currently hunting for players
 #define BFL_SMUDGE 0x4		// Can only idle. Deaf and blind.
@@ -74,6 +73,7 @@ integer BFL;
 
 #define BFL_HUNT_HAS_LOS 0x10	// We currently have line of sight to our target
 #define BFL_HUNT_HAS_POS 0x20	// LOS lost, but we have their last visible coordinates
+integer BFL = BFL_PAUSE;
 
 warpToGhostRoom(){
 
@@ -313,6 +313,46 @@ addFootsteps( key player, float trackChance ){
 }
 
 
+// Checks if a player is making noise
+int isNoisy( key player ){
+	
+	integer ainfo = llGetAgentInfo(player);
+	if( (ainfo & AGENT_WALKING && ~ainfo & AGENT_CROUCHING) || ainfo & AGENT_TYPING )
+		return TRUE;
+		
+	// Memory saving hex conversion
+	list anims = (list)
+		0xa71890f1 +
+		0x593e9a3d +
+		0x55fe6788 +
+		0xc1802201 +
+		0x69d5a8ed +
+		0x37694185 +
+		0xcb1139b6 +
+		0x28a3f544 +
+		0xcc340155 +
+		0xbbf194d1
+	;
+	list pl = llGetAnimationList(player);
+	
+	int i;
+	for(; i < count(pl); ++i ){
+		integer n = (int)("0x"+llGetSubString(l2s(pl, i), 0, 7));
+		if( ~llListFindList(anims, (list)n) ){
+			return true;
+		}
+	}
+	return FALSE;
+		
+}
+
+
+
+
+
+// IT BEGINS //
+
+
 #include "ObstacleScript/begin.lsl"
 
 handleTimer( "A" )
@@ -334,8 +374,7 @@ handleTimer( "A" )
 			lastFootstepsUpdate = llGetTime();
 			forPlayer( index, player )
 				
-				integer ainfo = llGetAgentInfo(player);
-				if( (ainfo & AGENT_WALKING && ~ainfo & AGENT_CROUCHING) || ainfo & AGENT_TYPING )
+				if( isNoisy(player) )
 					addFootsteps(player, 0.5);
 			
 			end
@@ -922,11 +961,18 @@ end
 
 handleOwnerMethod( GhostMethod$stop )
     
+	int verbose = argInt(1);
+	
 	BFL = BFL&~BFL_PAUSE;
 	if( argInt(0) )
 		BFL = BFL|BFL_PAUSE;
-    qd("Stop status: " + ((BFL&BFL_PAUSE)>0));
-	qd("Players:" + PLAYERS);
+		
+	if( verbose ){
+	
+		qd("Stop status: " + ((BFL&BFL_PAUSE)>0));
+		qd("Players:" + PLAYERS);
+		
+	}
 	
 end
 

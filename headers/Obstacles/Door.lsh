@@ -20,6 +20,11 @@
 
 #define DoorConst$CHAN (OBSTACLE_CHAN+0xD00)	// (6452) Listener
 
+#define DoorConst$STATE$closed 0		// Fully closed
+#define DoorConst$STATE$mid 1			// Opened but not fully
+#define DoorConst$STATE$opened 2		// Fully opened
+
+
 #define DoorTask$setRot 1						// (float)z - Sets Z rotation of door. Offset from rez rotation
 #define DoorTask$lock 2							// (bool)locked - Prevents interactions with the door
 #define DoorTask$setRotPerc 3					// (float)perc - Sets a door rotation to a percentage of its min max (0-1)
@@ -56,6 +61,18 @@
 	if( SENDER_SCRIPT IS "Door" AND EVENT_TYPE IS DoorEvt$locked ){ \
 		bool locked = argInt(0);
 	
+	
+	
+// Level event bindings
+	#define LevelCustomType$DOOR "oDoor"				// Generic type for traps like the lasher
+		#define LevelCustomEvt$DOOR$state 1				// label, state - Door state has changed. See Door.lsh for the states
+		
+		
+	#define onLevelCustomDoorOpened( label, st ) \
+		if( isEventLevelCustom() AND argStr(1) == LevelCustomType$DOOR AND argInt(2) == LevelCustomEvt$DOOR$state ){ \
+			str label = argStr(3); \
+			int st = argInt(4);
+			
 
 
 #endif

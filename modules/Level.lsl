@@ -124,22 +124,26 @@ onListen( ch, msg )
 			if( BFL & BFL_GAME_ACTIVE )
 				return;
             
-			if( count(PLAYERS) >= MAX_PLAYERS ){
+			
+			key owner = llGetOwnerKey(SENDER_KEY);
+			integer pos = llListFindList(PLAYERS, [(str)owner]);
+			
+			if( count(PLAYERS) >= MAX_PLAYERS && pos == -1 ){
 				llRegionSayTo(llGetOwnerKey(SENDER_KEY), 0, "Game is full");
 				return;
 			}
 			
-            integer pos = llListFindList(INVITES, (list)llGetOwnerKey(SENDER_KEY));
-            if( ~pos ){
+            integer invPos = llListFindList(INVITES, (list)llGetOwnerKey(SENDER_KEY));
+            if( ~invPos ){
                 
-				key owner = llGetOwnerKey(SENDER_KEY);
-                float time = l2f(INVITES, pos+1);
+				
+                float time = l2f(INVITES, invPos+1);
                 if( time+60 < llGetTime() && llListFindList(PLAYERS, [(str)owner]) == -1 )
                     llRegionSayTo(llGetOwnerKey(SENDER_KEY), 0, "Invite timed out, ask for a new one!");
                 else{
 				
 					
-					integer pos = llListFindList(PLAYERS, [(str)owner]);
+					
 					if( pos == -1 ){
 					
 						PLAYERS += (str)owner;
@@ -281,7 +285,7 @@ handleInternalMethod( LevelMethod$invite )
     
     integer invites;
     integer i;
-    for(; i < count(all) && i < nrInvites; ++i ){
+    for(; i < count(all) && invites < nrInvites; ++i ){
         
         string pl = l2s(all, i);
         // Not already joined

@@ -74,7 +74,7 @@
 
 #define RlvMethod$exitMouselook 12		// inverse, always - kicks the player out of mouselook. If inverse is true, it instead forces mouselook. Always forces this mode until the next call.
 
-#define RlvMethod$triggerSound 13		// (key)sound, (float)vol, (bool)ownerOnly
+#define RlvMethod$triggerSound 13		// (key)sound, (float)vol, (key)playerThatCanHear - Triggers a sound. If playerThatCanHear is 1, it uses llPlaySound and stops loopSound
 #define RlvMethod$loopSound 14			// (key)sound, (float)vol
 
 
@@ -97,6 +97,8 @@
 
 #define Rlv$triggerSound( target, sound, vol ) \
 	runMethod( target, "Rlv", RlvMethod$triggerSound, sound + vol)
+#define Rlv$playSound( target, sound, vol ) \
+	runMethod( target, "Rlv", RlvMethod$triggerSound, sound + vol + 1)
 // Plays a sound from target that only (key)listener can hear
 #define Rlv$triggerSoundOn( target, sound, vol, listener ) \
 	runMethod( target, "Rlv", RlvMethod$triggerSound, sound + vol + listener)

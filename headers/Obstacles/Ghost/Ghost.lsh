@@ -7,7 +7,7 @@
 #define GhostMethod$setType 3			// (int)ghost_type, (int)evidenceTypes - Sets a ghost type and evidence, affecting its behavior
 #define GhostMethod$smudge 4			// void  - Player has used a smudge stick
 #define GhostMethod$interact 5			// void - Interact with a nearby item
-#define GhostMethod$stop 6				// (bool)stop - Stops the ghost. Useful for debugging
+#define GhostMethod$stop 6				// (bool)stop, (bool)verbose - Stops the ghost. Verbose is useful for debugging
 #define GhostMethod$sendToChair 7		// key chair, key hud, int temp - Tells the ghost to go to a chair and trap the player. If no chair is available, drop the player.
 
 
@@ -104,8 +104,10 @@
 
 #define Ghost$followNodes( nodes ) \
 	runOmniMethod("Ghost", GhostMethod$followNodes, nodes)
-#define Ghost$stop( stop ) \
-	runOmniMethod("Ghost", GhostMethod$stop, stop)
+#define Ghost$stop( stop, verbose ) \
+	runOmniMethod("Ghost", GhostMethod$stop, stop + verbose)
+#define Ghost$start() \
+	runOmniMethod("Ghost", GhostMethod$stop, [])
 #define Ghost$toggleHunt( on ) \
 	runOmniMethod("Ghost", GhostMethod$toggleHunt, on)
 #define Ghost$setType( type, evidence ) \

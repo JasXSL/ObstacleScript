@@ -24,6 +24,7 @@ int breaker;		// Breaker on
 list roomLights;	// Lights of a room. Each index corresponds to an index in ROOMS. Note that this relies on readable name, which means only the first entry of that readable is toggled.
 list roomTemps;		// Temperatures of a room. Each index corresponds to an index in ROOMS. Same as above, it uses the first entry of readable name.
 float lastSweat;
+vector rezPos;
 
 list portals;      // 8bArray roomIndexes, uuid
 
@@ -266,7 +267,16 @@ resetTempData(){
 
 
 
+
+
+
+
+
+
+// BEGIN
+
 #include "ObstacleScript/begin.lsl"
+
 
 onSpawnerGetGroups( callback, spawns )
     
@@ -355,11 +365,11 @@ end
 
 onStateEntry()
 
+	rezPos = llGetPos();
     // Get room markers
     Spawner$getGroups("init", "rooms");
     
 	PLAYERS = [(str)llGetOwner()];
-    
     list unfoundRooms = llList2ListStrided(ROOMS, 0, -1, 2);
     // Sanity check our portals
     links_each( nr, name,
@@ -408,11 +418,22 @@ onStateEntry()
         
     )
     
+
 	
 	resetTempData();
 	setInterval("TICK", 10);
+	setInterval("POS", 1);
 
 end
+
+handleTimer( "POS" )
+	if( llVecDist(llGetPos(), rezPos) > .1 ){
+		qd("Level movement detected, recaching positions in 5 sec");
+		llSleep(5);
+		llResetScript();
+	}
+end
+
 
 handleEvent( "#Game", 0 )
 
@@ -435,6 +456,8 @@ handleEvent( "#Game", 0 )
     }	
 
 end
+
+
 
 handleEvent( "#Tools", 0 )
 		

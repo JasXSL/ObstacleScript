@@ -17,7 +17,6 @@ onStateEntry()
 	Level$raiseEvent(LevelCustomType$GTOOL, LevelCustomEvt$GTOOL$getGhost, []);
 	Portal$scriptOnline();
 	
-    
 end
 
 onPortalLoadComplete( desc )

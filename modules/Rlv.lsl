@@ -546,7 +546,11 @@ handleMethod( RlvMethod$triggerSound )
 	key sound = argKey(0);
 	float vol = argFloat(1);
 	key player = argKey(2);
-	if( player ){
+	if( argStr(2) == "1" ){
+		llStopSound();
+		llPlaySound(sound, vol);
+	}
+	else if( player ){
 		
 		vector pos = prPos(player);
 		vector p1 = <.1,.1,.1>;

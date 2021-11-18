@@ -34,17 +34,17 @@ int P_STAIN;
 key interactor;
 integer locked;
 
-integer doorState = 0;		// closed, 1 = partially open, 2 = fully open
+integer doorState;		// closed, 1 = partially open, 2 = fully open
 setDoorState( integer ds ){
 	
 	if( ds == doorState )
 		return;
 		
 	// State was 0 and no longer is = Opened
-	if( doorState == 0 )
+	if( doorState == DoorConst$STATE$closed )
 		raiseEvent(DoorEvt$open, []);
 	// New state is 0 = closed
-	else if( ds == 0 )
+	else if( ds == DoorConst$STATE$closed )
 		raiseEvent(DoorEvt$close, []);
 		
 	doorState = ds;
@@ -68,6 +68,8 @@ setDoorState( integer ds ){
 		}
 	
 	}
+	
+	Level$raiseEvent(LevelCustomType$DOOR, LevelCustomEvt$DOOR$state, ID + ds);
 
 
 }
@@ -86,11 +88,11 @@ setRot( float z ){
 	}
 	
 	if( tz >= mar )
-		setDoorState(2);
+		setDoorState(DoorConst$STATE$opened);
 	else if( tz <= mir )
-		setDoorState(0);
+		setDoorState(DoorConst$STATE$closed);
 	else
-		setDoorState(1);
+		setDoorState(DoorConst$STATE$mid);
 		
 	llRotLookAt(llEuler2Rot(<0,0,z>)*startRot, 1, 1);
 

@@ -194,7 +194,7 @@ drawActiveTool(){
 			else if( tool == ToolsetConst$types$ghost$hornybat )
 				anim = "bat_idle";
 			else if( tool == ToolsetConst$types$ghost$spiritbox )
-				anim = "readable_hold";
+				anim = "spiritbox_hold";
 			else if( tool == ToolsetConst$types$ghost$owometer )
 				anim = "emf_hold";
 			
@@ -715,7 +715,7 @@ end
 handleMethod( ToolSetMethod$temp )
 
 	float t = argFloat(0);
-	t -= llFrand(6);
+	t -= llFrand(4);
 	
 	if( getActiveToolInt() )
 		t = (t * 9.0/5.0) + 32;
