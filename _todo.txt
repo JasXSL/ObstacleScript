@@ -16,6 +16,9 @@ Phasmo:
 	- Limit players to whisper
 	- Add weegie board
 	- Some kind of radio
+	- Disable flying
+	- Board not letting coop players interact
+	- Don't affect temps until front door open
 	
 	- All living players must be out of the van to end
 	- Enforce mouselook (note: currently broken on firestorm). Method exists tho for when it's fixed.

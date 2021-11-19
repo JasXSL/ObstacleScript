@@ -73,7 +73,7 @@ setState( int st ){
 
 #define BFL_HUNT_HAS_LOS 0x10	// We currently have line of sight to our target
 #define BFL_HUNT_HAS_POS 0x20	// LOS lost, but we have their last visible coordinates
-integer BFL = BFL_PAUSE;
+integer BFL;
 
 warpToGhostRoom(){
 

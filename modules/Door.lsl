@@ -48,6 +48,8 @@ setDoorState( integer ds ){
 		raiseEvent(DoorEvt$close, []);
 		
 	doorState = ds;
+	
+	Level$raiseEvent(LevelCustomType$DOOR, LevelCustomEvt$DOOR$state, ID + ds);
 
 	list desc = split(llGetObjectDesc(), "$$");
 	integer i;
@@ -69,7 +71,7 @@ setDoorState( integer ds ){
 	
 	}
 	
-	Level$raiseEvent(LevelCustomType$DOOR, LevelCustomEvt$DOOR$state, ID + ds);
+	
 
 
 }
