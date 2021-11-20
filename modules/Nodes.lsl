@@ -25,6 +25,7 @@ list roomLights;	// Lights of a room. Each index corresponds to an index in ROOM
 list roomTemps;		// Temperatures of a room. Each index corresponds to an index in ROOMS. Same as above, it uses the first entry of readable name.
 float lastSweat;
 vector rezPos;
+int ghostInLight = -1;	// Sets if the ghost is in a lit room or not
 
 list portals;      // 8bArray roomIndexes, uuid
 
@@ -402,8 +403,8 @@ onStateEntry()
     links_each( nr, name,
         
         if( name == "PORTAL" ){
-            
             list spl = llParseString2List(
+            
                 l2s(llGetLinkPrimitiveParams(nr, (list)PRIM_DESC), 0), 
                 (list)":", 
                 []
@@ -425,12 +426,27 @@ onStateEntry()
 
 end
 
+// Checks if the level has moved, and also tracks the ghost
 handleTimer( "POS" )
+
+	if( llKey2Name(GHOST) ){
+		
+		int ri = getPosIndex(prPos(GHOST));
+		if( l2i(roomLights, ri) != ghostInLight ){
+			
+			ghostInLight = ri;
+			GhostAux$setLight( ghostInLight );
+		
+		}
+	
+	}
+	
 	if( llVecDist(llGetPos(), rezPos) > .1 ){
 		qd("Level movement detected, recaching positions in 5 sec");
 		llSleep(5);
 		llResetScript();
 	}
+	
 end
 
 

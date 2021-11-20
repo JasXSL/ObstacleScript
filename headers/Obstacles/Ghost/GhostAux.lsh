@@ -1,0 +1,30 @@
+#ifndef __GhostAux
+#define __GhostAux
+
+#define GhostAuxMethod$setLight 1			// (bool)on - Sets whether the light is on in the room of the ghost.
+
+#define GhostAux$setLight( on ) \
+	runOmniMethod("Ghost", GhostAuxMethod$setLight, on)
+
+
+#define GhostAuxEvt$caughtSat 1				// void - Caught player was sat on the ghost
+
+#define onGhostAuxCaughtSat() \
+	if( SENDER_SCRIPT IS "GhostAux" AND EVENT_TYPE IS GhostAuxEvt$caughtSat ){
+
+
+
+/*
+#define LevelCustomType$GHOSTAUX "oGhostAux"				// Generic type for traps like the lasher
+	#define LevelCustomEvt$GHOSTAUX$spawned 1			// void - The ghost has been spawned
+	
+
+#define onLevelCustomGhostSpawned( ghost ) \
+	if( isEventLevelCustom() AND argStr(1) == LevelCustomType$GHOSTAUX AND argInt(2) == LevelCustomEvt$GHOSTAUX$spawned ){ \
+		key ghost = argKey(0);
+*/
+
+
+	
+
+#endif

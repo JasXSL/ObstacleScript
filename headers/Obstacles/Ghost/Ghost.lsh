@@ -11,34 +11,49 @@
 #define GhostMethod$sendToChair 7		// key chair, key hud, int temp - Tells the ghost to go to a chair and trap the player. If no chair is available, drop the player.
 
 
-
 #define GhostMethod$cbNodes 100			// Callback for Nodes.lsh getNodes method
 
 #define GhostConst$type$succubus 0			// (Need player preference) Will prefer interacting with a particular player if they're nearby. During a hunt, target that player in particular.
 #define GhostConst$type$yuri 1				// (Female needed, arousal needed) Being close to the ghost increases player arousal.
 #define GhostConst$type$asswang 2			// (Looking at it needed, hunt speed needed) Only active if nobody's looking at it. Moves twice as fast during a hunt unless observed.
-#define GhostConst$type$powoltergeist 3		// (Preference needed) Prefers interacting with items over players, and will throw things twice as hard.
+#define GhostConst$type$powoltergeist 3		// TEST - Prefers interacting with items over players, and can throw things twice as hard.
 #define GhostConst$type$yaoikai 4			// (Deafness needed, male needed, hunt earlier needed) Can hunt earlier if players are typing within 3m of it. Cannot hear footsteps. Prefers male investigators.
-#define GhostConst$type$imp 5				// (Preference needed, luigi board needed) Prefers touching players over interacting with items. No arousal penalty when successfully using a luigi board.
+#define GhostConst$type$imp 5				// TEST - Prefers touching players over interacting with items. No arousal penalty when successfully using a luigi board.
 #define GhostConst$type$hantuwu 6			// (Interactivity needed) Starts low interactive and gets more interactive as arousal increases.
 #define GhostConst$type$inugami 7			// (Activity check needed) Gets less interactive when players are near it. More interactive if nobody's near it.
 #define GhostConst$type$obukakke 8			// (Stains needed) Active ability leaves stains on everything nearby without causing EMF or movement.
 #define GhostConst$type$gooryo 9			// (Teleport needed) Can teleport directly between rooms with plumbing.
 #define GhostConst$type$ehee 10				// (EMF needed, hunt needed) Will only give EMF if nobody's nearby. Won't hunt unless a player is nearby.
-#define GhostConst$type$bare 11				// (Hunt needed, light switch needed, strip needed) Will hunt earlier if the light is off. Double chance of stripping players if the lights are off. 
+#define GhostConst$type$bare 11				// (Hunt needed, light switch needed, strip needed) Will hunt earlier if the breaker is off. Won't turn off lights. Double chance of stripping a player if the breaker is off.
 
 
 
 #define GhostEvt$type 1						// int type - Ghost type received
-#define GhostEvt$visible 2					// bool visible - Ghost visibility has changed
+#define GhostEvt$hunt 2						// bool hunting - Ghost is hunting
+#define GhostEvt$lights 3					// bool lights_on - Raised when lights on in the current room of the ghost is changed
+#define GhostEvt$caught 4					// key player, key chair - Caught a player. Carry them to the chair.
+#define GhostEvt$huntStep 5					// void - Raised when the ghost makes a footstep while hunting
+#define GhostEvt$alpha 6					// float alpha - Raised when the ghost alpha changes
+
 
 #define onGhostType( type, evidence ) \
 	if( SENDER_SCRIPT IS "Ghost" AND EVENT_TYPE IS GhostEvt$type ){ \
 		int type = argInt(0); \
 		int evidence = argInt(1);
-#define onGhostVisible( visible ) \
-	if( SENDER_SCRIPT IS "Ghost" AND EVENT_TYPE IS GhostEvt$visible ){ \
-		bool visible = argInt(0);
+#define onGhostCaught( player, chair ) \
+	if( SENDER_SCRIPT IS "Ghost" AND EVENT_TYPE IS GhostEvt$caught ){ \
+		key player = argKey(0); \
+		key chair = argKey(1);
+#define onGhostHuntStep(  ) \
+	if( SENDER_SCRIPT IS "Ghost" AND EVENT_TYPE IS GhostEvt$huntStep ){
+
+#define onGhostAlpha( alpha ) \
+	if( SENDER_SCRIPT IS "Ghost" AND EVENT_TYPE IS GhostEvt$alpha ){ \
+		float alpha = argFloat(0);
+#define onGhostHunt( hunting ) \
+	if( SENDER_SCRIPT IS "Ghost" AND EVENT_TYPE IS GhostEvt$hunt ){ \
+		bool hunting = argInt(0);
+
 
 
 #define GhostConst$evidence$owometer 0x1
@@ -118,7 +133,6 @@
 	runOmniMethod("Ghost", GhostMethod$interact, [])
 #define Ghost$sendToChair( chair, hud, temp ) \
 	runOmniMethod("Ghost", GhostMethod$sendToChair, chair + hud + temp)
-
 
 
 	

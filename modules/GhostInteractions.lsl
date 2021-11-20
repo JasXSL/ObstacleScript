@@ -52,7 +52,7 @@ integer isInteractive( key id ){
 }
 
 list touchedPlayers;
-list SEEN_PLAYERS;
+
 
 #define INTERACT_BUTT 0
 #define INTERACT_GROIN 1
@@ -216,59 +216,6 @@ onStateEntry()
     
 end
 
-onGhostVisible( visible )
-
-	SEEN_PLAYERS = [];
-	forPlayer(idx, targ)
-		Rlv$stopLoopSound( targ );
-	end
-		
-	if( !visible )
-		unsetTimer("HEART");
-	else
-		setInterval("HEART", 0.5);
-
-end
-
-handleTimer( "HEART" )
-	
-	list found;
-	vector gp = llGetPos();
-	forPlayer( idx, targ )
-		
-		vector pp = prPos(targ);
-		list ray = llCastRay(gp, pp, RC_DEFAULT);
-		if( l2i(ray, -1) == 0 || llVecDist(pp, gp) < 2 ){
-			
-			found += targ;
-			if( llListFindList(SEEN_PLAYERS, (list)targ) == -1 ){
-			
-				Rlv$loopSoundOn(targ, "51ef6a1d-437e-1923-50dd-178dfa6f59fc", 1);
-				
-			}
-			
-		}
-	
-	end
-	
-	integer i;
-	for(; i < count(SEEN_PLAYERS); ++i ){
-	
-		key targ = l2k(SEEN_PLAYERS, i);
-		if( llListFindList(found, (list)targ) == -1 ){
-		
-			Rlv$stopLoopSound(targ);
-			
-		}
-			
-	}
-	
-	SEEN_PLAYERS = found;
-	
-	
-end
-
-
 
 handleTimer( "GI" )
 	
@@ -335,6 +282,12 @@ handleMethod( GhostInteractionsMethod$interact )
 	list viable = cObjs;
 	vector gp = llGetPos();
 	int power = getGhostPower();
+	
+	float playerChance = 0.5;
+	if( GHOST_TYPE == GhostConst$type$powoltergeist )
+		playerChance = 0.2;
+	else if( GHOST_TYPE == GhostConst$type$imp )
+		playerChance = 0.8;
 	
 	if( llFrand(1.0) < .5 ){
 		forPlayer( index, player )

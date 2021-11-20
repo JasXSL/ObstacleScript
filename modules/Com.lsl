@@ -116,8 +116,8 @@ key HOST;
     
     handleOwnerMethod( ComMethod$updatePortal )
 		
-		runMethod(SENDER_KEY, "Portal", PortalMethod$cbPlayers, PLAYERS);
-		runMethod(SENDER_KEY, "Portal", PortalMethod$cbHUDs, HUDS);
+		runMethod(prRoot(SENDER_KEY), "Portal", PortalMethod$cbPlayers, PLAYERS);
+		runMethod(prRoot(SENDER_KEY), "Portal", PortalMethod$cbHUDs, HUDS);
 	
 	end
     

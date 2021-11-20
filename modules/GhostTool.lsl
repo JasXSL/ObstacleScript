@@ -3,6 +3,7 @@
 #include "ObstacleScript/index.lsl"
 
 vector spawnPos;
+rotation spawnRot;
 
 #include "ObstacleScript/begin.lsl"
 
@@ -22,6 +23,7 @@ end
 onPortalLoadComplete( desc )
 	
 	spawnPos = llGetPos();
+	spawnRot = llGetRot();
 
 end
 
@@ -51,6 +53,11 @@ handleOwnerMethod( GhostToolMethod$dropped )
     
 	vector pos = argVec(0);
 	rotation rot = argRot(1);
+	if( pos == ZERO_VECTOR )
+		pos = spawnPos;
+	if( rot == ZERO_ROTATION )
+		rot = spawnRot;
+	
     str data = argStr(2);
 	raiseEvent(GhostToolEvt$dropped, data);
 	

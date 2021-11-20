@@ -7,13 +7,16 @@ Phasmo:
 	? Make sure players unsit after ending a level
 	? Test if ghost can track you into the basement during a hunt
 	
-	- Return players equipment when they die
-	- Make it more active when players ask it for a sign
-	- Add stats
-	- Some kind of radio
-	- Add ghost events
+	x Return players equipment when they die
+	x Add stats
+	x Some kind of radio for long distance speech
+	
 	- Add ghost behavior
+	
+	- Make it more active when players ask it for a sign
+	- Add ghost events
 	- Add rewards
+		- ??? How
 	- All living players must be out of the van to end
 	- Attach game tool on start, detach on end
 	- Allow games without the host

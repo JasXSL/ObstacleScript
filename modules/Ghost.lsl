@@ -1,10 +1,7 @@
 #define USE_TIMER
 #define USE_STATE_ENTRY
-#define USE_CHANGED
-#define USE_RUN_TIME_PERMISSIONS
 #define USE_LISTEN
 #define USE_PLAYERS
-#define USE_TOUCH_START
 #include "ObstacleScript/headers/Obstacles/Ghost/Ghost.lsh"
 #include "ObstacleScript/index.lsl"
 
@@ -29,7 +26,6 @@ integer walking;
 
 // Behavior
 integer ghostType = GhostConst$type$succubus;
-integer evidenceType;
 
 // State manager
 integer STATE; 
@@ -48,6 +44,7 @@ float lastReturn;
 float lastFootSound;		// Used when hunting to generate footsteps
 
 vector spawnPos;
+#define toggleMesh( alpha ) raiseEvent(GhostEvt$alpha, alpha)
 
 setState( int st ){
 	
@@ -174,64 +171,12 @@ integer walkTowards( vector pos ){
 	toggleWalking(true);
 	
 	if( BFL & BFL_HUNTING && llGetTime()-lastFootSound > .7 ){
-		
 		lastFootSound = llGetTime()+llFrand(.4);
-		list sounds = [
-            "fc3df235-c789-08b2-b09a-b45bce26684b", "631af33a-fde3-177c-8303-5e9af620a382",
-            "4ccb842d-4b5d-a7d3-56c6-b6a958ad7881", "c720ce7c-396e-c550-d8c0-1c3e6350debb",
-            "27282b3d-5731-3c9b-5940-09645d33f656", "37c2a5a6-07ed-725b-7425-d19a368bcdff"            
-        ];
-        integer sound = floor(llFrand(count(sounds)/2));
-        key normal = l2k(sounds, sound*2);
-        key cut = l2k(sounds, sound*2+1);
-        vector gp = llGetPos();
-        llTriggerSoundLimited(normal, 1, <255,255,gp.z+2>, <0,0,gp.z-2>);
-        llTriggerSoundLimited(cut, .75, <255,255,gp.z-2>, <0,0,0>);
-        llTriggerSoundLimited(cut, .5, <255,255,gp.z+100>, <0,0,gp.z+2>);
-		
+		raiseEvent(GhostEvt$huntStep, []);
 	}
 	
 	return TRUE;
 
-}
-
-toggleMesh( float alpha ){
-	
-	int pre = BFL&BFL_VISIBLE;
-	BFL = BFL&~BFL_VISIBLE;
-	if( alpha > 0 )
-		BFL = BFL|BFL_VISIBLE;
-		
-	if( pre != (BFL&BFL_VISIBLE) )
-		raiseEvent(GhostEvt$visible, ((BFL&BFL_VISIBLE)>0));
-
-	forLink(nr, name)
-		if( name == "MESH" )
-			llSetLinkAlpha(nr, alpha, ALL_SIDES);
-	end
-	
-}
-
-startHunt(){
-	
-	playerFootsteps = [];
-	forPlayer(index, player)
-		playerFootsteps += 0;
-	end
-	BFL = BFL&~BFL_HUNT_HAS_LOS;
-	BFL = BFL&~BFL_HUNT_HAS_POS;
-	huntTarget = "";
-	huntLastSeenPos = ZERO_VECTOR;
-	
-	BFL = BFL|BFL_HUNTING;
-	setState(STATE_HUNT_PRE);
-	toggleWalking(FALSE);
-	toggleMesh(1.0);
-	
-	llLoopSound("5a67fa19-3dbb-74c6-3297-8cee2b66e897", .6);
-	llSetKeyframedMotion([], [KFM_COMMAND, KFM_CMD_STOP]);
-	setTimeout("HUNT", 3);	// Start walking
-	
 }
 
 
@@ -525,7 +470,6 @@ handleTimer( "A" )
 
 		// Find a new target
 		if( llGetTime() > nextRoam || BFL&BFL_HUNTING ){
-			
 			vector dir = llRot2Fwd(llEuler2Rot(<0,0,llFrand(TWO_PI)>));
 			
 			// Exponentially grow the area it can roam
@@ -755,6 +699,7 @@ handleTimer( "A" )
 		
 		
 	}
+	/*
 	else if( STATE == STATE_EVENT ){
 	
 	}
@@ -762,7 +707,7 @@ handleTimer( "A" )
 	else if( STATE == STATE_HUNT_PRE ){
 		// Do nothing
 	}
-
+	*/
     
 
 end
@@ -779,7 +724,7 @@ handleMethod( GhostMethod$sendToChair )
 		return;
 	}
 	
-	Rlv$sit( caughtHud, llGetKey(), TRUE );
+	raiseEvent(GhostEvt$caught, caughtHud + caughtSeat);
 	setTimeout("IDL", 10);	// Go idle again
 	
 end
@@ -791,7 +736,7 @@ handleTimer( "IDL" )
 	toggleMesh(0);
 end
 
-handleTimer( "CH0" )
+onGhostAuxCaughtSat()
 	
 	setTimeout("CH1", 2);
 	
@@ -834,16 +779,16 @@ onStateEntry()
     stopAllObjectAnimations()
     llStartObjectAnimation("hugeman_idle");
     //llStartObjectAnimation("hugeman_walk");
-    llSitTarget(<.6,0,-.6>, llEuler2Rot(<0,0,PI>));
     setInterval("A", 0.25);
 	addListen(0);
 	Portal$scriptOnline();
-	toggleMesh(0);
-	llStopSound();
+	
+	
 	#ifdef FETCH_PLAYERS_ON_COMPILE
 	cacheNodes();
 	Level$forceRefreshPortal();
     #endif
+	
 	Level$raiseEvent(LevelCustomType$GHOST, LevelCustomEvt$GHOST$spawned, []);
 	
 end
@@ -862,58 +807,35 @@ onListen( chan, message )
 
 end
 
-onChanged( change )
-
-    if( change & CHANGED_LINK ){
-        
-        key ast = llAvatarOnSitTarget();
-        if( ast ){
-			
-			if( ast == llGetOwnerKey(caughtHud) ){
-				
-				llRequestPermissions(ast, PERMISSION_TRIGGER_ANIMATION);
-				setTimeout("CH0", 2);
-				
-			}
-			else
-				llUnSit(ast);
-		}
-		else{
-			llStopObjectAnimation("hugeman_grab_active");
-			llStopObjectAnimation("hugeman_grab_idle");
-		}
-    }
-    
-end
-    
-onRunTimePermissions( perm )
-    
-    if( perm & PERMISSION_TRIGGER_ANIMATION ){
-        
-        llStartObjectAnimation("hugeman_grab_active");
-        llStartAnimation("hugeman_av_grapple");
-        llSleep(.5);
-        llStartObjectAnimation("hugeman_grab_idle");
-        llStartAnimation("hugeman_av_grapple_idle");
-        
-    }
-
-end
-
 
 /* METHODS */
 handleOwnerMethod( GhostMethod$toggleHunt )
 	
-	
 	if( argInt(0) ){
 	
 		qd("Starting hunt");
-		startHunt();
+		playerFootsteps = [];
+		forPlayer(index, player)
+			playerFootsteps += 0;
+		end
+		BFL = BFL&~BFL_HUNT_HAS_LOS;
+		BFL = BFL&~BFL_HUNT_HAS_POS;
+		huntTarget = "";
+		huntLastSeenPos = ZERO_VECTOR;
+		
+		BFL = BFL|BFL_HUNTING;
+		setState(STATE_HUNT_PRE);
+		toggleWalking(FALSE);
+		toggleMesh(1.0);
+		raiseEvent(GhostEvt$hunt, TRUE);
+		llSetKeyframedMotion([], [KFM_COMMAND, KFM_CMD_STOP]);
+		setTimeout("HUNT", 3);	// Start walking
 		
 	}	
 	else{
 		
 		BFL = BFL&~BFL_HUNTING;
+		raiseEvent(GhostEvt$hunt, FALSE);
 		// Don't warp back if we caught someone
 		if( STATE != STATE_EVENT ){
 			
@@ -934,10 +856,12 @@ handleTimer( "HUNT" )
 	setState(STATE_IDLE);
 end
 
+
+
 handleOwnerMethod( GhostMethod$setType )
 
 	ghostType = argInt(0);
-	evidenceType = argInt(1);
+	int evidenceType = argInt(1);
 	raiseEvent(GhostEvt$type, ghostType + evidenceType);
 	
 end
