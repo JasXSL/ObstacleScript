@@ -4,7 +4,7 @@
 #define GhostAuxMethod$setLight 1			// (bool)on - Sets whether the light is on in the room of the ghost.
 
 #define GhostAux$setLight( on ) \
-	runOmniMethod("Ghost", GhostAuxMethod$setLight, on)
+	runOmniMethod("GhostAux", GhostAuxMethod$setLight, on)
 
 
 #define GhostAuxEvt$caughtSat 1				// void - Caught player was sat on the ghost

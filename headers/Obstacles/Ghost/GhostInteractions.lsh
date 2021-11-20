@@ -22,12 +22,17 @@
 // Level events
 #define LevelCustomType$GHOSTINT "oGhostInt"
 	#define LevelCustomEvt$GHOSTINT$interacted 1		// (key)id, (int)powerful - Ghost has interacted with something. May wanna give an EMF reading etc.
-			
+	#define LevelCustomEvt$GHOSTINT$power 2				// args based on ghost type - Ghost has used its power (if it has one).
+	
 #define onGhostInteraction( ghost, asset, power ) \
 	if( isEventLevelCustom() AND argStr(1) == LevelCustomType$GHOSTINT AND argInt(2) == LevelCustomEvt$GHOSTINT$interacted ){ \
 		key ghost = argKey(0); \
 		key asset = argStr(3); \
 		int power = argInt(4);
+#define onGhostPower( ghost, args ) \
+	if( isEventLevelCustom() AND argStr(1) == LevelCustomType$GHOSTINT AND argInt(2) == LevelCustomEvt$GHOSTINT$power ){ \
+		key ghost = argKey(0); \
+		list args = llDeleteSubList(METHOD_ARGS, 0, 2);
 		
 
 

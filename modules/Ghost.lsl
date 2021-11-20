@@ -25,7 +25,7 @@ vector alignPos;            // Fwd or behind the node we're going to
 integer walking;
 
 // Behavior
-integer ghostType = GhostConst$type$succubus;
+integer GHOST_TYPE = GhostConst$type$succubus;
 
 // State manager
 integer STATE; 
@@ -40,7 +40,7 @@ vector roamTarget;          // Position we're roaming towards
 key chaseTarget;            // Player we're chasting
 float nextRoam;       		// llGetTime() of when we finished the last roam
 float lastWarp;				// llGetTime of when we last went to the ghost room
-float lastReturn;
+float lastReturn = -26;		// -26 means it'll have 4 sec to cache the nodes when spawned, then immediately roam
 float lastFootSound;		// Used when hunting to generate footsteps
 
 vector spawnPos;
@@ -51,13 +51,14 @@ setState( int st ){
 	if( STATE == st )
 		return;
 		
-	if( STATE == STATE_ROAM && st == STATE_IDLE )
+	if( st == STATE_IDLE )
 		nextRoam = llGetTime()+1+llFrand(5);
 
 	if( STATE == STATE_CHASING )
 		chaseFailed = 0;
-
+		
 	STATE = st;
+	//llSetText((str)STATE, ONE_VECTOR, 1);
 	
 }
 
@@ -71,6 +72,22 @@ setState( int st ){
 #define BFL_HUNT_HAS_LOS 0x10	// We currently have line of sight to our target
 #define BFL_HUNT_HAS_POS 0x20	// LOS lost, but we have their last visible coordinates
 integer BFL;
+
+// 
+list getDoorData( key door ){
+	
+	list desc = split(prDesc(prRoot(door)), "$$");
+	integer i;
+	for(; i < count(desc); ++i ){
+		
+		list spl = split(l2s(desc, i), "$");
+		if( l2s(spl, 0) == Desc$TASK_DOOR_STAT )
+			return spl;
+			
+	}
+	return [];
+	
+}
 
 warpToGhostRoom(){
 
@@ -115,26 +132,20 @@ integer walkTowards( vector pos ){
 	vector gp = llGetPos();
 	vector pp = pos;
 	list ray;
-	// Door detection when pathing or hunting towards a position
-	if( STATE == STATE_PATHING || huntLastSeenPos != ZERO_VECTOR ){
+	// Door detection when hunting
+	if( BFL&BFL_HUNTING && (STATE == STATE_PATHING || huntLastSeenPos != ZERO_VECTOR) ){
 	
 		ray = llCastRay(gp, gp+llVecNorm(pp-gp), RC_DEFAULT);
 		if( l2i(ray, -1) ){
 			
 			key door = l2k(ray, 0);
-			list desc = split(prDesc(prRoot(door)), "$$");
-			integer i;
-			for(; i < count(desc); ++i ){
+			list desc = getDoorData(door);
+			// Door not already fully open
+			if( l2i(desc, 1) < 2 ){
 				
-				list spl = split(l2s(desc, i), "$");
-				if( l2s(spl, 0) == Desc$TASK_DOOR_STAT && l2i(spl, 1) < 2 ){
-					
-					GhostInteractions$objectTouched( door );
-					Door$setRotPercTarg( prRoot(door), "*", 1 );
-					
-				}
-				
-
+				GhostInteractions$objectTouched( door );
+				Door$setRotPercTarg( prRoot(door), "*", 1 );
+			
 			}
 			
 		}
@@ -153,10 +164,12 @@ integer walkTowards( vector pos ){
 
 	// Find where to step
 	vector fwd = llVecNorm(<pp.x, pp.y, 0>-<gp.x, gp.y, 0>)*speed;
+	
 	// Can step up on heights hip level or 1m below
-	ray = llCastRay(gp, gp+fwd-<0,0,2+hover>, RC_DEFAULT + RC_DATA_FLAGS + RC_GET_NORMAL);
+	ray = ignoreDoor(llCastRay(gp, gp+fwd-<0,0,2+hover>, RC_DEFAULT + RC_DATA_FLAGS + RC_GET_NORMAL + RC_MAX_HITS + 2 ), TRUE);
 	vector v = l2v(ray, 2);
-	list fwdRay = llCastRay(gp, gp+fwd*.5, RC_DEFAULT);
+	list fwdRay = ignoreDoor(llCastRay(gp, gp+fwd*.5, RC_DEFAULT + RC_MAX_HITS + 2 ), true);
+
 	if( l2i(ray, -1) < 1 || l2i(fwdRay, -1) || v.z < .2 )
 		return FALSE;
 		
@@ -177,6 +190,26 @@ integer walkTowards( vector pos ){
 	
 	return TRUE;
 
+}
+
+// Removes doors from a raycast
+list ignoreDoor( list ray, int hasNormal ){
+
+	int i; int n = 2+(hasNormal>0);
+	for(; i < count(ray)/2 && count(ray) > 1; ++i ){
+	
+		list door = getDoorData(l2k(ray, i*n));
+		if( door != [] ){
+		
+			ray = llDeleteSubList(ray, i*n, i*n+1);
+			--i;
+			
+		}
+	
+	}
+	return llListReplaceList(ray, (list)(count(ray)/n), -1, -1);
+	
+	
 }
 
 
@@ -443,12 +476,34 @@ handleTimer( "A" )
 	if( STATE == STATE_IDLE ){
 	
 		// Every 30 sec go back to ghost room or try to go to a completely random room if not at home
-		if( ~BFL&BFL_HUNTING && (llGetTime()-lastReturn > 30 || lastReturn <= 0) ){
+		if( ~BFL&BFL_HUNTING && llGetTime()-lastReturn > 30 ){
 			
 			
 			
 			int startRoom = pointInRoom( spawnPos );
 			int curRoom = pointInRoom( llGetPos() );
+			
+			
+			// GHOST BEHAVIOR - GOORYO - Request a room with plumbing
+			if( GHOST_TYPE == GhostConst$type$gooryo ){
+				
+				if( startRoom != curRoom ){
+
+					llSetKeyframedMotion([], [KFM_COMMAND, KFM_CMD_STOP]);
+					llSleep(.1);
+					llSetRegionPos(spawnPos);
+					lastReturn = llGetTime();
+					
+				}
+				else{
+					
+					Nodes$getPlumbedRoom( "PL", GhostMethod$cbPlumbing );
+					lastReturn = llGetTime()-28;	// Attempt every 2 sec until it succeeds
+					
+				}
+				return;
+				
+			}
 
 			// Go back
 			if( startRoom != curRoom ){
@@ -459,7 +514,7 @@ handleTimer( "A" )
 			else{
 				
 				vector rng = llGetPos()+<llFrand(20)-10,llFrand(20)-10,llFrand(15)-5>;
-				lastReturn = llGetTime()-25;	// Attempt every 5 sec until it succeeds
+				lastReturn = llGetTime()-28;	// Attempt every 2 sec until it succeeds
 				int gRoom = pointInRoom(rng);
 				if( ~gRoom && gRoom != curRoom )
 					Nodes$getPath( GhostMethod$followNodes, llGetPos(), rng );
@@ -475,7 +530,7 @@ handleTimer( "A" )
 			// Exponentially grow the area it can roam
 			float maxDist = llPow(0.05*(llGetTime()-lastWarp), 1.3)+1;
 			if( BFL&BFL_HUNTING )
-				maxDist = 50;
+				maxDist = 5;
 				
 			float dist = maxDist;
 			if( dist > 5 )
@@ -532,10 +587,23 @@ handleTimer( "A" )
 	
 	else if( STATE == STATE_PATHING ){
 		
+		// Prevents stuckage
+		while( gotoPortals != [] && prPos(l2k(gotoPortals, 0)) == ZERO_VECTOR )
+			gotoPortals = llDeleteSubList(gotoPortals, 0, 0);
+		
 		if( !count(gotoPortals) ){
 	
 			toggleWalking(false);
-			setState(STATE_IDLE);
+			
+			int startRoom = pointInRoom( spawnPos );
+			int curRoom = pointInRoom( llGetPos() );
+			if( startRoom == curRoom ){
+				roamTarget = spawnPos;
+				setState(STATE_ROAM);
+			}
+			else 
+				setState(STATE_IDLE);
+						
 			return;
 			
 		}
@@ -860,9 +928,9 @@ end
 
 handleOwnerMethod( GhostMethod$setType )
 
-	ghostType = argInt(0);
+	GHOST_TYPE = argInt(0);
 	int evidenceType = argInt(1);
-	raiseEvent(GhostEvt$type, ghostType + evidenceType);
+	raiseEvent(GhostEvt$type, GHOST_TYPE + evidenceType);
 	
 end
 
@@ -872,9 +940,27 @@ handleOwnerMethod( GhostMethod$smudge )
 	
 end
 
+handleOwnerMethod( GhostMethod$cbPlumbing )
+	
+	if( BFL&BFL_HUNTING )
+		return;
+			
+	str cb = argStr(0);
+	vector pos = argVec(1);
+	setState(STATE_IDLE);
+	llSetKeyframedMotion([], [KFM_COMMAND, KFM_CMD_STOP]);
+	llSleep(.2);
+	list ray = llCastRay(pos, pos-<0,0,3>, RC_DEFAULT);
+	if( l2i(ray, -1) == 1 )
+		llSetRegionPos(l2v(ray, 1)+<0,0,hover>);
+	
+
+end
+
 handleOwnerMethod( GhostMethod$followNodes )
     
     gotoPortals = METHOD_ARGS;
+	qd("Got portals " + gotoPortals);
     calculateAlignPos();
 	setState(STATE_PATHING);
 	lastReturn = llGetTime();	// Node follow should only happen when roaming or during a hunt. Both are good times to update the timer.

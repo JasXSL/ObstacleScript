@@ -24,6 +24,7 @@
 #define Desc$TASK_GHOST_INTERACTIVE "GI"	// (int)flags, (vec)push_dir - Used in ghost games to indicate that ghosts can interact with something
 	#define DescConst$GI$auto_push 0x1				// Allow GhostInteractive to handle push
 	#define DescConst$GI$auto_stains 0x2			// Sets alpha on any links with the name "STAINS"
+#define Desc$TASK_LIGHT_SWITCH "LS"		// Stores light swtich state. 0 = off, 1 = on
 	
 
 /*

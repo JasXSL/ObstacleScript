@@ -12,6 +12,7 @@ int GHOST_TYPE;
 int EVIDENCE_TYPES;
 key lastSound;
 float LAST_SOUND_TIME;
+float LAST_POWER;
 
 // Searches desc for a specific type
 list getDescType( key id, str type ){
@@ -43,9 +44,16 @@ integer isInteractive( key id ){
 		return 1;
 	if( getDescType(id, Desc$TASK_GHOST_INTERACTIVE) ){
 		
+		// GHOST BEHAVIOR :: BARE - Don't turn on lights
+		list ls = getDescType(id, Desc$TASK_LIGHT_SWITCH);
+		if( GHOST_TYPE == GhostConst$type$bare && ls != [] && !l2i(ls, 1) )
+			return -1;
+			
 		return 0;
 		
 	}
+	
+	
 	
     return -1;
 
@@ -201,6 +209,41 @@ onGhostTouch( key targ, int power ){
 }
 
 
+// Uses a ghost power, returns TRUE on success
+int usePower( list viable, int isPlayerInteract ){
+
+	// GHOST BEHAVIOR - GOORYO - Teleport
+	if( GHOST_TYPE == GhostConst$type$gooryo ){
+		
+		// Todo: teleport
+		return TRUE;
+		
+	}
+	// GHOST BEHAVIOR - Obukakke - Leave stains on everything nearby without EMF
+	if( GHOST_TYPE == GhostConst$type$obukakke && !isPlayerInteract && count(viable) ){
+		
+		integer i;
+		for(; i < count(viable); ++i ){
+		
+			key targ = l2k(viable, i);
+			Door$setStainsTarg( targ, "*", TRUE );
+			GhostInteractive$interact( targ, GhostInteractiveConst$INTERACT_ALLOW_STAINS, 0 );
+			
+		}
+		Level$raiseEvent(LevelCustomType$GHOSTINT, LevelCustomEvt$GHOSTINT$power, []);
+
+		return TRUE;
+	}
+		
+	// Failed, reset last time we used power
+	return FALSE;
+	
+}
+
+
+
+
+
 #include "ObstacleScript/begin.lsl"
 
 onStateEntry()
@@ -283,20 +326,53 @@ handleMethod( GhostInteractionsMethod$interact )
 	vector gp = llGetPos();
 	int power = getGhostPower();
 	
-	float playerChance = 0.5;
-	if( GHOST_TYPE == GhostConst$type$powoltergeist )
-		playerChance = 0.2;
-	else if( GHOST_TYPE == GhostConst$type$imp )
-		playerChance = 0.8;
+	int isUnlitBare = GHOST_TYPE == GhostConst$type$bare && !GhostGet$inLitRoom( llGetObjectDesc() );
 	
-	if( llFrand(1.0) < .5 ){
+	float playerChance = 0.3;	// 30% chance of touching a player if there's other things nearby
+	// GHOST BEHAVIOR :: POWOLTERGEIST
+	if( GHOST_TYPE == GhostConst$type$powoltergeist )
+		playerChance = 0.05;
+	// GHOST BEHAVIOR :: IMP
+	else if( GHOST_TYPE == GhostConst$type$imp )
+		playerChance = 0.75;
+	// GHOST BEHAVIOR :: BARE
+	else if( isUnlitBare )
+		playerChance = 0.5;
+	
+	int isPlayerInteract = llFrand(1.0) < playerChance || !count(viable);
+	if( isPlayerInteract ){
+	
+		list objs = viable;
+		viable = [];
 		forPlayer( index, player )
 			
 			if( llVecDist(prPos(player), gp) < 2.5 && ~llGetAgentInfo(player) & AGENT_SITTING )
 				viable += player;
 			
 		end
+		// No viable players, try going back to objs
+		if( !count(viable) ){
+			
+			isPlayerInteract = FALSE;
+			viable = objs;
+			
+		}
+		
 	}
+	
+	
+	// 10% chance of using its power. Can only use its power every 30 sec
+	if( llFrand(1.0) < 0.1 && llGetTime()-LAST_POWER > 30 ){
+		
+		if( usePower(viable, isPlayerInteract) ){
+			
+			LAST_POWER = llGetTime();
+			return;
+			
+		}
+	
+	}
+	
 
 	// We can generate a sound if there's nothing viable
 	if( !count(viable) ){
@@ -331,7 +407,11 @@ handleMethod( GhostInteractionsMethod$interact )
 			key hud = l2k(HUDS, pos);
 			//qd(HUDS);
 			int clothes = Rlv$getDesc$clothes( hud )&1023;	// 1023 = 10 bit
-			if( llFrand(1.0) < 0.15 && clothes && power ){
+			float cc = 0.15;
+			if( isUnlitBare )
+				cc *= 3;
+			
+			if( llFrand(1.0) < cc && clothes && power ){
 				
 				// 682 = fully dressed. +1 because 0 is ignore
 				stripPlayer(hud, clothes >= 682);
@@ -370,8 +450,9 @@ handleMethod( GhostInteractionsMethod$interact )
 		if( EVIDENCE_TYPES & GhostConst$evidence$stains )
 			flags = flags|GhostInteractiveConst$INTERACT_ALLOW_STAINS;
 			
+		// GHOST BEHAVIOR :: POWOLTERGEIST
 		if( GHOST_TYPE == GhostConst$type$powoltergeist )
-			speed += llFrand(2);
+			speed += llPow(llFrand(2),2);
 
 		GhostInteractive$interact( targ, flags, speed );
 		

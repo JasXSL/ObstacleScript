@@ -7,18 +7,20 @@
 	#define debugUncommon(text)
 #endif
 
+#define ROOMS_STRIDE 3
+
 key GHOST = "59556ee0-6fe3-ecbb-f28e-be357ac62685";
 int EVIDENCE_TYPES;
 #define HAS_TEMPS (EVIDENCE_TYPES & GhostConst$evidence$temps)
 
 // Note that the same index can appear multiple times
 #define RM_INDEX 0      // (Position in ROOMS list divided by ROOMS stride)
-#define RM_POS 1
-#define RM_ROT 2
-#define RM_SCALE 3
+#define RM_POS 1		// Position of the spawn
+#define RM_ROT 2		// Rotation of the spawn
+#define RM_SCALE 3		// Scale of the spawn
 
 #define RM_STRIDE NodesConst$rmStride
-list ROOM_MARKERS = [];
+list ROOM_MARKERS = [];	// Contains data from the spawner library
 
 int breaker;		// Breaker on
 list roomLights;	// Lights of a room. Each index corresponds to an index in ROOMS. Note that this relies on readable name, which means only the first entry of that readable is toggled.
@@ -31,9 +33,9 @@ list portals;      // 8bArray roomIndexes, uuid
 
 int GAME_ACTIVE;
 
-#define getRoomIndexByName(name) llListFindList(llList2ListStrided(ROOMS, 0, -1, 2), (list)name)
-#define getRoomIndexByReadable(name) llListFindList(llList2ListStrided(llDeleteSubList(ROOMS, 0,0), 0, -1, 2), (list)name)
-#define getRoomNameByIndex(index) l2s(ROOMS, (index)*2)
+#define getRoomIndexByName(name) llListFindList(llList2ListStrided(ROOMS, 0, -1, ROOMS_STRIDE), (list)name)
+#define getRoomIndexByReadable(name) llListFindList(llList2ListStrided(llDeleteSubList(ROOMS, 0,0), 0, -1, ROOMS_STRIDE), (list)name)
+#define getRoomNameByIndex(index) l2s(ROOMS, (index)*ROOMS_STRIDE)
 
 list portal2names( integer bitArray8 ){
     
@@ -45,6 +47,7 @@ list portal2names( integer bitArray8 ){
 }
 
 // Returns the absolute positions in the ROOM_MARKERS array where roomIndex is at
+// The reason it can return multiple ones is that one room can have multiple markers. Such as the front bedroom which would clip into the bathroom otherwise.
 list getRoomMarkersByRoomIndex( integer roomIndex ){
     
     list out;
@@ -179,8 +182,8 @@ string _gpr( vector point, int ret ){
 			if( ret == GPR_INDEX )
 				return (str)idx;
 			if( ret == GPR_READABLE )
-				return l2s(ROOMS, idx*2+1);
-            return l2s(ROOMS, idx*2);
+				return l2s(ROOMS, idx*ROOMS_STRIDE+1);
+            return l2s(ROOMS, idx*ROOMS_STRIDE);
         
 		}
 		
@@ -189,8 +192,6 @@ string _gpr( vector point, int ret ){
     return "";
     
 }
-
-
 
 #define getPosRoom(point) _gpr(point, GPR_LABEL)
 #define getPosReadable(point) _gpr(point, GPR_READABLE)
@@ -258,7 +259,7 @@ resetTempData(){
 	roomTemps = [];
 	breaker = false;
 	integer i;
-	for(; i < count(ROOMS); i += 2 ){
+	for(; i < count(ROOMS); i += ROOMS_STRIDE ){
 		roomTemps += 20;
 		roomLights += FALSE;
 	}
@@ -278,10 +279,10 @@ resetTempData(){
 
 #include "ObstacleScript/begin.lsl"
 
-
+// Caching from the spawner
 onSpawnerGetGroups( callback, spawns )
     
-    list rindex = llList2ListStrided( ROOMS, 0, -1, 2 );
+    list rindex = llList2ListStrided( ROOMS, 0, -1, ROOMS_STRIDE );
     if( callback == "init" ){
 
         integer i;
@@ -324,7 +325,7 @@ onLevelCustomSpiritBoxTrigger( spiritBox )
 		// Lights must be off
 		if( l2i(roomLights, index) && breaker ){
 			success = false;
-			qd("SB Fail: Lights on");
+			//qd("SB Fail: Lights on");
 		}
 		// Player must be solo
 		else{
@@ -340,9 +341,10 @@ onLevelCustomSpiritBoxTrigger( spiritBox )
 			}
 			
 			success = nrPlayers < 2 && nrPlayers;
+			/*
 			if( !success )
 				qd("SB Fail: Too many players" + nrPlayers);
-			
+			*/
 			
 		}
 		
@@ -356,7 +358,7 @@ onLevelCustomSpiritBoxTrigger( spiritBox )
 		)
     ){
         success = FALSE;
-		qd("SB Fail: Too far or not this evidence" + EVIDENCE_TYPES + dist);
+		//qd("SB Fail: Too far or not this evidence" + EVIDENCE_TYPES + dist);
     }
     SpiritBox$start( spiritBox, success );
 
@@ -370,7 +372,7 @@ onStateEntry()
     Spawner$getGroups("init", "rooms");
     
 	PLAYERS = [(str)llGetOwner()];
-    list unfoundRooms = llList2ListStrided(ROOMS, 0, -1, 2);
+    list unfoundRooms = llList2ListStrided(ROOMS, 0, -1, ROOMS_STRIDE);
     // Sanity check our portals
     links_each( nr, name,
         
@@ -431,10 +433,12 @@ handleTimer( "POS" )
 
 	if( llKey2Name(GHOST) ){
 		
-		int ri = getPosIndex(prPos(GHOST));
-		if( l2i(roomLights, ri) != ghostInLight ){
+		str room = getPosReadable(prPos(GHOST));
+		int lit = l2i(roomLights, getRoomIndexByReadable(room)) && breaker;
+		
+		if( lit != ghostInLight ){
 			
-			ghostInLight = ri;
+			ghostInLight = lit;
 			GhostAux$setLight( ghostInLight );
 		
 		}
@@ -530,7 +534,7 @@ handleTimer( "TICK" )
 	vector ghostPos = prPos(GHOST);
 	string roomLabel = getPosRoom(ghostPos);
 	int room = getRoomIndexByName(roomLabel);					// Get the label
-	room = getRoomIndexByReadable(l2s(ROOMS, room*2+1));	// Only the first readable is used, so we need to get the first one here
+	room = getRoomIndexByReadable(l2s(ROOMS, room*ROOMS_STRIDE+1));	// Only the first readable is used, so we need to get the first one here
 	
 	int cap = 29;
 	if( HAS_TEMPS )
@@ -602,7 +606,7 @@ handleTimer( "TICK" )
 			
 			amt = 1;	// Check if lights are off
 			int room = getRoomIndexByName(room);					// Get the label
-			room = getRoomIndexByReadable(l2s(ROOMS, room*2+1));	// Only the first readable is used, so we need to get the first one here
+			room = getRoomIndexByReadable(l2s(ROOMS, room*ROOMS_STRIDE+1));	// Only the first readable is used, so we need to get the first one here
 			if( !breaker || !l2i(roomLights, room) )
 				amt = 2;											// 3x drain in the dark 
 				
@@ -671,12 +675,40 @@ handleMethod( NodesMethod$getPath )
         debugUncommon("Trying to path from "+currentRoom+"to"+room);
         list nodes = pathToNodes(path);
         debugUncommon(path);
-        
+        debugUncommon(nodes);
         runMethod(SENDER_KEY, ss, cb, nodes);
         
     }
     
 
+end
+
+handleOwnerMethod( NodesMethod$getPlumbedRoom )
+	
+	str cb = argStr(0);
+	str senderScript = argStr(1);
+	int cbMethod = argInt(2);
+	int i;
+	list viableIdx;
+	for(; i < count(ROOMS); i += ROOMS_STRIDE ){
+		
+		// May go to the current room, but that's fine to keep the ghost there a bit longer
+		if( l2i(ROOMS, i+2) & ROOM_PLUMBED )
+			viableIdx += i/ROOMS_STRIDE;
+		
+	}
+	if( viableIdx == [] )
+		return;
+		
+	int ri = floor(llFrand(count(viableIdx)));
+	list markers = getRoomMarkersByRoomIndex( ri );
+	if( markers == [] )
+		return;
+	int out = floor(llFrand(count(markers)));
+	vector pos = l2v(ROOM_MARKERS, out+RM_POS);
+	
+	runMethod(SENDER_KEY, senderScript, cbMethod, cb + pos);
+	
 end
 
 handleMethod( NodesMethod$getRoomName )
@@ -713,7 +745,7 @@ handleMethod( NodesMethod$getTemp )
 	if( room ){
 	
 		integer ri = getRoomIndexByName(room);
-		ri = getRoomIndexByReadable(l2s(ROOMS, ri*2+1));	// Only the first readable is used, so we need to get the first one here
+		ri = getRoomIndexByReadable(l2s(ROOMS, ri*ROOMS_STRIDE+1));	// Only the first readable is used, so we need to get the first one here
 		temp = l2i(roomTemps, ri);
 		
 	}
@@ -725,6 +757,7 @@ end
 
 onLevelCustomGhostSpawned( ghost )
     GHOST = ghost;
+	ghostInLight = -1;
 end
 
 #include "ObstacleScript/end.lsl"

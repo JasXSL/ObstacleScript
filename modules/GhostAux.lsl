@@ -6,6 +6,8 @@
 #include "ObstacleScript/headers/Obstacles/Ghost/Ghost.lsh"
 #include "ObstacleScript/index.lsl"
 
+int GHOST_TYPE;
+int EVIDENCE_TYPES;
 
 list SEEN_PLAYERS;
 
@@ -23,6 +25,19 @@ key caughtHud;
 // [1] aggression = More prone to hunting
 // [2] active = More prone to interacting with things
 updateDesc(){
+
+
+	int agg = AGG;
+	
+	// GHOST BEHAVIOR :: BARE
+	if( GHOST_TYPE == GhostConst$type$bare ){
+	
+		if( GhostGet$inLitRoom( llGetObjectDesc() )
+			aggression -= 10;
+		else
+			aggression += 10;
+		
+	}
 
 	list out = (list)
 		LIT + AGG + ACT
@@ -206,10 +221,18 @@ onRunTimePermissions( perm )
 
 end
 
+onGhostType( type, evidence )
+	
+	GHOST_TYPE = type;
+	EVIDENCE_TYPES = evidence;
+	
+end
+
 
 handleOwnerMethod( GhostAuxMethod$setLight )
 	LIT = argInt(0);
 	updateDesc();
+	//qd("Setting light" + LIT);
 end
 
 
