@@ -1,32 +1,33 @@
-x = should be fixed, ? = not sure if fixed, - todo
+x = should be fixed, ? = not sure if fixed, - todo, u = unable to reproduce
 Phasmo:
 	? Weegie board not working
 	? Motion detector not working when placed by coop
-	? Make the ghost leave EMF when touching a door while leaving
-
-	? Start map when front door opens
-	- Add sounds to sprit box
-	- Add ghost noise for parabolic
-	- Limit third person cam to 3m
-	- Spawn additional tools
-	- Attach game tool on start, detach on end
+	? Mute dead players, but unlock their camera
+	? Test dead players in coop
+	? Make sure players unsit after ending a level
+	? Test if ghost can track you into the basement during a hunt
+	
+	- Return players equipment when they die
+	- Make it more active when players ask it for a sign
+	- Add stats
+	- Some kind of radio
+	- Add ghost events
 	- Add ghost behavior
 	- Add rewards
-	- Add ghost events
-	- Limit players to whisper
-	- Add weegie board
-	- Some kind of radio
-	- Disable flying
-	- Board not letting coop players interact
-	- Don't affect temps until front door open
-	
 	- All living players must be out of the van to end
-	- Enforce mouselook (note: currently broken on firestorm). Method exists tho for when it's fixed.
+	- Attach game tool on start, detach on end
 	- Allow games without the host
 	
-New yeetable meshes:
-	- Tissue box
+	u Board not letting coop players interact
 	
+
+
+
+
+
+
+
+
 	Metadata needed for descs:
 	Any interactive:
 		- CSV of labels they're in

@@ -19,7 +19,7 @@
 	#define LevelEvt$mainMenu 1				// Raised when the owner clicks the level controller
 	#define LevelEvt$custom 2				// (key)sender, (str)script, (int)evt, (var)data1, (var)data2... These events are defined in resources/LevelCustomEvents
 	#define LevelEvt$init 3					// Level initialized
-	
+	#define LevelEvt$playerJoined 4			// (key)player, (key)hud - Raised when a player joins or re-joins
 
 	#define LevelConst$REMOTE_SCRIPTS (list)\
 		"Rezzer" + \
@@ -30,6 +30,11 @@
 		
 	#define onLevelInit() \
 		if( SENDER_SCRIPT IS "Level" AND EVENT_TYPE IS LevelEvt$init ){
+		
+	#define onLevelPlayerJoined( player, hud ) \
+		if( SENDER_SCRIPT IS "Level" AND EVENT_TYPE IS LevelEvt$playerJoined ){ \
+			key player = argKey(0); \
+			key hud = argKey(1);
 		
 	#define isEventLevelCustom() \
 		(SENDER_SCRIPT IS "Level" AND EVENT_TYPE IS LevelEvt$custom)

@@ -31,7 +31,7 @@ setSprite( integer sprite ){
     llSetLinkPrimitiveParamsFast(P_SPIRITBOX, (list)
         PRIM_TEXTURE + 
         FACE + 
-        "1e1646ca-e9fb-b30d-5c19-6a51207968a0" +
+        "43c422ac-4a73-2de5-0b7b-fa41fc457559" +
         <SCALEX, SCALEY, 0> +
         <
             STARTX + x*1.0/8,
@@ -47,22 +47,26 @@ setSprite( integer sprite ){
 respond(){
     
     list responses = (list) // 4 bit arrays, big endian
-        0x4+    // Lewd
-        0x56+   // Nice behind
-        0x5C+   // Nice beans
-        0x5F+   // Nice cock
-        0xD+    // Youuuu
-        0x9+    // owo
-        0xAB+   // uwan sumfuk
-        0xAC+   // uwan beans
-        0x6E+   // Behind you
-        0x4E   // Lewd you
+        0x56 + "beb83e3f-a9c5-7d5a-e6c0-269192f76bbb" +   // Nice behind
+        0x5C + "c6932327-af78-32d0-a12b-5980e650a0da" +   // Nice beans
+        0x5F + "7d99f539-0b47-fb55-5f1b-877c4eda0ac9" +   // Nice cock
+        0xD + "8a39b219-d07e-53b7-32b8-84e00018b7a4" +    // Youuuu
+        0x9 + "dc2bf67d-ca99-2114-1e95-550bed69e518" +    // owo
+        0xA + "c263e79a-2dd4-4685-61e2-d2bb5dc8e81b" +   // E
+        0x6E + "fd4f046d-f6be-fb62-dc02-1302b1c0ec12" +   // Behind you
+		0x6 + "9014f0b6-a69e-f78d-24ac-9debcc01a2bb" +		// Behind
+		0x4B + "5378dd3c-e414-7425-6700-eab723bcdc12" + 	// Blow me
+		0x7E + "f70f8448-2cd3-c5b7-8df6-3834dd31f7ec" 		// No you
     ;
     
-    integer response = l2i(responses, llFloor(llFrand(count(responses))));
+	integer res = llFloor(llFrand(count(responses)/2))*2;
+    integer response = l2i(responses, res);
+	key voice = l2k(responses, res+1);
 	
 	if( !SUCCESS )
 		response = 0x78;   // No signal
+    else
+		llPlaySound(voice, 0.3);
     
     SWEEP = [];
     
@@ -79,7 +83,8 @@ respond(){
     
 	SWEEPING = 2;
     setSprite(l2i(SWEEP, 0));
-    SWEEP = llDeleteSubList(SWEEP, 0, 0);
+	
+	SWEEP = llDeleteSubList(SWEEP, 0, 0);
     setInterval("S", .75);
     
 }

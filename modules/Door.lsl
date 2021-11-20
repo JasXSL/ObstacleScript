@@ -35,21 +35,22 @@ key interactor;
 integer locked;
 
 integer doorState;		// closed, 1 = partially open, 2 = fully open
-setDoorState( integer ds ){
+setDoorState( integer ds, int silent ){
 	
 	if( ds == doorState )
 		return;
 		
 	// State was 0 and no longer is = Opened
-	if( doorState == DoorConst$STATE$closed )
+	if( doorState == DoorConst$STATE$closed && !silent )
 		raiseEvent(DoorEvt$open, []);
 	// New state is 0 = closed
-	else if( ds == DoorConst$STATE$closed )
+	else if( ds == DoorConst$STATE$closed && !silent )
 		raiseEvent(DoorEvt$close, []);
 		
 	doorState = ds;
 	
-	Level$raiseEvent(LevelCustomType$DOOR, LevelCustomEvt$DOOR$state, ID + ds);
+	if( !silent )
+		Level$raiseEvent(LevelCustomType$DOOR, LevelCustomEvt$DOOR$state, ID + ds);
 
 	list desc = split(llGetObjectDesc(), "$$");
 	integer i;
@@ -76,7 +77,18 @@ setDoorState( integer ds ){
 
 }
 
-setRot( float z ){
+setRotPerc( float perc, int silent ){
+	
+	if( llFabs(maxRot) < llFabs(minRot) )
+			perc = 1.0-perc;
+	
+	float r = perc*(maxRot-minRot) + minRot;
+	setRot(r, true);
+	stopInteract();
+
+}
+
+setRot( float z, int silent ){
 
 	float tz = llFabs(z);
 	float mar = llFabs(maxRot);
@@ -90,11 +102,11 @@ setRot( float z ){
 	}
 	
 	if( tz >= mar )
-		setDoorState(DoorConst$STATE$opened);
+		setDoorState(DoorConst$STATE$opened, silent);
 	else if( tz <= mir )
-		setDoorState(DoorConst$STATE$closed);
+		setDoorState(DoorConst$STATE$closed, silent);
 	else
-		setDoorState(DoorConst$STATE$mid);
+		setDoorState(DoorConst$STATE$mid, silent);
 		
 	llRotLookAt(llEuler2Rot(<0,0,z>)*startRot, 1, 1);
 
@@ -179,7 +191,7 @@ handleTimer( "A" )
     if( z < minRot || llFabs(z-minRot) < snap )
         z = minRot;
 
-	setRot(z);
+	setRot(z, false);
 
 end
 
@@ -249,19 +261,14 @@ onListen( chan, msg )
 	
 	if( task == DoorTask$setRot ){
 	
-		setRot(l2f(data, 0));
+		setRot(l2f(data, 0), false);
 		stopInteract();
 		
 	}
 	else if( task == DoorTask$setRotPerc ){
 	
 		float perc = l2f(data, 0);
-		if( llFabs(maxRot) < llFabs(minRot) )
-			perc = 1.0-perc;
-		
-		float r = perc*(maxRot-minRot) + minRot;
-		setRot(r);
-		stopInteract();
+		setRotPerc(perc, FALSE);
 		
 	}
 	else if( task == DoorTask$lock ){
@@ -279,6 +286,9 @@ onListen( chan, msg )
 		
 		llSetLinkAlpha(P_STAIN, l2i(data, 0), ALL_SIDES);
 		
+	}
+	else if( task == DoorTask$setRandomPerc && ID != "DO:EXT" ){
+		setRotPerc(llFrand(1), TRUE);
 	}
 
 	

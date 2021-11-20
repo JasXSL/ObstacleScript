@@ -425,6 +425,7 @@ handleInternalMethod( SpawnerMethod$getGroups )
 	METHOD_ARGS = llDeleteSubList(METHOD_ARGS, 0, 0);
 	
 	list out;
+	integer x;
 	integer i;
     for( ; i < count(ASSET_TABLES); ++i ){
         
@@ -434,7 +435,9 @@ handleInternalMethod( SpawnerMethod$getGroups )
             
             list spawn = llJson2List(l2s(data, idx));
             if( ~llListFindList(METHOD_ARGS, (list)l2s(spawn, E_GROUP)) )
-				out += l2s(data, idx);
+				out += mkarr(spawn + x);
+			
+			++x;
 			
         }
         

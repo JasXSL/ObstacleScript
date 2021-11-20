@@ -105,6 +105,7 @@ float sprint = MAX_SPRINT;
 integer sprintPrim;
 float sprintFadeModifier = 1;
 float sprintRegenModifier = 1;
+float camMaxDist;
 
 outputSprint(){
 
@@ -397,6 +398,52 @@ handleMethod( RlvMethod$setClothes )
     }
 	
 	setDesc();
+
+end
+
+handleMethod( RlvMethod$toggleFreeCam )
+	
+	bool allow = argInt(0);
+	str yn = "yn";
+	llOwnerSay("@camunlock="+llGetSubString(yn, !allow, !allow));
+	
+end
+
+handleMethod( RlvMethod$toggleFlying )
+
+	bool allow = argInt(0);
+	str yn = "yn";
+	llOwnerSay("@fly="+llGetSubString(yn, !allow, !allow));
+	
+end
+
+handleMethod( RlvMethod$setCamMaxDist )
+	
+	llOwnerSay("@camdistmax:"+(str)camMaxDist+"=y");
+	float dist = argFloat(0);
+	if( dist >= 0 ){
+		camMaxDist = dist;
+		llOwnerSay("@camdistmax:"+(str)dist+"=n");
+	}
+	
+end
+
+handleMethod( RlvMethod$disableChatLevels )
+	
+	#define bw2int(cn) !(levels&cn), !(levels&cn)
+	int levels = argInt(0);
+	str yn = "ny";
+	list remadd = ["add","rem"];
+	str text = 
+		"@chatwhisper="+llGetSubString(yn, bw2int(RlvConst$dcl$whisper))+","+
+		"chatnormal="+llGetSubString(yn, bw2int(RlvConst$dcl$normal))+","+
+		"chatshout="+llGetSubString(yn, bw2int(RlvConst$dcl$shout))+","+
+		"sendchat="+llGetSubString(yn, bw2int(RlvConst$dcl$all))+","+
+		"recvchat="+llGetSubString(yn, bw2int(RlvConst$dcl$recAll))+","+
+		"sendgesture="+llGetSubString(yn, bw2int(RlvConst$dcl$gesture))+","+
+		"rediremote:10="+l2s(remadd,!(levels&RlvConst$dcl$emote))
+	;
+	llOwnerSay(text);
 
 end
 

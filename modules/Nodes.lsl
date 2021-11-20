@@ -281,7 +281,6 @@ resetTempData(){
 onSpawnerGetGroups( callback, spawns )
     
     list rindex = llList2ListStrided( ROOMS, 0, -1, 2 );
-    
     if( callback == "init" ){
 
         integer i;
@@ -572,10 +571,13 @@ handleTimer( "TICK" )
 		
 	}
 	
+	int npl = count(PLAYERS);
+	float multi = 1.0+(npl-1)*.25;	// 25% faster arousal per player above 1
+	
 	// Handle sanity decay
 	// Check if player is in a room
 	list decay;	// Corresponds to player index
-	for( i = 0; i < count(PLAYERS); ++i ){
+	for( i = 0; i < npl; ++i ){
 		
 		int amt;
 		key player = l2k(PLAYERS, i);
@@ -590,7 +592,7 @@ handleTimer( "TICK" )
 				
 		}
 		
-		decay += amt;
+		decay += (amt*multi);
 		
 	}
 	

@@ -350,12 +350,11 @@ handleMethod( GhostInteractionsMethod$interact )
 		
 		if( llGetTime()-LAST_SOUND_TIME > 10 ){
 		
-			// Todo: Replace with a ghost sound
 			list sounds = [
-				"0c12069d-4963-f5e8-b1c7-3f8f0a89cdf7",
-				"952dfaba-c30f-1ddd-798d-e5e90f7d8156",
-				"49f24b04-fea1-9d3e-ff20-4e5691b72270",
-				"ca631edd-4725-c03f-3fa8-08c0bf6ffbf9"
+				"edb881de-3d1c-775a-7e35-46a00f6b7a30",
+				"e59ab35b-9d96-1c49-af60-aae586272e67",
+				"b7f92130-398b-ddab-5525-060cfca2f9da",
+				"66a0c5a8-3718-2126-d3f6-e4dfbdcda2df"
 			];
 			lastSound = randElem(sounds);
 

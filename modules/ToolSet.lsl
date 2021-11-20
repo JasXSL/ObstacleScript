@@ -474,6 +474,8 @@ end
 onPortalLclickStarted( hud )
 
 	integer tool = activeType();
+	if(!tool)
+		return;
     list toggled = (list)
         ToolsetConst$types$ghost$owometer +
         ToolsetConst$types$ghost$flashlight +
@@ -632,6 +634,20 @@ onListen( ch, msg )
 		dropTool();
 	
 	}
+
+end
+
+handleMethod( ToolSetMethod$hotTemps )
+	
+	vector vr = llRot2Euler(llGetRot());
+	vector as = llGetAgentSize(llGetOwner());
+	llRezAtRoot(
+		"HotTemps", 
+		llGetPos()+<0,0,as.z*.4>+llRot2Fwd(llEuler2Rot(<0,0,vr.z>))*.1, 
+		ZERO_VECTOR, 
+		llEuler2Rot(<0,0,vr.z>), 
+		1
+	);
 
 end
 

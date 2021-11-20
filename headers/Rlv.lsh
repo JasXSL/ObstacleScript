@@ -76,6 +76,22 @@
 
 #define RlvMethod$triggerSound 13		// (key)sound, (float)vol, (key)playerThatCanHear - Triggers a sound. If playerThatCanHear is 1, it uses llPlaySound and stops loopSound
 #define RlvMethod$loopSound 14			// (key)sound, (float)vol
+#define RlvMethod$setCamMaxDist 15		// (float)dist - Sets camera max distance, a value below 0 resets
+#define RlvMethod$disableChatLevels 16	// (int)chats_to_disable - Disables various chat volumes. See below.
+	#define RlvConst$dcl$whisper 0x1
+	#define RlvConst$dcl$normal 0x2
+	#define RlvConst$dcl$shout 0x4
+	#define RlvConst$dcl$all 0x8		// uses sendchat, but allows emotes and gestures
+	#define RlvConst$dcl$recAll 0x10	// Disables receiving chat
+	#define RlvConst$dcl$gesture 0x20	// Disables Sending gestures
+	#define RlvConst$dcl$emote 0x40		// Disables Sending emotes
+	
+	
+#define RlvMethod$toggleFreeCam 17		// (bool)allow - Enables or disables free look
+#define RlvMethod$toggleFlying 18		// (bool)allow - Enables or disables flying
+
+
+
 
 
 #define RlvEvt$supportCubeSpawn 1		// (key)cube_id
@@ -95,10 +111,21 @@
 #define Rlv$setClothSlot( target, slot, state ) \
 	runMethod( target, "Rlv", RlvMethod$setClothes, (state<<(slot*2)))
 
+#define Rlv$disableChatLevels( target, levels ) \
+	runMethod( target, "Rlv", RlvMethod$disableChatLevels, (levels) )
+
+#define Rlv$toggleFreeCam( target, enable ) \
+	runMethod( target, "Rlv", RlvMethod$toggleFreeCam, (enable) )
+
+#define Rlv$toggleFlying( target, enable ) \
+	runMethod( target, "Rlv", RlvMethod$toggleFlying, (enable) )
+
 #define Rlv$triggerSound( target, sound, vol ) \
 	runMethod( target, "Rlv", RlvMethod$triggerSound, sound + vol)
+
 #define Rlv$playSound( target, sound, vol ) \
 	runMethod( target, "Rlv", RlvMethod$triggerSound, sound + vol + 1)
+
 // Plays a sound from target that only (key)listener can hear
 #define Rlv$triggerSoundOn( target, sound, vol, listener ) \
 	runMethod( target, "Rlv", RlvMethod$triggerSound, sound + vol + listener)
@@ -109,7 +136,9 @@
 	Rlv$loopSoundOn( target, "", 0 ) \
 
 
-
+#define Rlv$setCamMaxDist( target, dist ) \
+	runMethod( target, "Rlv", RlvMethod$setCamMaxDist, dist)
+	
 	
 #define Rlv$cubeTask( target, tasks ) \
 	runMethod( target, "Rlv", RlvMethod$cubeTask, tasks)

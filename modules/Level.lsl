@@ -157,6 +157,8 @@ onListen( ch, msg )
 						
 					}
 					
+					raiseEvent(LevelEvt$playerJoined, owner + SENDER_KEY);
+					
                     Com$inviteSuccess(SENDER_KEY);
                     updatePlayers();
                     
@@ -378,7 +380,6 @@ handleMethod( LevelMethod$getHudAssets )
 end
 
 handleMethod( LevelMethod$forceRefreshPortal )
-	qd("Replying with players to" + llKey2Name(SENDER_KEY));
 	runMethod(SENDER_KEY, "Portal", PortalMethod$cbPlayers, PLAYERS);
 	runMethod(SENDER_KEY, "Portal", PortalMethod$cbHUDs, HUDS);
 end

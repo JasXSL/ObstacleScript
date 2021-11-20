@@ -29,6 +29,7 @@
 #define DoorTask$lock 2							// (bool)locked - Prevents interactions with the door
 #define DoorTask$setRotPerc 3					// (float)perc - Sets a door rotation to a percentage of its min max (0-1)
 #define DoorTask$setStains 4					// (bool)on - Toggles stains visibility
+#define DoorTask$setRandomPerc 5				// void - Sets the door opening state to a random percentage unless the ID is "DO:EXT"
 
 // Sets Z rotation of the door
 #define Door$setRot( label, z ) \
@@ -43,6 +44,8 @@
 	llRegionSay(DoorConst$CHAN, mkarr(label + DoorTask$setStains + on))
 #define Door$setStainsTarg( targ, label, on ) \
 	llRegionSayTo( targ, DoorConst$CHAN, mkarr(label + DoorTask$setStains + on) )
+#define Door$setRandomPerc( label ) \
+	llRegionSay(DoorConst$CHAN, mkarr(label + DoorTask$setRandomPerc))
 
 
 #define onDoorOpen() \

@@ -498,20 +498,23 @@ handleTimer( "A" )
 	if( STATE == STATE_IDLE ){
 	
 		// Every 30 sec go back to ghost room or try to go to a completely random room if not at home
-		if( ~BFL&BFL_HUNTING && llGetTime()-lastReturn > 30 ){
+		if( ~BFL&BFL_HUNTING && (llGetTime()-lastReturn > 30 || lastReturn <= 0) ){
 			
-			lastReturn = llGetTime();
+			
 			
 			int startRoom = pointInRoom( spawnPos );
 			int curRoom = pointInRoom( llGetPos() );
 
 			// Go back
-			if( startRoom != curRoom )
+			if( startRoom != curRoom ){
 				Nodes$getPath( GhostMethod$followNodes, llGetPos(), spawnPos );
+				lastReturn = llGetTime();
+			}
+			// Find a random room
 			else{
 				
 				vector rng = llGetPos()+<llFrand(20)-10,llFrand(20)-10,llFrand(15)-5>;
-				
+				lastReturn = llGetTime()-25;	// Attempt every 5 sec until it succeeds
 				int gRoom = pointInRoom(rng);
 				if( ~gRoom && gRoom != curRoom )
 					Nodes$getPath( GhostMethod$followNodes, llGetPos(), rng );
@@ -945,17 +948,12 @@ handleOwnerMethod( GhostMethod$smudge )
 	
 end
 
-handleOwnerMethod( GhostMethod$interact )
-	
-	// Todo: Find something to interact with
-	
-end
-
 handleOwnerMethod( GhostMethod$followNodes )
     
     gotoPortals = METHOD_ARGS;
     calculateAlignPos();
 	setState(STATE_PATHING);
+	lastReturn = llGetTime();	// Node follow should only happen when roaming or during a hunt. Both are good times to update the timer.
     
 end
 

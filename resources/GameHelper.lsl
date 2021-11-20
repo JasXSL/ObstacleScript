@@ -12,6 +12,7 @@
 	list onGameEnd(){} 				// Raised when the game ends
 	onRoundStart(){}			// Raised when a new round starts
 	onCountdownFinished(){}		// Countdown finished when starting a round
+	setGameRestrictions( key player ){}		// Raised on game start and when a player re-joins
 	
 	// Functions you can use
 	list endGame() 						// Ends the game. This is auto called if you use DialogHelper and end the game through a dialog, but you will want to use this after declaring a winner as well
@@ -61,6 +62,10 @@ list GCONF;	// This is custom data passed from DialogHelper
 				 \
 			} \
 		end \
+	end \
+	onLevelPlayerJoined( player, hud ) \
+		if( GSETTINGS&GS_GAME_STARTED ) \
+			setGameRestrictions(player); \
 	end \
 	handleEvent( "#Dialog", 0 ) \
 		 \
@@ -178,6 +183,9 @@ startGame(){
 	
 	Level$toggleGame(TRUE);
 	
+	forPlayer( idx, player )
+		setGameRestrictions(player);
+	end
 	onGameStart();
 	
 	raiseEvent(0, "START_GAME");

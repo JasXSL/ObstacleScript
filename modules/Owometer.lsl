@@ -207,8 +207,8 @@ handleTimer( "EMF" )
             key id = l2k(EMF_POINTS, i);
             float d = llVecDist(front, prPos(id));
             
-            // 2.5m EMF bubble
-            if( (index == -1 || d < dist) && d < 1.5 ){
+            // 2m radius EMF bubble
+            if( (index == -1 || d < dist) && d < 2 ){
                 
                 dist = d;
                 index = i;
