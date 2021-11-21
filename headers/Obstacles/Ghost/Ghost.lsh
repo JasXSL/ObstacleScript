@@ -15,7 +15,7 @@
 #define GhostMethod$cbPlumbing 101		// Callback for getting a position to teleport with plumbing
 
 #define GhostConst$type$succubus 0			// (Need player preference) Will prefer interacting with a particular player if they're nearby. During a hunt, target that player in particular.
-#define GhostConst$type$yuri 1				// (Female needed, arousal needed) Being close to the ghost increases player arousal.
+#define GhostConst$type$yuri 1				// (Female needed, arousal needed) Being close to the ghost increases player arousal. Prefers female hunters.
 #define GhostConst$type$asswang 2			// (Looking at it needed, hunt speed needed) Only active if nobody's looking at it. Moves twice as fast during a hunt unless observed.
 #define GhostConst$type$powoltergeist 3		// TEST - Prefers interacting with items over players, and can throw things twice as hard.
 #define GhostConst$type$yaoikai 4			// (Deafness needed, male needed, hunt earlier needed) Can hunt earlier if players are typing within 3m of it. Cannot hear footsteps. Prefers male investigators.
@@ -97,12 +97,12 @@
 	GhostConst$evidence$owometer|GhostConst$evidence$writing|GhostConst$evidence$temps, \
 	GhostConst$evidence$owometer|GhostConst$evidence$writing|GhostConst$evidence$hots, \
 	GhostConst$evidence$owometer|GhostConst$evidence$writing|GhostConst$evidence$spiritbox, \
-	GhostConst$evidence$stains|GhostConst$evidence$spiritbox|GhostConst$evidence$hots, \
+	GhostConst$evidence$temps|GhostConst$evidence$spiritbox|GhostConst$evidence$owometer, \
 	GhostConst$evidence$writing|GhostConst$evidence$spiritbox|GhostConst$evidence$temps, \
 	GhostConst$evidence$writing|GhostConst$evidence$temps|GhostConst$evidence$hots, \
 	GhostConst$evidence$stains|GhostConst$evidence$temps|GhostConst$evidence$hots, \
-	GhostConst$evidence$owometer|GhostConst$evidence$writing|GhostConst$evidence$stains, \
-	GhostConst$evidence$owometer|GhostConst$evidence$temps|GhostConst$evidence$stains, \
+	GhostConst$evidence$hots|GhostConst$evidence$writing|GhostConst$evidence$stains, \
+	GhostConst$evidence$owometer|GhostConst$evidence$hots|GhostConst$evidence$stains, \
 	GhostConst$evidence$writing|GhostConst$evidence$stains|GhostConst$evidence$spiritbox \
 ]
 #define getEvidenceTypes( ghostType ) \
