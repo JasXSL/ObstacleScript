@@ -32,15 +32,16 @@ updateDesc(){
 	// GHOST BEHAVIOR :: BARE
 	if( GHOST_TYPE == GhostConst$type$bare ){
 	
-		if( GhostGet$inLitRoom( llGetObjectDesc() )
-			aggression -= 10;
+		if( GhostGet$inLitRoom(llGetObjectDesc()) )
+			agg -= 10;
+		
 		else
-			aggression += 10;
+			agg += 10;
 		
 	}
 
 	list out = (list)
-		LIT + AGG + ACT
+		LIT + agg + ACT
 	;
 	llSetObjectDesc(mkarr(out));
 	

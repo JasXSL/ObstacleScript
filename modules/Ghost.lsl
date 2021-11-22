@@ -492,7 +492,7 @@ handleTimer( "A" )
 					llSetKeyframedMotion([], [KFM_COMMAND, KFM_CMD_STOP]);
 					llSleep(.1);
 					llSetRegionPos(spawnPos);
-					lastReturn = llGetTime();
+					lastReturn = llGetTime()+llFrand(20);	// gooryo warps more
 					
 				}
 				else{
@@ -508,7 +508,7 @@ handleTimer( "A" )
 			// Go back
 			if( startRoom != curRoom ){
 				Nodes$getPath( GhostMethod$followNodes, llGetPos(), spawnPos );
-				lastReturn = llGetTime();
+				lastReturn = llGetTime()+10+llFrand(40);	// Stay in the ghost room for longer than when it roams
 			}
 			// Find a random room
 			else{
@@ -936,6 +936,7 @@ end
 
 handleOwnerMethod( GhostMethod$smudge )
 	
+	lastReturn = llGetTime()+60;	// Don't use a long distance roam for 60 seconds
 	warpToGhostRoom();
 	
 end
@@ -953,14 +954,14 @@ handleOwnerMethod( GhostMethod$cbPlumbing )
 	list ray = llCastRay(pos, pos-<0,0,3>, RC_DEFAULT);
 	if( l2i(ray, -1) == 1 )
 		llSetRegionPos(l2v(ray, 1)+<0,0,hover>);
-	
+	lastReturn = llGetTime();
 
 end
 
 handleOwnerMethod( GhostMethod$followNodes )
     
     gotoPortals = METHOD_ARGS;
-	qd("Got portals " + gotoPortals);
+	//qd("Got portals " + gotoPortals);
     calculateAlignPos();
 	setState(STATE_PATHING);
 	lastReturn = llGetTime();	// Node follow should only happen when roaming or during a hunt. Both are good times to update the timer.
