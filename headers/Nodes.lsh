@@ -33,15 +33,17 @@
 	runOmniMethod( "#Nodes", NodesMethod$getPlumbedRoom, cbString + llGetScriptName() + cbMethod )
 
 
-#define NodesEvt$sweatyTemps 1		// (key)player - Sweaty temps has triggered on a player
+//#define NodesEvt$sweatyTemps 1		// (key)player - Sweaty temps has triggered on a player
 
 #define NodesConst$rmStride 4		// Since the roomMarkers is shared with getRooms, stride is a const here
 #define NodesConst$defaultRmSlice \
 	(list)0 + ZERO_VECTOR + ZERO_ROTATION + ZERO_VECTOR			// Needs to be a prototype for what's stored in the room marker list
 
+/*
 #define onNodesSweatyTemps( player ) \
 	if( SENDER_SCRIPT IS "#Nodes" AND EVENT_TYPE IS NodesEvt$sweatyTemps ){ \
 		key player = argKey(0);
+*/
 
 // Helper macro that can be put in your method handler for getRooms to automatically populate a global list with the args
 #define Nodes$handleGetRooms( globalVar ) \

@@ -12,13 +12,14 @@
 		(~llListFindList(PLAYERS, (list)((str)targ)))
 
 
-	#define forPlayer( index, player ) \
+#define forPlayer( index, player ) \
 	int index; \
 	for(; index < count(_P); ++index ){ \
 		key player = l2k(_P, index); 
 
 
 #else
+	#define forPlayer(index,player) #error Add #define USE_PLAYERS to enable players
 	#define _P #error Add #define USE_PLAYERS to enable player tracking
 	#define PLAYERS _P
 #endif

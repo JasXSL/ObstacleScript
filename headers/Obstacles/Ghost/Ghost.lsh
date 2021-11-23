@@ -14,18 +14,18 @@
 #define GhostMethod$cbNodes 100			// Callback for Nodes.lsh getNodes method
 #define GhostMethod$cbPlumbing 101		// Callback for getting a position to teleport with plumbing
 
-#define GhostConst$type$succubus 0			// (Need player preference) Will prefer interacting with a particular player if they're nearby. During a hunt, target that player in particular.
-#define GhostConst$type$yuri 1				// (Female needed, arousal needed) Being close to the ghost increases player arousal. Prefers female hunters.
-#define GhostConst$type$asswang 2			// (Looking at it needed, hunt speed needed) Only active if nobody's looking at it. Moves twice as fast during a hunt unless observed.
+#define GhostConst$type$succubus 0			// (Need player preference, crucifix radius, ghost power) Will will only touch a particular player. If that player dies, pick a new target. During a hunt, it can only hear that player's footsteps. When it uses its power, it teleports to its target if they're in the house. Has a greater crucifix radius.
+#define GhostConst$type$yuri 1				// TEST - Being close to the ghost adds 50% more arousal. Will only touch players without penis.
+#define GhostConst$type$asswang 2			// TEST - Only active if nobody's looking at it. Moves twice as fast while chasing a player unless observed, in which case it's moving at the slowest speed.
 #define GhostConst$type$powoltergeist 3		// TEST - Prefers interacting with items over players, and can throw things twice as hard.
-#define GhostConst$type$yaoikai 4			// (Deafness needed, male needed, hunt earlier needed) Can hunt earlier if players are typing within 3m of it. Cannot hear footsteps. Prefers male investigators.
+#define GhostConst$type$yaoikai 4			// TEST - Typing or talking near it may provoke a hunt, but cannot hear footsteps. Will only touch investigator with penis.
 #define GhostConst$type$imp 5				// TEST - Prefers touching players over interacting with items. No arousal penalty when successfully using a luigi board.
-#define GhostConst$type$hantuwu 6			// (Interactivity needed) Starts low interactive and gets more interactive as arousal increases.
-#define GhostConst$type$inugami 7			// (Activity check needed) Gets less interactive when players are near it. More interactive if nobody's near it.
-#define GhostConst$type$obukakke 8			// TEST - Active ability leaves stains on everything nearby without causing EMF or movement. Adds arousal when it does.
-#define GhostConst$type$gooryo 9			// TEST - Can teleport directly between rooms with plumbing. Doesn't roam normally, only teleports.
-#define GhostConst$type$ehee 10				// TEST - Will only give EMF if nobody's got line of sight to it. Can't hunt if a player is within 8 meters and has LOS
-#define GhostConst$type$bare 11				// TEST - Will hunt earlier if in a dark room. Won't turn off lights. Interacts with players more in the dark. 3x chance of stripping a player in the dark.
+#define GhostConst$type$hantuwu 6			// WORKS - Starts low interactive and gets more interactive as arousal increases.
+#define GhostConst$type$inugami 7			// WORKS - Gets less interactive when players are near it. More interactive if nobody's near it.
+#define GhostConst$type$obukakke 8			// WORKS - Active ability leaves stains on everything nearby without causing EMF or movement. Adds arousal when it does.
+#define GhostConst$type$gooryo 9			// WORKS - Can teleport directly between rooms with plumbing. Doesn't roam normally, only teleports.
+#define GhostConst$type$ehee 10				// WORKS - Will only give EMF if nobody's got line of sight to it. Can't hunt if a player is within 8 meters and has LOS. Higher chance of a stronger EMF.
+#define GhostConst$type$bare 11				// WORKS - Will hunt earlier if in a dark room. Won't turn off lights. Interacts with players more in the dark. 3x chance of stripping a player in the dark. Rarely leaves the ghost room.
 
 // Indexes for parsing the ghost desc. Note that desc is handled by GhostAux
 #define GhostDesc$inLitRoom 0				// int - Ghost is currently in a lit room
@@ -42,7 +42,7 @@
 #define GhostEvt$lights 3					// bool lights_on - Raised when lights on in the current room of the ghost is changed
 #define GhostEvt$caught 4					// key player, key chair - Caught a player. Carry them to the chair.
 #define GhostEvt$huntStep 5					// void - Raised when the ghost makes a footstep while hunting
-#define GhostEvt$alpha 6					// float alpha - Raised when the ghost alpha changes
+#define GhostEvt$visible 6					// bool visible - Raised when the ghost goes visible or hidden
 
 
 #define onGhostType( type, evidence ) \
@@ -56,9 +56,9 @@
 #define onGhostHuntStep(  ) \
 	if( SENDER_SCRIPT IS "Ghost" AND EVENT_TYPE IS GhostEvt$huntStep ){
 
-#define onGhostAlpha( alpha ) \
-	if( SENDER_SCRIPT IS "Ghost" AND EVENT_TYPE IS GhostEvt$alpha ){ \
-		float alpha = argFloat(0);
+#define onGhostVisible( visible ) \
+	if( SENDER_SCRIPT IS "Ghost" AND EVENT_TYPE IS GhostEvt$visible ){ \
+		bool visible = argInt(0);
 #define onGhostHunt( hunting ) \
 	if( SENDER_SCRIPT IS "Ghost" AND EVENT_TYPE IS GhostEvt$hunt ){ \
 		bool hunting = argInt(0);

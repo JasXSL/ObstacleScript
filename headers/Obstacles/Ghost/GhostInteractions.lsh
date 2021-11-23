@@ -9,7 +9,7 @@
 #define GhostInteractionsMethod$interact 1		// int maxItems=1 - Trigger an interaction in your local area
 #define GhostInteractionsMethod$playSoundOnMe 2		// (float)vol - Callback for when the ghost sends ToolSet$trigger with parabolic
 #define GhostInteractionsMethod$objectTouched 3		// (key)door - Used primarily by Ghost when it opens a door while walking
-
+#define GhostInteractionsMethod$forcePower 4		// void - Debugs the ghost power
 
 #define GhostInteractions$interact( maxItems ) \
 	runOmniMethod("GhostInteractions", GhostInteractionsMethod$interact, maxItems)

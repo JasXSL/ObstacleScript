@@ -11,7 +11,7 @@
 
 #define GhostInteractiveMethod$interact 1		// (int)flags, (float)throwStrength
 	#define GhostInteractiveConst$INTERACT_ALLOW_STAINS 0x1		// Add stains if possible
-	
+	#define GhostInteractiveConst$NO_EVENT 0x2					// Don't raise a default event
 
 #define GhostInteractive$interact( targ, flags, throwStrength ) \
 	runMethod( targ, "GhostInteractive", GhostInteractiveMethod$interact, (flags) + (throwStrength))

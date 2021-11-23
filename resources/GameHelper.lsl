@@ -45,220 +45,220 @@ list GCONF;	// This is custom data passed from DialogHelper
 #define getPlayerDataKey( id, index ) l2k(_gpd(id, index), 0)
 
 
-	
+#ifdef USE_PLAYERS
 
-
-// Add this to your state entry handler
-#define gameHelperStateEntry() \
-	//resetPlayerData(llGetOwner())
-	
-
-#define gameHelperEventHandler() \
-	onPlayersUpdated() \
-		forPlayer( index, player ) \
-			if( llListFindList(PLAYER_DATA, (list)player) == -1 ){ \
-				 \
-				resetPlayerData(player); \
-				 \
-			} \
-		end \
-	end \
-	onLevelPlayerJoined( player, hud ) \
-		if( GSETTINGS&GS_GAME_STARTED ) \
-			setGameRestrictions(player); \
-	end \
-	handleEvent( "#Dialog", 0 ) \
-		 \
-		string type = argStr(0); \
-		if( type == "START_GAME" ){ \
-			 \
-			GCONF = llDeleteSubList(METHOD_ARGS, 0, 0); \
-			startGame(); \
-			 \
-		} \
-		else if( type == "END_GAME" ) \
-			endGame(); \
-		else if( type == "INI" ) \
-			llResetScript(); \
-		else if( type == "START_ROUND" ) \
-			startRound(); \
-		\
-	end \
-	handleTimer( "_ROUND" ) \
-		startRound(); \
-	end \
-	handleTimer( "_COUNTDOWN" ) \
-		ROUND_START_TIME = llGetTime(); \
-		forPlayer( index, player ) \
-			Rlv$unSit( player, TRUE ); \
-		end \
-		GSETTINGS = GSETTINGS | GS_ROUND_STARTED; \
-		onCountdownFinished(); \
-	end
-
-
-// Put this directly under the event handler to automatically handle sending back to a checkpoint when falling in the water
-// Z is an offset from the root prim. When beneath this, you get sent back to the checkpoint
-// This requires you to have a function or macro called "getPlayerCheckpoint( key player )" that returns a vector position
-#define gameHelperAutoWater( Z ) \
-	onStateEntry() \
-		setInterval("_WATER", 3); \
-	end \
-	handleTimer( "_WATER" ) \
-		vector gpos = llGetRootPosition(); \
-		if( GSETTINGS & GS_ROUND_STARTED ){ \
+	// Add this to your state entry handler
+	#define gameHelperStateEntry() \
+		//resetPlayerData(llGetOwner())
+		
+	#define gameHelperEventHandler() \
+		onPlayersUpdated() \
 			forPlayer( index, player ) \
-				vector pos = prPos(player); \
-				if( pos.z < gpos.z+Z ){ \
-					warpPlayerToSurface( player, getPlayerCheckpoint(player), ZERO_ROTATION, TRUE ); \
+				if( llListFindList(PLAYER_DATA, (list)player) == -1 ){ \
+					 \
+					resetPlayerData(player); \
+					 \
 				} \
 			end \
-		} \
-	end
-
-
-// Resets player data, if player doesn't exists, it adds
-_rpd( key id ){
-    
-    // Default values, except uuid
-    list DEFAULTS = PD_DEFAULTS;
-    
-    integer pos = llListFindList(PLAYER_DATA, (list)id);
-    if( ~pos )
-        PLAYER_DATA = llListReplaceList(
-            PLAYER_DATA, 
-            DEFAULTS, 
-            pos+1, 
-            pos+PD_STRIDE-1
-        );
-    else
-        PLAYER_DATA += (list)id + DEFAULTS;    
-    
-}
-
-list _gpd( key player, integer index ){
-	
-	integer pos = llListFindList(PLAYER_DATA, (list)player);
-	if( ~pos )
-		return llList2List(PLAYER_DATA, pos+index, pos+index);
-	
-	return [];
-	
-}
-
-_spd( key id, integer index, list val ){
-    
-    integer pos = llListFindList(PLAYER_DATA, (list)id);
-    if( pos == -1 )
-        return;
-    
-    val = llList2List(val, 0, 0);
-    PLAYER_DATA = llListReplaceList(PLAYER_DATA, val, pos+index, pos+index);
-    
-}
-
-#define shufflePlayerData() \
-	PLAYER_DATA = llListRandomize(PLAYER_DATA, PD_STRIDE)
-
-
-
-
-
-resetAllPlayers(){
-
-	PLAYER_DATA = [];
-	forPlayer( index, player )
-		
-		resetPlayerData(player);
-	
-	end
-
-}
-
-startGame(){
-	
-	resetAllPlayers();
-	GSETTINGS = GSETTINGS &~ GS_ROUND_STARTED;
-    GSETTINGS = GSETTINGS | GS_GAME_STARTED;
-	
-	Level$toggleGame(TRUE);
-	
-	forPlayer( idx, player )
-		setGameRestrictions(player);
-	end
-	onGameStart();
-	
-	raiseEvent(0, "START_GAME");
-	
-}
-
-endGame(){
-
-	Level$toggleGame(FALSE);
-	GSETTINGS = GSETTINGS &~ GS_GAME_STARTED;
-    GSETTINGS = GSETTINGS &~ GS_ROUND_STARTED;
-	
-	raiseEvent(0, "END_GAME" + onGameEnd());
-	
-	
-}
-
-startRound(){
-
-	ROUND_START_TIME = llGetTime();
-	onRoundStart();
-	
-	forPlayer( index, player )
-        
-        Gui$startCountdown( player );
-    
-    end
-	raiseEvent(0, "ROUND_START");
-    setTimeout("_COUNTDOWN", 3);
-	
-}
-
-endRound( float delay ){
-
-	GSETTINGS = GSETTINGS &~GS_ROUND_STARTED;
-	if( delay > 0 )
-		setTimeout("_ROUND", delay);
-	else
-		startRound();
-
-}
-
-
-#define gameHelperHandleBalloonHit( dist, invulCheck ) \
-	onProjectileHit( projectile, obj ) \
-		 \
-		if( llGetAgentSize(obj) != ZERO_VECTOR ){ \
+		end \
+		onLevelPlayerJoined( player, hud ) \
+			if( GSETTINGS&GS_GAME_STARTED ) \
+				setGameRestrictions(player); \
+		end \
+		handleEvent( "#Dialog", 0 ) \
 			 \
-			if( llGetAgentInfo(obj) & AGENT_SITTING || invulCheck(obj) ) \
-				return; \
+			string type = argStr(0); \
+			if( type == "START_GAME" ){ \
 				 \
-			vector owner = prPos(llGetOwnerKey(projectile)); \
-			vector spos = prPos(obj); \
-			vector offs = spos-owner; \
-			offs.z = 0; \
-					 \
-			float time = 0.5; \
-			spos += llVecNorm(offs)*dist; \
+				GCONF = llDeleteSubList(METHOD_ARGS, 0, 0); \
+				startGame(); \
+				 \
+			} \
+			else if( type == "END_GAME" ) \
+				endGame(); \
+			else if( type == "INI" ) \
+				llResetScript(); \
+			else if( type == "START_ROUND" ) \
+				startRound(); \
+			\
+		end \
+		handleTimer( "_ROUND" ) \
+			startRound(); \
+		end \
+		handleTimer( "_COUNTDOWN" ) \
+			ROUND_START_TIME = llGetTime(); \
+			forPlayer( index, player ) \
+				Rlv$unSit( player, TRUE ); \
+			end \
+			GSETTINGS = GSETTINGS | GS_ROUND_STARTED; \
+			onCountdownFinished(); \
+		end
+
+
+	// Put this directly under the event handler to automatically handle sending back to a checkpoint when falling in the water
+	// Z is an offset from the root prim. When beneath this, you get sent back to the checkpoint
+	// This requires you to have a function or macro called "getPlayerCheckpoint( key player )" that returns a vector position
+	#define gameHelperAutoWater( Z ) \
+		onStateEntry() \
+			setInterval("_WATER", 3); \
+		end \
+		handleTimer( "_WATER" ) \
+			vector gpos = llGetRootPosition(); \
+			if( GSETTINGS & GS_ROUND_STARTED ){ \
+				forPlayer( index, player ) \
+					vector pos = prPos(player); \
+					if( pos.z < gpos.z+Z ){ \
+						warpPlayerToSurface( player, getPlayerCheckpoint(player), ZERO_ROTATION, TRUE ); \
+					} \
+				end \
+			} \
+		end
+
+
+	// Resets player data, if player doesn't exists, it adds
+	_rpd( key id ){
+		
+		// Default values, except uuid
+		list DEFAULTS = PD_DEFAULTS;
+		
+		integer pos = llListFindList(PLAYER_DATA, (list)id);
+		if( ~pos )
+			PLAYER_DATA = llListReplaceList(
+				PLAYER_DATA, 
+				DEFAULTS, 
+				pos+1, 
+				pos+PD_STRIDE-1
+			);
+		else
+			PLAYER_DATA += (list)id + DEFAULTS;    
+		
+	}
+
+	list _gpd( key player, integer index ){
+		
+		integer pos = llListFindList(PLAYER_DATA, (list)player);
+		if( ~pos )
+			return llList2List(PLAYER_DATA, pos+index, pos+index);
+		
+		return [];
+		
+	}
+
+	_spd( key id, integer index, list val ){
+		
+		integer pos = llListFindList(PLAYER_DATA, (list)id);
+		if( pos == -1 )
+			return;
+		
+		val = llList2List(val, 0, 0);
+		PLAYER_DATA = llListReplaceList(PLAYER_DATA, val, pos+index, pos+index);
+		
+	}
+
+	#define shufflePlayerData() \
+		PLAYER_DATA = llListRandomize(PLAYER_DATA, PD_STRIDE)
+
+
+
+
+	resetAllPlayers(){
+
+		PLAYER_DATA = [];
+		forPlayer( index, player )
+			
+			resetPlayerData(player);
+		
+		end
+
+	}
+
+
+	startGame(){
+		
+		resetAllPlayers();
+		GSETTINGS = GSETTINGS &~ GS_ROUND_STARTED;
+		GSETTINGS = GSETTINGS | GS_GAME_STARTED;
+		
+		Level$toggleGame(TRUE);
+		
+		forPlayer( idx, player )
+			setGameRestrictions(player);
+		end
+		onGameStart();
+		
+		raiseEvent(0, "START_GAME");
+		
+	}
+
+	endGame(){
+
+		Level$toggleGame(FALSE);
+		GSETTINGS = GSETTINGS &~ GS_GAME_STARTED;
+		GSETTINGS = GSETTINGS &~ GS_ROUND_STARTED;
+		
+		raiseEvent(0, "END_GAME" + onGameEnd());
+		
+		
+	}
+
+	startRound(){
+
+		ROUND_START_TIME = llGetTime();
+		onRoundStart();
+		
+		forPlayer( index, player )
+			
+			Gui$startCountdown( player );
+		
+		end
+		raiseEvent(0, "ROUND_START");
+		setTimeout("_COUNTDOWN", 3);
+		
+	}
+
+	endRound( float delay ){
+
+		GSETTINGS = GSETTINGS &~GS_ROUND_STARTED;
+		if( delay > 0 )
+			setTimeout("_ROUND", delay);
+		else
+			startRound();
+
+	}
+
+
+	#define gameHelperHandleBalloonHit( dist, invulCheck ) \
+		onProjectileHit( projectile, obj ) \
 			 \
-			Rlv$damageSprint( obj, 1 ); \
-			Rlv$target(  \
-				obj,  \
-				spos,  \
-				.1,  \
-				time \
-			); \
-			  \
-		} \
-		 \
-	end
+			if( llGetAgentSize(obj) != ZERO_VECTOR ){ \
+				 \
+				if( llGetAgentInfo(obj) & AGENT_SITTING || invulCheck(obj) ) \
+					return; \
+					 \
+				vector owner = prPos(llGetOwnerKey(projectile)); \
+				vector spos = prPos(obj); \
+				vector offs = spos-owner; \
+				offs.z = 0; \
+						 \
+				float time = 0.5; \
+				spos += llVecNorm(offs)*dist; \
+				 \
+				Rlv$damageSprint( obj, 1 ); \
+				Rlv$target(  \
+					obj,  \
+					spos,  \
+					.1,  \
+					time \
+				); \
+				  \
+			} \
+			 \
+		end
 
 
-
+#else
+	#define gameHelperEventHandler() #error Please use USE_PLAYERS
+#endif
 
 
 #endif

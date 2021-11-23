@@ -95,7 +95,8 @@ handleOwnerMethod( GhostInteractiveMethod$interact )
 		
 	}
     
-    raiseEvent(GhostInteractiveEvent$trigger, METHOD_ARGS);
+	if( ~intFlags & GhostInteractiveConst$NO_EVENT )
+		raiseEvent(GhostInteractiveEvent$trigger, METHOD_ARGS);
     
     
 

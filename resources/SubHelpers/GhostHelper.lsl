@@ -56,6 +56,7 @@ list _ghGGS( integer utimeLit ){
 #define onCountdownFinished() // Unused in this mode
 
 // Overrides GameHelper
+#ifdef USE_PLAYERS
 startRound(){
 
 	onRoundStart();
@@ -67,6 +68,7 @@ startRound(){
 	GSETTINGS = GSETTINGS | GS_ROUND_STARTED;
 	
 }
-
-
+#else
+	#define startRound() #error Please use USE_PLAYERS
+#endif
 

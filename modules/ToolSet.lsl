@@ -3,8 +3,8 @@
 #define USE_ATTACH
 #define USE_TIMER
 #define USE_LISTEN
-#include "ObstacleScript/resources/SubHelpers/GhostHelper.lsl"
 #include "ObstacleScript/index.lsl"
+#include "ObstacleScript/resources/SubHelpers/GhostHelper.lsl"
 
 
 integer BFL;
@@ -731,7 +731,7 @@ end
 handleMethod( ToolSetMethod$temp )
 
 	float t = argFloat(0);
-	t -= llFrand(4);
+	t -= llFrand(2);
 	
 	if( getActiveToolInt() )
 		t = (t * 9.0/5.0) + 32;

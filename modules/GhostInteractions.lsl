@@ -53,8 +53,6 @@ integer isInteractive( key id ){
 		
 	}
 	
-	
-	
     return -1;
 
 }
@@ -188,7 +186,13 @@ triggerParabolic( vector pos, integer sound ){
 }
 
 int getGhostPower(){
-	return llFloor(llFrand(2));
+	
+	float max = 2;
+	// GHOST BEHAVIOR :: EHEE - Higher chance of strong EMF
+	if( GHOST_TYPE == GhostConst$type$ehee )
+		max = 2.5;	// Higher chance of a strong EMF
+	return llFrand(max) > 1;
+	
 }
 
 // Set the global lastSound before calling this
@@ -209,25 +213,18 @@ onGhostTouch( key targ, int power ){
 }
 
 
-// Uses a ghost power, returns TRUE on success
-int usePower( list viable, int isPlayerInteract ){
+// Uses a ghost power, returns TRUE on success. Viable is a list of nearby objects (never players)
+int usePower(){
 
-	// GHOST BEHAVIOR - GOORYO - Teleport
-	if( GHOST_TYPE == GhostConst$type$gooryo ){
-		
-		// Todo: teleport
-		return TRUE;
-		
-	}
 	// GHOST BEHAVIOR - Obukakke - Leave stains on everything nearby without EMF
-	if( GHOST_TYPE == GhostConst$type$obukakke && !isPlayerInteract && count(viable) ){
+	if( GHOST_TYPE == GhostConst$type$obukakke && cObjs != [] ){
 		
 		integer i;
-		for(; i < count(viable); ++i ){
+		for(; i < count(cObjs); ++i ){
 		
-			key targ = l2k(viable, i);
+			key targ = l2k(cObjs, i);
 			Door$setStainsTarg( targ, "*", TRUE );
-			GhostInteractive$interact( targ, GhostInteractiveConst$INTERACT_ALLOW_STAINS, 0 );
+			GhostInteractive$interact( targ, GhostInteractiveConst$INTERACT_ALLOW_STAINS|GhostInteractiveConst$NO_EVENT, 0 );
 			
 		}
 		Level$raiseEvent(LevelCustomType$GHOSTINT, LevelCustomEvt$GHOSTINT$power, []);
@@ -241,25 +238,22 @@ int usePower( list viable, int isPlayerInteract ){
 }
 
 
-
-
-
 #include "ObstacleScript/begin.lsl"
 
 onStateEntry()
 
-    llSensorRepeat("", "", ACTIVE|PASSIVE, 2, PI, 1);
+    llSensorRepeat("", "", ACTIVE|PASSIVE, 4, PI, 1);
 	
 	Portal$scriptOnline();
 	
 	#ifdef FETCH_PLAYERS_ON_COMPILE
 	Level$forceRefreshPortal();
     #endif
-	
+
     
 end
 
-
+// Let players move again after touching them
 handleTimer( "GI" )
 	
 	integer i;
@@ -271,14 +265,17 @@ end
 
 onSensor( total )
     
+	vector gp = llGetPos();
     cObjs = [];
     integer i;
     for(; i < total; ++i ){
         
-        integer intr = isInteractive(llDetectedKey(i));
-        if( ~intr )
-            cObjs += (list)llDetectedKey(i);
-			
+		
+		key dk = llDetectedKey(i);
+		vector dp = llDetectedPos(i);
+		integer intr = isInteractive(llDetectedKey(i));
+		if( ~intr && llFabs(gp.z-dp.z) < 1.5 )
+			cObjs += (list)dk;
 		
     }
     
@@ -315,6 +312,11 @@ handleMethod( GhostInteractionsMethod$objectTouched )
 
 end
 
+handleOwnerMethod( GhostInteractionsMethod$forcePower )
+	qd("Using power");
+	usePower();
+end
+
 handleMethod( GhostInteractionsMethod$interact )
 	/*
 	maxItems is no longer used because it causes problems with the microphone
@@ -322,49 +324,17 @@ handleMethod( GhostInteractionsMethod$interact )
 	if( maxItems < 1 )
 		maxItems = 1;
 	*/
-	list viable = cObjs;
+	list viable;
 	vector gp = llGetPos();
 	int power = getGhostPower();
 	
-	int isUnlitBare = GHOST_TYPE == GhostConst$type$bare && !GhostGet$inLitRoom( llGetObjectDesc() );
+	lastSound = "";
 	
-	float playerChance = 0.3;	// 30% chance of touching a player if there's other things nearby
-	// GHOST BEHAVIOR :: POWOLTERGEIST
-	if( GHOST_TYPE == GhostConst$type$powoltergeist )
-		playerChance = 0.05;
-	// GHOST BEHAVIOR :: IMP
-	else if( GHOST_TYPE == GhostConst$type$imp )
-		playerChance = 0.75;
-	// GHOST BEHAVIOR :: BARE
-	else if( isUnlitBare )
-		playerChance = 0.5;
-	
-	int isPlayerInteract = llFrand(1.0) < playerChance || !count(viable);
-	if( isPlayerInteract ){
-	
-		list objs = viable;
-		viable = [];
-		forPlayer( index, player )
-			
-			if( llVecDist(prPos(player), gp) < 2.5 && ~llGetAgentInfo(player) & AGENT_SITTING )
-				viable += player;
-			
-		end
-		// No viable players, try going back to objs
-		if( !count(viable) ){
-			
-			isPlayerInteract = FALSE;
-			viable = objs;
-			
-		}
-		
-	}
-	
-	
+	// Power gets priority
 	// 10% chance of using its power. Can only use its power every 30 sec
 	if( llFrand(1.0) < 0.1 && llGetTime()-LAST_POWER > 30 ){
 		
-		if( usePower(viable, isPlayerInteract) ){
+		if( usePower() ){
 			
 			LAST_POWER = llGetTime();
 			return;
@@ -373,34 +343,50 @@ handleMethod( GhostInteractionsMethod$interact )
 	
 	}
 	
-
-	// We can generate a sound if there's nothing viable
-	if( !count(viable) ){
-		
-		if( llGetTime()-LAST_SOUND_TIME > 10 ){
-		
-			list sounds = [
-				"edb881de-3d1c-775a-7e35-46a00f6b7a30",
-				"e59ab35b-9d96-1c49-af60-aae586272e67",
-				"b7f92130-398b-ddab-5525-060cfca2f9da",
-				"66a0c5a8-3718-2126-d3f6-e4dfbdcda2df"
-			];
-			lastSound = randElem(sounds);
-
-		}
-		
-		return;
-	}
+	// Next check if we can interact with player
+	int roomLit = !GhostGet$inLitRoom( llGetObjectDesc() );
+	int isBare = GHOST_TYPE == GhostConst$type$bare;
 	
-
-	lastSound = "";
-
-	key targ = randElem(viable);
-	list door = getDescType(targ, Desc$TASK_DOOR_STAT);
 	
-	// Player interactions
-	if( llGetAgentSize(targ) != ZERO_VECTOR ){
+	float playerChance = 0.3;	// 30% chance of touching a player if there's other things nearby
+	// GHOST BEHAVIOR :: POWOLTERGEIST
+	if( GHOST_TYPE == GhostConst$type$powoltergeist )
+		playerChance = 0.05;
+	// GHOST BEHAVIOR :: IMP
+	else if( GHOST_TYPE == GhostConst$type$imp )
+		playerChance = 0.8;
+	// GHOST BEHAVIOR :: BARE
+	else if( isBare && !roomLit )
+		playerChance = 0.6;
+		
+	key targ;	// Target of the interact
+
+	if( llFrand(1.0) < playerChance ){
 	
+		forPlayer( index, player )
+			
+			// GHOST BEHAVIOR :: Bare - Longer range for player interactions in darkness
+			float range = 2.5;
+			if( isBare && !roomLit )
+				range = 3.5;
+			if( llVecDist(prPos(player), gp) < range && ~llGetAgentInfo(player) & AGENT_SITTING ){
+				
+				key hud = l2k(HUDS, index);
+				int genitals = Rlv$getDesc$sex( hud );
+				if( 
+					// GHOST BEHAVIOR :: yaoikai - Male preference
+					(GHOST_TYPE != GhostConst$type$yaoikai || genitals&GENITALS_PENIS) ||
+					// GHOST BEHAVIOR :: yuri - Female preference
+					(GHOST_TYPE != GhostConst$type$yuri || ~genitals&GENITALS_PENIS)
+				)viable += player;
+				
+			}
+			
+		end
+		
+		targ = randElem(viable);	// Handled at the end through onGhostTouch
+		
+		// Touch player
 		integer pos = llListFindList(PLAYERS, (list)((str)targ));
 		if( ~pos ){
 		
@@ -408,7 +394,7 @@ handleMethod( GhostInteractionsMethod$interact )
 			//qd(HUDS);
 			int clothes = Rlv$getDesc$clothes( hud )&1023;	// 1023 = 10 bit
 			float cc = 0.15;
-			if( isUnlitBare )
+			if( isBare && !roomLit )
 				cc *= 3;
 			
 			if( llFrand(1.0) < cc && clothes && power ){
@@ -423,44 +409,81 @@ handleMethod( GhostInteractionsMethod$interact )
 			}
 			
 		}
-		
-	}
-	// Door interactions
-	else if( door ){
 	
-		integer st = l2i(door, 1);
-		float perc = 0;
-		if( !st || st == 2 )
-			perc = 0.5;
-		else if( llFrand(1) < 0.5 )
-			perc = 1.0;
-		Door$setRotPercTarg( targ, "*", perc );
-		//qd("Door interact" + llKey2Name(targ));
-		lastSound = "8c8a6c69-f859-d559-0498-14cce9510635";
-		
 	}
-	// Tool interactions
-	else if( llKey2Name(targ) == "HOTS" || llKey2Name(targ) == "Ecchisketch" ){
-		GhostTool$trigger( targ, [] );
-	}
-	// Regular interactions
-	else{
+	
+	
+	// Roll for player failed, roll for object instead
+	else if( llFrand(1.0) > playerChance ){
 		
-		integer flags; float speed = 1.0;
-		if( EVIDENCE_TYPES & GhostConst$evidence$stains )
-			flags = flags|GhostInteractiveConst$INTERACT_ALLOW_STAINS;
+		int i; vector gp = llGetPos();
+		for(; i < count(cObjs); ++i ){
 			
-		// GHOST BEHAVIOR :: POWOLTERGEIST
-		if( GHOST_TYPE == GhostConst$type$powoltergeist )
-			speed += llPow(llFrand(2),2);
+			key k = l2k(cObjs, i);
+			vector offs = prPos(k);
+			if( llVecDist(<gp.x, gp.y, 0>, <offs.x, offs.y, 0>) < 2.5 )
+				viable += k;
+			
+		}
+		targ = randElem(viable);
+		
+		list door = getDescType(targ, Desc$TASK_DOOR_STAT);
+		
+		// Door interactions
+		if( door ){
+		
+			integer st = l2i(door, 1);
+			float perc = 0;
+			if( !st || st == 2 )
+				perc = 0.5;
+			else if( llFrand(1) < 0.5 )
+				perc = 1.0;
+			Door$setRotPercTarg( targ, "*", perc );
+			//qd("Door interact" + llKey2Name(targ));
+			lastSound = "8c8a6c69-f859-d559-0498-14cce9510635";
+			
+		}
+		// Tool interactions
+		else if( llKey2Name(targ) == "HOTS" || llKey2Name(targ) == "Ecchisketch" ){
+			GhostTool$trigger( targ, [] );
+		}
+		// Regular interactions
+		else{
+			
+			integer flags; float speed = 1.0;
+			if( EVIDENCE_TYPES & GhostConst$evidence$stains )
+				flags = flags|GhostInteractiveConst$INTERACT_ALLOW_STAINS;
+				
+			// GHOST BEHAVIOR :: POWOLTERGEIST
+			if( GHOST_TYPE == GhostConst$type$powoltergeist )
+				speed += llPow(llFrand(2),2);
 
-		GhostInteractive$interact( targ, flags, speed );
+			GhostInteractive$interact( targ, flags, speed );
+			
+		}
 		
 	}
 	
+	
+	// Now that we're done, see if we found a target, or should play a sound
 	// Trigger sound, add EMF etc
-	onGhostTouch(targ, power);
+	if( targ )
+		onGhostTouch(targ, power);
 
+	// We can generate a sound if there's no target
+	else if( llGetTime()-LAST_SOUND_TIME > 10 ){
+	
+		list sounds = [
+			"edb881de-3d1c-775a-7e35-46a00f6b7a30",
+			"e59ab35b-9d96-1c49-af60-aae586272e67",
+			"b7f92130-398b-ddab-5525-060cfca2f9da",
+			"66a0c5a8-3718-2126-d3f6-e4dfbdcda2df"
+		];
+		lastSound = randElem(sounds);
+		triggerParabolic(llGetPos(), TRUE);
+		LAST_SOUND_TIME = llGetTime();
+		
+	}
 
 	
 end

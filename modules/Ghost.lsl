@@ -1,6 +1,5 @@
 #define USE_TIMER
 #define USE_STATE_ENTRY
-#define USE_LISTEN
 #define USE_PLAYERS
 #include "ObstacleScript/headers/Obstacles/Ghost/Ghost.lsh"
 #include "ObstacleScript/index.lsl"
@@ -44,7 +43,7 @@ float lastReturn = -26;		// -26 means it'll have 4 sec to cache the nodes when s
 float lastFootSound;		// Used when hunting to generate footsteps
 
 vector spawnPos;
-#define toggleMesh( alpha ) raiseEvent(GhostEvt$alpha, alpha)
+#define toggleMesh( visible ) raiseEvent(GhostEvt$visible, visible)
 
 setState( int st ){
 	
@@ -155,8 +154,27 @@ integer walkTowards( vector pos ){
 	float speed = 1.0;
 	if( BFL & BFL_HUNTING && BFL & BFL_HUNT_HAS_LOS ){
 		
-		
 		speed = 0.75+(llGetTime()-timeLOS)/3;
+		
+		// GHOST BEHAVIOR :: Asswang - Slow down while chasing a player if observed
+		if( GHOST_TYPE == GhostConst$type$asswang ){
+			
+			vector gp = llGetPos();
+			speed = 2.5;
+			forPlayer( i, p )
+				
+				vector pp = prPos(p);
+				list ray = llCastRay(gp, pp, RC_DEFAULT);
+				prAngX(p, ang)
+				if( llFabs(ang) < PI_BY_TWO && l2i(ray, -1) ){
+					speed = 0.75;
+					i = count(PLAYERS);
+				}
+				
+			end
+			
+		}
+		
 		if( speed > 2.5 )
 			speed = 2.5;
 	
@@ -166,9 +184,9 @@ integer walkTowards( vector pos ){
 	vector fwd = llVecNorm(<pp.x, pp.y, 0>-<gp.x, gp.y, 0>)*speed;
 	
 	// Can step up on heights hip level or 1m below
-	ray = ignoreDoor(llCastRay(gp, gp+fwd-<0,0,2+hover>, RC_DEFAULT + RC_DATA_FLAGS + RC_GET_NORMAL + RC_MAX_HITS + 2 ), TRUE);
+	ray = ignoreDoor(llCastRay(gp, gp+fwd-<0,0,2+hover>, RC_DEFAULT + RC_DATA_FLAGS + RC_GET_NORMAL + RC_MAX_HITS + 3 ), TRUE);
 	vector v = l2v(ray, 2);
-	list fwdRay = ignoreDoor(llCastRay(gp, gp+fwd*.5, RC_DEFAULT + RC_MAX_HITS + 2 ), true);
+	list fwdRay = ignoreDoor(llCastRay(gp, gp+fwd*.5, RC_DEFAULT + RC_MAX_HITS + 3 ), true);
 
 	if( l2i(ray, -1) < 1 || l2i(fwdRay, -1) || v.z < .2 )
 		return FALSE;
@@ -269,6 +287,7 @@ addFootsteps( key player, float trackChance ){
 	integer index = llListFindList(PLAYERS, (list)((str)player));
 	playerFootsteps = llListReplaceList(playerFootsteps, (list)pos, index, index);
 
+	
 	// Random modifier to track down a hiding player in the room when they talk or move
 	if( llFrand(1.0) < trackChance || ~BFL&BFL_HUNTING || STATE == STATE_HUNT_PRE )
 		return;
@@ -295,10 +314,14 @@ addFootsteps( key player, float trackChance ){
 int isNoisy( key player ){
 	
 	integer ainfo = llGetAgentInfo(player);
-	if( (ainfo & AGENT_WALKING && ~ainfo & AGENT_CROUCHING) || ainfo & AGENT_TYPING )
+	
+	// GHOST BEHAVIOR :: yaoikai - No footsteps
+	int walking = ainfo & AGENT_WALKING && ~ainfo & AGENT_CROUCHING && GHOST_TYPE != GhostConst$type$hantuwu;
+	
+	if( walking || ainfo & AGENT_TYPING )
 		return TRUE;
 		
-	// Memory saving hex conversion
+	// Memory saving hex conversion. Checks medium/loud speech gestures
 	list anims = (list)
 		0xa71890f1 +
 		0x593e9a3d +
@@ -509,6 +532,9 @@ handleTimer( "A" )
 			if( startRoom != curRoom ){
 				Nodes$getPath( GhostMethod$followNodes, llGetPos(), spawnPos );
 				lastReturn = llGetTime()+10+llFrand(40);	// Stay in the ghost room for longer than when it roams
+				// GHOST BEHAVIOR :: EHEE - Don't leave the room as much
+				if( GHOST_TYPE == GhostConst$type$ehee )
+					lastReturn += 40;
 			}
 			// Find a random room
 			else{
@@ -688,6 +714,8 @@ handleTimer( "A" )
 		float catchDist = 0.5;
 		if( BFL & BFL_HUNT_HAS_LOS )
 			catchDist = 0.75;
+			
+		// Caught a player
 		if( llVecDist(<gp.x, gp.y, 0>, <pp.x, pp.y, 0>) < catchDist && l2i(ray, -1) == 0 ){
 		
 			
@@ -801,7 +829,7 @@ end
 handleTimer( "IDL" )
 	setState(STATE_IDLE);
 	llStopSound();
-	toggleMesh(0);
+	toggleMesh(false);
 end
 
 onGhostAuxCaughtSat()
@@ -848,7 +876,6 @@ onStateEntry()
     llStartObjectAnimation("hugeman_idle");
     //llStartObjectAnimation("hugeman_walk");
     setInterval("A", 0.25);
-	addListen(0);
 	Portal$scriptOnline();
 	
 	
@@ -858,16 +885,13 @@ onStateEntry()
     #endif
 	
 	Level$raiseEvent(LevelCustomType$GHOST, LevelCustomEvt$GHOST$spawned, []);
+	qd(llGetUsedMemory());
 	
 end
 
-onListen( chan, message )
+onGhostAuxListen( ch, msg, sender )
 	
-	if( ~BFL&BFL_HUNTING )
-		return;
-	
-	integer pos = llListFindList(PLAYERS, (list)((str)SENDER_KEY));
-	if( pos == -1 )
+	if( ~BFL&BFL_HUNTING || ch != 0 )
 		return;
 
 	addFootsteps(SENDER_KEY, 0.75);
@@ -894,7 +918,7 @@ handleOwnerMethod( GhostMethod$toggleHunt )
 		BFL = BFL|BFL_HUNTING;
 		setState(STATE_HUNT_PRE);
 		toggleWalking(FALSE);
-		toggleMesh(1.0);
+		toggleMesh(true);
 		raiseEvent(GhostEvt$hunt, TRUE);
 		llSetKeyframedMotion([], [KFM_COMMAND, KFM_CMD_STOP]);
 		setTimeout("HUNT", 3);	// Start walking
@@ -907,7 +931,7 @@ handleOwnerMethod( GhostMethod$toggleHunt )
 		// Don't warp back if we caught someone
 		if( STATE != STATE_EVENT ){
 			
-			toggleMesh(0);
+			toggleMesh(false);
 			setState(STATE_IDLE);
 			warpToGhostRoom();
 			llStopSound();

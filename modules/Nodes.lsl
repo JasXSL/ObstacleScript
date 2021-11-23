@@ -11,6 +11,7 @@
 
 key GHOST = "59556ee0-6fe3-ecbb-f28e-be357ac62685";
 int EVIDENCE_TYPES;
+int GHOST_TYPE;
 #define HAS_TEMPS (EVIDENCE_TYPES & GhostConst$evidence$temps)
 
 // Note that the same index can appear multiple times
@@ -28,6 +29,8 @@ list roomTemps;		// Temperatures of a room. Each index corresponds to an index i
 float lastSweat;
 vector rezPos;
 int ghostInLight = -1;	// Sets if the ghost is in a lit room or not
+
+int PIGR;	// Players in ghost room
 
 list portals;      // 8bArray roomIndexes, uuid
 
@@ -426,6 +429,7 @@ onStateEntry()
 	setInterval("TICK", 10);
 	setInterval("POS", 1);
 
+
 end
 
 // Checks if the level has moved, and also tracks the ghost
@@ -442,13 +446,30 @@ handleTimer( "POS" )
 			GhostAux$setLight( ghostInLight );
 		
 		}
+		
+		int playersInGhostRoom;
+		forPlayer( idx, player )
+			
+			if( getPosReadable(prPos(player)) == room )
+				++playersInGhostRoom;
+		
+		end
+		
+		if( playersInGhostRoom != PIGR ){
+			
+			PIGR = playersInGhostRoom;
+			raiseEvent(0, "PIGR" + PIGR);
+		
+		}
 	
 	}
 	
 	if( llVecDist(llGetPos(), rezPos) > .1 ){
+	
 		qd("Level movement detected, recaching positions in 5 sec");
 		llSleep(5);
 		llResetScript();
+		
 	}
 	
 end
@@ -457,8 +478,10 @@ end
 handleEvent( "#Game", 0 )
 
 	str type = argStr(0);
-	if( type == "EVIDENCE" )
+	if( type == "EVIDENCE" ){
+		GHOST_TYPE == argInt(0);
 		EVIDENCE_TYPES = argInt(1);
+	}
 	else if( type == "ROUND_START" || type == "END_GAME" ){
 		
 		GAME_ACTIVE = (type == "ROUND_START");
@@ -473,6 +496,20 @@ handleEvent( "#Game", 0 )
 		qd("Lights" + roomLights);
 		
     }	
+	else if( type == "CTH" ){
+		
+		forPlayer( idx, player )
+			
+			// Lazy way of checking if player is dead
+			if( getPosRoom(prPos(player)) != "" && ~llGetAgentInfo(player) & AGENT_SITTING ){
+				raiseEvent(0, "CTH");
+				return;
+			}
+
+		end
+
+	
+	}
 
 end
 
@@ -498,20 +535,7 @@ handleEvent( "#Tools", 0 )
 		GhostStatus$updateSoundSensors( "*", positions );
 	
 	}
-	else if( type == "CTH" ){
-		
-		forPlayer( idx, player )
-			
-			// Lazy way of checking if player is dead
-			if( getPosRoom(prPos(player)) != "" && ~llGetAgentInfo(player) & AGENT_SITTING ){
-				raiseEvent(0, "START_HUNT");
-				return;
-			}
-
-		end
-
 	
-	}
 	
 	
 end
@@ -532,23 +556,22 @@ handleTimer( "TICK" )
 	
 	// Check for ghost
 	vector ghostPos = prPos(GHOST);
-	string roomLabel = getPosRoom(ghostPos);
-	int room = getRoomIndexByName(roomLabel);					// Get the label
-	room = getRoomIndexByReadable(l2s(ROOMS, room*ROOMS_STRIDE+1));	// Only the first readable is used, so we need to get the first one here
+	str room = getPosReadable(ghostPos);	// Only the first readable is used, so we need to get the first one here.
+	int ghostRoomIdx = getRoomIndexByReadable(room);
 	
 	int cap = 29;
 	if( HAS_TEMPS )
 		cap = 35;
 	
+	// Update temperatures
 	integer i;
 	for( ; i < count(roomTemps); ++i ){
 		
 		integer val = l2i(roomTemps, i);
-		if( i == room )
+		if( i == ghostRoomIdx )
 			++val;
 		else 
-			val -= 2;
-			
+			val -= 1;
 			
 		if( val < 20 )
 			val = 20;
@@ -559,61 +582,54 @@ handleTimer( "TICK" )
 		
 	}
 	
-	// Handle animation
-	if( llGetTime()-lastSweat > 6 ){
-		
-		lastSweat = llGetTime();
-		
-		if( llFrand(1) < .35 )
-			return;
-			
-		list rand = llListRandomize(PLAYERS, 1);
-		integer i;
-		for(; i < count(rand); ++i ){
-			
-			key player = l2k(rand, i);
-			str room = getPosRoom(prPos(player));
-			int pos = llListFindList(ROOMS, (list)room);
-			if( ~pos ){
-				
-				int temp = l2i(roomTemps, pos/2);
-				if( temp >= 35 ){
-					
-					raiseEvent(NodesEvt$sweatyTemps, player);
-				
-					// EXIT HERE
-					return;
-				}
-				
-			}
-		
-		}
-		
-	}
-	
 	int npl = count(PLAYERS);
-	float multi = 1.0+(npl-1)*.25;	// 25% faster arousal per player above 1
+	float multi = 1.0+(npl-1)*.2;	// 20% faster arousal per player above 1
 	
 	// Handle sanity decay
 	// Check if player is in a room
 	list decay;	// Corresponds to player index
+	list swPlayers;	// Keys of players that are in hot rooms
 	for( i = 0; i < npl; ++i ){
+			
+		int amt;	// Start at 0 in case player is outdoors
 		
-		int amt;
 		key player = l2k(PLAYERS, i);
-		str room = getPosRoom(prPos(player));
-		if( room != "" ){
+		str plRoom = getPosReadable(prPos(player));
+		// Player is inside a room in the house
+		if( plRoom != "" ){
 			
 			amt = 1;	// Check if lights are off
-			int room = getRoomIndexByName(room);					// Get the label
-			room = getRoomIndexByReadable(l2s(ROOMS, room*ROOMS_STRIDE+1));	// Only the first readable is used, so we need to get the first one here
-			if( !breaker || !l2i(roomLights, room) )
+			int plRoomIdx = getRoomIndexByReadable(plRoom);			// Get the index of the readable
+			if( !breaker || !l2i(roomLights, plRoomIdx) )			// Check if the room is dark
 				amt = 2;											// 3x drain in the dark 
 				
+				
+			// GHOST BEHAVIOR :: Yurei - drains 50% faster in the same room
+			if( plRoom == room && GHOST_TYPE == GhostConst$type$yuri )	// Player is in the ghost's current room
+				amt *= 1.5;
+			
+			// Next check temps
+			int temp = l2i(roomTemps, plRoomIdx);
+			if( temp >= cap-2 && ~llGetAgentInfo(player) & AGENT_SITTING )
+				swPlayers += player;
+			
 		}
+		
+		
 		
 		decay += (amt*multi);
 		
+		// Handle hot temps
+		
+		
+	}
+	
+	if( count(swPlayers) && llGetTime()-lastSweat > 6 && llFrand(1) < .35 ){
+
+		key player = randElem(swPlayers);
+		AnimHandler$start(player, "sweaty");
+		ToolSet$hotTemps( player );		
+
 	}
 	
 	raiseEvent(0, "DECAY" + decay);
@@ -699,15 +715,16 @@ handleOwnerMethod( NodesMethod$getPlumbedRoom )
 	}
 	if( viableIdx == [] )
 		return;
-		
-	int ri = floor(llFrand(count(viableIdx)));
+
+	int ri = l2i(viableIdx, floor(llFrand(count(viableIdx))));
 	list markers = getRoomMarkersByRoomIndex( ri );
 	if( markers == [] )
 		return;
-	int out = floor(llFrand(count(markers)));
+	
+	int out = l2i(markers, floor(llFrand(count(markers))));
 	vector pos = l2v(ROOM_MARKERS, out+RM_POS);
 	
-	runMethod(SENDER_KEY, senderScript, cbMethod, cb + pos);
+	runMethod(SENDER_KEY, senderScript, cbMethod, cb + (pos+llGetRootPosition()));
 	
 end
 

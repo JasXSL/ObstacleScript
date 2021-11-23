@@ -12,11 +12,12 @@ Phasmo:
 	x Some kind of radio for long distance speech
 	x Smudge should prevent it from leaving the ghost room for 1 minute
 	x Reduce roaming and make it stay in the ghost room for a bit longer, plus some randomness
-	
+	x Increase accuracy thermo
+	x Make thermo fade slower
 	
 	- Add ghost behavior
-	- Pills broken in coop
 	- Make it more active when players ask it for a sign
+	- Make ghost flicker in and out while hunting
 	- Add ghost events
 	- Add rewards
 		- ??? How

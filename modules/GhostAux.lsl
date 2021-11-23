@@ -2,6 +2,7 @@
 #define USE_STATE_ENTRY
 #define USE_CHANGED
 #define USE_RUN_TIME_PERMISSIONS
+#define USE_LISTEN
 #define USE_PLAYERS
 #include "ObstacleScript/headers/Obstacles/Ghost/Ghost.lsh"
 #include "ObstacleScript/index.lsl"
@@ -12,9 +13,9 @@ int EVIDENCE_TYPES;
 list SEEN_PLAYERS;
 
 int LIT;	// Ghost is in a lit room
-int AGG;	// More prone to being agressive
-int ACT;	// more prone to being active
-
+int AGG;	// More prone to being agressive. Inverse ADDITIVE (higher value lowers hunt threshold)
+int ACT;	// more prone to being active. ADDITIVE
+float LAST_ANGER_ADD;
 int BFL;
 #define BFL_VISIBLE 0x1
 
@@ -28,20 +29,27 @@ updateDesc(){
 
 
 	int agg = AGG;
+	int act = ACT;
 	
 	// GHOST BEHAVIOR :: BARE
 	if( GHOST_TYPE == GhostConst$type$bare ){
 	
-		if( GhostGet$inLitRoom(llGetObjectDesc()) )
+		if( LIT ){
+			
 			agg -= 10;
-		
-		else
+			act -= 25;
+		}
+		else{
 			agg += 10;
-		
+			act += 25;
+		}
 	}
+	
+	if( agg > 100 )
+		agg = 100;
 
 	list out = (list)
-		LIT + agg + ACT
+		LIT + agg + act
 	;
 	llSetObjectDesc(mkarr(out));
 	
@@ -79,7 +87,32 @@ toggleMesh( float alpha ){
 }
 
 
+bool isVoiceTalking( key player ){
+	
+	list anims = (list)
+		0xa71890f1 +
+		0x593e9a3d +
+		0x55fe6788 +
+		0xc1802201 +
+		0x69d5a8ed +
+		0x37694185 +
+		0xcb1139b6 +
+		0x28a3f544 +
+		0xcc340155 +
+		0xbbf194d1
+	;
+	list pl = llGetAnimationList(player);
+	int i;
+	for(; i < count(pl); ++i ){
+		
+		integer n = (int)("0x"+llGetSubString(l2s(pl, i), 0, 7));
+		if( ~llListFindList(anims, (list)n) )
+			return true;
+	
+	}
+	return FALSE;
 
+}
 
 
 
@@ -101,7 +134,75 @@ onStateEntry()
 	llSitTarget(<.6,0,-.6>, llEuler2Rot(<0,0,PI>));
 	
 	toggleMesh(0);
+	llListen(0,"","","");
+	setInterval("TC", 1);
 	
+end
+
+
+// Checks yaoikai and handles aggro decay
+handleTimer( "TC" )
+	
+	int pre = AGG;
+	
+	if( AGG > 0 )
+		--AGG;
+	else if( AGG < 0 )
+		++AGG;
+
+	// GHOST BEHAVIOR :: yaoikai - Aggro
+	if( GHOST_TYPE == GhostConst$type$yaoikai && llGetTime()-LAST_ANGER_ADD > 4 ){
+		
+		vector gp = llGetPos();
+		// Check if a player is talking
+		forPlayer(idx, targ )
+			
+			vector pp = prPos(targ);
+			integer ai = llGetAgentInfo(targ);
+			if( llVecDist(gp, pp) < 3 && (ai & AGENT_TYPING || isVoiceTalking(targ)) ){
+				
+				LAST_ANGER_ADD = llGetTime();
+				AGG += 10;
+				idx = 9001;	// Break loop
+			
+			}
+			
+		end		
+
+	}
+		
+	if( pre != AGG )
+		updateDesc();
+
+end
+
+
+
+onListen( ch, msg )
+	
+	// Only listen to players
+	if( llListFindList(PLAYERS, [(str)SENDER_KEY]) == -1 || llGetAgentSize(SENDER_KEY) == ZERO_VECTOR )
+		return;
+		
+	raiseEvent(GhostAuxEvt$listen, ch + msg + SENDER_KEY);
+	
+	// GHOST BEHAVIOR :: yaoikai - Listen to players
+	if( llGetTime()-LAST_ANGER_ADD < 4 || GHOST_TYPE != GhostConst$type$yaoikai )
+		return;
+	
+	vector gp = llGetPos(); vector pp = prPos(SENDER_KEY);
+	float dist = llVecDist(gp, pp);
+	if( dist > 3 )
+		return;
+		
+	list ray = llCastRay(gp, pp, RC_DEFAULT);
+	if( l2i(ray, -1) )
+		return;
+		
+	AGG += 20;
+	LAST_ANGER_ADD = llGetTime();
+	
+
 end
 
 
@@ -144,13 +245,15 @@ onGhostHuntStep()
 	llTriggerSoundLimited(cut, .5, <255,255,gp.z+100>, <0,0,gp.z+2>);
 end
 
-onGhostAlpha( alpha )
-	toggleMesh(alpha);
+onGhostVisible( visible )
+	toggleMesh(visible);
+	// Todo: set flicker
 end
 
 onGhostHunt( hunting )
 	
 	llStopSound();
+	AGG = 0;
 	if( hunting )
 		llLoopSound("5a67fa19-3dbb-74c6-3297-8cee2b66e897", .6);
 
