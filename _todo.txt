@@ -14,11 +14,14 @@ Phasmo:
 	x Reduce roaming and make it stay in the ghost room for a bit longer, plus some randomness
 	x Increase accuracy thermo
 	x Make thermo fade slower
+	x Narrow cone of motion sensor
 	
 	- Add ghost behavior
-	- Make it more active when players ask it for a sign
+		- Add banshee and test
+	- Make it slightly more active when players ask it for a sign.
 	- Make ghost flicker in and out while hunting
 	- Add ghost events
+	
 	- Add rewards
 		- ??? How
 	- All living players must be out of the van to end

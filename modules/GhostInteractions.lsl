@@ -354,10 +354,13 @@ handleMethod( GhostInteractionsMethod$interact )
 		playerChance = 0.05;
 	// GHOST BEHAVIOR :: IMP
 	else if( GHOST_TYPE == GhostConst$type$imp )
-		playerChance = 0.8;
+		playerChance = 0.6;
 	// GHOST BEHAVIOR :: BARE
 	else if( isBare && !roomLit )
-		playerChance = 0.6;
+		playerChance = 0.5;
+	// GBHOST BEHAVIOR :: ASSWANG - Higher chance of touching a player. But can only touch players who aren't looking at it.
+	else if( GHOST_TYPE == GhostConst$type$asswang )
+		playerChance = 0.4;
 		
 	key targ;	// Target of the interact
 
@@ -369,15 +372,21 @@ handleMethod( GhostInteractionsMethod$interact )
 			float range = 2.5;
 			if( isBare && !roomLit )
 				range = 3.5;
+				
+			
 			if( llVecDist(prPos(player), gp) < range && ~llGetAgentInfo(player) & AGENT_SITTING ){
+				
+				prAngX(player, ang)
 				
 				key hud = l2k(HUDS, index);
 				int genitals = Rlv$getDesc$sex( hud );
 				if( 
 					// GHOST BEHAVIOR :: yaoikai - Male preference
-					(GHOST_TYPE != GhostConst$type$yaoikai || genitals&GENITALS_PENIS) ||
+					(GHOST_TYPE != GhostConst$type$yaoikai || genitals&GENITALS_PENIS) &&
 					// GHOST BEHAVIOR :: yuri - Female preference
-					(GHOST_TYPE != GhostConst$type$yuri || ~genitals&GENITALS_PENIS)
+					(GHOST_TYPE != GhostConst$type$yuri || ~genitals&GENITALS_PENIS) &&
+					// GHOST BEHAVIOR :: asswang - Only touch players not looking at it
+					(GHOST_TYPE != GhostConst$type$asswang || llFabs(ang) > PI_BY_TWO)
 				)viable += player;
 				
 			}
@@ -409,6 +418,10 @@ handleMethod( GhostInteractionsMethod$interact )
 			}
 			
 		}
+		// GHOST BEHAVIOR :: asswang - On fail, revert to .3 player chance
+		else if( GHOST_TYPE == GhostConst$type$asswang )
+			playerChance = 0.3;
+		
 	
 	}
 	
@@ -421,7 +434,10 @@ handleMethod( GhostInteractionsMethod$interact )
 			
 			key k = l2k(cObjs, i);
 			vector offs = prPos(k);
-			if( llVecDist(<gp.x, gp.y, 0>, <offs.x, offs.y, 0>) < 2.5 )
+			float dist = 2.5;
+			if( llKey2Name(k) == "HOTS" )	// Hots has 1m extra radius since it's a temp evidence
+				dist = 3.5;
+			if( llVecDist(<gp.x, gp.y, 0>, <offs.x, offs.y, 0>) < dist )
 				viable += k;
 			
 		}

@@ -314,9 +314,11 @@ addFootsteps( key player, float trackChance ){
 int isNoisy( key player ){
 	
 	integer ainfo = llGetAgentInfo(player);
+	vector pp = prPos(player);
+	vector gp = llGetPos();
 	
 	// GHOST BEHAVIOR :: yaoikai - No footsteps
-	int walking = ainfo & AGENT_WALKING && ~ainfo & AGENT_CROUCHING && GHOST_TYPE != GhostConst$type$hantuwu;
+	int walking = ainfo & AGENT_WALKING && ~ainfo & AGENT_CROUCHING && (GHOST_TYPE != GhostConst$type$hantuwu || llVecDist(pp, gp) < 5);
 	
 	if( walking || ainfo & AGENT_TYPING )
 		return TRUE;

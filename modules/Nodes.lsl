@@ -337,8 +337,9 @@ onLevelCustomSpiritBoxTrigger( spiritBox )
 			integer i;
 			for(; i < count(PLAYERS); ++i ){
 				
-				str pl = getPosReadable(prPos(l2k(PLAYERS, i)));
-				if( pl == room )
+				key t = l2k(PLAYERS, i);
+				str pl = getPosReadable(prPos(t));
+				if( pl == room && ~llGetAgentInfo(t) & AGENT_SITTING )
 					++nrPlayers;
 			
 			}
@@ -559,9 +560,10 @@ handleTimer( "TICK" )
 	str room = getPosReadable(ghostPos);	// Only the first readable is used, so we need to get the first one here.
 	int ghostRoomIdx = getRoomIndexByReadable(room);
 	
+	int MAX_TEMP = 35;
 	int cap = 29;
 	if( HAS_TEMPS )
-		cap = 35;
+		cap = MAX_TEMP;
 	
 	// Update temperatures
 	integer i;
@@ -591,14 +593,14 @@ handleTimer( "TICK" )
 	list swPlayers;	// Keys of players that are in hot rooms
 	for( i = 0; i < npl; ++i ){
 			
-		int amt;	// Start at 0 in case player is outdoors
+		float amt;	// Start at 0 in case player is outdoors
 		
 		key player = l2k(PLAYERS, i);
 		str plRoom = getPosReadable(prPos(player));
 		// Player is inside a room in the house
 		if( plRoom != "" ){
 			
-			amt = 1;	// Check if lights are off
+			amt = 0.7;	// Check if lights are off
 			int plRoomIdx = getRoomIndexByReadable(plRoom);			// Get the index of the readable
 			if( !breaker || !l2i(roomLights, plRoomIdx) )			// Check if the room is dark
 				amt = 2;											// 3x drain in the dark 
@@ -610,7 +612,7 @@ handleTimer( "TICK" )
 			
 			// Next check temps
 			int temp = l2i(roomTemps, plRoomIdx);
-			if( temp >= cap-2 && ~llGetAgentInfo(player) & AGENT_SITTING )
+			if( temp >= MAX_TEMP-2 && ~llGetAgentInfo(player) & AGENT_SITTING )
 				swPlayers += player;
 			
 		}
@@ -624,7 +626,7 @@ handleTimer( "TICK" )
 		
 	}
 	
-	if( count(swPlayers) && llGetTime()-lastSweat > 6 && llFrand(1) < .35 ){
+	if( swPlayers != [] && llGetTime()-lastSweat > 6 && llFrand(1) < .35 ){
 
 		key player = randElem(swPlayers);
 		AnimHandler$start(player, "sweaty");

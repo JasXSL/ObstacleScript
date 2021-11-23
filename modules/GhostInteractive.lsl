@@ -84,6 +84,8 @@ handleOwnerMethod( GhostInteractiveMethod$interact )
         llApplyImpulse(offs*llGetMass()*3*pushStrength, TRUE);
         setInterval("phys", 1);
         still = FALSE;
+		
+		triggerSoundRadius("2cd691be-46dc-ba05-9a08-ed4a8f48a976", .1, 5);
         
     }
 

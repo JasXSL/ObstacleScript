@@ -434,8 +434,9 @@ handleInternalMethod( SpawnerMethod$getGroups )
         for( ; idx < count(data); ++idx ){
             
             list spawn = llJson2List(l2s(data, idx));
-            if( ~llListFindList(METHOD_ARGS, (list)l2s(spawn, E_GROUP)) )
+            if( ~llListFindList(METHOD_ARGS, (list)l2s(spawn, E_GROUP)) ){
 				out += mkarr(spawn + x);
+			}
 			
 			++x;
 			

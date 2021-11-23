@@ -15,8 +15,8 @@
 #define GhostMethod$cbPlumbing 101		// Callback for getting a position to teleport with plumbing
 
 #define GhostConst$type$succubus 0			// (Need player preference, crucifix radius, ghost power) Will will only touch a particular player. If that player dies, pick a new target. During a hunt, it can only hear that player's footsteps. When it uses its power, it teleports to its target if they're in the house. Has a greater crucifix radius.
-#define GhostConst$type$yuri 1				// TEST - Being close to the ghost adds 50% more arousal. Will only touch players without penis.
-#define GhostConst$type$asswang 2			// TEST - Only active if nobody's looking at it. Moves twice as fast while chasing a player unless observed, in which case it's moving at the slowest speed.
+#define GhostConst$type$yuri 1				// TEST - Being close to the ghost adds 50% more arousal. Will only touch players without penis. Stepping through salt while not hunting will have the same effect as the vape stick.
+#define GhostConst$type$asswang 2			// TEST - Will only touch players with their back towards it. Moves twice as fast while chasing a player unless observed, in which case it's moving at the slowest speed.
 #define GhostConst$type$powoltergeist 3		// TEST - Prefers interacting with items over players, and can throw things twice as hard.
 #define GhostConst$type$yaoikai 4			// TEST - Typing or talking near it may provoke a hunt, but cannot hear footsteps. Will only touch investigator with penis.
 #define GhostConst$type$imp 5				// TEST - Prefers touching players over interacting with items. No arousal penalty when successfully using a luigi board.
@@ -91,6 +91,7 @@
 
 
 // Corresponds to the ghost type indexes
+// When changing these, you need to recompile #Game, Ghost, and the GHOST_BOARD
 #define GhostConst$evidenceTypes [\
 	GhostConst$evidence$stains|GhostConst$evidence$spiritbox|GhostConst$evidence$temps, \
 	GhostConst$evidence$owometer|GhostConst$evidence$spiritbox|GhostConst$evidence$hots, \
@@ -99,7 +100,7 @@
 	GhostConst$evidence$owometer|GhostConst$evidence$writing|GhostConst$evidence$spiritbox, \
 	GhostConst$evidence$temps|GhostConst$evidence$spiritbox|GhostConst$evidence$owometer, \
 	GhostConst$evidence$writing|GhostConst$evidence$spiritbox|GhostConst$evidence$temps, \
-	GhostConst$evidence$writing|GhostConst$evidence$temps|GhostConst$evidence$hots, \
+	GhostConst$evidence$writing|GhostConst$evidence$temps|GhostConst$evidence$stains, \
 	GhostConst$evidence$stains|GhostConst$evidence$temps|GhostConst$evidence$hots, \
 	GhostConst$evidence$hots|GhostConst$evidence$writing|GhostConst$evidence$stains, \
 	GhostConst$evidence$owometer|GhostConst$evidence$hots|GhostConst$evidence$stains, \
