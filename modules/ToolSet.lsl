@@ -350,8 +350,12 @@ list getRcPlacement( integer wall ){
 		
 	}
 	
-	list ray = llCastRay(base, base+llRot2Fwd(fwd)*2.5, RC_DEFAULT + RC_DATA_FLAGS + RC_GET_NORMAL );
+	list ray = llCastRay(base, base+llRot2Fwd(fwd)*2.5, RC_DEFAULT + RC_DATA_FLAGS + (RC_GET_NORMAL|RC_GET_ROOT_KEY) );
 	if( l2i(ray, -1) < 1 )
+		return [];
+		
+	// Prevents placement on interactive objects. Not graceful since it assumes $I is after D$. But it saves memory.
+	if( llSubStringIndex(prDesc(l2k(ray, 0)), "LEVEL") == -1 )
 		return [];
 		
 	vector n = l2v(ray, 2);
@@ -584,7 +588,8 @@ onPortalLclickStarted( hud )
 			return;
 			
 		vector norm = l2v(rc, 1);
-		rotation r = llRotBetween(<0,0,1>, norm);
+		rotation r = llEuler2Rot(<PI_BY_TWO, 0, 0>)*llEuler2Rot(<0,0,PI_BY_TWO>)*llRotBetween(<1,0,0>, norm);
+		
 		Level$raiseEvent( LevelCustomType$GTOOL, LevelCustomEvt$GTOOL$data, getActiveToolWorldId() + 1 );
 		BFL = BFL|BFL_USING;
 		setTimeout("USE", 1);

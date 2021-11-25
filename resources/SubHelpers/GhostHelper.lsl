@@ -10,7 +10,7 @@
 #define ToolsetConst$types$ghost$salt 7				// (int)charges_used
 #define ToolsetConst$types$ghost$candle 8			// NOT USED IN GAME
 #define ToolsetConst$types$ghost$parabolic 9		// (bool)on | ToolSet: pos
-#define ToolsetConst$types$ghost$motionDetector 10	// 0
+#define ToolsetConst$types$ghost$motionDetector 10	// 0 - NOTE: Can only be placed on linksets where the root prim has the word LEVEL somewhere in the description
 #define ToolsetConst$types$ghost$glowstick 11		// (int)utime_turned_on
 #define ToolsetConst$types$ghost$pills 12			// 0
 #define ToolsetConst$types$ghost$thermometer 13		// (bool)on

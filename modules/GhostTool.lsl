@@ -24,6 +24,7 @@ onPortalLoadComplete( desc )
 	
 	spawnPos = llGetPos();
 	spawnRot = llGetRot();
+	Level$raiseEvent(LevelCustomType$GTOOL, LevelCustomEvt$GTOOL$getGhost, []);
 
 end
 

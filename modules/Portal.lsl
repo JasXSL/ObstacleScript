@@ -113,7 +113,7 @@ onStateEntry()
 
     setupListenTunnel();
     setupDebug(0);
-        
+
     if( llGetStartParameter() == ScrepoConst$SP_LOADED ){
         
 		 // Fetch desc

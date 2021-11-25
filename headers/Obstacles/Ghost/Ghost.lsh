@@ -9,17 +9,17 @@
 #define GhostMethod$interact 5			// void - Interact with a nearby item
 #define GhostMethod$stop 6				// (bool)stop, (bool)verbose - Stops the ghost. Verbose is useful for debugging
 #define GhostMethod$sendToChair 7		// key chair, key hud, int temp - Tells the ghost to go to a chair and trap the player. If no chair is available, drop the player.
-
+#define GhostMethod$succubusPower 8		// void - Triggers the succubus power
 
 #define GhostMethod$cbNodes 100			// Callback for Nodes.lsh getNodes method
 #define GhostMethod$cbPlumbing 101		// Callback for getting a position to teleport with plumbing
 
-#define GhostConst$type$succubus 0			// (Need player preference, crucifix radius, ghost power) Will will only touch a particular player. If that player dies, pick a new target. During a hunt, it can only hear that player's footsteps. When it uses its power, it teleports to its target if they're in the house. Has a greater crucifix radius.
-#define GhostConst$type$yuri 1				// TEST - Being close to the ghost adds 50% more arousal. Will only touch players without penis. Stepping through salt while not hunting will have the same effect as the vape stick.
-#define GhostConst$type$asswang 2			// TEST - Will only touch players with their back towards it. Moves twice as fast while chasing a player unless observed, in which case it's moving at the slowest speed.
-#define GhostConst$type$powoltergeist 3		// TEST - Prefers interacting with items over players, and can throw things twice as hard.
-#define GhostConst$type$yaoikai 4			// TEST - Typing or talking near it may provoke a hunt, but cannot hear footsteps. Will only touch investigator with penis.
-#define GhostConst$type$imp 5				// TEST - Prefers touching players over interacting with items. No arousal penalty when successfully using a luigi board.
+#define GhostConst$type$succubus 0			// TEST - Will will only touch a particular player. If that player dies, pick a new target. During a hunt, it can only hear that player's footsteps. When it uses its power, it teleports to its target if they're in the house. Has a greater crucifix radius.
+#define GhostConst$type$yuri 1				// WORKS - Being close to the ghost adds 50% more arousal. Will only touch players without penis. Stepping through salt will have the same effect as the vape stick.
+#define GhostConst$type$asswang 2			// WORKS - Will only touch players with their back towards it. Moves twice as fast while chasing a player unless observed, in which case it's moving at the slowest speed.
+#define GhostConst$type$powoltergeist 3		// WORKS - Prefers interacting with items over players, and can throw things twice as hard.
+#define GhostConst$type$yaoikai 4			// WORKS - Typing or talking near it may provoke a hunt, but can only hear footsteps near it. Will only touch investigator with penis.
+#define GhostConst$type$imp 5				// WORKS - Prefers touching players over interacting with items. No arousal penalty when successfully using a luigi board.
 #define GhostConst$type$hantuwu 6			// WORKS - Starts low interactive and gets more interactive as arousal increases.
 #define GhostConst$type$inugami 7			// WORKS - Gets less interactive when players are near it. More interactive if nobody's near it.
 #define GhostConst$type$obukakke 8			// WORKS - Active ability leaves stains on everything nearby without causing EMF or movement. Adds arousal when it does.
@@ -31,10 +31,13 @@
 #define GhostDesc$inLitRoom 0				// int - Ghost is currently in a lit room
 #define GhostDesc$aggression 1				// int - Modifier for triggering a hunt
 #define GhostDesc$activity 2				// int - Modifier for doing an interaction
+#define GhostDesc$ghostCustom 3				// var - Currently only used for succubus, stores its current target
+
 
 #define GhostGet$inLitRoom( desc ) ((int)j(desc, GhostDesc$inLitRoom))
 #define GhostGet$aggression( desc ) ((int)j(desc, GhostDesc$aggression))
 #define GhostGet$activity( desc ) ((int)j(desc, GhostDesc$activity))
+#define GhostGet$sucTarg( desc ) ((key)j(desc, GhostDesc$ghostCustom))
 
 
 #define GhostEvt$type 1						// int type - Ghost type received
@@ -143,6 +146,8 @@
 	runOmniMethod("Ghost", GhostMethod$interact, [])
 #define Ghost$sendToChair( chair, hud, temp ) \
 	runOmniMethod("Ghost", GhostMethod$sendToChair, chair + hud + temp)
+#define Ghost$succubusPower() \
+	runMethod(LINK_THIS, "Ghost", GhostMethod$succubusPower, [])
 
 
 	

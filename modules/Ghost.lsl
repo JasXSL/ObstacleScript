@@ -88,14 +88,14 @@ list getDoorData( key door ){
 	
 }
 
-warpToGhostRoom(){
+warpTo( vector pos ){
 
 	setState(STATE_IDLE);
 	lastWarp = llGetTime();
 	toggleWalking(FALSE);
 	llSetKeyframedMotion([], [KFM_COMMAND, KFM_CMD_STOP]);
-	llSleep(.5);
-	llSetRegionPos(spawnPos);
+	llSleep(.25);
+	llSetRegionPos(pos);
 	
 }
 
@@ -165,8 +165,8 @@ integer walkTowards( vector pos ){
 				
 				vector pp = prPos(p);
 				list ray = llCastRay(gp, pp, RC_DEFAULT);
-				prAngX(p, ang)
-				if( llFabs(ang) < PI_BY_TWO && l2i(ray, -1) ){
+				myAngX(p, ang)
+				if( llFabs(ang) < PI_BY_TWO && l2i(ray, -1) < 1 ){
 					speed = 0.75;
 					i = count(PLAYERS);
 				}
@@ -287,9 +287,16 @@ addFootsteps( key player, float trackChance ){
 	integer index = llListFindList(PLAYERS, (list)((str)player));
 	playerFootsteps = llListReplaceList(playerFootsteps, (list)pos, index, index);
 
+	// GHOST BEHAVIOR :: Succubus - Perfect tracking of its target
+	if( GHOST_TYPE == GhostConst$type$succubus )
+		trackChance = 1.0;
 	
 	// Random modifier to track down a hiding player in the room when they talk or move
-	if( llFrand(1.0) < trackChance || ~BFL&BFL_HUNTING || STATE == STATE_HUNT_PRE )
+	if( llFrand(1.0) < trackChance || ~BFL&BFL_HUNTING || STATE == STATE_HUNT_PRE || llGetAgentInfo(player) & AGENT_SITTING )
+		return;
+		
+	// GHOST BEHAVIOR :: Succubus - Only hear victim
+	if( GHOST_TYPE == GhostConst$type$succubus && player != GhostGet$sucTarg(llGetObjectDesc()) )
 		return;
 
 	// If there's a hunt target and it's not this player, ignore
@@ -306,46 +313,6 @@ addFootsteps( key player, float trackChance ){
 	huntTarget = player;
 	BFL = BFL|BFL_HUNT_HAS_POS;
 	setState(STATE_CHASING);
-		
-}
-
-
-// Checks if a player is making noise
-int isNoisy( key player ){
-	
-	integer ainfo = llGetAgentInfo(player);
-	vector pp = prPos(player);
-	vector gp = llGetPos();
-	
-	// GHOST BEHAVIOR :: yaoikai - No footsteps
-	int walking = ainfo & AGENT_WALKING && ~ainfo & AGENT_CROUCHING && (GHOST_TYPE != GhostConst$type$hantuwu || llVecDist(pp, gp) < 5);
-	
-	if( walking || ainfo & AGENT_TYPING )
-		return TRUE;
-		
-	// Memory saving hex conversion. Checks medium/loud speech gestures
-	list anims = (list)
-		0xa71890f1 +
-		0x593e9a3d +
-		0x55fe6788 +
-		0xc1802201 +
-		0x69d5a8ed +
-		0x37694185 +
-		0xcb1139b6 +
-		0x28a3f544 +
-		0xcc340155 +
-		0xbbf194d1
-	;
-	list pl = llGetAnimationList(player);
-	
-	int i;
-	for(; i < count(pl); ++i ){
-		integer n = (int)("0x"+llGetSubString(l2s(pl, i), 0, 7));
-		if( ~llListFindList(anims, (list)n) ){
-			return true;
-		}
-	}
-	return FALSE;
 		
 }
 
@@ -377,7 +344,42 @@ handleTimer( "A" )
 			lastFootstepsUpdate = llGetTime();
 			forPlayer( index, player )
 				
-				if( isNoisy(player) )
+				bool noisy;
+				integer ainfo = llGetAgentInfo(player);
+				vector pp = prPos(player);
+				vector gp = llGetPos();
+				
+				// GHOST BEHAVIOR :: yaoikai - No footsteps
+				int walking = ainfo & AGENT_WALKING && ~ainfo & AGENT_CROUCHING && (GHOST_TYPE != GhostConst$type$hantuwu || llVecDist(pp, gp) < 3);
+				// Check if walking
+				if( walking || ainfo & AGENT_TYPING )
+					noisy = true;
+				// Check if talking
+				else{
+					// Memory saving hex conversion. Checks medium/loud speech gestures
+					list anims = (list)
+						0xa71890f1 +
+						0x593e9a3d +
+						0x55fe6788 +
+						0xc1802201 +
+						0x69d5a8ed +
+						0x37694185 +
+						0xcb1139b6 +
+						0x28a3f544 +
+						0xcc340155 +
+						0xbbf194d1
+					;
+					list pl = llGetAnimationList(player);
+					
+					int i;
+					for(; i < count(pl) && !noisy; ++i ){
+						integer n = (int)("0x"+llGetSubString(l2s(pl, i), 0, 7));
+						if( ~llListFindList(anims, (list)n) )
+							noisy = true;
+					}
+				}
+					
+				if( noisy )
 					addFootsteps(player, 0.5);
 			
 			end
@@ -386,6 +388,7 @@ handleTimer( "A" )
 			
 		
 		// Start chasing after the setup phase
+		// Find players with raycast
 		if( STATE != STATE_HUNT_PRE ){
 		
 			vector g = llGetPos();
@@ -395,7 +398,7 @@ handleTimer( "A" )
 			
 				vector tp = getPlayerVisibilityPos(huntTarget);
 				list ray = llCastRay(llGetPos(), tp, RC_DEFAULT);
-				if( l2i(ray, -1) == 0 && ~pointInRoom(tp) ){
+				if( l2i(ray, -1) == 0 && ~pointInRoom(tp) && ~llGetAgentInfo(huntTarget) & AGENT_SITTING ){
 					
 					if( ~BFL&BFL_HUNT_HAS_LOS ){
 						
@@ -513,10 +516,8 @@ handleTimer( "A" )
 			if( GHOST_TYPE == GhostConst$type$gooryo ){
 				
 				if( startRoom != curRoom ){
-
-					llSetKeyframedMotion([], [KFM_COMMAND, KFM_CMD_STOP]);
-					llSleep(.1);
-					llSetRegionPos(spawnPos);
+					
+					warpTo(spawnPos);
 					lastReturn = llGetTime()+llFrand(20);	// gooryo warps more
 					
 				}
@@ -551,7 +552,7 @@ handleTimer( "A" )
 		
 		}
 
-		// Find a new target
+		// Find a new place to roam
 		if( llGetTime() > nextRoam || BFL&BFL_HUNTING ){
 			vector dir = llRot2Fwd(llEuler2Rot(<0,0,llFrand(TWO_PI)>));
 			
@@ -887,7 +888,7 @@ onStateEntry()
     #endif
 	
 	Level$raiseEvent(LevelCustomType$GHOST, LevelCustomEvt$GHOST$spawned, []);
-	qd(llGetUsedMemory());
+	//qd(llGetUsedMemory());
 	
 end
 
@@ -935,7 +936,7 @@ handleOwnerMethod( GhostMethod$toggleHunt )
 			
 			toggleMesh(false);
 			setState(STATE_IDLE);
-			warpToGhostRoom();
+			warpTo(spawnPos);
 			llStopSound();
 			
 			
@@ -963,7 +964,7 @@ end
 handleOwnerMethod( GhostMethod$smudge )
 	
 	lastReturn = llGetTime()+60;	// Don't use a long distance roam for 60 seconds
-	warpToGhostRoom();
+	warpTo(spawnPos);
 	
 end
 
@@ -974,13 +975,32 @@ handleOwnerMethod( GhostMethod$cbPlumbing )
 			
 	str cb = argStr(0);
 	vector pos = argVec(1);
-	setState(STATE_IDLE);
-	llSetKeyframedMotion([], [KFM_COMMAND, KFM_CMD_STOP]);
-	llSleep(.2);
+	
 	list ray = llCastRay(pos, pos-<0,0,3>, RC_DEFAULT);
-	if( l2i(ray, -1) == 1 )
-		llSetRegionPos(l2v(ray, 1)+<0,0,hover>);
-	lastReturn = llGetTime();
+	if( l2i(ray, -1) == 1 ){
+		
+		warpTo(l2v(ray, 1)+<0,0,hover>);
+		lastReturn = llGetTime();
+		
+	}
+	
+end
+
+handleInternalMethod( GhostMethod$succubusPower )
+	
+	key targ = GhostGet$sucTarg( llGetObjectDesc() );
+	vector pos = prPos(targ);
+	if( pointInRoom(pos) == -1 )
+		return;
+		
+	list ray = llCastRay(pos, pos-<0,0,5>, RC_DEFAULT);
+	if( l2i(ray, -1) == 1 ){
+		
+		warpTo(l2v(ray, 1)+<0,0,hover>);
+		lastReturn = llGetTime()-15;
+		
+	}
+	
 
 end
 

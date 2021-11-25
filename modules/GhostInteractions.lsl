@@ -231,6 +231,12 @@ int usePower(){
 
 		return TRUE;
 	}
+	if( GHOST_TYPE == GhostConst$type$succubus ){
+		
+		Ghost$succubusPower();		
+		return TRUE;
+		
+	}
 		
 	// Failed, reset last time we used power
 	return FALSE;
@@ -346,7 +352,7 @@ handleMethod( GhostInteractionsMethod$interact )
 	// Next check if we can interact with player
 	int roomLit = !GhostGet$inLitRoom( llGetObjectDesc() );
 	int isBare = GHOST_TYPE == GhostConst$type$bare;
-	
+	int isAsswang = GHOST_TYPE == GhostConst$type$asswang;
 	
 	float playerChance = 0.3;	// 30% chance of touching a player if there's other things nearby
 	// GHOST BEHAVIOR :: POWOLTERGEIST
@@ -354,13 +360,16 @@ handleMethod( GhostInteractionsMethod$interact )
 		playerChance = 0.05;
 	// GHOST BEHAVIOR :: IMP
 	else if( GHOST_TYPE == GhostConst$type$imp )
-		playerChance = 0.6;
+		playerChance = 0.7;
 	// GHOST BEHAVIOR :: BARE
 	else if( isBare && !roomLit )
 		playerChance = 0.5;
-	// GBHOST BEHAVIOR :: ASSWANG - Higher chance of touching a player. But can only touch players who aren't looking at it.
+	// GHOST BEHAVIOR :: ASSWANG - Higher chance of touching a player. But can only touch players who aren't looking at it.
 	else if( GHOST_TYPE == GhostConst$type$asswang )
-		playerChance = 0.4;
+		playerChance = 0.6;
+	// GHOST BEHAVIOR :: SUCCUBUS - Touch a bit more
+	else if( GHOST_TYPE == GhostConst$type$succubus )
+		playerChance = 0.5;
 		
 	key targ;	// Target of the interact
 
@@ -370,14 +379,14 @@ handleMethod( GhostInteractionsMethod$interact )
 			
 			// GHOST BEHAVIOR :: Bare - Longer range for player interactions in darkness
 			float range = 2.5;
-			if( isBare && !roomLit )
+			if( (isBare && !roomLit) || isAsswang )
 				range = 3.5;
 				
 			
 			if( llVecDist(prPos(player), gp) < range && ~llGetAgentInfo(player) & AGENT_SITTING ){
 				
-				prAngX(player, ang)
-				
+				myAngX(player, ang)
+
 				key hud = l2k(HUDS, index);
 				int genitals = Rlv$getDesc$sex( hud );
 				if( 
@@ -386,7 +395,9 @@ handleMethod( GhostInteractionsMethod$interact )
 					// GHOST BEHAVIOR :: yuri - Female preference
 					(GHOST_TYPE != GhostConst$type$yuri || ~genitals&GENITALS_PENIS) &&
 					// GHOST BEHAVIOR :: asswang - Only touch players not looking at it
-					(GHOST_TYPE != GhostConst$type$asswang || llFabs(ang) > PI_BY_TWO)
+					(GHOST_TYPE != GhostConst$type$asswang || llFabs(ang) > PI_BY_TWO) &&
+					// GHOST BEHAVIOR :: succubus - Only touch one player
+					(GHOST_TYPE != GhostConst$type$succubus || player == GhostGet$sucTarg( llGetObjectDesc() ))
 				)viable += player;
 				
 			}

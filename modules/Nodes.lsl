@@ -358,7 +358,7 @@ onLevelCustomSpiritBoxTrigger( spiritBox )
 	if( 
 		success && (
 			~EVIDENCE_TYPES&GhostConst$evidence$spiritbox || 
-			dist > 2.5
+			dist > 3.5
 		)
     ){
         success = FALSE;
@@ -600,10 +600,10 @@ handleTimer( "TICK" )
 		// Player is inside a room in the house
 		if( plRoom != "" ){
 			
-			amt = 0.7;	// Check if lights are off
+			amt = 0.5;	// Check if lights are off
 			int plRoomIdx = getRoomIndexByReadable(plRoom);			// Get the index of the readable
 			if( !breaker || !l2i(roomLights, plRoomIdx) )			// Check if the room is dark
-				amt = 2;											// 3x drain in the dark 
+				amt = 1.5;											// 3x drain in the dark 
 				
 				
 			// GHOST BEHAVIOR :: Yurei - drains 50% faster in the same room

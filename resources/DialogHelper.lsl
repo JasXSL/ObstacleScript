@@ -64,10 +64,17 @@
 
 				if( text == "" )
 					text = "Main Menu";
-					
+				text += "\nJoined players: ";
+				list names;
+				forPlayer(i, pl)
+					names += "secondlife:///app/agent/"+(str)pl+"/about";
+				end
+				text += llList2CSV(names);
+				
 				if( MAX_PLAYERS && MAX_PLAYERS < 100 ){
 					text += "\nMax players: "+(str)MAX_PLAYERS;
 				}
+				
 				
 				buttons += (list)
 					"INV. ALL" + 
@@ -248,7 +255,10 @@
 					txt += (str)count(PLAYERS)+" Joined\n";
 				else{
 					forPlayer( index, player )
-						txt += llGetDisplayName(player)+"\n";
+						str name = llGetDisplayName(player);
+						if( name == "" )
+							name = "???";
+						txt += name+"\n";
 					end
 				}
 				

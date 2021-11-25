@@ -9,6 +9,7 @@
 
 #define GhostAuxEvt$caughtSat 1				// void - Caught player was sat on the ghost
 #define GhostAuxEvt$listen 2				// (int)chan, (str)msg, (key)SENDER_KEY - Raised when ghostAux listens to a player in the game
+#define GhostAuxEvt$suctarg 3				// (key)targ - Succubus target has changed
 
 #define onGhostAuxCaughtSat() \
 	if( SENDER_SCRIPT IS "GhostAux" AND EVENT_TYPE IS GhostAuxEvt$caughtSat ){

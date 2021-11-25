@@ -7,19 +7,21 @@
 #include "ObstacleScript/headers/Obstacles/Ghost/Ghost.lsh"
 #include "ObstacleScript/index.lsl"
 
-int GHOST_TYPE;
+int GHOST_TYPE = -1;
 int EVIDENCE_TYPES;
-
+int VIS;
 list SEEN_PLAYERS;
 
 int LIT;	// Ghost is in a lit room
 int AGG;	// More prone to being agressive. Inverse ADDITIVE (higher value lowers hunt threshold)
 int ACT;	// more prone to being active. ADDITIVE
 float LAST_ANGER_ADD;
+float LAST_ACT_ADD;
 int BFL;
 #define BFL_VISIBLE 0x1
 
 key caughtHud;
+key SUCTARG;	// Succubus target
 
 // Sets DESC to a JSON array
 // [0] lit = Ghost room lit
@@ -49,12 +51,13 @@ updateDesc(){
 		agg = 100;
 
 	list out = (list)
-		LIT + agg + act
+		LIT + agg + act + SUCTARG
 	;
 	llSetObjectDesc(mkarr(out));
 	
 }
 
+list P_MESH;
 toggleMesh( float alpha ){
 	
 	
@@ -78,10 +81,9 @@ toggleMesh( float alpha ){
 	
 	}
 	
-	forLink(nr, name)
-		if( name == "MESH" )
-			llSetLinkAlpha(nr, alpha, ALL_SIDES);
-	end
+	int i;
+	for(; i < count(P_MESH); ++i )
+		llSetLinkAlpha(l2i(P_MESH, i), alpha, ALL_SIDES);
 	
 
 }
@@ -115,11 +117,86 @@ bool isVoiceTalking( key player ){
 }
 
 
+pickNewSucTarg(){
+	
+	list pl = llListRandomize(PLAYERS, 1);
+	integer i;
+	for(; i < count(pl); ++i ){
+		
+		key t = l2k(pl, i);
+		if( ~llGetAgentInfo(t) & AGENT_SITTING ){
+			
+			SUCTARG = t;
+			updateDesc();
+			return;
+			
+		}
+	}
+	
+}
 
 
+// Takes precedence over activity
+bool hasAngryWord( str input ){
 
+	list words = (list)
+		"bitch" + "hunt" + "cuck" + "attack" + "shit" + "damn" + "heck" + "hell" + "idiot" + "moron" + "bloody" + "smelly" + "dickhead" + "motherfucker" + "fight"
+	;
+	
+	integer i;
+	for(; i < count(words); ++i ){
+		
+		if( ~llSubStringIndex(input, l2s(words, i)) )
+			return true;
+		
+	}
+	return false;
 
+}
 
+bool hasActivityPhrase( str input ){
+
+	list phr = (list)
+		"give us a sign" + 
+		"are you here" +
+		"where are you" +
+		"do something" + 
+		"show yourself" +
+		"do you want" + 
+		"angry" + 
+		"lewd" +
+		"sexy" +
+		"us to leave" +
+		"are you friendly" +
+		"horny" +
+		"cunt" +
+		"pussy" + 
+		"cock" +
+		"dick" +
+		"wang" +
+		"vagina" +
+		"penis" +
+		"suck" +
+		"fuck" +
+		"ass" +
+		"behind" +
+		"bang" +
+		"hello" +
+		"balls" +
+		"butt" +
+		"touch"
+	;
+	int i;
+	for(; i < count(phr); ++i ){
+		
+		if( ~llSubStringIndex(input, l2s(phr, i)) )
+			return true;
+		
+	}
+	
+	return false;
+
+}
 
 
 
@@ -133,25 +210,39 @@ onStateEntry()
 	Portal$scriptOnline();
 	llSitTarget(<.6,0,-.6>, llEuler2Rot(<0,0,PI>));
 	
-	toggleMesh(0);
+	
 	llListen(0,"","","");
 	setInterval("TC", 1);
 	
-end
+	forLink(nr, name)
+		if( name == "MESH" )
+			P_MESH += nr;
+	end
+	toggleMesh(FALSE);
+	
+end	
 
 
 // Checks yaoikai and handles aggro decay
 handleTimer( "TC" )
 	
 	int pre = AGG;
+	int apre = ACT;
 	
 	if( AGG > 0 )
 		--AGG;
 	else if( AGG < 0 )
 		++AGG;
 
+	if( ACT > 0 )
+		--ACT;
+	else if( ACT < 0 )
+		++ACT;
+	
+
 	// GHOST BEHAVIOR :: yaoikai - Aggro
-	if( GHOST_TYPE == GhostConst$type$yaoikai && llGetTime()-LAST_ANGER_ADD > 4 ){
+	// If typing or talking, it can add anger up to 40
+	if( GHOST_TYPE == GhostConst$type$yaoikai && AGG < 40 ){
 		
 		vector gp = llGetPos();
 		// Check if a player is talking
@@ -159,21 +250,20 @@ handleTimer( "TC" )
 			
 			vector pp = prPos(targ);
 			integer ai = llGetAgentInfo(targ);
-			if( llVecDist(gp, pp) < 3 && (ai & AGENT_TYPING || isVoiceTalking(targ)) ){
-				
-				LAST_ANGER_ADD = llGetTime();
-				AGG += 10;
-				idx = 9001;	// Break loop
-			
-			}
+			if( llVecDist(gp, pp) < 3 && (ai & AGENT_TYPING || isVoiceTalking(targ)) )
+				AGG += 2;
 			
 		end		
 
 	}
-		
-	if( pre != AGG )
+			
+	if( pre != AGG || apre != ACT )
 		updateDesc();
-
+		
+	// GHOST BEHAVIOR :: Succubus - Find a new target if old one is sitting
+	if( GHOST_TYPE == GhostConst$type$succubus && (llGetAgentInfo(SUCTARG)&AGENT_SITTING || llKey2Name(SUCTARG) == "") )
+		pickNewSucTarg();
+		
 end
 
 
@@ -183,25 +273,35 @@ onListen( ch, msg )
 	// Only listen to players
 	if( llListFindList(PLAYERS, [(str)SENDER_KEY]) == -1 || llGetAgentSize(SENDER_KEY) == ZERO_VECTOR )
 		return;
-		
+
+	// Send to Ghost for hunt talk detection
 	raiseEvent(GhostAuxEvt$listen, ch + msg + SENDER_KEY);
 	
-	// GHOST BEHAVIOR :: yaoikai - Listen to players
-	if( llGetTime()-LAST_ANGER_ADD < 4 || GHOST_TYPE != GhostConst$type$yaoikai )
-		return;
-	
-	vector gp = llGetPos(); vector pp = prPos(SENDER_KEY);
+	// Limit to 4m for reactions
+	vector gp = llGetPos();
+	vector pp = prPos(SENDER_KEY);
 	float dist = llVecDist(gp, pp);
-	if( dist > 3 )
+	if( dist > 4 )
 		return;
-		
-	list ray = llCastRay(gp, pp, RC_DEFAULT);
-	if( l2i(ray, -1) )
-		return;
-		
-	AGG += 20;
-	LAST_ANGER_ADD = llGetTime();
+
+			
+	// GHOST BEHAVIOR :: yaoikai - Anger whenever hearing a voice
+	str m = llToLower(msg);
+	int angry = llGetTime()-LAST_ANGER_ADD > 5 && (GHOST_TYPE == GhostConst$type$yaoikai || hasAngryWord(m));
+	if( angry ){
 	
+		if( AGG < 60 )
+			AGG += 10;
+		LAST_ANGER_ADD = llGetTime();
+	
+	}
+	
+	else if( llGetTime()-LAST_ACT_ADD > 25 && hasActivityPhrase(m) ){
+		
+		ACT += 20;	// Can add 20 activity every 25 sec when asking for a sign
+		LAST_ACT_ADD = llGetTime();
+		
+	}
 
 end
 
@@ -246,8 +346,23 @@ onGhostHuntStep()
 end
 
 onGhostVisible( visible )
+
+	unsetTimer("FL");
 	toggleMesh(visible);
-	// Todo: set flicker
+	if( visible )
+		setInterval("FL", 0.1);
+	
+end
+
+handleTimer( "FL" )
+	
+	VIS = !VIS;
+	float time = .2+llFrand(.3);
+	if( VIS )
+		time = 0.05+llFrand(.15);
+		
+	toggleMesh(VIS);
+
 end
 
 onGhostHunt( hunting )
@@ -256,7 +371,8 @@ onGhostHunt( hunting )
 	AGG = 0;
 	if( hunting )
 		llLoopSound("5a67fa19-3dbb-74c6-3297-8cee2b66e897", .6);
-
+	updateDesc();
+	
 end
 
 handleTimer( "HEART" )
@@ -326,9 +442,13 @@ onRunTimePermissions( perm )
 end
 
 onGhostType( type, evidence )
-	
+
 	GHOST_TYPE = type;
 	EVIDENCE_TYPES = evidence;
+	
+	// GHOST BEHAVIOR :: SUCCUBUS - Pick a target
+	if( SUCTARG == "" && GHOST_TYPE == GhostConst$type$succubus )
+		pickNewSucTarg();
 	
 end
 

@@ -159,7 +159,7 @@ onStateEntry()
             ++SC_MAX;
         
     }
-    
+	
 end
 
 handleOwnerMethod( ScrepoMethod$deferredLoad )
@@ -167,6 +167,20 @@ handleOwnerMethod( ScrepoMethod$deferredLoad )
 	addDeferredLoaderScript( argKey(0), argStr(1) );
 	
 end
+
+#ifndef NO_DEFERRED
+handleOwnerMethod( ScrepoMethod$dump )
+	
+	llOwnerSay("Deferred loaders:");
+    integer i;
+	for(; i < count(LOADS); ++i ){
+		
+		if( llGetListEntryType(LOADS, i) == TYPE_KEY )
+			llOwnerSay(mkarr(getDeferredSlice(i)));
+					
+	}
+end
+#endif
 
 handleOwnerMethod( ScrepoMethod$get )
     
