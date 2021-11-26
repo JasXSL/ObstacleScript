@@ -6,12 +6,17 @@
 #define RezzerMethod$rezzed 2		// (int)id - A portal object has been rezzed and is awaiting instructions
 #define RezzerMethod$cb 3			// (str)callback. Adds this to the current position in the queue. When encountered, it raises RezzerEvt$cb
 #define RezzerMethod$initialized 4	// void - A spawned portal has been initialized.
+#define RezzerMethod$debug 5		// void - Outputs info
+#define RezzerMethod$rezMulti 6		// (arr)json_arrays - Same as rez but with each arg being a json array containing one dataset for RezzerMethod$rez
 
 #define RezzerEvt$cb 1				// (str)cb
 #define RezzerEvt$rezzed 2			// (key)id - An object has been spawned and initialized		
 
+
 #define Rezzer$rez( targ, asset, pos, rot, desc, group, live ) \
 	runMethod(targ, "Rezzer", RezzerMethod$rez, asset + pos + rot + desc + group + live)
+#define Rezzer$rezMulti( targ, assets ) \
+	runMethod(targ, "Rezzer", RezzerMethod$rezMulti, assets)
 #define Rezzer$cb( targ, cb ) \
 	runMethod(targ, "Rezzer", RezzerMethod$cb, cb)
 

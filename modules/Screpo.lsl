@@ -110,7 +110,8 @@ removeFromLoads( key id ){
 
 
 addDeferredLoaderScript( key targ, string script ){
-
+	
+	// Portal is too important to defer.
 	integer pos = llListFindList(LOADS, (list)targ);
 	if( ~pos )
 		LOADS = llListInsertList(LOADS, (list)script, pos+2);
@@ -160,6 +161,7 @@ onStateEntry()
         
     }
 	
+	
 end
 
 handleOwnerMethod( ScrepoMethod$deferredLoad )
@@ -179,6 +181,12 @@ handleOwnerMethod( ScrepoMethod$dump )
 			llOwnerSay(mkarr(getDeferredSlice(i)));
 					
 	}
+	
+	// purge
+	pruneDeferredLoaders();
+	qd("After purge");
+	qd(LOADS);
+	
 end
 #endif
 
@@ -207,8 +215,9 @@ handleOwnerMethod( ScrepoMethod$get )
 			
 			#ifndef NO_DEFERRED
 			key deferredLoader = getDeferredLoader(script, SENDER_KEY);
-			if( deferredLoader != "" && !noDeferred ){
+			if( deferredLoader != "" && !noDeferred /*&& script != "Portal"*/ ){
 				
+				//qd("DEFER:" + (str)deferredLoader + script + " >> " + (str)SENDER_KEY);
 				Portal$remoteLoad( 
 					deferredLoader, 
 					SENDER_KEY, 
@@ -224,6 +233,7 @@ handleOwnerMethod( ScrepoMethod$get )
 			}
 			else{
 			#endif
+				//qd("LOCAL: " + script + " >> " + (str)SENDER_KEY + " TO "+(str)SC);
 				llMessageLinked(LINK_THIS, 0, mkarr(
 					pin +
 					script +

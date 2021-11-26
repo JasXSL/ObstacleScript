@@ -55,20 +55,4 @@ list _ghGGS( integer utimeLit ){
 #define ghostHelperEventHandler() gameHelperEventHandler()
 #define onCountdownFinished() // Unused in this mode
 
-// Overrides GameHelper
-#ifdef USE_PLAYERS
-startRound(){
-
-	onRoundStart();
-	raiseEvent(0, "ROUND_START");
-	ROUND_START_TIME = llGetTime();
-	forPlayer( index, player )
-		Rlv$unSit( player, TRUE );
-	end
-	GSETTINGS = GSETTINGS | GS_ROUND_STARTED;
-	
-}
-#else
-	#define startRound() #error Please use USE_PLAYERS
-#endif
 

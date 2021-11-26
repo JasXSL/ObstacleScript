@@ -347,6 +347,7 @@ handleOwnerMethod( SpawnerMethod$load )
     
 	raiseEvent(SpawnerEvt$loadStart, cb + live + METHOD_ARGS);
 	
+	list batch;
     integer i;
     for( ; i < count(ASSET_TABLES); ++i ){
         
@@ -355,20 +356,36 @@ handleOwnerMethod( SpawnerMethod$load )
         for( ; idx < count(data); ++idx ){
             
             list spawn = llJson2List(l2s(data, idx));
-            if( ~llListFindList(METHOD_ARGS, (list)l2s(spawn, 4)) )
-                Rezzer$rez( 
-                    LINK_THIS, 
-                    l2s(spawn, E_NAME),
+            if( ~llListFindList(METHOD_ARGS, (list)l2s(spawn, 4)) ){
+			
+				list data = [
+					l2s(spawn, E_NAME),
                     (llGetRootPosition()+(vector)l2s(spawn, E_POS)), 
                     l2s(spawn, E_ROT),
                     l2s(spawn, E_DESC),
                     l2s(spawn, E_GROUP), 
                     live
-                );
+				];
+				batch += mkarr(data);
+				
+				if( count(batch) > 10 ){
+				
+					Rezzer$rezMulti( 
+						LINK_THIS, 
+						batch
+					);
+					batch = [];
+				
+				}
+				
+			}
             
         }
         
     }
+	
+	if( count(batch) )
+		Rezzer$rezMulti(LINK_THIS, batch);
 	
 	if( cb != JSON_INVALID )
 		Rezzer$cb(LINK_THIS, cb);

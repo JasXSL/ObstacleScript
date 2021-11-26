@@ -27,6 +27,8 @@ rez(){
 	string s = l2s(objQueue, 0);
 	objQueue = llDeleteSubList(objQueue, 0, 0);
 	
+	//qd("Rezzing" + s);
+	
 	if( llGetSubString(s, 0, 0) == "$" ){
 		
 		raiseEvent(RezzerEvt$cb, llGetSubString(s, 1, -1));
@@ -79,9 +81,15 @@ onStateEntry()
 		Level$scriptInit();
 end
 
+handleOwnerMethod( RezzerMethod$rezMulti )
+	
+	objQueue += METHOD_ARGS;
+	rez();
+	
+end
 
 handleOwnerMethod( RezzerMethod$rez )
-
+	
     objQueue += mkarr(METHOD_ARGS);
     rez();        
 
@@ -102,6 +110,8 @@ onTimer( label )
 			rez();
 		
 		}
+		else
+			qd("Failed to rez an item: " + idx + "but it was not found in queue somehow");
 	
 	}
 
@@ -115,9 +125,17 @@ handleOwnerMethod( RezzerMethod$cb )
 	
 end
 
+handleOwnerMethod( RezzerMethod$debug )
+	
+	qd(("Obj queue ["+(str)count(objQueue)+"]") + objQueue);
+	qd(("descQueue ["+(str)(count(descQueue)/DQSTRIDE)+"]") + descQueue);
+	
+end
+
 handleOwnerMethod( RezzerMethod$rezzed )
 
-    
+    //qd("INI" + llKey2Name(SENDER_KEY) + SENDER_KEY);
+	
     integer id = argInt(0);
     integer pos = llListFindList(descQueue, (list)id);
     if( pos == -1 ){
