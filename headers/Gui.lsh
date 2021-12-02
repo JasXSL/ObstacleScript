@@ -52,6 +52,7 @@
 	#define GuiConst$OL_BLACK 1				// Blindness
 	#define GuiConst$OL_NOISE 2				// Sets camera noise
 	
+#define GuiMethod$setOrbs 12			// (vec)pos, (float)dur - Sets orbs position 
 
 
 // Todo
@@ -63,6 +64,8 @@
 
 #define Gui$setBarPerc( target, bar, perc ) \
 	runMethod( target, "Gui", GuiMethod$setBarPerc, bar + perc )
+#define Gui$setOrbs( target, pos, dur ) \
+	runMethod( target, "Gui", GuiMethod$setOrbs, pos + dur )
 
 
 #define Gui$setBarTexture( target, bar, face, texture ) \

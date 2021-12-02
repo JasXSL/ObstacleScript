@@ -7,14 +7,31 @@ Phasmo:
 	- Attach game tool on start, detach on end
 	- Allow games without the host	
 
+	New ghosts:
+		- Stringoi - Hot temps, hots, ??? - Has a greater radius of influence. Has a greater chance of stripping players. Occasionally leaves orbs behind that can be seen on the camera.
+		- Orghast - Owometer 5, stains, ??? - Roams more often. Generates more noise on the parabolic microphone.
+		- Jim - Spirit box, hots, ??? - Becomes more active when the breaker is on. Its ghost events are guaranteed to be an event that messes with electronics. When setting off a motion detector, it has a chance not to show in the van.
+
 	Ghost events:
 		- Knocked down and dragged
-		- Lifted and spanked
+		- Lift the player into the air and carry them around for a bit.
+		- Shows itself, increasing arousal to players that look at it
+		- Lights flickering plus one of:
+			- Disable all cameras and hots.
+			- Popping the breaker.
+			- Popping all the motion sensors off the wall.
+		- Turns on all lights, followed by an electric sound, and then the breaker pops.
+		- Flicker the lights in the ghost's room. Then pop the bulb.
+		- Make the doors in the ghost's room open and close rapidly.
+		- 
 		
+	Ghost interactions:
+		- Motorboating
 
-
-
-
+	
+	Make gooryo only give HOTS when nobody's nearby
+	
+	
 
 
 	Metadata needed for descs:

@@ -159,6 +159,19 @@ interactPlayer( key hud, int power ){
     
     
 }
+
+triggerSound(){
+	list sounds = [
+		"edb881de-3d1c-775a-7e35-46a00f6b7a30",
+		"e59ab35b-9d96-1c49-af60-aae586272e67",
+		"b7f92130-398b-ddab-5525-060cfca2f9da",
+		"66a0c5a8-3718-2126-d3f6-e4dfbdcda2df"
+	];
+	lastSound = randElem(sounds);
+	triggerParabolic(llGetPos(), TRUE);
+	LAST_SOUND_TIME = llGetTime();
+}
+
 stripPlayer( key targ, integer slot ){
     
     AnimHandler$anim(
@@ -236,6 +249,32 @@ int usePower(){
 		Ghost$succubusPower();		
 		return TRUE;
 		
+	}
+	if( GHOST_TYPE == GhostConst$type$orghast ){
+		
+		triggerSound();
+		return TRUE;
+		
+	}
+	
+	if( GHOST_TYPE == GhostConst$type$jim && GhostGet$inLitRoom( llGetObjectDesc() ) ){
+		
+		Level$raiseEvent(LevelCustomType$GHOSTINT, LevelCustomEvt$GHOSTINT$power, []);
+		return TRUE;
+		
+	}
+	
+	// Leave an orb
+	if( GHOST_TYPE == GhostConst$type$stringoi ){
+	
+		forPlayer( i, k )
+		
+			Gui$setOrbs( k, llGetPos(), 60 );
+			
+		end
+		
+		return TRUE;
+	
 	}
 		
 	// Failed, reset last time we used power
@@ -337,8 +376,16 @@ handleMethod( GhostInteractionsMethod$interact )
 	lastSound = "";
 	
 	// Power gets priority
-	// 10% chance of using its power. Can only use its power every 30 sec
-	if( llFrand(1.0) < 0.1 && llGetTime()-LAST_POWER > 30 ){
+	// 20% chance of using its power. Can only use its power every 30 sec by default
+	float powCD = 40;
+	// Orghast just plays a sound
+	if( GHOST_TYPE == GhostConst$type$orghast )
+		powCD = 15;
+	// Jim uses it a little more often
+	if( GHOST_TYPE == GhostConst$type$jim )
+		powCD = 25;
+	
+	if( llFrand(1.0) < 0.2 && llGetTime()-LAST_POWER > powCD ){
 		
 		if( usePower() ){
 			
@@ -385,7 +432,9 @@ handleMethod( GhostInteractionsMethod$interact )
 			float range = 2.5;
 			if( (isBare && !roomLit) || isAsswang )
 				range = 3.5;
-				
+			// GHOST BEHAVIOR :: Stringoi - 30% longer interact radius
+			if( GHOST_TYPE == GhostConst$type$stringoi )
+				range *= 1.3;
 			
 			if( llVecDist(prPos(player), gp) < range && ~llGetAgentInfo(player) & AGENT_SITTING ){
 				
@@ -420,6 +469,9 @@ handleMethod( GhostInteractionsMethod$interact )
 			float cc = 0.15;
 			if( isBare && !roomLit )
 				cc *= 3;
+			// GHOST BEHAVIOR :: Stringoi - Strip
+			if( GHOST_TYPE == GhostConst$type$stringoi )
+				cc *= 2;
 			
 			if( llFrand(1.0) < cc && clothes && power ){
 				
@@ -452,6 +504,9 @@ handleMethod( GhostInteractionsMethod$interact )
 			float dist = 2.5;
 			if( llKey2Name(k) == "HOTS" )	// Hots has 1m extra radius since it's a temp evidence
 				dist = 3.5;
+			// GHOST BEHAVIOR :: Stringoi - 30% longer interact radius
+			if( GHOST_TYPE == GhostConst$type$stringoi )
+				dist *= 1.3;
 			if( llVecDist(<gp.x, gp.y, 0>, <offs.x, offs.y, 0>) < dist )
 				viable += k;
 			
@@ -504,15 +559,7 @@ handleMethod( GhostInteractionsMethod$interact )
 	// We can generate a sound if there's no target
 	else if( llGetTime()-LAST_SOUND_TIME > 10 ){
 	
-		list sounds = [
-			"edb881de-3d1c-775a-7e35-46a00f6b7a30",
-			"e59ab35b-9d96-1c49-af60-aae586272e67",
-			"b7f92130-398b-ddab-5525-060cfca2f9da",
-			"66a0c5a8-3718-2126-d3f6-e4dfbdcda2df"
-		];
-		lastSound = randElem(sounds);
-		triggerParabolic(llGetPos(), TRUE);
-		LAST_SOUND_TIME = llGetTime();
+		triggerSound();
 		
 	}
 

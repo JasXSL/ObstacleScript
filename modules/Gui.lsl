@@ -12,8 +12,13 @@ list BUTTONS = ["","","","","","","",""];  // (str)label
 list INSTRUCTIONS = [];		// Instruction prims
 
 int P_OL;	// Overlay
-
+int P_ORBS;
+vector ORBS;
 integer CTDN;
+vector CAM_POS;	// Orbs camera
+rotation CAM_ROT;
+float L_ORBS;		// Last time orbs were drawn
+float ORB_D;		// Orbs die
 
 // Tries to get a bar by label
 integer getBar( string label ){
@@ -197,6 +202,71 @@ updateButtonPositions(){
 
 }
 
+// Returns a list of (vec)pos, (vec)size or an empty list on fail
+list getOrbs(){
+
+	float dist = llVecDist(CAM_POS, ORBS);
+	
+	// Make sure it's not blocked
+	list ray = llCastRay(CAM_POS, ORBS, []);
+	if( l2i(ray, -1) != 0 )
+		return [];
+	
+	// Calculate the offset from camera to ORBS.
+    // Positive X is the forward-distance to ORBS.
+    // Y0 & Z0 are at the center of the screen.
+    // +Y is left, +Z is up; when the HUD is at ZERO_ROTATION.
+    vector relative = (ORBS - CAM_POS) / CAM_ROT;
+
+    vector hud;
+	// Out of bounds
+    if( relative.x <= .5 || relative.x > 10 )
+		return [];
+	// "Perspective division"
+	// Here, the forward-distance is used to divide the
+	// two other components to "map" them to a lower dimension. (3D -> 2D)
+	hud.y = relative.y / relative.x;
+	hud.z = relative.z / relative.x;
+    return [(hud * 0.87), (<.2,.2,.1>/llPow(dist, 1.25)), 0.05+0.2*(1.0-dist/10)]; // FOV ratio fix. ZERO_VECTOR if behind the camera.
+	
+}
+
+updateOrbs(){
+	
+	list set = getOrbs();
+	if( set == [] || CAM_POS == ZERO_VECTOR || ORBS == ZERO_VECTOR || llGetTime() > ORB_D )
+		llSetLinkAlpha(P_ORBS, 0, ALL_SIDES);
+	else{
+		
+		vector pos = l2v(set, 0);
+		vector scale = l2v(set, 1);
+		float alpha = l2f(set, 2);
+		// Update pos
+		llSetLinkPrimitiveParamsFast(P_ORBS, (list)
+			PRIM_POSITION + (pos+<0,0,.55>) +
+			PRIM_SIZE + scale +
+			PRIM_COLOR + 0 + ONE_VECTOR + alpha
+		);
+		
+		// Every 3 sec or so
+		if( llGetTime()-L_ORBS > 3 ){
+			
+			float speed = 25+llFrand(15);
+			int dir;
+			if( llFrand(1) < .5 )
+				dir = REVERSE;
+				
+			llSetLinkTextureAnim(P_ORBS, ANIM_ON|dir, 0, 8,8, 0,0, speed);
+			L_ORBS = llGetTime()+llFrand(4);
+			llSetLinkPrimitiveParamsFast(P_ORBS, (list)
+				PRIM_ROT_LOCAL + llEuler2Rot(<0,-PI_BY_TWO,llFrand(TWO_PI)>)
+			);
+		
+		}
+	
+	}
+	
+}
 
 // Countdown number stage
 integer ctStep;
@@ -277,14 +347,21 @@ onStateEntry()
 			;
 			
 		}
+		else if( name == "ORBS" )
+			P_ORBS = nr;
 		
         if( name == "CTDN" )
             CTDN = nr;
         
     )
-    
+	
     llSetLinkPrimitiveParamsFast(0, set);
+	setInterval("O", 1);
 	        
+end
+
+handleTimer( "O" )
+	updateOrbs();
 end
 
 handleMethod( GuiMethod$setOverlay )
@@ -330,6 +407,20 @@ handleMethod( GuiMethod$setOverlay )
 	
 end
 
+handleMethod( GuiMethod$setOrbs )
+
+	ORBS = argVec(0);
+	ORB_D = llGetTime()+argFloat(1);
+	L_ORBS = llGetTime()-1-llFrand(2);
+	updateOrbs();
+	
+end
+
+onRlvCam( pos, rot )
+	CAM_POS = pos;
+	CAM_ROT = rot;
+	updateOrbs();
+end
 
 handleMethod( GuiMethod$createBar )
     

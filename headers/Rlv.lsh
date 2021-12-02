@@ -97,7 +97,7 @@
 
 #define RlvEvt$supportCubeSpawn 1		// (key)cube_id
 #define RlvEvt$flags 2					// (int)flags
-
+#define RlvEvt$camera 3					// (vec)pos, (rot)rotation - Raised when setCamera starts or ends. On end, it doesn't include args.
 
 
 #define Rlv$setClothes( target, head, arms, torso, crotch, feet ) \
@@ -188,7 +188,10 @@
 
 
 
-
+#define onRlvCam( pos, rot ) \
+	if( SENDER_SCRIPT IS "Rlv" AND EVENT_TYPE IS RlvEvt$camera ){ \
+		vector pos = argVec(0); \
+		rotation rot = argRot(1);
 
 #define onRlvSupportCubeSpawn( id ) \
 	if( SENDER_SCRIPT IS "Rlv" AND EVENT_TYPE IS RlvEvt$supportCubeSpawn ){ \

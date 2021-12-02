@@ -455,7 +455,9 @@ handleMethod( RlvMethod$setCamera )
 		
 		
 	}
-
+	
+	raiseEvent(RlvEvt$camera, pos + rot);
+	
 end
 
 // Methods

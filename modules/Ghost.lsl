@@ -504,7 +504,12 @@ handleTimer( "A" )
 	if( STATE == STATE_IDLE ){
 	
 		// Every 30 sec go back to ghost room or try to go to a completely random room if not at home
-		if( ~BFL&BFL_HUNTING && llGetTime()-lastReturn > 30 ){
+		float roamcd = 30;
+		// GHOST BEHAVIOR :: Orghast - Roam more often
+		if( GHOST_TYPE == GhostConst$type$orghast )
+			roamcd = 20;
+		
+		if( ~BFL&BFL_HUNTING && llGetTime()-lastReturn > roamcd ){
 			
 			
 			
@@ -524,7 +529,7 @@ handleTimer( "A" )
 				else{
 					
 					Nodes$getPlumbedRoom( "PL", GhostMethod$cbPlumbing );
-					lastReturn = llGetTime()-28;	// Attempt every 2 sec until it succeeds
+					lastReturn = llGetTime()-roamcd+2;	// Attempt every 2 sec until it succeeds
 					
 				}
 				return;
@@ -533,17 +538,25 @@ handleTimer( "A" )
 
 			// Go back
 			if( startRoom != curRoom ){
+			
 				Nodes$getPath( GhostMethod$followNodes, llGetPos(), spawnPos );
-				lastReturn = llGetTime()+10+llFrand(40);	// Stay in the ghost room for longer than when it roams
+				
+				float rand = 40;
+				// GHOST BEHAVIOR :: Orghast - Roam more often
+				if( GHOST_TYPE == GhostConst$type$orghast )
+					rand = 20;
+			
+				lastReturn = llGetTime()+10+llFrand(rand);	// Stay in the ghost room for longer than when it roams
 				// GHOST BEHAVIOR :: EHEE - Don't leave the room as much
 				if( GHOST_TYPE == GhostConst$type$ehee )
 					lastReturn += 40;
+					
 			}
 			// Find a random room
 			else{
 				
 				vector rng = llGetPos()+<llFrand(20)-10,llFrand(20)-10,llFrand(15)-5>;
-				lastReturn = llGetTime()-28;	// Attempt every 2 sec until it succeeds
+				lastReturn = llGetTime()-roamcd+2;	// Attempt every 2 sec until it succeeds
 				int gRoom = pointInRoom(rng);
 				if( ~gRoom && gRoom != curRoom )
 					Nodes$getPath( GhostMethod$followNodes, llGetPos(), rng );
