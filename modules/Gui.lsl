@@ -11,6 +11,8 @@ list BAR_SETTINGS = [0,0,0];
 list BUTTONS = ["","","","","","","",""];  // (str)label
 list INSTRUCTIONS = [];		// Instruction prims
 
+int P_OL;	// Overlay
+
 integer CTDN;
 
 // Tries to get a bar by label
@@ -266,6 +268,16 @@ onStateEntry()
 			
 		}
         
+		else if( name == "OVERLAY" ){
+		
+			P_OL = nr;
+			set += (list)PRIM_LINK_TARGET + nr +
+				PRIM_POSITION + ZERO_VECTOR +
+				PRIM_SIZE + ZERO_VECTOR
+			;
+			
+		}
+		
         if( name == "CTDN" )
             CTDN = nr;
         
@@ -275,7 +287,48 @@ onStateEntry()
 	        
 end
 
+handleMethod( GuiMethod$setOverlay )
+	
+	vector pos;
+	vector size;
+	vector color;
+	int anim;
+	float alpha;
+	key texture;
+	int ol = argInt(0);
+	if( ol ){
+		
+		alpha = 1.0;
+		pos = <0,0,.55>;
+		size = <2,1.5,0>;
+		
+		if( ol == GuiConst$OL_NOISE ){
+		
+			texture = "be7c76eb-8eca-5ec0-e90d-5b118f14e57a";
+			anim = ANIM_ON|SMOOTH|LOOP|PING_PONG;
+			color = ONE_VECTOR;
+			alpha = 0.1;
+			
+		}
+		else if( ol == GuiConst$OL_BLACK )
+			texture = TEXTURE_BLANK;
 
+	}
+	
+	list set = (list)
+		PRIM_POSITION + (pos+<0,0,.05>) +
+		PRIM_SIZE + size +
+		PRIM_COLOR + 0 + color + alpha
+	;
+	if( texture )
+		set += (list)PRIM_TEXTURE + 0 + texture + <1,1,1> + ZERO_VECTOR + 0;
+		
+		
+	llSetLinkPrimitiveParamsFast(P_OL, set + PRIM_ROTATION + llEuler2Rot(<PI_BY_TWO,-PI_BY_TWO,0>));
+	llSetLinkPrimitiveParamsFast(P_OL, (list)PRIM_POSITION + pos);
+	llSetLinkTextureAnim(P_OL, anim, 0, 0,0, 0,1,25);
+	
+end
 
 
 handleMethod( GuiMethod$createBar )

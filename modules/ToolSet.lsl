@@ -51,7 +51,7 @@ integer P_PARA;
 integer P_PARAMON;
 integer P_CAM;
 integer P_THERMO;
-
+integer P_VCAM;
 
 vector SOUND_SPOT;
 float SOUND_TIME;
@@ -120,6 +120,8 @@ onDataUpdate(){
 		);
 		
 	}
+	
+	
     else if( tool == ToolsetConst$types$ghost$thermometer ){
 	
 		integer f = getActiveToolInt();
@@ -175,7 +177,9 @@ drawActiveTool(){
     AL(P_PARA, (tool == ToolsetConst$types$ghost$parabolic)*.5, 1);
     AL(P_CAM, tool == ToolsetConst$types$ghost$camera, ALL_SIDES);
     AL(P_THERMO, tool == ToolsetConst$types$ghost$thermometer, ALL_SIDES);
-    
+	AL(P_VCAM, tool == ToolsetConst$types$ghost$videoCamera, ALL_SIDES);
+		
+	
 
     onDataUpdate();
     
@@ -183,8 +187,9 @@ drawActiveTool(){
     if( llGetPermissions()&PERMISSION_TRIGGER_ANIMATION ){
         
         if( tool ){
-            anim = "default_hold";
+            anim = "default_hold_better";
             
+			integer on = getActiveToolInt();
             if( tool == ToolsetConst$types$ghost$parabolic )
                 anim = "paramic_hold";
             else if( tool == ToolsetConst$types$ghost$camera )
@@ -197,6 +202,19 @@ drawActiveTool(){
 				anim = "spiritbox_hold";
 			else if( tool == ToolsetConst$types$ghost$owometer )
 				anim = "emf_hold";
+			else if( tool == ToolsetConst$types$ghost$flashlight )
+				anim = "flashlight_hold";
+			else if( tool == ToolsetConst$types$ghost$hots )
+				anim = "default_hold_up";
+			else if( tool == ToolsetConst$types$ghost$glowstick ){
+			
+				anim = "glowstick_hold";
+				if( !on )
+					anim += "_off";
+				
+			}
+			else if( tool == ToolsetConst$types$ghost$weegieboard )
+				anim = "default_hold";
 			
         }
             
@@ -219,10 +237,12 @@ drawActiveTool(){
 int dropTool(){
 	
 	key id = getActiveToolWorldId();
+	//qd(id + BFL_USING );
 	if( id == "" || BFL&BFL_USING )
 		return FALSE;
 		
 	list rc = getRcPlacement(FALSE);
+	//qd(rc);
 	if( rc == [] )
 		return FALSE;
 	
@@ -230,7 +250,7 @@ int dropTool(){
 	vr = <0,0,vr.z>;
 		
 	
-		
+	// qd("Raising level evt");
 	Level$raiseEvent( 
 		LevelCustomType$TOOLSET, 
 		LevelCustomEvt$TOOLSET$drop, 
@@ -351,10 +371,12 @@ list getRcPlacement( integer wall ){
 	}
 	
 	list ray = llCastRay(base, base+llRot2Fwd(fwd)*2.5, RC_DEFAULT + RC_DATA_FLAGS + (RC_GET_NORMAL|RC_GET_ROOT_KEY) );
+	//qd("Fwd ray" + ray);
 	if( l2i(ray, -1) < 1 )
 		return [];
 		
 	// Prevents placement on interactive objects. Not graceful since it assumes $I is after D$. But it saves memory.
+	//qd("");
 	if( llSubStringIndex(prDesc(l2k(ray, 0)), "LEVEL") == -1 )
 		return [];
 		
@@ -433,6 +455,8 @@ onStateEntry()
             P_PARAMON = nr;
         else if( name == "CAM" )
             P_CAM = nr;
+		else if( name == "VCAM" )
+			P_VCAM = nr;
         else if( name == "THERMO" )
             P_THERMO = nr;
         else if( name == "PLANCHETTE" )
@@ -495,6 +519,7 @@ onPortalLclickStarted( hud )
         setActiveToolVal(llGetUnixTime());
         onDataUpdate();
         Level$raiseEvent( LevelCustomType$GTOOL, LevelCustomEvt$GTOOL$data, getActiveToolWorldId() + llGetUnixTime() );
+		drawActiveTool();
 
     }
     
@@ -572,7 +597,7 @@ onPortalLclickStarted( hud )
 		
 	}
 	
-	if( tool == ToolsetConst$types$ghost$hots || tool == ToolsetConst$types$ghost$ecchisketch ){
+	if( tool == ToolsetConst$types$ghost$hots || tool == ToolsetConst$types$ghost$ecchisketch || tool == ToolsetConst$types$ghost$videoCamera ){
 		
 		if( tool == ToolsetConst$types$ghost$hots ){
 			Level$raiseEvent( LevelCustomType$GTOOL, LevelCustomEvt$GTOOL$data, getActiveToolWorldId() + 1 );

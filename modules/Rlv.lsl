@@ -1,8 +1,8 @@
 
-
 #define USE_STATE_ENTRY
 #define USE_TIMER
 #define USE_LISTEN
+#define USE_RUN_TIME_PERMISSIONS
 #include "ObstacleScript/index.lsl"
 
 
@@ -19,6 +19,9 @@ integer BFL;
 #define BFL_SPRINTING 0x2
 #define BFL_RUN_LOCKED 0x4
 #define BFL_SPRINT_STARTED 0x8
+#define BFL_UNLOCK_CAM_ON_E 0x10
+#define BFL_IN_CAMERA 0x20
+#define BFL_GRAIN 0x40
 
 int SEX;	// Flags received from JasX HUD
 
@@ -43,6 +46,10 @@ setWindlight( string preset ){
     if( cWL == preset )
         return;
     cWL = preset;
+	/*
+	if( BFL&BFL_GRAIN )	// cWL is force refreshed when grain effect ends
+		return;
+	*/
 	if( preset == "" )
 		llOwnerSay("@setenv_daytime:-1=force");
 	else
@@ -105,7 +112,8 @@ float sprint = MAX_SPRINT;
 integer sprintPrim;
 float sprintFadeModifier = 1;
 float sprintRegenModifier = 1;
-float camMaxDist;
+float camMaxDist = -1;
+float lastCamMaxDist = -1;
 
 outputSprint(){
 
@@ -259,8 +267,15 @@ onStateEntry()
 	llRegionSayTo(llGetOwner(), 1, "jasx.settings");
     setDesc();
 	
+	if( llGetAttached() )
+		llRequestPermissions(llGetOwner(), PERMISSION_CONTROL_CAMERA);
+	
 end
 
+onRunTimePermissions( perm )
+	if( perm & PERMISSION_CONTROL_CAMERA )
+		llClearCameraParams();
+end
 
 onListen( chan, message )
 
@@ -368,10 +383,80 @@ end
 
 
 
+onControlsKeyPress( pressed, released )
+
+	if( pressed&~released & CONTROL_UP  && BFL & BFL_UNLOCK_CAM_ON_E ){
+		
+		BFL = BFL&~BFL_UNLOCK_CAM_ON_E;
+		runMethod(LINK_THIS, llGetScriptName(), RlvMethod$setCamera, []);
+	
+	
+	}
+	
+end
 
 
+handleMethod( RlvMethod$setCamera )
+	
+	if( ~llGetPermissions() & PERMISSION_CONTROL_CAMERA )
+		return;
+	
+	
+	vector pos = argVec(0);
+	rotation rot = argRot(1);
+	
+	if( pos == ZERO_VECTOR ){
+	
+		if( BFL&BFL_UNLOCK_CAM_ON_E )
+			Level$raiseEvent(LevelCustomType$RLV, LevelCustomEvt$RLV$cameraCleared, []);
+	
+		BFL = BFL&~BFL_UNLOCK_CAM_ON_E;
+		BFL = BFL&~BFL_IN_CAMERA;
+		if( BFL&BFL_GRAIN ){
+			
+			BFL = BFL&~BFL_GRAIN;
+			Gui$setOverlay( LINK_THIS, GuiConst$OL_NONE );
+			/*
+			str wl = cWL;
+			cWL = "";
+			setWindlight(wl);
+			*/
+		}
+		llClearCameraParams();
+		runMethod(LINK_THIS, llGetScriptName(), RlvMethod$setCamMaxDist, lastCamMaxDist);
+		
+	}
+	else{
+				
+		if( argInt(2) ){
+		
+			BFL = BFL|BFL_UNLOCK_CAM_ON_E;
+			if( argInt(3) ){
+				
+				BFL = BFL | BFL_GRAIN;
+				Gui$setOverlay( LINK_THIS, GuiConst$OL_NOISE );
+				//llOwnerSay("@setenv_preset:7660a5c9-e1b7-4271-4ba3-ab509d1cb11e=force");
+				
+			}
+				
+		}
+		
+		lastCamMaxDist = camMaxDist;
+		BFL = BFL|BFL_IN_CAMERA;
+		llSetCameraParams((list)
+			CAMERA_ACTIVE + TRUE +
+			CAMERA_POSITION_LOCKED + TRUE +
+			CAMERA_FOCUS_LOCKED + TRUE +
+			CAMERA_POSITION + pos +
+			CAMERA_FOCUS + (pos+llRot2Fwd(rot))
+		);
+		runMethod(LINK_THIS, llGetScriptName(), RlvMethod$setCamMaxDist, -1);
+		runMethod(LINK_THIS, llGetScriptName(), RlvMethod$exitMouselook, false);
+		
+		
+	}
 
-
+end
 
 // Methods
 handleMethod( RlvMethod$setClothes )
@@ -420,10 +505,12 @@ end
 handleMethod( RlvMethod$setCamMaxDist )
 	
 	llOwnerSay("@camdistmax:"+(str)camMaxDist+"=y");
-	float dist = argFloat(0);
-	if( dist >= 0 ){
-		camMaxDist = dist;
-		llOwnerSay("@camdistmax:"+(str)dist+"=n");
+	camMaxDist = argFloat(0);
+	if( camMaxDist >= 0 ){
+		
+		if( ~BFL&BFL_IN_CAMERA )
+			llOwnerSay("@camdistmax:"+(str)camMaxDist+"=n");
+		
 	}
 	
 end

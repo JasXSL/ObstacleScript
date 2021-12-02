@@ -90,6 +90,7 @@
 #define RlvMethod$toggleFreeCam 17		// (bool)allow - Enables or disables free look
 #define RlvMethod$toggleFlying 18		// (bool)allow - Enables or disables flying
 
+#define RlvMethod$setCamera 19			// (vec)pos, (rot)rotation, (bool)allowUnlock, (bool)filmGrain - Sets the camera and ejects from mouselook. If allowUnlock is true, it lets the user clear the camera by hitting e
 
 
 
@@ -107,6 +108,11 @@
 		((crotch)<<6)| \
 		((feet)<<8) \
 	))
+	
+#define Rlv$setCamera(target, pos, rot, allowUnlock, grain ) \
+	runMethod(target, "Rlv", RlvMethod$setCamera, pos + rot + allowUnlock + grain)
+#define Rlv$clearCamera(target) \
+	runMethod(target, "Rlv", RlvMethod$setCamera, [])
 
 #define Rlv$setClothSlot( target, slot, state ) \
 	runMethod( target, "Rlv", RlvMethod$setClothes, (state<<(slot*2)))

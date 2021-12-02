@@ -1,29 +1,16 @@
 x = should be fixed, ? = not sure if fixed, - todo, u = unable to reproduce
 Phasmo:
-	? Weegie board not working
-	? Motion detector not working when placed by coop
-	? Mute dead players, but unlock their camera
-	? Test dead players in coop
-	? Make sure players unsit after ending a level
-	? Test if ghost can track you into the basement during a hunt
-	
-	x Add ghost behavior
-	
-	? Make it slightly more active when players ask it for a sign.
-	? Make ghost flicker in and out while hunting
-	? All living players must be out of the van to end
-	
 	- Add ghost events
 	- Add side objectives
 	- Add rewards
 		- ??? How
 	- Attach game tool on start, detach on end
-	- Allow games without the host
-	- Ghost not setting of motion sensor
-	u Board not letting coop players interact
-	
+	- Allow games without the host	
 
-
+	Ghost events:
+		- Knocked down and dragged
+		- Lifted and spanked
+		
 
 
 

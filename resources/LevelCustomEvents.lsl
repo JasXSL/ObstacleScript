@@ -36,13 +36,19 @@
 #define LevelCustomType$HOTKEY "avHotkey"			// Receives messages on channel 3
 	#define LevelCustomEvt$HOTKEY$press 1			// (str)key
 		
+#define LevelCustomType$RLV "avRlv"
+	#define LevelCustomEvt$RLV$cameraCleared 1		// void - Camera override has ended by presseing e
 		
 #define onProjectileHit( projectile, object ) \
 	if( isEventLevelCustom() AND argStr(1) == LevelCustomType$PROJECTILE AND argInt(2) == LevelCustomEvt$PROJECTILE$hit ){ \
 		key projectile = argKey(0); \
 		key object = argKey(3);
 
-		
+#define onRlvCameraCleared( hud ) \
+	if( isEventLevelCustom() AND argStr(1) == LevelCustomType$RLV AND argInt(2) == LevelCustomEvt$RLV$cameraCleared ){ \
+		key hud = argKey(0);
+
+	
 		
 #define onStairSeated( hud, stair, seated ) \
 	if( isEventLevelCustom() AND argStr(1) == LevelCustomType$STAIR AND argInt(2) == LevelCustomEvt$STAIR$seated ){ \

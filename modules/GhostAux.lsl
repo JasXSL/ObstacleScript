@@ -357,7 +357,7 @@ end
 handleTimer( "FL" )
 	
 	VIS = !VIS;
-	float time = .2+llFrand(.3);
+	float time = .3+llFrand(.6);
 	if( VIS )
 		time = 0.05+llFrand(.15);
 		

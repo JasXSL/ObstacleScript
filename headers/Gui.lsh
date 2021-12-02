@@ -47,6 +47,11 @@
 
 #define GuiMethod$instruction 10		// (int)frame, (int)index=0, (key)texture=default, (int)xSize=4, (int)ySize=16, (float)timeout=0 - Adds an instruction button. Send -1 frame to hide
 
+#define GuiMethod$setOverlay 11			// (int)overlay - Sets an overlay
+	#define GuiConst$OL_NONE 0				// No overlay
+	#define GuiConst$OL_BLACK 1				// Blindness
+	#define GuiConst$OL_NOISE 2				// Sets camera noise
+	
 
 
 // Todo
@@ -74,6 +79,9 @@
 
 #define Gui$tweenBar( target, label, start, end, time ) \
 	runMethod( target, "Gui", GuiMethod$tweenBar, label + start + end +time )
+	
+#define Gui$setOverlay( target, type ) \
+	runMethod( target, "Gui", GuiMethod$setOverlay, type )
 
 #define Gui$setDefaultInstruction( target, instruction, index, timeout ) \
 	runMethod( target, "Gui", GuiMethod$instruction, instruction + index + "" + 0 + 0 + timeout )

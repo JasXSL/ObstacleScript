@@ -370,6 +370,10 @@ handleMethod( GhostInteractionsMethod$interact )
 	// GHOST BEHAVIOR :: SUCCUBUS - Touch a bit more
 	else if( GHOST_TYPE == GhostConst$type$succubus )
 		playerChance = 0.5;
+	// GHOST BEHAVIOR :: YURI/YAIKAI - Slightly more touchy
+	else if( GHOST_TYPE == GhostConst$type$yuri || GHOST_TYPE == GhostConst$type$yaoikai )
+		playerChance = 0.4;
+	
 		
 	key targ;	// Target of the interact
 

@@ -908,7 +908,6 @@ handleOwnerMethod( GhostMethod$toggleHunt )
 	
 	if( argInt(0) ){
 	
-		qd("Starting hunt");
 		playerFootsteps = [];
 		forPlayer(index, player)
 			playerFootsteps += 0;

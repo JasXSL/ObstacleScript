@@ -18,6 +18,7 @@
 #define ToolsetConst$types$ghost$vape 15			// 0
 #define ToolsetConst$types$ghost$hornybat 16		// 0
 #define ToolsetConst$types$ghost$saltpile 17		// (bool)stepped
+#define ToolsetConst$types$ghost$videoCamera 18		// void
 
 
 #define GhostHelper$CAM_MAX_PICS 5
