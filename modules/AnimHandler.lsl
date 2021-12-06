@@ -1,6 +1,7 @@
 #define USE_ATTACH
 #define USE_STATE_ENTRY
 #define USE_TIMER
+#define USE_RUN_TIME_PERMISSIONS
 
 #include "ObstacleScript/index.lsl"
 
@@ -157,6 +158,13 @@ handleInternalMethod( AnimHandlerMethod$purgeCustomAnimations )
 
 end
 
+// Plays a default breast animation so they don't get stuck
+onRunTimePermissions( perms )
+
+	if( perms & PERMISSION_TRIGGER_ANIMATION && llGetInventoryType("breasts_default") == INVENTORY_ANIMATION )
+		llStartAnimation("breasts_default");
+
+end
 
 
 onStateEntry()

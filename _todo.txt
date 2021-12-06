@@ -6,46 +6,34 @@ Phasmo:
 		- ??? How
 	- Attach game tool on start, detach on end
 	- Allow games without the host	
-
+	- Make gooryo only give HOTS when nobody's nearby
+	
 	New ghosts:
 		- Stringoi - Hot temps, hots, ??? - Has a greater radius of influence. Has a greater chance of stripping players. Occasionally leaves orbs behind that can be seen on the camera.
 		- Orghast - Owometer 5, stains, ??? - Roams more often. Generates more noise on the parabolic microphone.
 		- Jim - Spirit box, hots, ??? - Becomes more active when the breaker is on. Its ghost events are guaranteed to be an event that messes with electronics. When setting off a motion detector, it has a chance not to show in the van.
 
-	Ghost events:
-		- Knocked down and dragged
-		- Lift the player into the air and carry them around for a bit.
-		- Shows itself, increasing arousal to players that look at it
+	Ghost events: o = assets/code done and ready to be added
+		o Knocked down and dragged
+		o Push player against the wall and spank them
+		o Ghost possesses a player to make them rub another player
+		o Ghost possesses a player to rub themselves
+			o Unisex
+			o F
+		- Show itself and makes lights red
 		- Lights flickering plus one of:
 			- Disable all cameras and hots.
 			- Popping the breaker.
 			- Popping all the motion sensors off the wall.
-		- Turns on all lights, followed by an electric sound, and then the breaker pops.
-		- Flicker the lights in the ghost's room. Then pop the bulb.
-		- Make the doors in the ghost's room open and close rapidly.
-		- 
+		- Make nearby doors open and close rapidly.
+		
 		
 	Ghost interactions:
 		- Motorboating
 
 	
-	Make gooryo only give HOTS when nobody's nearby
 	
 	
-
-
-	Metadata needed for descs:
-	Any interactive:
-		- CSV of labels they're in
-		- Interactive tag
-	Ghost:
-		- State the ghost is currently in
-	
-	Ghost needed data from host:
-		- Ghost room position, rotation, and scale
-		- Some way to prevent the ghost from leaving the house
-	
-
 	m = model
 	u = uv mapped
 	t = textured

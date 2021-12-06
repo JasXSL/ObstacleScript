@@ -67,12 +67,13 @@ list touchedPlayers;
 #define INTERACT_BUTT_SMALL 4
 #define INTERACT_GROIN_SMALL 5
 #define INTERACT_BREASTS_SMALL 6
+#define INTERACT_BREASTS_MOTORBOAT 7
 interactPlayer( key hud, int power ){
     	
     integer sex = Rlv$getDesc$sex( hud );
     list allowed = [INTERACT_BUTT, INTERACT_GROIN];
     if( sex & GENITALS_BREASTS )
-        allowed += (list)INTERACT_BREASTS_PINCH + INTERACT_BREASTS_GRAB;
+        allowed += (list)INTERACT_BREASTS_PINCH + INTERACT_BREASTS_GRAB + INTERACT_BREASTS_MOTORBOAT;
 		
 	if( !power ){
 		
@@ -129,6 +130,13 @@ interactPlayer( key hud, int power ){
         
         anim = "breastsqueeze";
         dur = 1.7;
+        
+    }
+	else if( type == INTERACT_BREASTS_MOTORBOAT ){
+        
+        anim = "phasmo_motorboat";
+        dur = 1.4;
+		sound = "c84a8f79-e6cf-76bb-3e27-a4be63c8f2c0";
         
     }
     

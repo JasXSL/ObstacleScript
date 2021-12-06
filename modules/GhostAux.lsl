@@ -19,9 +19,11 @@ float LAST_ANGER_ADD;
 float LAST_ACT_ADD;
 int BFL;
 #define BFL_VISIBLE 0x1
+#define BFL_HUNT_CATCH 0x2 	// Next seated player should be handled like a hunt catch.
 
 key caughtHud;
 key SUCTARG;	// Succubus target
+
 
 // Sets DESC to a JSON array
 // [0] lit = Ghost room lit
@@ -316,7 +318,12 @@ onChanged( change )
 			if( ast == llGetOwnerKey(caughtHud) ){
 				
 				llRequestPermissions(ast, PERMISSION_TRIGGER_ANIMATION);
-				setTimeout("CH0", 2);
+				
+				// The caught player was a hunted player. Otherwise, it's a ghost event.
+				if( BFL & BFL_HUNT_CATCH )
+					setTimeout("CH0", 2);
+				else
+					setTimeout("UNSIT", 4);
 				
 			}
 			else
@@ -375,6 +382,26 @@ onGhostHunt( hunting )
 	
 end
 
+handleTimer( "UNSIT" )
+	
+	key ast = llAvatarOnSitTarget();
+	if( ast ){
+		
+		Rlv$unSit(ast, true);
+		llUnSit(ast);
+		
+	}
+	
+end
+
+handleOwnerMethod( GhostAuxMethod$seatGhostEvent )
+	
+	BFL = BFL&~BFL_HUNT_CATCH;
+	caughtHud = argKey(0);
+	Rlv$sit( caughtHud, llGetKey(), TRUE );
+	
+end
+
 handleTimer( "HEART" )
 	
 	list found;
@@ -423,6 +450,7 @@ end
 onGhostCaught( player, chair )
 
 	caughtHud = player;
+	BFL = BFL|BFL_HUNT_CATCH;
 	Rlv$sit( caughtHud, llGetKey(), TRUE );
 	
 }
