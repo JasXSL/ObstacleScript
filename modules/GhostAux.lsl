@@ -20,6 +20,7 @@ float LAST_ACT_ADD;
 int BFL;
 #define BFL_VISIBLE 0x1
 #define BFL_HUNT_CATCH 0x2 	// Next seated player should be handled like a hunt catch.
+float LAST_HEART;
 
 key caughtHud;
 key SUCTARG;	// Succubus target
@@ -433,6 +434,8 @@ end
 
 handleTimer( "HEART" )
 	
+	bool tickHeart = llGetTime()-LAST_HEART > 2;
+	
 	list found;
 	vector gp = llGetPos();
 	forPlayer( idx, targ )
@@ -444,13 +447,21 @@ handleTimer( "HEART" )
 			found += targ;
 			if( llListFindList(SEEN_PLAYERS, (list)targ) == -1 ){
 			
-				Rlv$loopSoundOn(targ, "51ef6a1d-437e-1923-50dd-178dfa6f59fc", 1);
+				Rlv$loopSoundOn(targ, "b3f04998-bac5-047b-7939-448cbdda39a1", 1);
 				
 			}
 			
 		}
 	
 	end
+	
+	// Tick heart
+	if( llGetTime()-LAST_HEART > 2 && found != [] ){
+		
+		LAST_HEART = llGetTime();
+		Level$raiseEvent(LevelCustomType$GHOST, LevelCustomEvt$GHOST$arouse, mkarr(found) + 4);
+		
+	}
 	
 	integer i;
 	for(; i < count(SEEN_PLAYERS); ++i ){

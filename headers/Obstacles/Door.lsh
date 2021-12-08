@@ -8,7 +8,6 @@
 #define DoorDesc$snapShut 3		// (float)radius 	- Distance to snap to the "shut" state
 #define DoorDesc$maxRange 4		// (float)meters	- Drop interact after the player moves this far away
 
-
 #define DoorEvt$open 1			// Raised when it moves out of closed snap
 #define DoorEvt$close 2			// Raised when it snaps into closed state
 #define DoorEvt$interactStart 3			// (key)player - Raised when a player interacts with it in idle state, or when the player is changed
@@ -30,6 +29,7 @@
 #define DoorTask$setRotPerc 3					// (float)perc - Sets a door rotation to a percentage of its min max (0-1)
 #define DoorTask$setStains 4					// (bool)on - Toggles stains visibility
 #define DoorTask$setRandomPerc 5				// void - Sets the door opening state to a random percentage unless the ID is "DO:EXT"
+#define DoorTask$slam 6							// (float)dur - Opens and closes the doors rapidly for dur duration
 
 // Sets Z rotation of the door
 #define Door$setRot( label, z ) \
@@ -46,6 +46,8 @@
 	llRegionSayTo( targ, DoorConst$CHAN, mkarr(label + DoorTask$setStains + on) )
 #define Door$setRandomPerc( label ) \
 	llRegionSay(DoorConst$CHAN, mkarr(label + DoorTask$setRandomPerc))
+#define Door$slam( label, dur ) \
+	llRegionSay(DoorConst$CHAN, mkarr(label + DoorTask$slam + (dur)))
 
 
 #define onDoorOpen() \

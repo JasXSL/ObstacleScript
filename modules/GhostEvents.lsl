@@ -78,8 +78,12 @@ integer isInteractive( key id ){
 
 
 onGhostEventStart(){
+
 	Level$raiseEvent(LevelCustomType$GHOSTEVT, LevelCustomEvt$GHOSTEVT$evt, mkarr(evtPlayers) + evtType + subType + evtDur);
 	raiseEvent(GhostEventsEvt$begin, mkarr(evtPlayers) + evtType + subType + evtDur );
+	llLoopSound("5a67fa19-3dbb-74c6-3297-8cee2b66e897", .2);
+	
+	
 }
 
 #include "ObstacleScript/begin.lsl"
@@ -124,6 +128,7 @@ end
 
 handleTimer( "END" )
 	
+	llStopSound();
 	if( evtType == GhostEventsConst$IT_LIGHTS ){
 	
 		if( subType == GhostEventsConst$ITL_BREAKER )
@@ -136,11 +141,10 @@ handleTimer( "END" )
 		}
 
 	}
-	
-	
-	
+		
 	// Ugly, but functional finisher
 	if( evtType == GhostEventsConst$IT_POSSESS && subType == GhostEventsConst$ITP_SPANK ){
+	
 		AnimHandler$anim(
 			l2k(evtPlayers, 0), 
 			"butthurt", 
@@ -149,6 +153,7 @@ handleTimer( "END" )
 			0
 		);
 		llSleep(2);
+		
 	}
 	
 	unsetTimer("EVT");
@@ -200,9 +205,7 @@ handleOwnerMethod( GhostEventsMethod$trigger )
 		;
 		
 	}
-	
-viable = (list)GhostEventsConst$IT_LIGHTS;
-	
+
 	viable = llListRandomize(viable, 1);
 	
 
@@ -217,7 +220,7 @@ viable = (list)GhostEventsConst$IT_LIGHTS;
 		}
 	end
 	evtPlayers = (list)closest;
-	
+		
 	integer v;
 	for(; v < count(viable); ++v ){
 		
@@ -234,8 +237,6 @@ viable = (list)GhostEventsConst$IT_LIGHTS;
 				viable += GhostEventsConst$ITL_POP;
 			
 			type = l2i(viable, llFloor(llFrand(count(viable))));
-			
-type = GhostEventsConst$ITL_ELECTRONICS;
 			subType = type;
 			evtDur = 2+llFrand(4);
 			
@@ -259,7 +260,7 @@ type = GhostEventsConst$ITL_ELECTRONICS;
 				
 			}
 			*/
-				
+			Level$raiseEvent( LevelCustomType$GHOSTINT, LevelCustomEvt$GHOSTINT$interacted, llGetKey() + 1 );
 			setTimeout("END", evtDur);
 			onGhostEventStart();
 			return;
@@ -269,8 +270,8 @@ type = GhostEventsConst$ITL_ELECTRONICS;
 		if( type == GhostEventsConst$IT_DOORS ){
 			
 			subType = 0;
-			qd("Todo: Slam doors");
 			evtDur = 3+llFrand(3);
+			Door$slam( "*", evtDur );
 			setTimeout("END", evtDur);
 			onGhostEventStart();
 			return;
@@ -559,6 +560,7 @@ type = GhostEventsConst$ITL_ELECTRONICS;
 				
 				if( success ){
 				
+					Level$raiseEvent( LevelCustomType$GHOSTINT, LevelCustomEvt$GHOSTINT$interacted, l2k(evtPlayers, 0) + 1 );
 					setTimeout("END", timeout);
 					evtDur = timeout;
 					onGhostEventStart();

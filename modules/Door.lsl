@@ -83,7 +83,7 @@ setRotPerc( float perc, int silent ){
 			perc = 1.0-perc;
 	
 	float r = perc*(maxRot-minRot) + minRot;
-	setRot(r, true);
+	setRot(r, silent);
 	stopInteract();
 
 }
@@ -244,6 +244,20 @@ onStateEntry()
     
 end
 
+handleTimer( "SL" )
+	
+	float rot = 0;
+	if( doorState == 0 )
+		rot = .25+llFrand(.25);
+	setRotPerc(rot, FALSE);
+	setTimeout("SL", 0.1+llFrand(.5));
+	
+end
+handleTimer( "SLE" )
+	unsetTimer("SL");
+	stopInteract();
+end
+
 
 
 onListen( chan, msg )
@@ -289,6 +303,27 @@ onListen( chan, msg )
 	}
 	else if( task == DoorTask$setRandomPerc && ID != "DO:EXT" ){
 		setRotPerc(llFrand(1), TRUE);
+	}
+	
+	else if( task == DoorTask$slam ){
+		
+		vector pos = prPos(SENDER_KEY);
+		vector g = llGetPos();
+		float z = llFabs(pos.z-g.z);
+		
+		if( z > 2 )
+			return;
+		
+		if( llVecDist(pos, g) > 8 )
+			return;
+			
+		float timeout = l2f(data, 0);
+		if( timeout < 1 )
+			timeout = 1;
+		setTimeout("SL", .1);
+		setTimeout("SLE", timeout);
+		raiseEvent(DoorEvt$interactStart, "");
+		
 	}
 
 	

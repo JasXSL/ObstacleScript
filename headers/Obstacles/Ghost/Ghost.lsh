@@ -127,7 +127,7 @@
 #define LevelCustomType$GHOST "oGhost"				// Generic type for traps like the lasher
 	#define LevelCustomEvt$GHOST$spawned 1			// void - The ghost has been spawned
 	#define LevelCustomEvt$GHOST$caught 2			// key player - The ghost has caught a player
-	
+	#define LevelCustomEvt$GHOST$arouse 3			// arr players, float points - Adds arousal to players
 
 #define onLevelCustomGhostSpawned( ghost ) \
 	if( isEventLevelCustom() AND argStr(1) == LevelCustomType$GHOST AND argInt(2) == LevelCustomEvt$GHOST$spawned ){ \
@@ -136,7 +136,11 @@
 	if( isEventLevelCustom() AND argStr(1) == LevelCustomType$GHOST AND argInt(2) == LevelCustomEvt$GHOST$caught ){ \
 		key ghost = argKey(0); \
 		key player = argKey(3);
-
+#define onLevelCustomGhostArouse( ghost, players, points ) \
+	if( isEventLevelCustom() AND argStr(1) == LevelCustomType$GHOST AND argInt(2) == LevelCustomEvt$GHOST$arouse ){ \
+		key ghost = argKey(0); \
+		list players = llJson2List(argStr(3)); \
+		float points = argFloat(4);
 
 
 #define Ghost$followNodes( nodes ) \

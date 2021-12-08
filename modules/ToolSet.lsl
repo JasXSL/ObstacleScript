@@ -502,8 +502,9 @@ end
 onPortalLclickStarted( hud )
 
 	integer tool = activeType();
-	if(!tool)
+	if( !tool || BFL&BFL_USING )
 		return;
+		
     list toggled = (list)
         ToolsetConst$types$ghost$owometer +
         ToolsetConst$types$ghost$flashlight +

@@ -962,6 +962,7 @@ onGhostEventsBegin( players, type, subtype )
 
 	setState( STATE_EVENT );
 	toggleWalking(false);
+	llSetKeyframedMotion([], [KFM_COMMAND, KFM_CMD_STOP]);
 	llSleep(.1);
 	vector pos = prPos(l2k(players, 0));
 	vector g = llGetPos();

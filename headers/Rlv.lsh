@@ -67,8 +67,8 @@
 #define RlvMethod$setMaxSprint 7		// (float)duration - Sets sprint max duration in seconds. 0 disables running, -1 sets infinite sprint
 #define RlvMethod$damageSprint 8		// (float)percent
 
-#define RlvMethod$setFlags 9			// (int)flags 
-#define RlvMethod$unsetFlags 10			// (int)flags
+#define RlvMethod$setFlags 9			// (int)flags, (bool)important
+#define RlvMethod$unsetFlags 10			// (int)flags, (bool)important
 
 #define RlvMethod$target 11				// (vec)pos=targetPos, (float)speed, (float)duration - Uses llMoveToTarget on a player. Pos is the position of the target. Speed is the llMoveToTarget speed, and duration is how long to keep it.
 

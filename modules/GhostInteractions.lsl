@@ -168,7 +168,7 @@ interactPlayer( key hud, int power ){
 	
     if( dur ){
     
-        Rlv$setFlags( hud, RlvFlags$IMMOBILE, TRUE );
+        Rlv$setFlags( hud, RlvFlags$IMMOBILE, false );
 		setTimeout("GI", dur);
 		touchedPlayers += hud;
         
