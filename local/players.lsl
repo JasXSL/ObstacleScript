@@ -12,10 +12,10 @@
 		(~llListFindList(PLAYERS, (list)((str)targ)))
 
 
-#define forPlayer( index, player ) \
-	int index; \
-	for(; index < count(_P); ++index ){ \
-		key player = l2k(_P, index); 
+	#define forPlayer( index, player ) \
+		int index; \
+		for(; index < count(_P); ++index ){ \
+			key player = l2k(_P, index); 
 
 
 #else
@@ -28,6 +28,11 @@
 	
 	list _H;		// Stores a list of HUDs
 	#define HUDS _H
+	
+	#define forHuds( index, hud ) \
+		int index; \
+		for(; index < count(_H); ++index ){ \
+			key hud = l2k(_H, index); 
 
 #else
 	#define _H #error Add #define USE_HUDS to the top of your script to enable HUD tracking

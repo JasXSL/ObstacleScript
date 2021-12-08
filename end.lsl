@@ -5,6 +5,14 @@ default{
 	
 	
 	state_entry(){
+		#ifdef DEFAULT_PLAYERS
+			PLAYERS = DEFAULT_PLAYERS;
+		#endif
+		#ifdef DEFAULT_HUDS
+			HUDS = DEFAULT_HUDS;
+		#endif
+		
+	
 		onEvent(evt$STATE_ENTRY, "", "", []);
 	} 
 	

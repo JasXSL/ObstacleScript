@@ -1,36 +1,26 @@
 x = should be fixed, ? = not sure if fixed, - todo, u = unable to reproduce
 Phasmo:
 	- Add ghost events
+		- Add lights flickering during any ghost event
+		- Add Ghost possess duo event
+		- Add the door event
+		- Add Lights flickering event
+		- Add cooldown to using pills
+		
 	- Add side objectives
 	- Add rewards
 		- ??? How
 	- Attach game tool on start, detach on end
 	- Allow games without the host	
-	- Make gooryo only give HOTS when nobody's nearby
-	
-	New ghosts:
-		- Stringoi - Hot temps, hots, ??? - Has a greater radius of influence. Has a greater chance of stripping players. Occasionally leaves orbs behind that can be seen on the camera.
-		- Orghast - Owometer 5, stains, ??? - Roams more often. Generates more noise on the parabolic microphone.
-		- Jim - Spirit box, hots, ??? - Becomes more active when the breaker is on. Its ghost events are guaranteed to be an event that messes with electronics. When setting off a motion detector, it has a chance not to show in the van.
 
-	Ghost events: o = assets/code done and ready to be added
-		o Knocked down and dragged
-		o Push player against the wall and spank them
-		o Ghost possesses a player to make them rub another player
-		o Ghost possesses a player to rub themselves
-			o Unisex
-			o F
-		- Show itself and makes lights red
+	Ghost events:
+		
 		- Lights flickering plus one of:
 			- Disable all cameras and hots.
 			- Popping the breaker.
 			- Popping all the motion sensors off the wall.
-		- Make nearby doors open and close rapidly.
+		- Show itself and makes lights red. nearby doors open and close rapidly.
 		
-		
-	Ghost interactions:
-		- Motorboating
-
 	
 	
 	

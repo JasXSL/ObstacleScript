@@ -35,8 +35,19 @@ list getDescType( key id, str type ){
 integer isInteractive( key id ){
     
 	str name = llKey2Name(id);
-	if( name == "HOTS" && EVIDENCE_TYPES & GhostConst$evidence$hots )
+	if( name == "HOTS" && EVIDENCE_TYPES & GhostConst$evidence$hots ){
+		
+		// GHOST BEHAVIOR :: Gooryo - Don't touch hots if a player is within 4m
+		vector g = llGetPos();
+		forPlayer(i, k)
+			if( llVecDist(g, prPos(k)) < 4 && ~llGetAgentInfo(k) & AGENT_SITTING )
+				return -1;
+		end
+		
 		return 0;
+		
+	}
+	
 	if( name == "Ecchisketch" && EVIDENCE_TYPES & GhostConst$evidence$writing )
 		return 0;
 	
@@ -157,7 +168,7 @@ interactPlayer( key hud, int power ){
 	
     if( dur ){
     
-        Rlv$setFlags( hud, RlvFlags$IMMOBILE, FALSE );
+        Rlv$setFlags( hud, RlvFlags$IMMOBILE, TRUE );
 		setTimeout("GI", dur);
 		touchedPlayers += hud;
         
@@ -302,7 +313,8 @@ onStateEntry()
 	#ifdef FETCH_PLAYERS_ON_COMPILE
 	Level$forceRefreshPortal();
     #endif
-
+	
+	//qd(llGetUsedMemory());
     
 end
 
@@ -370,7 +382,8 @@ handleOwnerMethod( GhostInteractionsMethod$forcePower )
 	usePower();
 end
 
-handleMethod( GhostInteractionsMethod$interact )
+
+handleOwnerMethod( GhostInteractionsMethod$interact )
 	/*
 	maxItems is no longer used because it causes problems with the microphone
 	int maxItems = argInt(0);

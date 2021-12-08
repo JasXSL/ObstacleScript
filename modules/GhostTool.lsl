@@ -36,6 +36,24 @@ handleMethod( GhostToolMethod$hunting )
     
 end
 
+
+handleOwnerMethod( GhostToolMethod$emp )
+	
+	vector pos = prPos(SENDER_KEY);
+	vector g = llGetPos();
+	float z = llFabs(pos.z-g.z);
+	
+	if( z > 2 )
+		return;
+	
+	if( llVecDist(pos, g) > 8 )
+		return;
+	
+	raiseEvent(GhostToolEvt$emp, []);
+	
+end
+
+
 // Only for the rezzed out assets
 handleOwnerMethod( GhostToolMethod$pickedUp )
     
@@ -43,6 +61,9 @@ handleOwnerMethod( GhostToolMethod$pickedUp )
         return;
         
 	raiseEvent(GhostToolEvt$pickedUp, []);
+	llSetStatus(STATUS_PHYSICS, FALSE);
+	llSetKeyframedMotion([], [KFM_COMMAND, KFM_CMD_STOP]);
+	llSleep(.1);
 	llSetRegionPos(spawnPos-<0,0,10>);
 	
 end

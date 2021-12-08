@@ -958,6 +958,24 @@ handleOwnerMethod( GhostMethod$toggleHunt )
 
 end
 
+onGhostEventsBegin( players, type, subtype )
+
+	setState( STATE_EVENT );
+	toggleWalking(false);
+	llSleep(.1);
+	vector pos = prPos(l2k(players, 0));
+	vector g = llGetPos();
+	llRotLookAt(
+		llRotBetween(<1,0,0>, llVecNorm(<pos.x, pos.y, g.z>-g)), 
+		1, 1
+	);
+	
+end
+onGhostEventsEnd( players, type, subtype )
+	llStopLookAt();
+	setState( STATE_IDLE );
+end
+
 // Start hunting
 handleTimer( "HUNT" )
 	setState(STATE_IDLE);

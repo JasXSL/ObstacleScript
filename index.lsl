@@ -302,6 +302,7 @@ _me( str ta, str sc, int me, list da ){
 #include "./headers/Obstacles/Ghost/GhostBoard.lsh"
 #include "./headers/Obstacles/Ghost/GhostRadio.lsh"
 #include "./headers/Obstacles/Ghost/GhostAux.lsh"
+#include "./headers/Obstacles/Ghost/GhostEvents.lsh"
 
 
 

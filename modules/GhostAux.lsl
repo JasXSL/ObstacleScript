@@ -68,21 +68,7 @@ toggleMesh( float alpha ){
 	if( alpha > 0 )
 		BFL = BFL|BFL_VISIBLE;
 		
-	if( pre != (BFL&BFL_VISIBLE) ){
-		
-		SEEN_PLAYERS = [];
-		forPlayer(idx, targ)
-			Rlv$stopLoopSound( targ );
-		end
-		
-		if( ~BFL&BFL_VISIBLE )
-			unsetTimer("HEART");
-		else
-			setInterval("HEART", 0.5);
 
-	
-	}
-	
 	int i;
 	for(; i < count(P_MESH); ++i )
 		llSetLinkAlpha(l2i(P_MESH, i), alpha, ALL_SIDES);
@@ -200,7 +186,19 @@ bool hasActivityPhrase( str input ){
 
 }
 
+toggleHeartbeat( bool on ){
+	
+	SEEN_PLAYERS = [];
+	forPlayer(idx, targ)
+		Rlv$stopLoopSound( targ );
+	end
+	
+	if( !on )
+		unsetTimer("HEART");
+	else
+		setInterval("HEART", 0.5);
 
+}
 
 #include "ObstacleScript/begin.lsl"
 
@@ -358,8 +356,38 @@ onGhostVisible( visible )
 	toggleMesh(visible);
 	if( visible )
 		setInterval("FL", 0.1);
+	toggleHeartbeat(visible);
 	
 end
+
+onGhostEventsBegin( players, type, subtype )
+
+	if( 
+		(type == GhostEventsConst$IT_POSSESS && (subtype == GhostEventsConst$ITP_SPANK || subtype == GhostEventsConst$ITP_DRAG)) ||
+		(type == GhostEventsConst$IT_LIGHTS && subtype == GhostEventsConst$ITL_POP)
+	){
+		setInterval("HEART", 0.5);	// Only heartbeat for spank
+	}
+	else{
+		BFL = BFL&~BFL_VISIBLE;
+		toggleMesh(true);
+		toggleHeartbeat(true);
+	}
+	
+	if( type == GhostEventsConst$IT_LIGHTS )
+		setInterval("FL", 0.1);
+		
+end
+onGhostEventsEnd( players, type, subtype )
+	
+	toggleHeartbeat(false);
+	unsetTimer("FL");
+	BFL = BFL|BFL_VISIBLE;
+	toggleMesh(FALSE);
+	
+	
+end
+
 
 handleTimer( "FL" )
 	
@@ -369,7 +397,8 @@ handleTimer( "FL" )
 		time = 0.05+llFrand(.15);
 		
 	toggleMesh(VIS);
-
+	setTimeout("FL", time);
+	
 end
 
 onGhostHunt( hunting )

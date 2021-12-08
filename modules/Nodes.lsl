@@ -29,6 +29,7 @@ list roomTemps;		// Temperatures of a room. Each index corresponds to an index i
 float lastSweat;
 vector rezPos;
 int ghostInLight = -1;	// Sets if the ghost is in a lit room or not
+int poppedLight = -1;	// Set to the room index of readable of a room that's got a popped light
 
 int PIGR;	// Players in ghost room
 
@@ -258,6 +259,7 @@ string getClosestRoom( vector pos ){
 
 resetTempData(){
 
+	poppedLight = -1;
 	roomLights = [];
 	roomTemps = [];
 	breaker = false;
@@ -287,7 +289,6 @@ onSpawnerGetGroups( callback, spawns )
     
     list rindex = llList2ListStrided( ROOMS, 0, -1, ROOMS_STRIDE );
     if( callback == "init" ){
-
         integer i;
         for(; i < count(spawns); ++i ){
             
@@ -326,7 +327,7 @@ onLevelCustomSpiritBoxTrigger( spiritBox )
 	
 		int index = getRoomIndexByReadable(room);
 		// Lights must be off
-		if( l2i(roomLights, index) && breaker ){
+		if( l2i(roomLights, index) && breaker && index != poppedLight ){
 			success = false;
 			//qd("SB Fail: Lights on");
 		}
@@ -439,7 +440,8 @@ handleTimer( "POS" )
 	if( llKey2Name(GHOST) ){
 		
 		str room = getPosReadable(prPos(GHOST));
-		int lit = l2i(roomLights, getRoomIndexByReadable(room)) && breaker;
+		int index = getRoomIndexByReadable(room);
+		int lit = l2i(roomLights, index) && breaker && poppedLight != index;
 		
 		if( lit != ghostInLight ){
 			
@@ -494,7 +496,7 @@ handleEvent( "#Game", 0 )
 		qd("Rooms" + ROOMS);
 		qd("Breaker"+breaker);
 		qd("Temps" + roomTemps);
-		qd("Lights" + roomLights);
+		qd("Lights" + roomLights + "popped" + poppedLight);
 		
     }	
 	else if( type == "CTH" ){
@@ -602,7 +604,7 @@ handleTimer( "TICK" )
 			
 			amt = 0.5;	// Check if lights are off
 			int plRoomIdx = getRoomIndexByReadable(plRoom);			// Get the index of the readable
-			if( !breaker || !l2i(roomLights, plRoomIdx) )			// Check if the room is dark
+			if( !breaker || !l2i(roomLights, plRoomIdx) || poppedLight == plRoomIdx )			// Check if the room is dark
 				amt = 1.5;											// 3x drain in the dark 
 				
 				
@@ -650,6 +652,13 @@ onLevelCustomLightSwitch( lightSwitch, room, on )
 		return;
 	roomLights = llListReplaceList(roomLights, (list)on, index, index);
 	Lamp$toggle( room, on );
+	
+end
+
+handleMethod( NodesMethod$popLight )
+	
+	str readable = argStr(0);
+	poppedLight = getRoomIndexByReadable(readable);
 	
 end
 
@@ -731,7 +740,7 @@ handleOwnerMethod( NodesMethod$getPlumbedRoom )
 end
 
 handleMethod( NodesMethod$getRoomName )
-	
+
 	str cbString = argStr(0);
 	vector ppos = argVec(1);
 	str ss = argStr(2);
@@ -742,6 +751,7 @@ handleMethod( NodesMethod$getRoomName )
 	list out;
 	if( ~pos )
 		out = llList2List(ROOMS, pos, pos+1);
+		
 		
 	list re = (list)SENDER_KEY;
 	if( SENDER_KEY == "" )
