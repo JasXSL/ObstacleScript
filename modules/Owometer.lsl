@@ -11,6 +11,7 @@ integer BFL;
 #define BFL_ON 0x1
 #define BFL_HUNTING 0x2
 #define BFL_DROPPED 0x4
+float DUR = 8;	// Set when receiving an EMF
 
 list EMF_POINTS;    // key id, int strength(1-5), (float)time
 
@@ -115,6 +116,9 @@ handleMethod( OwometerMethod$addPoint )
     
     key point = argKey(0);
     integer emf = argInt(1)%5;
+	DUR = argFloat(2);
+	if( DUR < 8 )
+		DUR = 8;
     
     integer pos = llListFindList(EMF_POINTS, (list)point);
     if( ~pos )
@@ -195,7 +199,7 @@ handleTimer( "EMF" )
         
         // Expiry check
         float time = l2f(EMF_POINTS, i+2);
-        if( llGetTime()-time > 10 ){
+        if( llGetTime()-time > DUR ){
             
             EMF_POINTS = llDeleteSubList(EMF_POINTS, i, i+2);
             i -= 3;

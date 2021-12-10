@@ -13,6 +13,7 @@ key GHOST = "59556ee0-6fe3-ecbb-f28e-be357ac62685";
 int EVIDENCE_TYPES;
 int GHOST_TYPE;
 #define HAS_TEMPS (EVIDENCE_TYPES & GhostConst$evidence$temps)
+int DIFFICULTY;
 
 // Note that the same index can appear multiple times
 #define RM_INDEX 0      // (Position in ROOMS list divided by ROOMS stride)
@@ -355,11 +356,12 @@ onLevelCustomSpiritBoxTrigger( spiritBox )
 		
 	}
 	
+	float mDist = 4-0.25*DIFFICULTY;
 	float dist = llVecDist(prPos(spiritBox), prPos(GHOST));
 	if( 
 		success && (
 			~EVIDENCE_TYPES&GhostConst$evidence$spiritbox || 
-			dist > 3.5
+			dist > mDist
 		)
     ){
         success = FALSE;
@@ -482,9 +484,11 @@ handleEvent( "#Game", 0 )
 
 	str type = argStr(0);
 	if( type == "EVIDENCE" ){
-		GHOST_TYPE == argInt(0);
 		EVIDENCE_TYPES = argInt(1);
+		GHOST_TYPE == argInt(2);
 	}
+	else if( type == "DIFFICULTY" )
+		DIFFICULTY = argInt(1);
 	else if( type == "ROUND_START" || type == "END_GAME" ){
 		
 		GAME_ACTIVE = (type == "ROUND_START");
@@ -577,8 +581,8 @@ handleTimer( "TICK" )
 		else 
 			val -= 1;
 			
-		if( val < 20 )
-			val = 20;
+		if( val < 23 )
+			val = 23;
 		else if( val > cap )
 			val = cap;
 		

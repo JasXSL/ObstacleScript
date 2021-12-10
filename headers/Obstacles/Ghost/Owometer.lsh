@@ -5,12 +5,12 @@
 #define __Owometer
 
 
-#define OwometerMethod$addPoint 1			// (key)asset, (int)intensity - Adds an EMF asset that can be detected. Intensity is 0 to 4, where 4 is EMF 5.
+#define OwometerMethod$addPoint 1			// (key)asset, (int)intensity, (float)duration - Adds an EMF asset that can be detected. Intensity is 0 to 4, where 4 is EMF 5. Note that duration updates the global duration, it's not individual per EMF point.
 
 
 
-#define Owometer$addPoint( asset, intensity ) \
-	runOmniMethod("Owometer", OwometerMethod$addPoint, (asset) + (intensity))
+#define Owometer$addPoint( asset, intensity, dur ) \
+	runOmniMethod("Owometer", OwometerMethod$addPoint, (asset) + (intensity) + (dur))
 
 
 

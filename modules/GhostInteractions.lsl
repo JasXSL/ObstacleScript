@@ -406,7 +406,7 @@ handleOwnerMethod( GhostInteractionsMethod$interact )
 	if( GHOST_TYPE == GhostConst$type$jim )
 		powCD = 25;
 	
-	if( llFrand(1.0) < 0.2 && llGetTime()-LAST_POWER > powCD ){
+	if( llFrand(1.0) < 0.25 && llGetTime()-LAST_POWER > powCD ){
 		
 		if( usePower() ){
 			

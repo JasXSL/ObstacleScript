@@ -121,12 +121,14 @@ onListen( ch, msg )
 				
         if( method == LevelMethod$acceptInvite ){
             
-			if( BFL & BFL_GAME_ACTIVE )
+			key owner = llGetOwnerKey(SENDER_KEY);
+			integer pos = llListFindList(PLAYERS, [(str)owner]);
+			
+			if( BFL & BFL_GAME_ACTIVE && pos == -1 )
 				return;
             
 			
-			key owner = llGetOwnerKey(SENDER_KEY);
-			integer pos = llListFindList(PLAYERS, [(str)owner]);
+			
 			
 			if( count(PLAYERS) >= MAX_PLAYERS && pos == -1 ){
 				llRegionSayTo(llGetOwnerKey(SENDER_KEY), 0, "Game is full");
@@ -170,12 +172,13 @@ onListen( ch, msg )
         }
 		// Player is already in the game, but have detached their HUD
 		else if( method == LevelMethod$autoJoin ){
-		
-			if( BFL & BFL_GAME_ACTIVE )
+			
+			key owner = llGetOwnerKey(SENDER_KEY);
+			int pos = llListFindList(PLAYERS, [(str)owner]);
+			if( BFL & BFL_GAME_ACTIVE && pos == -1 )
 				return;
 		
-			key owner = llGetOwnerKey(SENDER_KEY);
-			if( ~llListFindList(PLAYERS, [(str)owner]) )
+			if( ~pos )
 				invite(owner);
 
 		}

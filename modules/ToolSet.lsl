@@ -647,7 +647,7 @@ onListen( ch, msg )
 		return;
 	
 	// Cycle asset
-	if( msg == "sheathe" ){
+	if( msg == "sheathe" && ~BFL&BFL_USING ){
 		
 		ACTIVE_TOOL = (ACTIVE_TOOL+1) % ToolSetConst$MAX_ACTIVE;
 		
@@ -762,10 +762,11 @@ end
 handleMethod( ToolSetMethod$temp )
 
 	float t = argFloat(0);
-	t -= llFrand(2);
+	t -= llFloor(llFrand(4));
 	
 	if( getActiveToolInt() )
 		t = (t * 9.0/5.0) + 32;
+		
 	str nr = (str)floor(t);
 	while( llStringLength(nr) < 3 )
 		nr = "0"+nr;

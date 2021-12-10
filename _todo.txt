@@ -12,6 +12,7 @@ Phasmo:
 		- ??? How
 	- Attach game tool on start, detach on end
 	- Allow games without the host	
+	- Fix game re-invite
 
 	Ghost events:
 		

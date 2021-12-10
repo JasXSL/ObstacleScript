@@ -293,7 +293,7 @@ handleOwnerMethod( GhostEventsMethod$trigger )
 			forHuds( idx, k )
 				
 				list ray = llCastRay(gp, prPos(k), RC_DEFAULT);
-				if( l2i(ray, -1) == 0 )
+				if( l2i(ray, -1) == 0 && ~llGetAgentInfo(k) & AGENT_SITTING )
 					targets += k;
 			
 			end

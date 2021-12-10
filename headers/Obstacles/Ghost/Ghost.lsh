@@ -23,12 +23,12 @@
 #define GhostConst$type$hantuwu 6			// - Starts low interactive and gets more interactive as arousal increases.
 #define GhostConst$type$inugami 7			// - Gets less interactive when players are near it. More interactive if nobody's near it.
 #define GhostConst$type$obukakke 8			// - Active ability leaves stains on everything nearby without causing EMF or movement. Adds arousal when it does.
-#define GhostConst$type$gooryo 9			// (Need HOTS only if no player is nearby) - Can teleport directly between rooms with plumbing. Doesn't roam normally, only teleports.
+#define GhostConst$type$gooryo 9			// - Can teleport directly between rooms with plumbing. Doesn't roam normally, only teleports.
 #define GhostConst$type$ehee 10				// - Will only give EMF if nobody's got line of sight to it. Can't hunt if a player is within 8 meters and has LOS. Higher chance of a stronger EMF.
 #define GhostConst$type$bare 11				// - Will hunt earlier if in a dark room. Won't turn off lights. Interacts with players more in the dark. 3x chance of stripping a player in the dark. Rarely leaves the ghost room.
 #define GhostConst$type$stringoi 12			// - Has a greater chance of stripping players. Can interact with things at a greater distance. Occasionally leaves behind ghost orbs that can be seen on the camera.
 #define GhostConst$type$orghast 13			// - Roams more frequently. Has a greater chance of making noises on the microphone.
-#define GhostConst$type$jim 14				// (Need ghost event freq & type) - Ghost power increases player arousal, but only usable when in a room with the lights on. Will only trigger the electric type ghost events. Motion sensors might not show up in the van. 
+#define GhostConst$type$jim 14				// - Ghost power increases player arousal, but only usable when in a room with the lights on. Will only trigger the electric type ghost events. Motion sensors might not show up in the van. 
 
 
 // Indexes for parsing the ghost desc. Note that desc is handled by GhostAux
