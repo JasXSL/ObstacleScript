@@ -4,7 +4,7 @@
 // Ghost uses standard methods
 #define GhostMethod$followNodes 1		// portal1, portal2... - Follow path nodes
 #define GhostMethod$toggleHunt 2		// (bool)hunting - Start or stop hunting players
-#define GhostMethod$setType 3			// (int)ghost_type, (int)evidenceTypes - Sets a ghost type and evidence, affecting its behavior
+#define GhostMethod$setType 3			// (int)ghost_type, (int)evidenceTypes, (int)difficulty - Sets a ghost type and evidence, affecting its behavior
 #define GhostMethod$smudge 4			// void  - Player has used a smudge stick
 #define GhostMethod$interact 5			// void - Interact with a nearby item
 #define GhostMethod$stop 6				// (bool)stop, (bool)verbose - Stops the ghost. Verbose is useful for debugging
@@ -76,7 +76,7 @@
 #define GhostConst$evidence$writing 0x2
 #define GhostConst$evidence$spiritbox 0x4
 #define GhostConst$evidence$temps 0x8
-#define GhostConst$evidence$hots 0x10
+#define GhostConst$evidence$hots 0x10		// 16
 #define GhostConst$evidence$stains 0x20
 
 
@@ -151,8 +151,8 @@
 	runOmniMethod("Ghost", GhostMethod$stop, [])
 #define Ghost$toggleHunt( on ) \
 	runOmniMethod("Ghost", GhostMethod$toggleHunt, on)
-#define Ghost$setType( type, evidence ) \
-	runOmniMethod("Ghost", GhostMethod$setType, type + evidence)
+#define Ghost$setType( type, evidence, difficulty ) \
+	runOmniMethod("Ghost", GhostMethod$setType, (type) + (evidence) + (difficulty))
 #define Ghost$smudge() \
 	runOmniMethod("Ghost", GhostMethod$smudge, [])
 #define Ghost$interact() \

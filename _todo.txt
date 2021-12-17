@@ -1,12 +1,11 @@
 x = should be fixed, ? = not sure if fixed, - todo, u = unable to reproduce
 Phasmo:
-	- Add ghost events
-		- Add lights flickering during any ghost event
-		- Add Ghost possess duo event
-		- Add the door event
-		- Add Lights flickering event
-		- Add cooldown to using pills
-		
+	x Hot temps should ramp up faster in easy mode
+	x A ghost event should raise temperatures
+	- Add lights to exterior
+	- Add railing to steps
+	- Reduce random walk distance further
+	
 	- Add side objectives
 	- Add rewards
 		- ??? How

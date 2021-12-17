@@ -21,6 +21,8 @@ int DIFFICULTY;
 #define RM_ROT 2		// Rotation of the spawn
 #define RM_SCALE 3		// Scale of the spawn
 
+#define MAX_TEMP 35
+
 #define RM_STRIDE NodesConst$rmStride
 list ROOM_MARKERS = [];	// Contains data from the spawner library
 
@@ -274,7 +276,20 @@ resetTempData(){
 
 
 
+setGhostTemp( int roomIndex, float val ){
+	
+	int cap = 29;
+	if( HAS_TEMPS )
+		cap = MAX_TEMP;
+		
+	if( val < 23 )
+		val = 23;
+	else if( val > cap )
+		val = cap;
 
+	roomTemps = llListReplaceList(roomTemps, (list)val, roomIndex, roomIndex);
+
+}
 
 
 
@@ -566,27 +581,18 @@ handleTimer( "TICK" )
 	str room = getPosReadable(ghostPos);	// Only the first readable is used, so we need to get the first one here.
 	int ghostRoomIdx = getRoomIndexByReadable(room);
 	
-	int MAX_TEMP = 35;
-	int cap = 29;
-	if( HAS_TEMPS )
-		cap = MAX_TEMP;
-	
+
 	// Update temperatures
 	integer i;
 	for( ; i < count(roomTemps); ++i ){
 		
-		integer val = l2i(roomTemps, i);
-		if( i == ghostRoomIdx )
-			++val;
+		float val = l2i(roomTemps, i);
+		if( i == ghostRoomIdx ){
+			val += 2-DIFFICULTY*0.33;
+		}
 		else 
 			val -= 1;
-			
-		if( val < 23 )
-			val = 23;
-		else if( val > cap )
-			val = cap;
-		
-		roomTemps = llListReplaceList(roomTemps, (list)val, i, i);
+		setGhostTemp(i, val);
 		
 	}
 	
@@ -641,6 +647,16 @@ handleTimer( "TICK" )
 	}
 	
 	raiseEvent(0, "DECAY" + decay);
+	
+end
+
+onGhostEventsBegin( players, type, subtype )
+	
+	vector ghostPos = prPos(GHOST);
+	str room = getPosReadable(ghostPos);
+	int tempRoom = getRoomIndexByReadable(room);
+	if( ~tempRoom )
+		setGhostTemp(tempRoom, l2f(roomTemps, tempRoom)+6);
 	
 end
 

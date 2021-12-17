@@ -306,7 +306,7 @@ int usePower(){
 
 onStateEntry()
 
-    llSensorRepeat("", "", ACTIVE|PASSIVE, 4, PI, 1);
+    llSensorRepeat("", "", ACTIVE|PASSIVE, 6, PI, 1);
 	
 	Portal$scriptOnline();
 	
@@ -339,7 +339,7 @@ onSensor( total )
 		key dk = llDetectedKey(i);
 		vector dp = llDetectedPos(i);
 		integer intr = isInteractive(llDetectedKey(i));
-		if( ~intr && llFabs(gp.z-dp.z) < 1.5 )
+		if( ~intr && llFabs(gp.z-dp.z) < 1.8 )
 			cObjs += (list)dk;
 		
     }
@@ -393,6 +393,7 @@ handleOwnerMethod( GhostInteractionsMethod$interact )
 	list viable;
 	vector gp = llGetPos();
 	int power = getGhostPower();
+	int debug = argInt(0);
 	
 	lastSound = "";
 	
@@ -445,7 +446,11 @@ handleOwnerMethod( GhostInteractionsMethod$interact )
 		
 	key targ;	// Target of the interact
 
+
 	if( llFrand(1.0) < playerChance ){
+		
+		if( debug )
+			llOwnerSay("Rolled player");
 	
 		forPlayer( index, player )
 			
@@ -509,13 +514,16 @@ handleOwnerMethod( GhostInteractionsMethod$interact )
 		// GHOST BEHAVIOR :: asswang - On fail, revert to .3 player chance
 		else if( GHOST_TYPE == GhostConst$type$asswang )
 			playerChance = 0.3;
+		else
+			playerChance *= .5;	// Make it a little higher chance to touch an object
 		
-	
 	}
 	
 	
 	// Roll for player failed, roll for object instead
 	else if( llFrand(1.0) > playerChance ){
+		
+		list dbg;
 		
 		int i; vector gp = llGetPos();
 		for(; i < count(cObjs); ++i ){
@@ -523,16 +531,30 @@ handleOwnerMethod( GhostInteractionsMethod$interact )
 			key k = l2k(cObjs, i);
 			vector offs = prPos(k);
 			float dist = 2.5;
-			if( llKey2Name(k) == "HOTS" )	// Hots has 1m extra radius since it's a temp evidence
+			if( llKey2Name(k) == "HOTS" ){	// Hots has 1m extra radius since it's a temp evidence
 				dist = 3.5;
+				if( llFrand(1) < .25 ){		// 25% chance to guarantee hots if found
+				
+					viable = (list)k;
+					i = count(cObjs);
+					
+				}
+				
+			}
 			// GHOST BEHAVIOR :: Stringoi - 30% longer interact radius
 			if( GHOST_TYPE == GhostConst$type$stringoi )
 				dist *= 1.3;
 			if( llVecDist(<gp.x, gp.y, 0>, <offs.x, offs.y, 0>) < dist )
 				viable += k;
+				
+			if( debug )
+				dbg += (list)llKey2Name(k) + dist;
 			
 		}
+		
 		targ = randElem(viable);
+		if( debug )
+			qd("Viable objs" + dbg);
 		
 		list door = getDescType(targ, Desc$TASK_DOOR_STAT);
 		
@@ -578,9 +600,12 @@ handleOwnerMethod( GhostInteractionsMethod$interact )
 		onGhostTouch(targ, power);
 
 	// We can generate a sound if there's no target
-	else if( llGetTime()-LAST_SOUND_TIME > 10 ){
+	else{
 	
-		triggerSound();
+		if( debug )
+			llOwnerSay("no viable");
+		if( llGetTime()-LAST_SOUND_TIME > 10 )
+			triggerSound();
 		
 	}
 

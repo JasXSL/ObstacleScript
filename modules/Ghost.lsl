@@ -25,6 +25,7 @@ integer walking;
 
 // Behavior
 integer GHOST_TYPE = GhostConst$type$succubus;
+int DIF; 	// Difficulty
 
 // State manager
 integer STATE; 
@@ -509,14 +510,25 @@ handleTimer( "A" )
 		if( GHOST_TYPE == GhostConst$type$orghast )
 			roamcd = 20;
 		
-		if( ~BFL&BFL_HUNTING && llGetTime()-lastReturn > roamcd ){
-			
-			
-			
-			int startRoom = pointInRoom( spawnPos );
-			int curRoom = pointInRoom( llGetPos() );
-			
-			
+		int startRoom = pointInRoom( spawnPos );
+		int curRoom = pointInRoom( llGetPos() );
+		// Exponentially grow the area it can go to
+		float maxDist = llPow(0.04*(DIF+1)*(llGetTime()-lastWarp), 1.3)+.25;
+		if( BFL&BFL_HUNTING )
+			maxDist = 1000;
+		
+		// Handle roaming far
+		if( 
+			~BFL&BFL_HUNTING && 
+			(
+				llGetTime()-lastReturn > roamcd || 		// Timeout
+				(
+					startRoom != curRoom && 
+					llVecDist(llGetPos(), spawnPos) > maxDist 
+				)	// Not in the ghost room, and out of influence
+			)
+		){
+				
 			// GHOST BEHAVIOR - GOORYO - Request a room with plumbing
 			if( GHOST_TYPE == GhostConst$type$gooryo ){
 				
@@ -547,6 +559,8 @@ handleTimer( "A" )
 					rand = 20;
 			
 				lastReturn = llGetTime()+10+llFrand(rand);	// Stay in the ghost room for longer than when it roams
+				lastReturn += 30-10*DIF;
+				
 				// GHOST BEHAVIOR :: EHEE - Don't leave the room as much
 				if( GHOST_TYPE == GhostConst$type$ehee )
 					lastReturn += 40;
@@ -565,20 +579,17 @@ handleTimer( "A" )
 		
 		}
 
-		// Find a new place to roam
+		// Walk randomly after reaching a room
+		// Find a new place to walk to
 		if( llGetTime() > nextRoam || BFL&BFL_HUNTING ){
 			vector dir = llRot2Fwd(llEuler2Rot(<0,0,llFrand(TWO_PI)>));
+
+			// It can walk max 2m at a time
+			float md = maxDist/2;
+			if( md > 3 )
+				md = 3;
 			
-			// Exponentially grow the area it can roam
-			float maxDist = llPow(0.05*(llGetTime()-lastWarp), 1.3)+1;
-			if( BFL&BFL_HUNTING )
-				maxDist = 5;
-				
-			float dist = maxDist;
-			if( dist > 5 )
-				dist = 5;
-			
-				
+			float dist = llFrand(md/2-.5)+.5;
 			vector gp = llGetPos()-<0,0,.5>;
 			
 			list ray = llCastRay(gp, gp+dir*dist, RC_DEFAULT);
@@ -592,8 +603,11 @@ handleTimer( "A" )
 			}
 			
 			roamTarget = llGetPos()+dir*dist;
-			if( llVecDist(spawnPos, roamTarget) > maxDist || pointInRoom(roamTarget) == -1 )
-				return;
+			if( 
+				(llVecDist(spawnPos, roamTarget) > maxDist && ~BFL&BFL_HUNTING) || // Don't go if out of bounds while not hunting
+				pointInRoom(roamTarget) == -1 		// Never leave the house
+			)return;
+			
 			setState(STATE_ROAM);
 		
 		}
@@ -612,12 +626,12 @@ handleTimer( "A" )
 			
 		}
 	
+	
 		// Try walking
-		integer att = walkTowards(roamTarget);
-		
+		integer att = walkTowards(roamTarget);		
 		// Failed walking, return to idle
 		if( !att ){
-		
+			
 			llSetKeyframedMotion([], [KFM_COMMAND, KFM_CMD_STOP]);
 			toggleWalking(false);
 			setState(STATE_IDLE);
@@ -640,8 +654,10 @@ handleTimer( "A" )
 			int startRoom = pointInRoom( spawnPos );
 			int curRoom = pointInRoom( llGetPos() );
 			if( startRoom == curRoom ){
+			
 				roamTarget = spawnPos;
 				setState(STATE_ROAM);
+				
 			}
 			else 
 				setState(STATE_IDLE);
@@ -673,8 +689,8 @@ handleTimer( "A" )
 				portalState = PS_ALIGNING;
 				alignPos = -alignPos;
 				
-				// Go deeper into the room when hunting if possible
-				if( BFL&BFL_HUNTING && count(gotoPortals) < 2 ){
+				// Go deeper into the room if possible
+				if( count(gotoPortals) < 2 ){
 					
 					vector raw = l2v(data, 0);
 					list ray = llCastRay(raw, raw+alignPos*3, RC_DEFAULT);
@@ -988,6 +1004,7 @@ handleOwnerMethod( GhostMethod$setType )
 
 	GHOST_TYPE = argInt(0);
 	int evidenceType = argInt(1);
+	DIF = argInt(2);
 	raiseEvent(GhostEvt$type, GHOST_TYPE + evidenceType);
 	
 end
