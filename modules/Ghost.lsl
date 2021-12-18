@@ -959,6 +959,7 @@ handleOwnerMethod( GhostMethod$toggleHunt )
 		
 		BFL = BFL&~BFL_HUNTING;
 		raiseEvent(GhostEvt$hunt, FALSE);
+		
 		// Don't warp back if we caught someone
 		if( STATE != STATE_EVENT ){
 			
@@ -966,9 +967,10 @@ handleOwnerMethod( GhostMethod$toggleHunt )
 			setState(STATE_IDLE);
 			warpTo(spawnPos);
 			llStopSound();
-			
+			lastReturn = llGetTime()+20;	// Act like a lesser smudge
 			
 		}
+			
 		
 	}
 

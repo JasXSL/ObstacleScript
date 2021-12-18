@@ -406,6 +406,8 @@ handleOwnerMethod( GhostInteractionsMethod$interact )
 	// Jim uses it a little more often
 	if( GHOST_TYPE == GhostConst$type$jim )
 		powCD = 25;
+	if( GHOST_TYPE == GhostConst$type$obukakke )
+		powCD = 20;
 	
 	if( llFrand(1.0) < 0.25 && llGetTime()-LAST_POWER > powCD ){
 		
@@ -423,25 +425,25 @@ handleOwnerMethod( GhostInteractionsMethod$interact )
 	int isBare = GHOST_TYPE == GhostConst$type$bare;
 	int isAsswang = GHOST_TYPE == GhostConst$type$asswang;
 	
-	float playerChance = 0.3;	// 30% chance of touching a player if there's other things nearby
+	float playerChance = 0.2;	// 20% chance of touching a player
 	// GHOST BEHAVIOR :: POWOLTERGEIST
 	if( GHOST_TYPE == GhostConst$type$powoltergeist )
-		playerChance = 0.05;
+		playerChance = 0.05;	// Powoltergeist is very low
 	// GHOST BEHAVIOR :: IMP
 	else if( GHOST_TYPE == GhostConst$type$imp )
-		playerChance = 0.7;
+		playerChance = 0.4;		// Imp is twice as high
 	// GHOST BEHAVIOR :: BARE
 	else if( isBare && !roomLit )
-		playerChance = 0.5;
+		playerChance = 0.4;		// Bare gets same amount as imp if light is off
 	// GHOST BEHAVIOR :: ASSWANG - Higher chance of touching a player. But can only touch players who aren't looking at it.
 	else if( GHOST_TYPE == GhostConst$type$asswang )
-		playerChance = 0.6;
+		playerChance = 0.4;		// Asswang also has double touch chance, but it's on the condition that the player is facing away
 	// GHOST BEHAVIOR :: SUCCUBUS - Touch a bit more
 	else if( GHOST_TYPE == GhostConst$type$succubus )
-		playerChance = 0.5;
+		playerChance = 0.4;		// Succubus is also the highest, but will only touch one player.
 	// GHOST BEHAVIOR :: YURI/YAIKAI - Slightly more touchy
 	else if( GHOST_TYPE == GhostConst$type$yuri || GHOST_TYPE == GhostConst$type$yaoikai )
-		playerChance = 0.4;
+		playerChance = 0.3;		// Yuri/yaoikai are lightly more touchy
 	
 		
 	key targ;	// Target of the interact
@@ -534,6 +536,16 @@ handleOwnerMethod( GhostInteractionsMethod$interact )
 			if( llKey2Name(k) == "HOTS" ){	// Hots has 1m extra radius since it's a temp evidence
 				dist = 3.5;
 				if( llFrand(1) < .25 ){		// 25% chance to guarantee hots if found
+				
+					viable = (list)k;
+					i = count(cObjs);
+					
+				}
+				
+			}
+			if( llKey2Name(k) == "Ecchisketch" ){	// Writing has a small extra chance
+				dist = 3.5;
+				if( llFrand(1) < .1 ){
 				
 					viable = (list)k;
 					i = count(cObjs);
