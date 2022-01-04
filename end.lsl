@@ -66,7 +66,7 @@ default{
 		// Filter methods
 		if( type == os$lmtype$method && ids != llGetScriptName() )
 			return;
-			
+		
 		if( type == os$lmtype$method )
 			ids = "!";
 
@@ -130,6 +130,9 @@ default{
 	touch_end( int n ){ onEvent(evt$TOUCH_END, "", "", (list)n); }
 	#endif
 	
+	#ifdef USE_HTTP_RESPONSE
+	http_response( key id, integer status, list meta, string body ){ onEvent(evt$HTTP_RESPONSE, "", "", (list)id + status + body); }
+	#endif
 	
 	
 	

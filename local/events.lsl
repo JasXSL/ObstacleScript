@@ -35,6 +35,18 @@ Note: Checking if something is an event is enough to check _sc == something othe
 #endif
 
 
+// state_entry
+#ifdef USE_HTTP_RESPONSE
+	#define onHttpResponse( id, status, body ) \
+		if( _ty == evt$HTTP_RESPONSE && _sc == "" ){ \
+			key id = argKey(0); \
+			int status = argInt(1); \
+			str body = argStr(2);
+#else
+	#define onHttpResponse() #error Add #define USE_HTTP_RESPONSE to the top of your script
+#endif
+
+
 // sensor
 #ifdef USE_SENSOR
 	#define onSensor( total ) \

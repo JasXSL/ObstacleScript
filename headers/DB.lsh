@@ -1,0 +1,19 @@
+#ifndef __DB
+#define __DB
+
+#define DBMethod$setData 1 			// (str)callbackScript, (int)callbackMethod, (str)game, (var)data, (bool)merge - If you don't have permissions, callbacks with "_PERMS_" once permissions have been granted.
+#define DBMethod$getData 2			// (str)callbackScript, (int)callbackMethod, (str)game - Doesn't require permissions. Callbacks with args: (str)game, (var)data. 
+									// Anyone in your game can get this. Each avatar can only request one game at a time. 
+									// Wait for the callback. Returns game, JSON_NULL data on fail, followed by "_TOO_MANY_REQUSTS_" or "_INTERNAL_ERROR_"
+#define DBMethod$reqPermissions 3	// (str)callbackScript, (int)callbackMethod, (arr)dbs - Requests permissions to game DBs. Sends callback method on success.
+
+
+#define DB$reqPermissions( cbMethod, dbs ) \
+	runMethod(llGetOwner(), "DB", DBMethod$reqPermissions, llGetScriptName() + cbMethod + mkarr(dbs) )
+#define DB$getData( targ, cbMethod, db ) \
+	runMethod(targ, "DB", DBMethod$getData, llGetScriptName() + cbMethod + db )
+#define DB$setData( cbMethod, db, data, merge ) \
+	runMethod(llGetOwner(), "DB", DBMethod$setData, llGetScriptName() + cbMethod + db + data + merge)
+
+
+#endif

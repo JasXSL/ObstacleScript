@@ -67,6 +67,8 @@
 #define evt$TOUCH 14
 #define evt$TOUCH_START 15
 #define evt$TOUCH_END 16
+#define evt$HTTP_RESPONSE 17
+
 
 // Macros
 #include "./resources/macros.lsl"
@@ -272,7 +274,7 @@ _me( str ta, str sc, int me, list da ){
 #include "./headers/Rezzer.lsh"
 #include "./headers/LevelRepo.lsh"
 #include "./headers/Nodes.lsh"
-
+#include "./headers/DB.lsh"
 #include "./headers/Attachment.lsh"
 
 #include "./headers/PrimSwimParticles.lsh"
@@ -303,6 +305,7 @@ _me( str ta, str sc, int me, list da ){
 #include "./headers/Obstacles/Ghost/GhostRadio.lsh"
 #include "./headers/Obstacles/Ghost/GhostAux.lsh"
 #include "./headers/Obstacles/Ghost/GhostEvents.lsh"
+
 
 
 
