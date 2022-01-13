@@ -151,7 +151,7 @@ fetchFromCamera(){
                 #ifdef InteractCfg$USE_ROOT
                 k = prRoot(k);
                 #else
-                if(td == "ROOT"){
+                if( td == "ROOT" ){
                     k = prRoot(k);
                     td = prDesc(k);
                 }
@@ -164,7 +164,7 @@ fetchFromCamera(){
                     list_shift_each(descparse, val, {
                     
                         list parse = llParseString2List(val, ["$"], []);
-                        if( llList2String(parse,0) == Desc$TASK_DESC ){
+                        if( llList2String(parse, 0) == Desc$TASK_DESC ){
 						
                             targDesc = td;
                             targ = k;
@@ -336,7 +336,7 @@ onControlsKeyPress( pressed, released )
 	if( released & controls && INTERACT_TARG != "" ){
 	
 		if( INTERACT_LOCAL )
-			Portal$raiseEvent( INTERACT_TARG, PortalCustomType$INTERACT, PortalCustomEvt$INTERACT$end, [] );
+			Portal$raiseEvent( INTERACT_TARG, PortalCustomType$INTERACT, PortalCustomEvt$INTERACT$end, real_key );
 		else
 			Level$raiseEvent( LevelCustomType$INTERACT, LevelCustomEvt$INTERACT$end, INTERACT_TARG );
 	
@@ -449,8 +449,14 @@ onControlsKeyPress( pressed, released )
 			else if( task == Desc$TASK_INTERACT ){
 				
 				bool direct = l2i(spl, 0);	// If true, send to object, otherwise raise a level event
-				if( direct )
-					Portal$raiseEvent( targ, PortalCustomType$INTERACT, PortalCustomEvt$INTERACT$start, targPos );
+				if( direct ){
+					
+					key t = targ;
+					if( l2i(spl, 1) )
+						t = prRoot(t);
+					Portal$raiseEvent( t, PortalCustomType$INTERACT, PortalCustomEvt$INTERACT$start, targPos + real_key );
+					
+				}
 				else
 					Level$raiseEvent( LevelCustomType$INTERACT, LevelCustomEvt$INTERACT$start, targ + targPos );
 				

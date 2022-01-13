@@ -21,10 +21,35 @@
 #define ToolsetConst$types$ghost$videoCamera 18		// void
 
 
+#define ToolSetConst$affix$weakFlashlights 1
+#define ToolSetConst$affix$fewerHidingSpots 2
+#define ToolSetConst$affix$noVapes 3
+#define ToolSetConst$affix$noHornyBats 4
+#define ToolSetConst$affix$noRadios 5
+#define ToolSetConst$affix$powerOutage 6
+#define ToolSetConst$affix$noPills 7
+#define ToolSetConst$affix$noEvidenceUntilSalted 8
+
+#define ToolSetConst$affix$noArousalMonitor 1		// Arousal monitor shows ???
+#define ToolSetConst$affix$ghostInvisible 2			// Ghost is permanently invisible
+#define ToolSetConst$affix$ghostSpeed 3				// Ghost speed increased by 20%
+#define ToolSetConst$affix$noThermometer 4			// Thermometer missing
+#define ToolSetConst$affix$ghostRoomChange 5		// Ghost has a 50% chance when roaming to make the new room their home, starting every 420 sec after a room change.
+#define ToolSetConst$affix$reqMotionSensor 6		// Ghost won't touch things until motion sensed
+#define ToolSetConst$affix$noDuplicates 7			// Bring only one of each item
+#define ToolSetConst$affix$vibrator 8
+
+
+
+#define getWeakAffix() (AFFIXES&0xF)
+#define getStrongAffix() ((AFFIXES>>4)&0xF)
+#define hasWeakAffix(affix) (getWeakAffix()==affix)
+#define hasStrongAffix(affix) (getStrongAffix()==affix)
+
 #define GhostHelper$CAM_MAX_PICS 5
 #define GhostHelper$SALT_MAX_CHARGES 3
 
-#define GhostHelper$flashlightSettings (list)PRIM_POINT_LIGHT + on + <1.000, 0.928, 0.710> + 1 + 4 + 1
+#define GhostHelper$flashlightSettings (list)PRIM_POINT_LIGHT + on + <1.000, 0.928, 0.710> + 1 + (4-((AFFIXES&0xF)==ToolSetConst$affix$weakFlashlights)*2) + 1
 #define GhostHelper$ecchisketchTexture "9b2f4cf3-2796-4a6a-e5f4-0b93693c86aa"
 
 

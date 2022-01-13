@@ -61,6 +61,10 @@ handleTimer( "phys" )
 
 end
 
+handleOwnerMethod( GhostInteractiveMethod$breaker )
+	raiseEvent(GhostInteractiveEvent$breaker, argInt(0));
+end
+
 handleOwnerMethod( GhostInteractiveMethod$interact )
 
     list dt = getDescType(llGetKey(), Desc$TASK_GHOST_INTERACTIVE);

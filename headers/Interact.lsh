@@ -13,7 +13,7 @@
 // #define InteractCfg$SOUND_ON_FAIL (str)sound // Triggers a sound if interact fails
 // #define InteractCfg$SOUND_ON_SUCCESS (str)sound // Triggers a sound if interact is successful
 
-#define InteractEvt$interact 1			// (key)targ OR custom, (str)task, arg1, arg2...
+#define InteractEvt$interact 1				// (key)targ OR custom, (str)task, arg1, arg2...
 
 // * Implemented by default. Though you might need to install a module for it.
 #define InteractMethod$allowWhenSitting 1	// (bool)allow - Toggles whether interacts are allowed while sitting

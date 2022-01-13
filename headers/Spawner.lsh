@@ -17,6 +17,7 @@
 #define SpawnerMethod$spawnByIndex 17		// (int)live, (int)index1, index2... - Spawns one or many items by index
 #define SpawnerMethod$fetchFromHud 18		// void - Fetches new assets from HUD
 #define SpawnerMethod$getGroups 19			// (str)callback, group1, group2... - Raises the getGroups event with [(jsonArray)spawn1, spawn2...] Each spawn has the index appended to the end
+#define SpawnerMethod$nFromGroup 20			// (int)nr, (str)group - Spawns a random asset from group
 
 
 #define SpawnerConst$CB_GAME_START "_G_"
@@ -42,6 +43,9 @@
 
 #define Spawner$fetchFromHud( targ ) \
 	runMethod(targ, "Spawner", SpawnerMethod$fetchFromHud, [])
+	
+#define Spawner$nFromGroup( targ, amount, group ) \
+	runMethod(targ, "Spawner", SpawnerMethod$nFromGroup, (amount) + (group))
 
 
 #define onSpawnerLoadStart( cb, live, groups ) \

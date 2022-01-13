@@ -4,24 +4,23 @@
 #ifndef __GhostBoard
 #define __GhostBoard
 
+#define GhostBoardMethod$setAffixes 1			// int affixes - 4 bit array. Rightmost is the easy challenge
 
-#define GhostBoardMethod$setObjectives 1			// (key)texture0, (key)texture1, (key)texture2 - Sets the 3 side objectives
-#define GhostBoardMethod$setObjectiveCompletion 2	// (int)completed - Bitwise, little endian. Sets completed objectives.
-
-#define GhostBoard$setObjectives( a, b, c ) \
-	runMethod("GhostBoard", GhostBoardMethod$setObjectives, a + b + c)
-#define GhostBoard$setObjectiveCompletion( a, b, c ) \
-	runMethod("GhostBoard", GhostBoardMethod$setObjectives, ((a>0)|((b>0)<<1)|((c>0)<<2)))
-
+#define GhostBoard$setAffixes( affixes ) \
+	runOmniMethod("GhostBoard", GhostBoardMethod$setAffixes, affixes)
 
 // Level events
 #define LevelCustomType$GHOSTBOARD "oGhostBoard"
 	#define LevelCustomEvt$GHOSTBOARD$setGhost 1				// (int)ghostIndex - Sets the ghost selected by the player
+	#define LevelCustomEvt$GHOSTBOARD$spawned 2					// void - Sets active ghost board on the level
 	
-			
+
 #define onGhostBoardSelect( ghost ) \
 	if( isEventLevelCustom() AND argStr(1) == LevelCustomType$GHOSTBOARD AND argInt(2) == LevelCustomEvt$GHOSTBOARD$setGhost ){ \
 		int ghost = argInt(3);
+		
+#define onGhostBoardSpawn() \
+	if( isEventLevelCustom() AND argStr(1) == LevelCustomType$GHOSTBOARD AND argInt(2) == LevelCustomEvt$GHOSTBOARD$spawned ){
 		
 
 

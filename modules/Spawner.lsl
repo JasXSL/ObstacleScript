@@ -14,14 +14,16 @@
 
 // DB tables are structured as [TABLE_NAME, data1, data2...]
 integer P_DB;   // Database prim
-list DB_TABLES = [-1, -1, -1];  // contains faces, index mapped to TABLE_* below
-list DB_MAP = ["SPA","SPB", "SPC"];    // Shorthand labels for above
+list DB_TABLES = [-1, -1, -1, -1];  // contains faces, index mapped to TABLE_* below
+list DB_MAP = ["SPA","SPB", "SPC", "SPD"];    // Shorthand labels for above
 #define TABLE_SPAWNS_A 0
 #define TABLE_SPAWNS_B 1
 #define TABLE_SPAWNS_C 2
+#define TABLE_SPAWNS_D 3
+
 
 list ASSET_TABLES = [
-    TABLE_SPAWNS_A, TABLE_SPAWNS_B, TABLE_SPAWNS_C
+    TABLE_SPAWNS_A, TABLE_SPAWNS_B, TABLE_SPAWNS_C, TABLE_SPAWNS_D
 ];
 
 string SAVE_ROUND;      // When calling a save, this is the label
@@ -331,6 +333,47 @@ handleOwnerMethod( SpawnerMethod$add )
     }
 	
 	qd("Error: out of DB space");
+
+end
+
+// Spawn N elements from a group
+handleMethod( SpawnerMethod$nFromGroup )
+	
+	int nr = argInt(0);
+	if( nr < 1 )
+		nr = 1;
+		
+	str group = argStr(1);
+	list batch; integer i;
+	for( ; i < count(ASSET_TABLES); ++i ){
+		list data = getTableData(l2i(ASSET_TABLES, i));
+		
+		integer idx;
+        for( ; idx < count(data); ++idx ){
+            
+            list spawn = llJson2List(l2s(data, idx));
+            if( l2s(spawn, 4) == group ){
+			
+				list data = [
+					l2s(spawn, E_NAME),
+                    (llGetRootPosition()+(vector)l2s(spawn, E_POS)), 
+                    l2s(spawn, E_ROT),
+                    l2s(spawn, E_DESC),
+                    l2s(spawn, E_GROUP), 
+                    true
+				];
+				batch += mkarr(data);
+				
+			}
+            
+        }
+		
+	}
+	
+	Rezzer$rezMulti( 
+		LINK_THIS, 
+		llList2List(llListRandomize(batch, 1), 0, nr-1)
+	);
 
 end
 

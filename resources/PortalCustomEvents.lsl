@@ -24,13 +24,15 @@
 	#define PortalCustomEvt$LCLICK$end 2			// void - Lclick released
 
 
-#define onPortalInteractStarted( hud, pos ) \
+#define onPortalInteractStarted( hud, pos, linkKey ) \
 	if( isEventPortalCustom() AND argStr(1) == PortalCustomType$INTERACT AND argInt(2) == PortalCustomEvt$INTERACT$start ){ \
 		key hud = argKey(0); \
-		vector pos = argVec(3);
-#define onPortalInteractEnded( hud ) \
+		vector pos = argVec(3); \
+		key linkKey = argKey(4);
+#define onPortalInteractEnded( hud, linkKey ) \
 	if( isEventPortalCustom() AND argStr(1) == PortalCustomType$INTERACT AND argInt(2) == PortalCustomEvt$INTERACT$end ){ \
-		key hud = argKey(0);
+		key hud = argKey(0); \
+		linkKey = argKey(3);
 		
 #define onPortalLclickStarted( hud ) \
 	if( isEventPortalCustom() AND argStr(1) == PortalCustomType$LCLICK AND argInt(2) == PortalCustomEvt$LCLICK$start ){ \

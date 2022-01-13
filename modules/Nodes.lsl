@@ -1,6 +1,7 @@
 #define USE_STATE_ENTRY
 #define USE_TIMER
 #define USE_PLAYERS
+#include "ObstacleScript/resources/SubHelpers/GhostHelper.lsl"
 #include "ObstacleScript/index.lsl"
 
 #ifndef debugUncommon
@@ -33,7 +34,7 @@ float lastSweat;
 vector rezPos;
 int ghostInLight = -1;	// Sets if the ghost is in a lit room or not
 int poppedLight = -1;	// Set to the room index of readable of a room that's got a popped light
-
+int AFFIXES;
 int PIGR;	// Players in ghost room
 
 list portals;      // 8bArray roomIndexes, uuid
@@ -279,7 +280,7 @@ resetTempData(){
 setGhostTemp( int roomIndex, float val ){
 	
 	int cap = 29;
-	if( HAS_TEMPS )
+	if( HAS_TEMPS && !hasWeakAffix(ToolSetConst$affix$noEvidenceUntilSalted) )
 		cap = MAX_TEMP;
 		
 	if( val < 23 )
@@ -337,7 +338,7 @@ onLevelCustomSpiritBoxTrigger( spiritBox )
 	integer success = TRUE;
 	
 	str room = getPosReadable(prPos(spiritBox));
-	if( room == "" )
+	if( room == "" || hasWeakAffix(ToolSetConst$affix$noEvidenceUntilSalted) )
 		success = FALSE;
 	else{
 	
@@ -502,6 +503,8 @@ handleEvent( "#Game", 0 )
 		EVIDENCE_TYPES = argInt(1);
 		GHOST_TYPE == argInt(2);
 	}
+	else if( type == "AFFIXES" )
+		AFFIXES = argInt(1);
 	else if( type == "DIFFICULTY" )
 		DIFFICULTY = argInt(1);
 	else if( type == "ROUND_START" || type == "END_GAME" ){
@@ -584,18 +587,19 @@ handleTimer( "TICK" )
 
 	// Update temperatures
 	integer i;
-	for( ; i < count(roomTemps); ++i ){
-		
-		float val = l2i(roomTemps, i);
-		if( i == ghostRoomIdx ){
-			val += 2-DIFFICULTY*0.33;
+	if( !hasStrongAffix(ToolSetConst$affix$reqMotionSensor) && !hasStrongAffix(ToolSetConst$affix$vibrator) ){
+		for( ; i < count(roomTemps); ++i ){
+			
+			float val = l2i(roomTemps, i);
+			if( i == ghostRoomIdx ){
+				val += 2-DIFFICULTY*0.33;
+			}
+			else 
+				val -= 1;
+			setGhostTemp(i, val);
+			
 		}
-		else 
-			val -= 1;
-		setGhostTemp(i, val);
-		
 	}
-	
 	int npl = count(PLAYERS);
 	float multi = 1.0+(npl-1)*.2;	// 20% faster arousal per player above 1
 	
@@ -618,7 +622,7 @@ handleTimer( "TICK" )
 				amt = 1.5;											// 3x drain in the dark 
 				
 				
-			// GHOST BEHAVIOR :: Yurei - drains 50% faster in the same room
+			// GHOST BEHAVIOR :: Yuri - drains 50% faster in the same room
 			if( plRoom == room && GHOST_TYPE == GhostConst$type$yuri )	// Player is in the ghost's current room
 				amt *= 1.5;
 			
@@ -629,13 +633,8 @@ handleTimer( "TICK" )
 			
 		}
 		
-		
-		
 		decay += (amt*multi);
-		
-		// Handle hot temps
-		
-		
+
 	}
 	
 	if( swPlayers != [] && llGetTime()-lastSweat > 6 && llFrand(1) < .35 ){

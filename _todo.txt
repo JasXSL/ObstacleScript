@@ -1,27 +1,13 @@
 x = should be fixed, ? = not sure if fixed, - todo, u = unable to reproduce
 Phasmo:
-	x Hot temps should ramp up faster in easy mode
-	x A ghost event should raise temperatures
 	- Add lights to exterior
 	- Add railing to steps
-	- Reduce random walk distance further
-	
-	- Add side objectives
-	- Add rewards
-		- ??? How
+	- Add postit to thermometer
 	- Attach game tool on start, detach on end
-	- Allow games without the host	
-	- Fix game re-invite
-
-	Ghost events:
-		
-		- Lights flickering plus one of:
-			- Disable all cameras and hots.
-			- Popping the breaker.
-			- Popping all the motion sensors off the wall.
-		- Show itself and makes lights red. nearby doors open and close rapidly.
-		
 	
+	
+	
+	- Allow games without the host	
 	
 	
 	m = model

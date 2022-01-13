@@ -62,7 +62,6 @@
 		#define LevelCustomEvt$TOOLSET$pills 7				// void - Pills used
 		#define LevelCustomEvt$TOOLSET$ouija 8				// str type(pos, age, sex, name) - Ouija board question asked
 		
-		
 	#define onLevelCustomToolsetDrop( toolsetuuid, worldID, pos, rot ) \
 		if( isEventLevelCustom() AND argStr(1) == LevelCustomType$TOOLSET AND argInt(2) == LevelCustomEvt$TOOLSET$drop ){ \
 			key toolsetuuid = argKey(0); \
@@ -91,8 +90,7 @@
 			bool ghost = argInt(3);
 	#define onLevelCustomToolsetOuija( type ) \
 		if( isEventLevelCustom() AND argStr(1) == LevelCustomType$TOOLSET AND argInt(2) == LevelCustomEvt$TOOLSET$ouija ){ \
-			str type = argStr(3); \
-			
+			str type = argStr(3);
 	
 
 #endif

@@ -4,9 +4,9 @@
 // Ghost uses standard methods
 #define GhostMethod$followNodes 1		// portal1, portal2... - Follow path nodes
 #define GhostMethod$toggleHunt 2		// (bool)hunting - Start or stop hunting players
-#define GhostMethod$setType 3			// (int)ghost_type, (int)evidenceTypes, (int)difficulty - Sets a ghost type and evidence, affecting its behavior
+#define GhostMethod$setType 3			// (int)ghost_type, (int)evidenceTypes, (int)difficulty, (int)affixes - Sets a ghost type and evidence, affecting its behavior
 #define GhostMethod$smudge 4			// void  - Player has used a smudge stick
-#define GhostMethod$interact 5			// void - Interact with a nearby item
+//#define GhostMethod$interact 5			// void - Interact with a nearby item
 #define GhostMethod$stop 6				// (bool)stop, (bool)verbose - Stops the ghost. Verbose is useful for debugging
 #define GhostMethod$sendToChair 7		// key chair, key hud, int temp - Tells the ghost to go to a chair and trap the player. If no chair is available, drop the player.
 #define GhostMethod$succubusPower 8		// void - Triggers the succubus power
@@ -30,6 +30,25 @@
 #define GhostConst$type$orghast 13			// - Roams more frequently. Has a greater chance of making noises on the microphone.
 #define GhostConst$type$jim 14				// - Ghost power increases player arousal, but only usable when in a room with the lights on. Will only trigger the electric type ghost events. Motion sensors might not show up in the van. 
 
+// Corresponds to the ghost index above
+#define GhostConst$type$names (list) \
+	"Succubus" + \
+	"Yuri" + \
+	"Asswang" + \
+	"Powoltergeist" + \
+	"Yaoikai" + \
+	"Imp" + \
+	"Hantuwu" + \
+	"Inugami" + \
+	"Obukakke" + \
+	"Gooryo" + \
+	"Ehee" + \
+	"Bare" + \
+	"Stringoi" + \
+	"Orghast" + \
+	"Jim"
+
+
 
 // Indexes for parsing the ghost desc. Note that desc is handled by GhostAux
 #define GhostDesc$inLitRoom 0				// int - Ghost is currently in a lit room
@@ -44,7 +63,7 @@
 #define GhostGet$sucTarg( desc ) ((key)j(desc, GhostDesc$ghostCustom))
 
 
-#define GhostEvt$type 1						// int type - Ghost type received
+#define GhostEvt$type 1						// int type, int evidence, int affixes - Ghost type received
 #define GhostEvt$hunt 2						// bool hunting - Ghost is hunting
 #define GhostEvt$lights 3					// bool lights_on - Raised when lights on in the current room of the ghost is changed
 #define GhostEvt$caught 4					// key player, key chair - Caught a player. Carry them to the chair.
@@ -52,10 +71,11 @@
 #define GhostEvt$visible 6					// bool visible - Raised when the ghost goes visible or hidden
 
 
-#define onGhostType( type, evidence ) \
+#define onGhostType( type, evidence, affixes ) \
 	if( SENDER_SCRIPT IS "Ghost" AND EVENT_TYPE IS GhostEvt$type ){ \
 		int type = argInt(0); \
-		int evidence = argInt(1);
+		int evidence = argInt(1); \
+		int affixes = argInt(2);
 #define onGhostCaught( player, chair ) \
 	if( SENDER_SCRIPT IS "Ghost" AND EVENT_TYPE IS GhostEvt$caught ){ \
 		key player = argKey(0); \
@@ -77,25 +97,7 @@
 #define GhostConst$evidence$spiritbox 0x4
 #define GhostConst$evidence$temps 0x8
 #define GhostConst$evidence$hots 0x10		// 16
-#define GhostConst$evidence$stains 0x20
-
-
-// Corresponds to the ghost index above
-#define GhostConst$type$names (list) \
-	"Succubus" + \
-	"Yuri" + \
-	"Asswang" + \
-	"Powoltergeist" + \
-	"Yaoikai" + \
-	"Imp" + \
-	"Hantuwu" + \
-	"Inugami" + \
-	"Obukakke" + \
-	"Gooryo" + \
-	"Ehee" + \
-	"Stringoi" + \
-	"Orghast" + \
-	"Jim"
+#define GhostConst$evidence$stains 0x20		// 32
 
 
 
@@ -151,8 +153,8 @@
 	runOmniMethod("Ghost", GhostMethod$stop, [])
 #define Ghost$toggleHunt( on ) \
 	runOmniMethod("Ghost", GhostMethod$toggleHunt, on)
-#define Ghost$setType( type, evidence, difficulty ) \
-	runOmniMethod("Ghost", GhostMethod$setType, (type) + (evidence) + (difficulty))
+#define Ghost$setType( type, evidence, difficulty, affixes ) \
+	runOmniMethod("Ghost", GhostMethod$setType, (type) + (evidence) + (difficulty) + (affixes))
 #define Ghost$smudge() \
 	runOmniMethod("Ghost", GhostMethod$smudge, [])
 #define Ghost$interact() \

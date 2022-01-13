@@ -10,16 +10,15 @@
 	#define GhostToolMethod$pickedUp 2		// void - The tool has been picked up, turn off and hide if detached
 	#define GhostToolMethod$dropped 3		// (vec)pos, (vec)fwd, (var)data - The item has been dropped by user, place it on the floor if possible.
 	#define GhostToolMethod$trigger 4		// ... - Has the level trigger this tool. Generally used for "placed" things such as HOTS, writing, etc
-	#define GhostToolMethod$ghost 5			// (key)ghost - Whenever the ghost is spawned, this is triggered
+	#define GhostToolMethod$ghost 5			// (key)ghost, (int)affixes - Whenever the ghost is spawned, this is triggered
 	#define GhostToolMethod$emp 6			// void - EMP triggered
 	
 	#define GhostToolEvt$hunting 1			// (bool)hunting, (key)ghost - Can be captured by the rest of the linkset to do something
 	#define GhostToolEvt$pickedUp 2			// void
 	#define GhostToolEvt$dropped 3			// (var)data
 	#define GhostToolEvt$trigger 4			// ...
-	#define GhostToolEvt$ghost 5			// (key)ghost
-	#define GhostToolEvt$emp 6			// void - EMP has been triggered
-
+	#define GhostToolEvt$ghost 5			// (key)ghost, (int)affixes
+	#define GhostToolEvt$emp 6				// void - EMP has been triggered
 	
 	#define GhostTool$dropped( targ, pos, rot, data ) \
 		runMethod(targ, "GhostTool", GhostToolMethod$dropped, pos + rot + data)
@@ -29,14 +28,15 @@
 		runMethod(targ, "GhostTool", GhostToolMethod$pickedUp, [])
 	#define GhostTool$trigger( targ, args ) \
 		runMethod(targ, "GhostTool", GhostToolMethod$trigger, args)
-	#define GhostTool$setGhost( ghost ) \
-		runOmniMethod("GhostTool", GhostToolMethod$ghost, ghost)
-	#define GhostTool$setGhostTarg( targ, ghost ) \
-		runMethod(targ, "GhostTool", GhostToolMethod$ghost, ghost)
+	#define GhostTool$setGhost( ghost, affixes ) \
+		runOmniMethod("GhostTool", GhostToolMethod$ghost, ghost + affixes)
+	#define GhostTool$setGhostTarg( targ, ghost, affixes ) \
+		runMethod(targ, "GhostTool", GhostToolMethod$ghost, ghost + affixes)
 	#define GhostTool$toggleHunt( on, ghost ) \
 		runOmniMethod("GhostTool", GhostToolMethod$hunting, on + ghost)
 	#define GhostTool$emp() \
 		runOmniMethod("GhostTool", GhostToolMethod$emp, [])
+	
 	
 	#define onGhostToolEMP() \
 		if( SENDER_SCRIPT IS "GhostTool" AND EVENT_TYPE IS GhostToolEvt$emp ){
@@ -57,10 +57,11 @@
 	#define onGhostToolTrigger() \
 		if( SENDER_SCRIPT IS "GhostTool" AND EVENT_TYPE IS GhostToolEvt$trigger ){
 			
-	#define onGhostToolGhost( ghost ) \
+	#define onGhostToolGhost( ghost, affixes ) \
 	if( SENDER_SCRIPT IS "GhostTool" AND EVENT_TYPE IS GhostToolEvt$ghost ){ \
-		key ghost = argKey(0);
-	
+		key ghost = argKey(0); \
+		int affixes = argInt(1);
+		
 	
 	
 	// Level event bindings

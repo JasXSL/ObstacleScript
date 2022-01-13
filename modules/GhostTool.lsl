@@ -13,8 +13,6 @@ onStateEntry()
 		Level$raiseEvent( LevelCustomType$GTOOL, LevelCustomEvt$GTOOL$spawned, [] );
     
 	spawnPos = llGetPos();
-	
-	
 	Level$raiseEvent(LevelCustomType$GTOOL, LevelCustomEvt$GTOOL$getGhost, []);
 	Portal$scriptOnline();
 	
@@ -88,6 +86,7 @@ handleOwnerMethod( GhostToolMethod$dropped )
 	
     
 end
+
 
 handleOwnerMethod( GhostToolMethod$ghost )
 

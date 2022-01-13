@@ -60,6 +60,7 @@ integer TEMPERATURE;
 
 string curAnim;
 
+int AFFIXES;
 
 
 
@@ -632,7 +633,6 @@ onPortalLclickStarted( hud )
 
 end
 
-
 onRunTimePermissions( perm )
 
     if( perm & PERMISSION_TRIGGER_ANIMATION )
@@ -806,6 +806,11 @@ handleTimer( "HUNT" )
 		);
 	}
 	
+end
+
+onGhostToolGhost( ghost, affixes )
+	AFFIXES = affixes;
+	onDataUpdate();
 end
 
 onGhostToolHunt( hunting, ghost )

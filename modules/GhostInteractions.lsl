@@ -13,6 +13,8 @@ int EVIDENCE_TYPES;
 key lastSound;
 float LAST_SOUND_TIME;
 float LAST_POWER;
+int AFFIXES;
+
 
 // Searches desc for a specific type
 list getDescType( key id, str type ){
@@ -35,7 +37,7 @@ list getDescType( key id, str type ){
 integer isInteractive( key id ){
     
 	str name = llKey2Name(id);
-	if( name == "HOTS" && EVIDENCE_TYPES & GhostConst$evidence$hots ){
+	if( name == "HOTS" && EVIDENCE_TYPES & GhostConst$evidence$hots && !hasWeakAffix(ToolSetConst$affix$noEvidenceUntilSalted) ){
 		
 		// GHOST BEHAVIOR :: Gooryo - Don't touch hots if a player is within 4m
 		vector g = llGetPos();
@@ -48,7 +50,7 @@ integer isInteractive( key id ){
 		
 	}
 	
-	if( name == "Ecchisketch" && EVIDENCE_TYPES & GhostConst$evidence$writing )
+	if( name == "Ecchisketch" && EVIDENCE_TYPES & GhostConst$evidence$writing && !hasWeakAffix(ToolSetConst$affix$noEvidenceUntilSalted) )
 		return 0;
 	
 	if( getDescType(id, Desc$TASK_DOOR_STAT) )
@@ -237,7 +239,7 @@ onGhostTouch( key targ, int power ){
 		LAST_SOUND_TIME = llGetTime();
 	}
 	// Lazily sent to any target
-	if( EVIDENCE_TYPES&GhostConst$evidence$stains ){
+	if( EVIDENCE_TYPES&GhostConst$evidence$stains && !hasWeakAffix(ToolSetConst$affix$noEvidenceUntilSalted) ){
 		//qd("Setting stains on " + llKey2Name(targ));
 		Door$setStainsTarg( targ, "*", TRUE );
 	}
@@ -330,19 +332,29 @@ end
 
 onSensor( total )
     
+	//qd(total);
 	vector gp = llGetPos();
     cObjs = [];
     integer i;
+	list accepted;
+	list rejected;
     for(; i < total; ++i ){
         
-		
 		key dk = llDetectedKey(i);
 		vector dp = llDetectedPos(i);
 		integer intr = isInteractive(llDetectedKey(i));
-		if( ~intr && llFabs(gp.z-dp.z) < 1.8 )
+		if( ~intr && llFabs(gp.z-dp.z) < 1.8 ){
 			cObjs += (list)dk;
+			accepted += llKey2Name(dk);
+		}
+		else
+			rejected += (list)llDetectedName(i) + intr + llFabs(gp.z-dp.z);
 		
     }
+	
+	//qd("R "+ llDumpList2String(rejected, ","));
+	//qd("A "+llDumpList2String(accepted, ","));
+	
     
 end
 
@@ -352,10 +364,11 @@ onNoSensor()
 
 end
 
-onGhostType( type, evidence )
+onGhostType( type, evidence, affixes )
 	
 	GHOST_TYPE = type;
 	EVIDENCE_TYPES = evidence;
+	AFFIXES = affixes;
 	
 end
 
@@ -448,164 +461,175 @@ handleOwnerMethod( GhostInteractionsMethod$interact )
 		
 	key targ;	// Target of the interact
 
-
-	if( llFrand(1.0) < playerChance ){
+	// Needs to be motion sensed before it can touch anything
+	if( !hasStrongAffix(ToolSetConst$affix$reqMotionSensor) && !hasStrongAffix(ToolSetConst$affix$vibrator) ){
 		
-		if( debug )
-			llOwnerSay("Rolled player");
-	
-		forPlayer( index, player )
+		if( llFrand(1.0) < playerChance ){
 			
-			// GHOST BEHAVIOR :: Bare - Longer range for player interactions in darkness
-			float range = 2.5;
-			if( (isBare && !roomLit) || isAsswang )
-				range = 3.5;
-			// GHOST BEHAVIOR :: Stringoi - 30% longer interact radius
-			if( GHOST_TYPE == GhostConst$type$stringoi )
-				range *= 1.3;
-			
-			if( llVecDist(prPos(player), gp) < range && ~llGetAgentInfo(player) & AGENT_SITTING ){
-				
-				myAngX(player, ang)
-
-				key hud = l2k(HUDS, index);
-				int genitals = Rlv$getDesc$sex( hud );
-				if( 
-					// GHOST BEHAVIOR :: yaoikai - Male preference
-					(GHOST_TYPE != GhostConst$type$yaoikai || genitals&GENITALS_PENIS) &&
-					// GHOST BEHAVIOR :: yuri - Female preference
-					(GHOST_TYPE != GhostConst$type$yuri || ~genitals&GENITALS_PENIS) &&
-					// GHOST BEHAVIOR :: asswang - Only touch players not looking at it
-					(GHOST_TYPE != GhostConst$type$asswang || llFabs(ang) > PI_BY_TWO) &&
-					// GHOST BEHAVIOR :: succubus - Only touch one player
-					(GHOST_TYPE != GhostConst$type$succubus || player == GhostGet$sucTarg( llGetObjectDesc() ))
-				)viable += player;
-				
-			}
-			
-		end
-		
-		targ = randElem(viable);	// Handled at the end through onGhostTouch
-		
-		// Touch player
-		integer pos = llListFindList(PLAYERS, (list)((str)targ));
-		if( ~pos ){
-		
-			key hud = l2k(HUDS, pos);
-			//qd(HUDS);
-			int clothes = Rlv$getDesc$clothes( hud )&1023;	// 1023 = 10 bit
-			float cc = 0.15;
-			if( isBare && !roomLit )
-				cc *= 3;
-			// GHOST BEHAVIOR :: Stringoi - Strip
-			if( GHOST_TYPE == GhostConst$type$stringoi )
-				cc *= 2;
-			
-			if( llFrand(1.0) < cc && clothes && power ){
-				
-				// 682 = fully dressed. +1 because 0 is ignore
-				stripPlayer(hud, clothes >= 682);
-				lastSound = "620fe5e8-9223-10fc-3a5c-0f5e0edc3a35";
-				
-			}
-			else{
-				interactPlayer(hud, power);
-			}
-			
-		}
-		// GHOST BEHAVIOR :: asswang - On fail, revert to .3 player chance
-		else if( GHOST_TYPE == GhostConst$type$asswang )
-			playerChance = 0.3;
-		else
-			playerChance *= .5;	// Make it a little higher chance to touch an object
-		
-	}
-	
-	
-	// Roll for player failed, roll for object instead
-	else if( llFrand(1.0) > playerChance ){
-		
-		list dbg;
-		
-		int i; vector gp = llGetPos();
-		for(; i < count(cObjs); ++i ){
-			
-			key k = l2k(cObjs, i);
-			vector offs = prPos(k);
-			float dist = 2.5;
-			if( llKey2Name(k) == "HOTS" ){	// Hots has 1m extra radius since it's a temp evidence
-				dist = 3.5;
-				if( llFrand(1) < .25 ){		// 25% chance to guarantee hots if found
-				
-					viable = (list)k;
-					i = count(cObjs);
-					
-				}
-				
-			}
-			if( llKey2Name(k) == "Ecchisketch" ){	// Writing has a small extra chance
-				dist = 3.5;
-				if( llFrand(1) < .1 ){
-				
-					viable = (list)k;
-					i = count(cObjs);
-					
-				}
-				
-			}
-			// GHOST BEHAVIOR :: Stringoi - 30% longer interact radius
-			if( GHOST_TYPE == GhostConst$type$stringoi )
-				dist *= 1.3;
-			if( llVecDist(<gp.x, gp.y, 0>, <offs.x, offs.y, 0>) < dist )
-				viable += k;
-				
 			if( debug )
-				dbg += (list)llKey2Name(k) + dist;
-			
-		}
+				llOwnerSay("Rolled player");
 		
-		targ = randElem(viable);
-		if( debug )
-			qd("Viable objs" + dbg);
-		
-		list door = getDescType(targ, Desc$TASK_DOOR_STAT);
-		
-		// Door interactions
-		if( door ){
-		
-			integer st = l2i(door, 1);
-			float perc = 0;
-			if( !st || st == 2 )
-				perc = 0.5;
-			else if( llFrand(1) < 0.5 )
-				perc = 1.0;
-			Door$setRotPercTarg( targ, "*", perc );
-			//qd("Door interact" + llKey2Name(targ));
-			lastSound = "8c8a6c69-f859-d559-0498-14cce9510635";
-			
-		}
-		// Tool interactions
-		else if( llKey2Name(targ) == "HOTS" || llKey2Name(targ) == "Ecchisketch" ){
-			GhostTool$trigger( targ, [] );
-		}
-		// Regular interactions
-		else{
-			
-			integer flags; float speed = 1.0;
-			if( EVIDENCE_TYPES & GhostConst$evidence$stains )
-				flags = flags|GhostInteractiveConst$INTERACT_ALLOW_STAINS;
+			forPlayer( index, player )
 				
-			// GHOST BEHAVIOR :: POWOLTERGEIST
-			if( GHOST_TYPE == GhostConst$type$powoltergeist )
-				speed += llPow(llFrand(2),2);
+				// GHOST BEHAVIOR :: Bare - Longer range for player interactions in darkness
+				float range = 2.5;
+				if( (isBare && !roomLit) || isAsswang )
+					range = 3.5;
+				// GHOST BEHAVIOR :: Stringoi - 30% longer interact radius
+				if( GHOST_TYPE == GhostConst$type$stringoi )
+					range *= 1.3;
+				
+				if( llVecDist(prPos(player), gp) < range && ~llGetAgentInfo(player) & AGENT_SITTING ){
+					
+					myAngX(player, ang)
 
-			GhostInteractive$interact( targ, flags, speed );
+					key hud = l2k(HUDS, index);
+					int genitals = Rlv$getDesc$sex( hud );
+					if( 
+						// GHOST BEHAVIOR :: yaoikai - Male preference
+						(GHOST_TYPE != GhostConst$type$yaoikai || genitals&GENITALS_PENIS) &&
+						// GHOST BEHAVIOR :: yuri - Female preference
+						(GHOST_TYPE != GhostConst$type$yuri || ~genitals&GENITALS_PENIS) &&
+						// GHOST BEHAVIOR :: asswang - Only touch players not looking at it
+						(GHOST_TYPE != GhostConst$type$asswang || llFabs(ang) > PI_BY_TWO) &&
+						// GHOST BEHAVIOR :: succubus - Only touch one player
+						(GHOST_TYPE != GhostConst$type$succubus || player == GhostGet$sucTarg( llGetObjectDesc() ))
+					)viable += player;
+					
+				}
+				
+			end
+			
+			targ = randElem(viable);	// Handled at the end through onGhostTouch
+				
+			// Touch player
+			integer pos = llListFindList(PLAYERS, (list)((str)targ));
+			if( debug )
+				llOwnerSay("Touching player " + llGetDisplayName(targ) + (str)pos);
+			if( ~pos ){
+			
+				key hud = l2k(HUDS, pos);
+				//qd(HUDS);
+				int clothes = Rlv$getDesc$clothes( hud )&1023;	// 1023 = 10 bit
+				float cc = 0.15;
+				if( isBare && !roomLit )
+					cc *= 3;
+				// GHOST BEHAVIOR :: Stringoi - Strip
+				if( GHOST_TYPE == GhostConst$type$stringoi )
+					cc *= 2;
+				
+				if( llFrand(1.0) < cc && clothes && power ){
+					
+					// 682 = fully dressed. +1 because 0 is ignore
+					stripPlayer(hud, clothes >= 682);
+					lastSound = "620fe5e8-9223-10fc-3a5c-0f5e0edc3a35";
+					
+				}
+				else{
+					interactPlayer(hud, power);
+				}
+				
+			}
+			// GHOST BEHAVIOR :: asswang - On fail, revert to .3 player chance
+			else if( GHOST_TYPE == GhostConst$type$asswang )
+				playerChance = 0.3;
+			else
+				playerChance *= .5;	// Make it a little higher chance to touch an object
 			
 		}
 		
+		
+		// Roll for player failed, roll for object instead
+		else if( llFrand(1.0) > playerChance ){
+			
+			list dbg;
+			
+			int i; vector gp = llGetPos();
+			for(; i < count(cObjs); ++i ){
+				
+				key k = l2k(cObjs, i);
+				vector offs = prPos(k);
+				float dist = 3;
+				float d = llVecDist(<gp.x, gp.y, 0>, <offs.x, offs.y, 0>);
+				
+				if( llKey2Name(k) == "HOTS" ){	// Hots has 1m extra radius since it's a temp evidence
+					dist = 3.5;
+					if( d < dist && llFrand(1) < .2 ){		// 20% chance to guarantee hots if found
+					
+						viable = (list)k;
+						i = count(cObjs);
+						
+					}
+					
+				}
+				if( llKey2Name(k) == "Ecchisketch" ){	// Writing has a small extra chance
+					dist = 3.5;
+					if( llFrand(1) < .1 && d < dist ){
+					
+						viable = (list)k;
+						i = count(cObjs);
+						
+					}
+					
+				}
+				// GHOST BEHAVIOR :: Stringoi - 30% longer interact radius
+				if( GHOST_TYPE == GhostConst$type$stringoi )
+					dist *= 1.3;
+					
+				if( d < dist )
+					viable += k;
+				
+				if( debug )
+					dbg += (list)llKey2Name(k) + d;
+				
+			}
+			
+			targ = randElem(viable);
+			if( debug ){
+				qd("Targ" + llKey2Name(targ) + "weak affix" + getWeakAffix() +"strong" + getStrongAffix());
+				qd(("Unfiltered ("+(str)(count(dbg)/3)+")") + llDumpList2String(dbg, ","));
+			}
+			list door = getDescType(targ, Desc$TASK_DOOR_STAT);
+			
+			if( debug )
+				llOwnerSay("Touching ITEM "+llKey2Name(targ));
+			// Door interactions
+			if( door ){
+			
+				integer st = l2i(door, 1);
+				float perc = 0;
+				if( !st || st == 2 )
+					perc = 0.5;
+				else if( llFrand(1) < 0.5 )
+					perc = 1.0;
+				Door$setRotPercTarg( targ, "*", perc );
+				//qd("Door interact" + llKey2Name(targ));
+				lastSound = "8c8a6c69-f859-d559-0498-14cce9510635";
+				
+			}
+			// Tool interactions
+			else if( llKey2Name(targ) == "HOTS" || llKey2Name(targ) == "Ecchisketch" ){
+				GhostTool$trigger( targ, [] );
+			}
+			// Regular interactions
+			else{
+				
+				integer flags; float speed = 1.0;
+				if( EVIDENCE_TYPES & GhostConst$evidence$stains && !hasWeakAffix(ToolSetConst$affix$noEvidenceUntilSalted) )
+					flags = flags|GhostInteractiveConst$INTERACT_ALLOW_STAINS;
+					
+				// GHOST BEHAVIOR :: POWOLTERGEIST
+				if( GHOST_TYPE == GhostConst$type$powoltergeist )
+					speed += llPow(llFrand(2),2);
+
+				GhostInteractive$interact( targ, flags, speed );
+				
+			}
+			
+		}
+		
+	
 	}
-	
-	
 	// Now that we're done, see if we found a target, or should play a sound
 	// Trigger sound, add EMF etc
 	if( targ )

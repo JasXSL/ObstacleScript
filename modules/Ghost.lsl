@@ -2,11 +2,14 @@
 #define USE_STATE_ENTRY
 #define USE_PLAYERS
 #include "ObstacleScript/headers/Obstacles/Ghost/Ghost.lsh"
+#include "ObstacleScript/resources/SubHelpers/GhostHelper.lsl"
 #include "ObstacleScript/index.lsl"
 
 list cNodes;	// Cache of pathing nodes, fetched from Nodes script
 #define cacheNodes() cNodes = []; Nodes$getRooms( GhostMethod$cbNodes )
 
+
+int AFFIXES;
 
 /* CONFIG */
 // Hover height when walking
@@ -36,12 +39,27 @@ integer STATE;
 #define STATE_EVENT 4       // Ghost is doing an event, and shouldn't be interfered with
 #define STATE_HUNT_PRE 5	// Waiting to start the hunt
 
+
+// Settings
+#define BFL_PAUSE 0x1		// Pause the ghost, used for debugging.
+#define BFL_HUNTING 0x2		// Currently hunting for players
+#define BFL_SMUDGE 0x4		// Can only idle. Deaf and blind.
+#define BFL_VISIBLE 0x8		// Player visible
+
+#define BFL_HUNT_HAS_LOS 0x10	// We currently have line of sight to our target
+#define BFL_HUNT_HAS_POS 0x20	// LOS lost, but we have their last visible coordinates
+#define BFL_ROAM_REACHED 0x40	// When roam starts this is unset. When roam ends by reaching the target, this is set.
+integer BFL;
+
+
 vector roamTarget;          // Position we're roaming towards
 key chaseTarget;            // Player we're chasting
 float nextRoam;       		// llGetTime() of when we finished the last roam
 float lastWarp;				// llGetTime of when we last went to the ghost room
 float lastReturn = -26;		// -26 means it'll have 4 sec to cache the nodes when spawned, then immediately roam
 float lastFootSound;		// Used when hunting to generate footsteps
+
+float lastRoomChange;		// Used with hasStrongAffix(ToolSetConst$affix$ghostRoomChange)
 
 vector spawnPos;
 #define toggleMesh( visible ) raiseEvent(GhostEvt$visible, visible)
@@ -57,21 +75,18 @@ setState( int st ){
 	if( STATE == STATE_CHASING )
 		chaseFailed = 0;
 		
+	if( STATE == STATE_PATHING ){
+	
+		BFL = BFL&~BFL_ROAM_REACHED;
+		roamTimeout = llGetTime()+60;
+		
+	}
+		
 	STATE = st;
 	//llSetText((str)STATE, ONE_VECTOR, 1);
 	
 }
 
-
-// Settings
-#define BFL_PAUSE 0x1		// Pause the ghost, used for debugging.
-#define BFL_HUNTING 0x2		// Currently hunting for players
-#define BFL_SMUDGE 0x4		// Can only idle. Deaf and blind.
-#define BFL_VISIBLE 0x8		// Player visible
-
-#define BFL_HUNT_HAS_LOS 0x10	// We currently have line of sight to our target
-#define BFL_HUNT_HAS_POS 0x20	// LOS lost, but we have their last visible coordinates
-integer BFL;
 
 // 
 list getDoorData( key door ){
@@ -180,6 +195,9 @@ integer walkTowards( vector pos ){
 			speed = 2.5;
 	
 	}
+	
+	if( hasStrongAffix(ToolSetConst$affix$ghostSpeed) )
+		speed *= 1.2;
 
 	// Find where to step
 	vector fwd = llVecNorm(<pp.x, pp.y, 0>-<gp.x, gp.y, 0>)*speed;
@@ -215,18 +233,21 @@ integer walkTowards( vector pos ){
 list ignoreDoor( list ray, int hasNormal ){
 
 	int i; int n = 2+(hasNormal>0);
-	for(; i < count(ray)/2 && count(ray) > 1; ++i ){
+
+	for(; i < count(ray)/n && count(ray) > 1; ++i ){
 	
 		list door = getDoorData(l2k(ray, i*n));
 		if( door != [] ){
 		
-			ray = llDeleteSubList(ray, i*n, i*n+1);
+			ray = llDeleteSubList(ray, i*n, i*n+n-1);
 			--i;
 			
 		}
 	
 	}
-	return llListReplaceList(ray, (list)(count(ray)/n), -1, -1);
+	
+	ray = llListReplaceList(ray, (list)(count(ray)/n), -1, -1);	
+	return ray;
 	
 	
 }
@@ -269,6 +290,7 @@ float timeLOS;				// Time when we got line of sight
 int easyMode = TRUE;
 key caughtSeat;				// UUID of seat to put player on
 key caughtHud;				// HUD of caught player
+float roamTimeout;
 
 vector getPlayerVisibilityPos( key player ){
 	
@@ -551,7 +573,16 @@ handleTimer( "A" )
 			// Go back
 			if( startRoom != curRoom ){
 			
-				Nodes$getPath( GhostMethod$followNodes, llGetPos(), spawnPos );
+				
+				// Set this as our new home location
+				if( hasStrongAffix(ToolSetConst$affix$ghostRoomChange) && llGetTime()-lastRoomChange > 420 && llFrand(1) < .5 && BFL&BFL_ROAM_REACHED ){
+				
+					spawnPos = llGetPos();
+					return;
+					
+				}
+				else
+					Nodes$getPath( GhostMethod$followNodes, llGetPos(), spawnPos );
 				
 				float rand = 40;
 				// GHOST BEHAVIOR :: Orghast - Roam more often
@@ -559,7 +590,7 @@ handleTimer( "A" )
 					rand = 20;
 			
 				lastReturn = llGetTime()+10+llFrand(rand);	// Stay in the ghost room for longer than when it roams
-				lastReturn += 30-10*DIF;
+				lastReturn += 50-10*DIF;	// Less roamy on lower difficulties
 				
 				// GHOST BEHAVIOR :: EHEE - Don't leave the room as much
 				if( GHOST_TYPE == GhostConst$type$ehee )
@@ -609,16 +640,17 @@ handleTimer( "A" )
 			)return;
 			
 			setState(STATE_ROAM);
-		
+			
 		}
 		
 	}
 	
+	// Not actually roaming, just walking randomly in the current room
 	else if( STATE == STATE_ROAM ){
 	
 		// Reached destination
 		vector gp = llGetPos();
-		if( llVecDist(<gp.x, gp.y, 0>, <roamTarget.x, roamTarget.y, 0>) < .25 ){
+		if( llVecDist(<gp.x, gp.y, 0>, <roamTarget.x, roamTarget.y, 0>) < .3 ){
 		
 			toggleWalking(false);
 			setState(STATE_IDLE);
@@ -650,18 +682,20 @@ handleTimer( "A" )
 		if( !count(gotoPortals) ){
 	
 			toggleWalking(false);
-			
+			BFL = BFL|BFL_ROAM_REACHED;
 			int startRoom = pointInRoom( spawnPos );
 			int curRoom = pointInRoom( llGetPos() );
+			// Gone home
 			if( startRoom == curRoom ){
 			
 				roamTarget = spawnPos;
 				setState(STATE_ROAM);
 				
 			}
-			else 
+			// Gone into another room
+			else{
 				setState(STATE_IDLE);
-						
+			}		
 			return;
 			
 		}
@@ -677,13 +711,14 @@ handleTimer( "A" )
 		pp += alignPos;
 		
 		// In order for stairs to work we need to relax the Z height of seeking
-		float zAllow = 1.0;
+		float zAllow = hover*1.75;
 		if( portalState == PS_SEEKING )
 			zAllow = 10;
 			
 		// Reached the node, find the next
-		if( llVecDist(<gp.x, gp.y, 0>, <pp.x, pp.y, 0>) < .25 && llFabs(gp.z-pp.z) < zAllow ){
+		if( (llVecDist(<gp.x, gp.y, 0>, <pp.x, pp.y, 0>) < .25 && llFabs(gp.z-pp.z) < zAllow) || llGetTime() > roamTimeout ){
 			
+			roamTimeout = llGetTime()+60;	// If it hasn't been able to reach the node in a minute, give up and call an unstuck 
 			if( portalState == PS_SEEKING ){
 				
 				portalState = PS_ALIGNING;
@@ -1007,7 +1042,8 @@ handleOwnerMethod( GhostMethod$setType )
 	GHOST_TYPE = argInt(0);
 	int evidenceType = argInt(1);
 	DIF = argInt(2);
-	raiseEvent(GhostEvt$type, GHOST_TYPE + evidenceType);
+	AFFIXES = argInt(3);
+	raiseEvent(GhostEvt$type, GHOST_TYPE + evidenceType + AFFIXES);
 	
 end
 

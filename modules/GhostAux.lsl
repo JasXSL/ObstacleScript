@@ -5,12 +5,14 @@
 #define USE_LISTEN
 #define USE_PLAYERS
 #include "ObstacleScript/headers/Obstacles/Ghost/Ghost.lsh"
+#include "ObstacleScript/resources/SubHelpers/GhostHelper.lsl"
 #include "ObstacleScript/index.lsl"
 
 int GHOST_TYPE = -1;
 int EVIDENCE_TYPES;
 int VIS;
 list SEEN_PLAYERS;
+int AFFIXES;
 
 int LIT;	// Ghost is in a lit room
 int AGG;	// More prone to being agressive. Inverse ADDITIVE (higher value lowers hunt threshold)
@@ -63,8 +65,9 @@ updateDesc(){
 list P_MESH;
 toggleMesh( float alpha ){
 	
+	if( hasStrongAffix(ToolSetConst$affix$ghostInvisible) )
+		alpha = 0;
 	
-	int pre = BFL&BFL_VISIBLE;
 	BFL = BFL&~BFL_VISIBLE;
 	if( alpha > 0 )
 		BFL = BFL|BFL_VISIBLE;
@@ -509,11 +512,11 @@ onRunTimePermissions( perm )
 
 end
 
-onGhostType( type, evidence )
+onGhostType( type, evidence, affixes )
 
 	GHOST_TYPE = type;
 	EVIDENCE_TYPES = evidence;
-	
+	AFFIXES = affixes;
 	// GHOST BEHAVIOR :: SUCCUBUS - Pick a target
 	if( SUCTARG == "" && GHOST_TYPE == GhostConst$type$succubus )
 		pickNewSucTarg();
