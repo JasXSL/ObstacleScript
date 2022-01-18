@@ -127,7 +127,7 @@ stopInteract(){
 #include "ObstacleScript/begin.lsl"
 
 // Pos is where on the door we touched it
-onPortalInteractStarted( hud, pos )
+onPortalInteractStarted( hud, pos, linkKey )
 
 	if( pos == ZERO_VECTOR )
 		return;
@@ -155,7 +155,7 @@ onPortalInteractStarted( hud, pos )
     
 end
 
-onPortalInteractEnded( hud )
+onPortalInteractEnded( hud, linkKey )
     
     if( hud != interactor )
         return;

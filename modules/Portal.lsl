@@ -5,6 +5,7 @@
 #define USE_HUDS
 #define USE_TIMER
 #define SCRIPT_IS_PLAYER_MANAGER
+#define COM_ADDITIONAL (list)((str)llGetOwnerKey(HOST))
 #include "ObstacleScript/index.lsl"
 
 int BFL;
@@ -17,6 +18,8 @@ vector SPAWN_POS;
 str DESC;
 str SPAWN_GROUP;
 int PIN;
+key HOST;
+
 
 fetchScripts(){
     
@@ -175,7 +178,7 @@ handleOwnerMethod( PortalMethod$cbPlayers )
 
 	PLAYERS = METHOD_ARGS;
 	globalAction$setPlayers();
-
+	
 end
 handleOwnerMethod( PortalMethod$cbHUDs )
 
@@ -183,7 +186,9 @@ handleOwnerMethod( PortalMethod$cbHUDs )
 	globalAction$setHUDs();
 
 end
-
+handleOwnerMethod( PortalMethod$cbHost )
+	HOST = argKey(0);
+end
 
 
 handleOwnerMethod( PortalMethod$setLive )

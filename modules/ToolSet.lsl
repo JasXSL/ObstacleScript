@@ -495,7 +495,8 @@ onStateEntry()
 	Level$raiseEvent( LevelCustomType$TOOLSET, LevelCustomEvt$TOOLSET$get, [] );    
 	Portal$scriptOnline();
 	
-	Level$forceRefreshPortal();
+	Com$updatePortal();
+	//Level$forceRefreshPortal();
 	
 end
 

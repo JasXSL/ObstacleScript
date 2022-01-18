@@ -9,6 +9,7 @@ float ACC_HOST;     // Timer
 key PENDING_HOST;
 key HOST;
 
+// Not added to the player list, but is allowed to call methods on us
 #define COM_ADDITIONAL (list)((str)llGetOwnerKey(HOST))
 
 #include "ObstacleScript/begin.lsl"
@@ -118,12 +119,15 @@ key HOST;
 		
 		runMethod(prRoot(SENDER_KEY), "Portal", PortalMethod$cbPlayers, PLAYERS);
 		runMethod(prRoot(SENDER_KEY), "Portal", PortalMethod$cbHUDs, HUDS);
+		runMethod(prRoot(SENDER_KEY), "Portal", PortalMethod$cbHost, HOST);
+		
 	
 	end
     
     handleMethod( ComMethod$players )
         
-        if( SENDER_KEY == HOST ){
+		// Must be HOST or owner. Owner is to update the host's HUD with players regardless of if they're in the game. As portals must fetch from the host's HUD.
+        if( SENDER_KEY == HOST || llGetOwnerKey(SENDER_KEY) == llGetOwner() ){
             
             PLAYERS = METHOD_ARGS;
             globalAction$setPlayers();
@@ -134,7 +138,8 @@ key HOST;
     end
 	handleMethod( ComMethod$huds )
         
-        if( SENDER_KEY == HOST ){
+		// Must be HOST or owner. Owner is to update the host's HUD with players regardless of if they're in the game. As portals must fetch from the host's HUD.
+        if( SENDER_KEY == HOST || llGetOwnerKey(SENDER_KEY) == llGetOwner() ){
             
             HUDS = METHOD_ARGS;
             globalAction$setHUDs();
@@ -145,7 +150,7 @@ key HOST;
     end
 	handleMethod( ComMethod$uninvite )
 		
-		if( SENDER_KEY == HOST ){
+		if( SENDER_KEY == HOST || llGetOwnerKey(SENDER_KEY) == llGetOwner() ){
 			
 			PLAYERS = [llGetOwner()];
 			HUDS = [llGetKey()];

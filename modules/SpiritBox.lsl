@@ -207,7 +207,7 @@ onStateEntry()
 	PLAYERS = [(str)llGetOwner()];
     Portal$scriptOnline();
 	
-	Level$forceRefreshPortal();
+	//Level$forceRefreshPortal();
 	
 	if( llGetInventoryType("ToolSet") != INVENTORY_NONE ){
 		setInterval("VO", 1);

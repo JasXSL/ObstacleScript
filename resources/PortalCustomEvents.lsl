@@ -32,7 +32,7 @@
 #define onPortalInteractEnded( hud, linkKey ) \
 	if( isEventPortalCustom() AND argStr(1) == PortalCustomType$INTERACT AND argInt(2) == PortalCustomEvt$INTERACT$end ){ \
 		key hud = argKey(0); \
-		linkKey = argKey(3);
+		key linkKey = argKey(3);
 		
 #define onPortalLclickStarted( hud ) \
 	if( isEventPortalCustom() AND argStr(1) == PortalCustomType$LCLICK AND argInt(2) == PortalCustomEvt$LCLICK$start ){ \

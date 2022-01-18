@@ -104,21 +104,21 @@
 // Corresponds to the ghost type indexes
 // When changing these, you need to recompile #Game, Ghost, and the GHOST_BOARD
 #define GhostConst$evidenceTypes [\
-	GhostConst$evidence$stains|GhostConst$evidence$spiritbox|GhostConst$evidence$temps, \
-	GhostConst$evidence$owometer|GhostConst$evidence$spiritbox|GhostConst$evidence$hots, \
-	GhostConst$evidence$owometer|GhostConst$evidence$writing|GhostConst$evidence$temps, \
-	GhostConst$evidence$owometer|GhostConst$evidence$writing|GhostConst$evidence$hots, \
-	GhostConst$evidence$owometer|GhostConst$evidence$writing|GhostConst$evidence$spiritbox, \
-	GhostConst$evidence$temps|GhostConst$evidence$spiritbox|GhostConst$evidence$owometer, \
-	GhostConst$evidence$writing|GhostConst$evidence$spiritbox|GhostConst$evidence$temps, \
-	GhostConst$evidence$writing|GhostConst$evidence$temps|GhostConst$evidence$stains, \
-	GhostConst$evidence$stains|GhostConst$evidence$temps|GhostConst$evidence$hots, \
-	GhostConst$evidence$hots|GhostConst$evidence$writing|GhostConst$evidence$stains, \
-	GhostConst$evidence$owometer|GhostConst$evidence$hots|GhostConst$evidence$stains, \
-	GhostConst$evidence$writing|GhostConst$evidence$stains|GhostConst$evidence$spiritbox, \
-	GhostConst$evidence$spiritbox|GhostConst$evidence$temps|GhostConst$evidence$hots, \
-	GhostConst$evidence$owometer|GhostConst$evidence$stains|GhostConst$evidence$spiritbox, \
-	GhostConst$evidence$writing|GhostConst$evidence$temps|GhostConst$evidence$hots \
+	GhostConst$evidence$stains|GhostConst$evidence$spiritbox|GhostConst$evidence$temps, /* Succubus */ \
+	GhostConst$evidence$owometer|GhostConst$evidence$spiritbox|GhostConst$evidence$hots, /* Yuri */ \
+	GhostConst$evidence$owometer|GhostConst$evidence$writing|GhostConst$evidence$temps, /* asswang */ \
+	GhostConst$evidence$owometer|GhostConst$evidence$writing|GhostConst$evidence$hots, /* Powoltergeist */ \
+	GhostConst$evidence$owometer|GhostConst$evidence$writing|GhostConst$evidence$spiritbox, /* Yaoikai */ \
+	GhostConst$evidence$temps|GhostConst$evidence$spiritbox|GhostConst$evidence$owometer, /* Imp */ \
+	GhostConst$evidence$writing|GhostConst$evidence$spiritbox|GhostConst$evidence$temps, /* Hantuwu */ \
+	GhostConst$evidence$writing|GhostConst$evidence$temps|GhostConst$evidence$stains, /* Inugami */ \
+	GhostConst$evidence$stains|GhostConst$evidence$temps|GhostConst$evidence$hots, /* Obukakke */ \
+	GhostConst$evidence$hots|GhostConst$evidence$writing|GhostConst$evidence$stains, /* Gooryo */ \
+	GhostConst$evidence$owometer|GhostConst$evidence$hots|GhostConst$evidence$stains, /* Ehee */  \
+	GhostConst$evidence$writing|GhostConst$evidence$stains|GhostConst$evidence$spiritbox,/* Bare */  \
+	GhostConst$evidence$spiritbox|GhostConst$evidence$temps|GhostConst$evidence$hots, /* Stringoi */ \
+	GhostConst$evidence$owometer|GhostConst$evidence$stains|GhostConst$evidence$spiritbox, /* Orghast */ \
+	GhostConst$evidence$writing|GhostConst$evidence$temps|GhostConst$evidence$hots /* Jim */ \
 ]
 #define getEvidenceTypes( ghostType ) \
 	l2i(GhostConst$evidenceTypes, ghostType)

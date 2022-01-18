@@ -18,6 +18,11 @@ list WAITING_SCRIPTS;
 
 int MAX_PLAYERS = 1000;
 
+updateOwnerPlayers(){
+	Com$players( llGetOwner(), PLAYERS );
+	Com$huds( llGetOwner(), HUDS );
+}
+
 updatePlayers(){
     
     globalAction$setPlayers();  
@@ -28,6 +33,9 @@ updatePlayers(){
 		Com$huds( player, HUDS );
     end
 	
+	if( llListFindList(PLAYERS, [(str)llGetOwner()]) == -1 )
+		updateOwnerPlayers();
+
 	// The HUDs update portals, since portals will only fetch users from the owner
 	
 }
@@ -174,6 +182,11 @@ onListen( ch, msg )
 		else if( method == LevelMethod$autoJoin ){
 			
 			key owner = llGetOwnerKey(SENDER_KEY);
+			// Make sure owner has an up to date list of players
+			if( owner == llGetOwner() )
+				updateOwnerPlayers();
+			
+			
 			int pos = llListFindList(PLAYERS, [(str)owner]);
 			if( BFL & BFL_GAME_ACTIVE && pos == -1 )
 				return;
@@ -217,23 +230,6 @@ onTouchStart( total )
         llDialog(targ, "Ask secondlife:///app/agent/"+(str)llGetOwner()+"/about for an invite!", [], 123);    
     
     
-
-end
-
-
-
-handleMethod( LevelMethod$getPlayers )
-	
-	string senderScript = argStr(1);
-	int cbMethod = argInt(0);
-	runMethod(SENDER_KEY, senderScript, cbMethod, PLAYERS);
-
-end
-handleMethod( LevelMethod$getHUDs )
-	
-	string senderScript = argStr(1);
-	int cbMethod = argInt(0);
-	runMethod(SENDER_KEY, senderScript, cbMethod, HUDS);
 
 end
 
@@ -382,18 +378,13 @@ handleMethod( LevelMethod$getHudAssets )
 	
 end
 
-handleMethod( LevelMethod$forceRefreshPortal )
-	runMethod(SENDER_KEY, "Portal", PortalMethod$cbPlayers, PLAYERS);
-	runMethod(SENDER_KEY, "Portal", PortalMethod$cbHUDs, HUDS);
-end
-
 handleOwnerMethod( LevelMethod$update )
 	llOwnerSay("Updating level...");
 	updateCode();
 end
 
 handleInternalMethod( LevelMethod$scriptInit )
-
+	
 	integer pos = llListFindList(WAITING_SCRIPTS, (list)argStr(0));
 	if( pos == -1 )
 		return;

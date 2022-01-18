@@ -6,15 +6,15 @@
 	#define LevelMethod$resetPlayers 2		// Resets players to owner only
 	#define LevelMethod$acceptInvite 3		// void - Accepts an invite
 	#define LevelMethod$raiseEvent 4		// (str)script, (int)evt, (var)data1, (var)data2... - Owner only depending on prefix
-	#define LevelMethod$getPlayers 5		// (int)callbackMethod, (str)callbackScript - Sends callbackMethod to callbackScript with data (str)player1, (str)player2... 
+	
 	#define LevelMethod$getHudAssets 6			// void - After setting inventory drop, the HUD prim sends this to Level to get all HUD assets. HUD assets names should start with "HUD:"
 	#define LevelMethod$updateAllHudAssets 7	// void - Sends a request to all active players to request new HUD assets
 	#define LevelMethod$scriptInit 8			// (str)script - A script has been remoteloaded. Only needed by scripts in LevelConst$REMOTE_SCRIPTS
 	#define LevelMethod$autoJoin 9			// Sent by the HUD to try to auto reconnect to a level
 	#define LevelMethod$removePlayer 10		// (key)player
 	#define LevelMethod$toggleGame 11		// (bool)game_in_progress - Locks invites
-	#define LevelMethod$forceRefreshPortal 12	// void - Force refreshes the portal with up to date players on the linkset sending the command
-	#define LevelMethod$getHUDs 5			// (int)callbackMethod, (str)callbackScript - Sends callbackMethod to callbackScript with data (str)hud1, (str)hud2... 
+	//#define LevelMethod$forceRefreshPortal 12	// void - Force refreshes the portal with up to date players on the linkset sending the command
+	
 	
 	#define LevelEvt$mainMenu 1				// Raised when the owner clicks the level controller
 	#define LevelEvt$custom 2				// (key)sender, (str)script, (int)evt, (var)data1, (var)data2... These events are defined in resources/LevelCustomEvents
@@ -24,6 +24,7 @@
 	#define LevelConst$REMOTE_SCRIPTS (list)\
 		"Rezzer" + \
 		"Spawner"
+
 
 	#define onLevelMainMenu() \
 		if( SENDER_SCRIPT IS "Level" AND EVENT_TYPE IS LevelEvt$mainMenu ){
@@ -50,12 +51,10 @@
 		runMethod(LINK_THIS, "Level", LevelMethod$update, [])
 	#define Level$update() \
 		runOmniMethod("Level", LevelMethod$update, [])
+	/*
 	#define Level$forceRefreshPortal() \
 		runOmniMethod("Level", LevelMethod$forceRefreshPortal, [])
-
-	#define Level$getPlayers( callbackMethod ) \
-		runOmniMethod("Level", LevelMethod$getPlayers, callbackMethod + llGetScriptName() )
-
+	*/
 	#define Level$scriptInit() \
 		runMethod(LINK_THIS, "Level", LevelMethod$scriptInit, llGetScriptName())
 	#define Level$invite( player, maxPlayers ) \

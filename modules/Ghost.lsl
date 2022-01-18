@@ -584,7 +584,7 @@ handleTimer( "A" )
 				else
 					Nodes$getPath( GhostMethod$followNodes, llGetPos(), spawnPos );
 				
-				float rand = 40;
+				float rand = 120;
 				// GHOST BEHAVIOR :: Orghast - Roam more often
 				if( GHOST_TYPE == GhostConst$type$orghast )
 					rand = 20;
@@ -945,11 +945,12 @@ onStateEntry()
     setInterval("A", 0.25);
 	Portal$scriptOnline();
 	
-	
+	/*
 	#ifdef FETCH_PLAYERS_ON_COMPILE
 	cacheNodes();
 	Level$forceRefreshPortal();
     #endif
+	*/
 	
 	Level$raiseEvent(LevelCustomType$GHOST, LevelCustomEvt$GHOST$spawned, []);
 	//qd(llGetUsedMemory());

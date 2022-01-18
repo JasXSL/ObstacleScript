@@ -50,9 +50,6 @@ integer isInteractive( key id ){
 		
 	}
 	
-	if( name == "Ecchisketch" && EVIDENCE_TYPES & GhostConst$evidence$writing && !hasWeakAffix(ToolSetConst$affix$noEvidenceUntilSalted) )
-		return 0;
-	
 	if( getDescType(id, Desc$TASK_DOOR_STAT) )
 		return 1;
 	if( getDescType(id, Desc$TASK_GHOST_INTERACTIVE) ){
@@ -311,11 +308,11 @@ onStateEntry()
     llSensorRepeat("", "", ACTIVE|PASSIVE, 6, PI, 1);
 	
 	Portal$scriptOnline();
-	
+	/*
 	#ifdef FETCH_PLAYERS_ON_COMPILE
 	Level$forceRefreshPortal();
     #endif
-	
+	*/
 	//qd(llGetUsedMemory());
     
 end
@@ -455,7 +452,7 @@ handleOwnerMethod( GhostInteractionsMethod$interact )
 	else if( GHOST_TYPE == GhostConst$type$succubus )
 		playerChance = 0.4;		// Succubus is also the highest, but will only touch one player.
 	// GHOST BEHAVIOR :: YURI/YAIKAI - Slightly more touchy
-	else if( GHOST_TYPE == GhostConst$type$yuri || GHOST_TYPE == GhostConst$type$yaoikai )
+	else if( GHOST_TYPE == GhostConst$type$yuri || GHOST_TYPE == GhostConst$type$yaoikai || GHOST_TYPE == GhostConst$type$stringoi )
 		playerChance = 0.3;		// Yuri/yaoikai are lightly more touchy
 	
 		
@@ -513,10 +510,10 @@ handleOwnerMethod( GhostInteractionsMethod$interact )
 				int clothes = Rlv$getDesc$clothes( hud )&1023;	// 1023 = 10 bit
 				float cc = 0.15;
 				if( isBare && !roomLit )
-					cc *= 3;
+					cc *= 4;
 				// GHOST BEHAVIOR :: Stringoi - Strip
 				if( GHOST_TYPE == GhostConst$type$stringoi )
-					cc *= 2;
+					cc *= 3;
 				
 				if( llFrand(1.0) < cc && clothes && power ){
 					
@@ -551,27 +548,7 @@ handleOwnerMethod( GhostInteractionsMethod$interact )
 				vector offs = prPos(k);
 				float dist = 3;
 				float d = llVecDist(<gp.x, gp.y, 0>, <offs.x, offs.y, 0>);
-				
-				if( llKey2Name(k) == "HOTS" ){	// Hots has 1m extra radius since it's a temp evidence
-					dist = 3.5;
-					if( d < dist && llFrand(1) < .2 ){		// 20% chance to guarantee hots if found
-					
-						viable = (list)k;
-						i = count(cObjs);
-						
-					}
-					
-				}
-				if( llKey2Name(k) == "Ecchisketch" ){	// Writing has a small extra chance
-					dist = 3.5;
-					if( llFrand(1) < .1 && d < dist ){
-					
-						viable = (list)k;
-						i = count(cObjs);
-						
-					}
-					
-				}
+
 				// GHOST BEHAVIOR :: Stringoi - 30% longer interact radius
 				if( GHOST_TYPE == GhostConst$type$stringoi )
 					dist *= 1.3;
@@ -606,10 +583,6 @@ handleOwnerMethod( GhostInteractionsMethod$interact )
 				//qd("Door interact" + llKey2Name(targ));
 				lastSound = "8c8a6c69-f859-d559-0498-14cce9510635";
 				
-			}
-			// Tool interactions
-			else if( llKey2Name(targ) == "HOTS" || llKey2Name(targ) == "Ecchisketch" ){
-				GhostTool$trigger( targ, [] );
 			}
 			// Regular interactions
 			else{

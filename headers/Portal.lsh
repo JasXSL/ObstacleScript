@@ -61,6 +61,8 @@
 
 #define PortalMethod$cbHUDs 9			// Callback binding for getting HUDs
 #define PortalMethod$remoteLoad 10		// (key)targ, (str)script, (int)pin, (int)startParam - Remoteloads a script onto another script
+#define PortalMethod$cbHost 11			// (key)host - Sets gamehost
+
 
 #define onPortalLoadComplete( desc ) \
 	if( SENDER_SCRIPT IS "Portal" AND EVENT_TYPE IS PortalEvt$loadComplete ){ \
