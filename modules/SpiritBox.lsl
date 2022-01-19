@@ -44,6 +44,19 @@ setSprite( integer sprite ){
     
 }
 
+updateSound(){
+	
+	llStopSound();
+	if( ~BFL&BFL_ON )
+		return;
+		
+	if( SWEEP ){
+		llLoopSound("30b60b7e-952b-f083-86d0-21280a6cc8ca", .25);
+	}
+	else
+		llLoopSound("f9abe756-b788-b2b4-fd3d-7c373f83a464", 0.1);
+}
+
 respond(){
     
     list responses = (list) // 4 bit arrays, big endian
@@ -66,7 +79,7 @@ respond(){
 	if( !SUCCESS )
 		response = 0x78;   // No signal
     else
-		llPlaySound(voice, 0.3);
+		llTriggerSound(voice, 0.3);
     
     SWEEP = [];
     
@@ -144,29 +157,21 @@ sweep(){
     SWEEP = (list)0 + 1 + 2 + 3 + 0 + 1 + 2 + 3;
     setInterval("S", .2);
     SWEEPING = 1;
-    llLoopSound("30b60b7e-952b-f083-86d0-21280a6cc8ca", .25);
+    updateSound();
     
 }
 
 
 toggleOn( integer on ){
     
-	// Todo: Update visual
-	
     if( on ){
-        
         BFL = BFL|BFL_ON;
-        llStopSound();
-        llLoopSound("ca52dde3-1c21-d380-442b-aa4b245e7522", 0.0001);
-        
     }
     else{
-        
-        BFL = BFL&~BFL_ON;
-        llAdjustSoundVolume(0);
-        
+        BFL = BFL&~BFL_ON;		
     }
-    
+	
+	updateSound();
 	llSetLinkPrimitiveParamsFast(P_SPIRITBOX, (list)PRIM_FULLBRIGHT + SCREEN_FACE + on + PRIM_GLOW + SCREEN_FACE + (0.1*on));
            
 }
@@ -201,6 +206,9 @@ onStateEntry()
     
     end
     
+	llPreloadSound("f9abe756-b788-b2b4-fd3d-7c373f83a464");
+	llPreloadSound("30b60b7e-952b-f083-86d0-21280a6cc8ca");
+	
 	llSetAlpha(0, FACE);
     llListen(0, "", "", "");
     toggleOn(FALSE);
@@ -248,11 +256,14 @@ end
 
 onToolSetActiveTool( tool, data )
 
-    if( tool != ToolsetConst$types$ghost$spiritbox )
+    if( tool != ToolsetConst$types$ghost$spiritbox ){
         toggleOn(FALSE);
-    else
+	}
+    else{
+		if( (int)data )
+			llSleep(.1);	// Fixes audio race conditions with owometer
         onDataChanged((int)data);
-
+	}
 end
 
 onGhostToolHunt( hunting, ghost )
@@ -313,15 +324,14 @@ handleTimer( "S" )
 
 	if( !count(SWEEP) ){
 			
+		updateSound();
+		
 		unsetTimer("S");
-		llStopSound();
-		if( SWEEPING == 1 ){
+		if( SWEEPING == 1 )
 			respond();
-			
-		}
 		else
 			SWEEPING = 0;
-			
+		
 		return;
 		
 	}

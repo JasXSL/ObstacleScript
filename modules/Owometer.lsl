@@ -132,9 +132,11 @@ onToolSetActiveTool( tool, data )
 
     if( tool != ToolsetConst$types$ghost$owometer )
         toggleOn(FALSE);
-    else
+    else{
+		if( (int)data )
+			llSleep(.1);	// Fixes audio race conditions with spirit box
         onDataChanged((int)data);
-
+	}
 end
 
 onGhostToolHunt( hunting, ghost )

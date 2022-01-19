@@ -51,6 +51,7 @@ integer P_PARA;
 integer P_PARAMON;
 integer P_CAM;
 integer P_THERMO;
+integer P_THERMO_POSTIT;
 integer P_VCAM;
 
 vector SOUND_SPOT;
@@ -178,6 +179,7 @@ drawActiveTool(){
     AL(P_PARA, (tool == ToolsetConst$types$ghost$parabolic)*.5, 1);
     AL(P_CAM, tool == ToolsetConst$types$ghost$camera, ALL_SIDES);
     AL(P_THERMO, tool == ToolsetConst$types$ghost$thermometer, ALL_SIDES);
+	AL(P_THERMO_POSTIT, tool == ToolsetConst$types$ghost$thermometer, ALL_SIDES);
 	AL(P_VCAM, tool == ToolsetConst$types$ghost$videoCamera, ALL_SIDES);
 		
 	
@@ -462,7 +464,8 @@ onStateEntry()
             P_THERMO = nr;
         else if( name == "PLANCHETTE" )
             P_PLANCHETTE = nr;
-        
+        else if( name == "TPOST" )
+			P_THERMO_POSTIT = nr;
     end
     
     setInterval("T", 1);
@@ -495,6 +498,7 @@ onStateEntry()
 	Level$raiseEvent( LevelCustomType$TOOLSET, LevelCustomEvt$TOOLSET$get, [] );    
 	Portal$scriptOnline();
 	
+	llSleep(.5);
 	Com$updatePortal();
 	//Level$forceRefreshPortal();
 	
@@ -809,7 +813,7 @@ handleTimer( "HUNT" )
 	
 end
 
-onGhostToolGhost( ghost, affixes )
+onGhostToolGhost( ghost, affixes, evidence, difficulty )
 	AFFIXES = affixes;
 	onDataUpdate();
 end

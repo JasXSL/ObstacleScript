@@ -1,10 +1,7 @@
 x = should be fixed, ? = not sure if fixed, - todo, u = unable to reproduce
 Phasmo:
-	- Make HOTS/Writing detect the ghost instead of vice versa
-	- Add postit to thermometer
 	- Attach game tool on start, detach on end
-	- Allow games without the host	
-	
+	t Restoring RLV constraints shouldn't happen to dead players
 	
 	m = model
 	u = uv mapped
