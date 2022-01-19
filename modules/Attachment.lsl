@@ -69,11 +69,14 @@ handleOwnerMethod( AttachmentMethod$reqPerm )
 end
 
 handleOwnerMethod( AttachmentMethod$detach )
+	
+	if( !llGetStartParameter() )
+		return;
 
 	str targ = argStr(0);
 	if( targ != llGetObjectName() && targ != "*" )
 		return;
-		
+	
 	detach();
 		
 

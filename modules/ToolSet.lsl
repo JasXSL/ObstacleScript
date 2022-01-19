@@ -495,12 +495,11 @@ onStateEntry()
     
 	llListen(3, "", llGetOwner(), "");
 	
-	Level$raiseEvent( LevelCustomType$TOOLSET, LevelCustomEvt$TOOLSET$get, [] );    
 	Portal$scriptOnline();
 	
 	llSleep(.5);
 	Com$updatePortal();
-	//Level$forceRefreshPortal();
+	Level$raiseEvent( LevelCustomType$TOOLSET, LevelCustomEvt$TOOLSET$get, [] );    
 	
 end
 
