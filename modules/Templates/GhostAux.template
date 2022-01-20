@@ -1,0 +1,520 @@
+// Name the script #AUX
+/*
+	Used in ghost hunting games to handle:
+	- Cameras
+	- Ghost spawn locations
+	- Name and age of ghost
+	- Spawning the ghost
+	- RLV constraints
+	- Players spawn positions
+	- Ending the game
+	
+	Required globals
+	#define START_POS pos_offset_from_root - Player start position
+	#define GHOST_SPAWNS (list)spawns - Ghost spawn positions relative to root prim
+	
+	
+	Optional overrides
+	#define GHOST_NAMES (list)names - Overrides the default ghost names
+	
+	
+*/
+
+
+#ifndef GHOST_NAMES
+	#define GHOST_NAMES (list) \
+        "Mike Hawk"+ \
+        "Mike Rotch"+ \
+        "Hugh Mungus"+ \
+        "Ivana Likyu"+ \
+        "Ben Dover"+ \
+        "Drew Peacock"+ \
+        "Hugh Jass"+ \
+        "Amanda Mount"+ \
+        "Annie Position"+ \
+        "Buster Cherry"+ \
+        "Connie Lingus"+ \
+        "Erik Shun"+ \
+        "Dixie Normus"+ \
+        "Dick Pound"+ \
+        "Eaton Beaver"+ \
+        "Eileen Ulick"+ \
+        "Harry Cox"+ \
+        "Pat Myaz"+ \
+        "Wilma Dickfit"+ \
+        "Mary Jane"+ \
+        "Dan Gleesac"+ \
+        "Wayne King"
+#endif
+
+
+
+
+list pCams; // (key)player, (int)camera - Players currently watching cameras
+key GHOST;
+int DIFFICULTY;
+integer GHOST_AGE;
+string GHOST_NAME;
+int EVIDENCE_TYPES;
+int GHOST_TYPE;
+list P_CAMS;  // Camera prims
+list CAMS;      // uuids
+int BFL;
+#define BFL_STARTED 0x1 // Round started
+
+
+
+// Name/age is handled here. Type is handled in #Game
+generateGhost(){
+    
+    // Generate the ghost
+    GHOST_AGE = 18+llFloor(llFrand(100));
+    list names = GHOST_NAMES;
+    GHOST_NAME = randElem(names);
+    
+}
+
+spawnGhost(){
+    
+	list spawns = GHOST_SPAWNS;
+    vector pos = (vector)randElem(spawns)+llGetRootPosition();
+    Rezzer$rez( LINK_THIS, "Gimp", pos, 0, "", "GHOST", TRUE );
+    
+}
+
+// If forcedead is 0, it auto checks dead
+setGameRestrictions( key player, integer forceDead ){
+    
+    // Also attaches tools
+    LevelRepo$attach( player, "HUD:PhasmTools");
+        
+    if( 
+        forceDead > -1 &&   // Not dead if forceDead is less than 0
+        (   
+            forceDead > 0 ||    // Always dead if forcedead > 0
+            // If forcedead is 0, we auto detect by sitting
+            (llGetAgentInfo(player) & AGENT_SITTING && BFL&BFL_STARTED)
+        ) 
+    ){
+        
+        Rlv$disableChatLevels( player, 
+            RlvConst$dcl$all|RlvConst$dcl$recAll|
+            RlvConst$dcl$gesture|RlvConst$dcl$emote 
+        );
+        Rlv$setCamMaxDist(player, -1);
+        Rlv$toggleFreeCam(player, TRUE);
+        return;
+        
+    }
+        
+    
+    Rlv$setMaxSprint( player, 0 );
+    Rlv$setCamMaxDist( player, 3 );
+    Rlv$disableChatLevels( player, RlvConst$dcl$normal|RlvConst$dcl$shout );
+    Rlv$toggleFreeCam( player, FALSE );
+    Rlv$toggleFlying( player, FALSE );
+    
+}
+
+
+// Warps a player to start or unsits them
+warpToStart( integer unsit ){
+    
+    // We only have one round in this level
+    // So in this case, it's only raised when the level has loaded
+    forPlayer( index, player )
+        
+        if( unsit )
+            Rlv$unSit( player, TRUE ); 
+        // Warp player to the start
+        else
+            warpPlayerToSurface( player, (START_POS+llGetRootPosition()), ZERO_ROTATION, FALSE );
+        
+    end
+    
+}
+
+integer isPosInLink( vector pos, int link ){
+    
+    list data = llGetLinkPrimitiveParams(link, (list)
+        PRIM_ROTATION +
+        PRIM_POSITION +
+        PRIM_SIZE
+    );
+    
+    rotation bbRot = l2r(data, 0);
+    vector bbPos = l2v(data, 1);
+    vector bbSize = l2v(data, 2);       
+    bbPos /= bbRot;
+    pos /= bbRot;
+
+    return (
+        pos.x < bbPos.x+bbSize.x/2 && pos.x > bbPos.x-bbSize.x/2 &&
+        pos.y < bbPos.y+bbSize.y/2 && pos.y > bbPos.y-bbSize.y/2 &&
+        pos.z < bbPos.z+bbSize.z/2 && pos.z > bbPos.z-bbSize.z/2
+    );
+    
+}
+
+setCamOn( int cam, bool on ){
+    
+    vector color = <1,.25,.25>;
+    str desc;
+    if( on ){
+        
+        color = <.25,1,.25>;
+        desc = "D$Camera "+(str)cam+"$$I";
+    
+    }
+    else{
+        
+        int i;
+        for(; i < count(pCams); i += 2 ){
+            
+            if( l2i(pCams, i+1) == cam )
+                Rlv$clearCamera(l2k(pCams, i));
+            
+        }
+             
+    }
+    
+    int nr = l2i(P_CAMS, cam);
+    if( nr == 0 )
+        return;
+        
+    llSetLinkPrimitiveParamsFast(l2i(P_CAMS, cam), (list)
+        PRIM_COLOR + 4 + color + 1 +
+        PRIM_DESC + desc
+    );
+    
+}
+
+
+
+
+#include "ObstacleScript/begin.lsl"
+
+onChanged( change )
+    
+    if( change & (CHANGED_INVENTORY|CHANGED_ALLOWED_DROP) ){
+        llSleep(1);
+        llResetScript();
+    }
+    
+end
+
+onStateEntry() 
+    
+    PLAYERS = (list)[(str)llGetOwner()];
+    
+    list cams;
+    forLink( nr, name )
+        
+        if( llGetSubString(name, 0, 2) == "CAM" ){
+            
+            P_CAMS += 0;
+            cams += nr;
+            
+        }
+    
+    end
+    
+    int i;
+    for(; i < count(cams); ++i ){
+        
+        int link = l2i(cams, i);
+        str name = llGetLinkName(link);
+        int nr = (int)llGetSubString(name, 3, -1);
+        P_CAMS = llListReplaceList(P_CAMS, (list)link, nr, nr);
+        setCamOn(nr, FALSE);
+        
+    }
+    
+    
+        
+end
+
+
+handleEvent( "#Tools", 0 )
+    
+    str type = argStr(0);
+    if( type == "CAM" ){
+        
+        key uuid = argKey(1);
+        bool dropped = argInt(2);
+        
+        int pos = llListFindList(CAMS, (list)uuid);
+        if( pos == -1 ){
+            
+            pos = count(CAMS);
+            CAMS += (list)uuid;
+            
+        }
+        
+        
+        setCamOn( pos, dropped );
+        
+    }
+    
+end
+
+onLevelPlayerJoined( player, hud )
+    if( BFL & BFL_STARTED )
+        setGameRestrictions(player, FALSE);
+end
+
+handleEvent( "#Game", 0 )
+    
+    str type = argStr(0);
+    if( type == "START_GAME" ){
+        
+        int i;
+        for(; i < count(P_CAMS); ++i )
+            setCamOn( i, FALSE );
+        CAMS = [];
+        pCams = [];
+         // We can initiate the players here, by configuring them, setting up bars etc
+        forPlayer( index, player )
+            
+            // Rlv$enforceMouselook(player); -- Currently busted in firestorm
+            integer armor = 3;
+            Rlv$setClothes( player, armor, armor, armor, armor, armor );
+            setGameRestrictions(player, FALSE);
+            
+        end
+        
+        warpToStart(FALSE);
+        
+    }
+    else if( type == "SPAWN_GHOST" )
+        spawnGhost();
+    else if( type == "ROUND_START" ){
+        
+        Lamp$togglePower( "*", FALSE );
+        
+        forPlayer( idx, player )
+            Rlv$playSound(player, "dbc0792a-a286-86b1-bed4-07ad8727db68", .75);
+        end
+        
+        BFL = BFL|BFL_STARTED;
+        
+        // Game Loaded
+        if( DIFFICULTY > 1 )
+            Door$setRandomPerc( "*" );
+            
+    }
+    else if( type == "END_GAME" ){
+        
+        BFL = BFL&~BFL_STARTED;
+        
+        
+        // Unsit first
+        warpToStart(TRUE);
+        llSleep(1);
+        warpToStart(FALSE); // Then back to the truck
+        
+        forPlayer( idx, player )
+            // Rlv$exitMouselook(player); -- Currently busted in firestorm
+            Rlv$stopLoopSound(player);
+            Rlv$playSound(player, "de1bb563-3df0-bdff-f73c-bb813c77b4d8", .5);
+            Rlv$setCamMaxDist( player, -1 );
+            Rlv$setMaxSprint( player, -1 );
+            Rlv$disableChatLevels( player, 0);
+            Rlv$toggleFreeCam( player, TRUE );
+            Rlv$toggleFlying( player, TRUE );
+            LevelRepo$detach( player, "HUD:PhasmTools");
+        
+        end
+        
+        setTimeout("END", 3);   // Unsit after getting back
+        
+    }
+    else if( type == "EVIDENCE" ){
+        
+        generateGhost();
+        EVIDENCE_TYPES = argInt(1);
+        GHOST_TYPE = argInt(2);
+        
+    }
+    else if( type == "DIFFICULTY" ){
+        DIFFICULTY = argInt(1);
+    }
+
+
+end
+
+handleTimer( "END" )
+    
+    warpToStart(TRUE);
+
+end
+
+onLevelCustomBondagePlayerDied( chair, player, dead )
+    
+     // Unlock camera but prevent talking
+    if( dead ){
+        integer armor = 1;
+        Rlv$setClothes( player, armor, armor, armor, armor, armor );
+    }
+    else 
+        dead = -1;
+
+    setGameRestrictions(player, dead);
+
+end
+
+onLevelCustomGhostSpawned( ghost )
+    GHOST = ghost;
+end
+
+// Sends a negative ouija board id with the text
+onLevelCustomToolsetOuija( type )
+
+    integer success = llFrand(1.0) < .666;
+    
+    int arousal = 5;
+    if( success ){
+        
+        str text;
+        if( type == "age" )
+            text = (str)GHOST_AGE;
+        else if( type == "pos" )
+            Nodes$getRoomName( LINK_THIS, argKey(0), prPos(GHOST), 255 );
+        else if( type == "name" )
+            text = GHOST_NAME;
+        else if( type == "sex" ){
+            
+            list texts = (list)
+                "hot" +
+                "sexy" +
+                "smoking" +
+                "tasty"
+            ;
+            text = randElem(texts);
+            
+        }
+        
+        if( text )
+            ToolSet$trigger( 
+                argKey(0), 
+                -ToolsetConst$types$ghost$weegieboard, 
+                text 
+            );
+            
+        arousal = 20;
+    }
+    else
+        // Get name of room we should flicker in
+        Nodes$getRoomName( LINK_THIS, "_F_", prPos(argKey(0)), 255 );
+    
+    if( GHOST_TYPE != GhostConst$type$imp )
+        raiseEvent(0, "AROUSE" + llGetOwnerKey(SENDER_KEY) + arousal);
+
+end
+
+onGhostEvent( ghost, players, baseType, subType, dur )
+    
+    // Pop light
+    if( baseType == GhostEventsConst$IT_LIGHTS && subType == GhostEventsConst$ITL_POP )
+        Nodes$getRoomName( LINK_THIS, "POP", prPos(ghost), 255 );
+    // Red flash
+    else
+        Nodes$getRoomName( LINK_THIS, ("_FE_"+(str)dur), prPos(ghost), 255 );
+    
+end
+
+
+onLevelInteractStarted( obstacle, pos )
+    
+    str name = llKey2Name(obstacle);
+    if( name == "DOOR" && BFL & BFL_STARTED ){
+        
+        int P_TRUCK;
+        forLink( nr, name )
+        
+            if( name == "TRUCK" )
+                P_TRUCK = nr;
+        
+        end
+        
+        int playersNotInTruck;
+        forPlayer( i, pl )
+            
+            if( ~llGetAgentInfo(pl) & AGENT_SITTING && llKey2Name(pl) != "" )
+                playersNotInTruck += !isPosInLink(prPos(pl), P_TRUCK);
+
+        end
+        
+        if( playersNotInTruck )
+            return;
+        
+        BFL = BFL&~BFL_STARTED;
+        raiseEvent(0, "ENDGAME");
+        
+    }
+    
+    
+    else if( llGetSubString(name, 0, 2) == "CAM" ){
+        
+        int nr = (int)llGetSubString(name, 3, -1);
+        key cam = l2k(CAMS, nr);
+        vector pos = prPos(cam);
+        rotation rot = llEuler2Rot(<0,0,PI>)*prRot(cam);
+        pos += <.25, 0, .25>*rot;
+        Rlv$setCamera(SENDER_KEY, pos, rot, true, true);
+        
+        int pp = llListFindList(pCams, (list)SENDER_KEY);
+        if( ~pp )
+            pCams = llListReplaceList(pCams, (list)nr, pp+1, pp+1);
+        else
+            pCams += (list)SENDER_KEY + nr;
+        
+    }
+    
+end
+
+
+onRlvCameraCleared( hud )
+
+    int pos = llListFindList(pCams, (list)hud);
+    if( pos == -1 )
+        return;
+        
+    pCams = llDeleteSubList(pCams, pos, pos+1);
+    
+end
+
+// Callback for weegie board get room
+handleMethod( 255 )
+
+ 
+    if( argStr(0) == "_F_" ){
+        
+        Lamp$flicker( argStr(2), TRUE, 3 );
+        return;
+        
+    }
+    else if( argStr(0) == "POP" ){
+        Lamp$pop( argStr(2) );
+        Nodes$popLight(argStr(2));
+    }
+    
+    else if( llGetSubString(argStr(0),0,3) == "_FE_" ){
+        
+        float dur = (float)llGetSubString(argStr(0), 4, -1);
+        Lamp$color(argStr(2), (<1,0,0>), dur);
+        Lamp$flicker( argStr(2), TRUE, dur );
+        
+    }
+    
+    ToolSet$trigger( 
+        argKey(0), 
+        -ToolsetConst$types$ghost$weegieboard, 
+        argStr(2) 
+    );
+
+end
+
+
+#include "ObstacleScript/end.lsl"
+

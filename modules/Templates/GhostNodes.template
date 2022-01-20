@@ -1,3 +1,24 @@
+// Name the script #Nodes
+/*
+	Handles:
+	- Room detection
+	- Hot temps
+	- Breaker
+	- Lamps
+	- Spirit box room detection
+	- Hunt room detection
+	- Passive arousal generation
+	
+	Required globals
+	list ROOMS - 3-strided array:
+		[0] str Label - Shorthand form of the rooms name, in allcaps. Ex a living room might be LROOM
+		[1] str User readable - Long name, ex "Living Room"
+		[2] int Flags - 0x1 = Room has plumbing (used for gooryo)
+	
+	// Labels are unique, but user readable names can be used to combine rooms into one. Such as the junction above the stairs
+	// Roomindex is based on the strided first index of the ROOMS array.
+	
+*/
 #define USE_STATE_ENTRY
 #define USE_TIMER
 #define USE_PLAYERS
@@ -10,7 +31,7 @@
 
 #define ROOMS_STRIDE 3
 
-key GHOST = "59556ee0-6fe3-ecbb-f28e-be357ac62685";
+key GHOST;
 int EVIDENCE_TYPES;
 int GHOST_TYPE;
 #define HAS_TEMPS (EVIDENCE_TYPES & GhostConst$evidence$temps)
@@ -205,14 +226,6 @@ string _gpr( vector point, int ret ){
 #define getPosReadable(point) _gpr(point, GPR_READABLE)
 #define getPosIndex(point) ((int)_gpr(point, GPR_INDEX))
 
-
-onGroupsCached(){
-	/*
-	if( DEBUG_TARG )
-		sendGhostToRoom(DEBUG_TARG);
-    */
-}
-
 // Returns absolute indexes from the portals list of portals in the room marker
 list findPortalsInRoom( integer roomIndex ){
     
@@ -326,8 +339,6 @@ onSpawnerGetGroups( callback, spawns )
         
         //qd("Cached" + count(ROOM_MARKERS)/4 + "Markers");
         
-        onGroupsCached();
-            
     }
 
 end
@@ -809,3 +820,5 @@ onLevelCustomGhostSpawned( ghost )
 end
 
 #include "ObstacleScript/end.lsl"
+
+

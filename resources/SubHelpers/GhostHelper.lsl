@@ -1,4 +1,6 @@
-#include "../GameHelper.lsl"
+/* Note: When using this in #Game, include GameHelper first */
+#ifndef __GHOSTHELPER
+#define __GHOSTHELPER
 
 // ToolSet.lsh tool types. Commented is the data, followed by call to either ToolSet$trigger or GhostToolMethod$trigger
 #define ToolsetConst$types$ghost$owometer 1			// (bool)on
@@ -76,9 +78,39 @@ list _ghGGS( integer utimeLit ){
 		key worldID = argKey(3);
 
 
-// Use parent
-#define ghostHelperStateEntry() gameHelperStateEntry()
-#define ghostHelperEventHandler() gameHelperEventHandler()
-#define onCountdownFinished() // Unused in this mode
 
+
+
+
+
+#define ghostHelper$dialog$globals \
+
+
+#define ghostHelper$DIFFICULTY_DESCS [ \
+    "- Players break free from bondage devices after 30 seconds\n"+ \
+    "- Pills clear 50% arousal" \
+    , \
+    "- Pills clear 35% arousal\n"+ \
+    "- Slightly longer hunts\n"+ \
+    "- Less active ghosts\n"+ \
+    "- Weak affix" \
+    , \
+    "- Pills clear 25% arousal\n"+ \
+    "- Hunts last the longest\n"+ \
+    "- Doors start open\n"+ \
+    "- Much less active ghosts\n"+ \
+    "- Weak and strong affix" \
+]
+
+list ghostHelper_DIFFICULTIES = [
+    "Casual",
+    "Intermediate",
+    "Professional"
+];
+
+
+
+	
+
+#endif
 

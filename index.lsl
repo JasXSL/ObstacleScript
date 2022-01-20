@@ -10,12 +10,15 @@
 	- headers : Contains headers and event definitions for modules
 				The script name in SL should be the same as the script name in the directory
 				The script name should have a capital first letter
+		- Obstacles : Standard calls to specific obstacle types. Obstacles are usually hardcoded for speed reasons.
 	- local : Contains headers for LSL events, such as timers etc. 
 				Event definitions for these are stored in this file since they all use "" as sender
 				Local doesn't use capital letters at the start of the script name
 	- modules : Contains fully built modules
+		- templates : Modules that aren't auto loaded, and come with config variables specific to your game
 	- resources : Tools, asset libraries, and macros
-
+		- SubHelpers : Helpers for a particular game
+		
 
 	Naming:
 	- USE : Enables new functionality in the code. Syntax: USE_<SCRIPTNAME>

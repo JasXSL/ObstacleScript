@@ -1,8 +1,6 @@
 x = should be fixed, ? = not sure if fixed, - todo, u = unable to reproduce
 Phasmo:
-	- Attach game tool on start, detach on end
-	t Restoring RLV constraints shouldn't happen to dead players
-	
+
 	m = model
 	u = uv mapped
 	t = textured

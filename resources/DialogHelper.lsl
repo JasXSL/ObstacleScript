@@ -21,11 +21,9 @@
 	
 	// The DialogHelper helps you track game start state
 	int GSETTINGS;
-	#define GS_GAME_STARTED 0x1
-	#define GS_RECENT_GAME_END 0x2
-	#define GS_GAME_LOADED 0x4
-	
-	
+	#define DialogHelper$GS_GAME_STARTED 0x1
+	#define DialogHelper$GS_RECENT_GAME_END 0x2
+	#define DialogHelper$GS_GAME_LOADED 0x4
 	
 	list GSCORE;
 	list GCONF;		// Sent alongside the game start command. Store your game mode etc here
@@ -60,7 +58,7 @@
 		
 		if( menu == MENU_MAIN ){
 				
-			if( ~GSETTINGS & GS_GAME_STARTED ){
+			if( ~GSETTINGS & DialogHelper$GS_GAME_STARTED ){
 
 				if( text == "" )
 					text = "Main Menu";
@@ -172,18 +170,18 @@
 			}
 			else if( msg == "Clean Up" ){
 				Portal$killAll();
-				GSETTINGS = GSETTINGS & ~GS_GAME_LOADED;
+				GSETTINGS = GSETTINGS & ~DialogHelper$GS_GAME_LOADED;
 			}
 			else if( msg == "End Game" ){
-				GSETTINGS = GSETTINGS & ~GS_GAME_STARTED;
+				GSETTINGS = GSETTINGS & ~DialogHelper$GS_GAME_STARTED;
 				raiseEvent(0, "END_GAME");
 			}
 			else if( msg == "START GAME" ){
 			 
-				GSETTINGS = GSETTINGS|GS_GAME_STARTED;
+				GSETTINGS = GSETTINGS|DialogHelper$GS_GAME_STARTED;
 				raiseEvent(0, "START_GAME" + GCONF );
 				
-				if( ~GSETTINGS & GS_GAME_LOADED )
+				if( ~GSETTINGS & DialogHelper$GS_GAME_LOADED )
 					Spawner$spawnGame();
 				else
 					raiseEvent(0, "START_ROUND");
@@ -236,12 +234,12 @@
 		if( txt == "" ){
 		
 			// You probably want to override this
-			if( GSETTINGS & GS_RECENT_GAME_END )
+			if( GSETTINGS & DialogHelper$GS_RECENT_GAME_END )
 				txt = "Winner: "+llGetDisplayName(l2s(GSCORE, 0));
 				
-			else if( GSETTINGS & GS_GAME_STARTED ){
+			else if( GSETTINGS & DialogHelper$GS_GAME_STARTED ){
 
-				if( ~GSETTINGS & GS_GAME_LOADED )
+				if( ~GSETTINGS & DialogHelper$GS_GAME_LOADED )
 					txt += "Loading level...";
 				else{
 					// You probably want to override this too
@@ -289,17 +287,17 @@
 			if( type == "END_GAME" ){ \
 				 \
 				GSCORE = llDeleteSubList(METHOD_ARGS, 0, 0); \
-				GSETTINGS = GSETTINGS&~GS_GAME_STARTED; \
-				GSETTINGS = GSETTINGS|GS_RECENT_GAME_END; \
+				GSETTINGS = GSETTINGS&~DialogHelper$GS_GAME_STARTED; \
+				GSETTINGS = GSETTINGS|DialogHelper$GS_RECENT_GAME_END; \
 				setTimeout("RECENT", 30); \
 				 \
 			} \
 			else if( type == "START_GAME" ){ \
 				 \
 				unsetTimer("RECENT"); \
-				GSETTINGS = GSETTINGS|GS_GAME_STARTED; \
+				GSETTINGS = GSETTINGS|DialogHelper$GS_GAME_STARTED; \
 				 \
-				GSETTINGS = GSETTINGS&~GS_RECENT_GAME_END; \
+				GSETTINGS = GSETTINGS&~DialogHelper$GS_RECENT_GAME_END; \
 				 \
 			} \
 			_dtxt(); \
@@ -307,14 +305,14 @@
 		end \
 		onRezzerGameLoaded() \
 			 \
-			GSETTINGS = GSETTINGS|GS_GAME_LOADED; \
+			GSETTINGS = GSETTINGS|DialogHelper$GS_GAME_LOADED; \
 			_dtxt(); \
 			raiseEvent(0, "START_ROUND"); \
 			 \
 		end \
 		handleTimer( "RECENT" ) \
 		 \
-			GSETTINGS = GSETTINGS & ~GS_RECENT_GAME_END; \
+			GSETTINGS = GSETTINGS & ~DialogHelper$GS_RECENT_GAME_END; \
 			_dtxt(); \
 			 \
 		end \

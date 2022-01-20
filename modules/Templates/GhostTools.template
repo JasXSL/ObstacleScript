@@ -1,0 +1,774 @@
+// Name the script #Tools
+/*
+	Handles:
+	- Van opening/closing
+	- What tools are held by what players
+	- Spawning tools
+	- Motion sensors and communciation with the sensor board
+	- 
+	
+	
+	Required globals:
+	#define DOOR_START_ROT (rot)local - Local rotation of the van doors in closed rotation
+	
+	
+*/
+#include "ObstacleScript/resources/SubHelpers/GhostHelper.lsl"
+#define USE_STATE_ENTRY
+#define USE_TIMER
+#define USE_PLAYERS
+#include "ObstacleScript/index.lsl"
+
+int AFFIXES;
+int EVIDENCE;
+int GHOST_TYPE;
+int DIFFICULTY;
+
+int BFL;
+#define BFL_HUNTING 0x1
+
+key GHOST;
+list spawnedTools = [];  // key tool, int type, key heldBy, var data
+#define STSTRIDE 4
+
+
+// Gear is a 2-stride int list of (int)toolIndex, (int)amount
+// ToolIndex is defined in GhostHelper.lsl
+spawnGear( list gear ){
+    
+    integer P_TABLE;
+    integer P_SIDE;
+    forLink( ln, name )
+        if( name == "MAIN_EQUIP" )
+            P_TABLE = ln;
+        else if( name == "SIDE_EQUIP" )
+            P_SIDE = ln;
+    end
+    if( !P_TABLE )
+        qd("Error: Main gear table not found!");
+    if( !P_SIDE )
+        qd("Error: Side equipment table not found");
+
+    // tool, spacing, name, rotation, shelf (0 = main, 0=main, 1=main bottom, 2=custom shelf mid, 3 = custom shelf top, 4 = custom shelf bottom)
+    #define GSSTRIDE 5
+    list GSIZE = [
+        ToolsetConst$types$ghost$owometer, 
+            0.11, "Owometer", ZERO_ROTATION, 0,
+        ToolsetConst$types$ghost$hots, 
+            0.25, "HOTS", ZERO_ROTATION, 1,
+        ToolsetConst$types$ghost$flashlight, 
+            0.1, "Flashlight", ZERO_ROTATION, 0,
+        ToolsetConst$types$ghost$spiritbox, 
+            0.15, "Spiritbox", ZERO_ROTATION, 0,
+        ToolsetConst$types$ghost$ecchisketch, 
+            0.2, "Ecchisketch", llEuler2Rot(<0,0,PI_BY_TWO>), 1,
+        ToolsetConst$types$ghost$thermometer, 
+            0.1, "Thermometer", llEuler2Rot(<0,0,-PI_BY_TWO>), 0,
+            
+        ToolsetConst$types$ghost$salt, 
+            0.15, "Salt", llEuler2Rot(<0,0,PI_BY_TWO>), 2,
+        ToolsetConst$types$ghost$vape, 
+            0.1, "Vape", 0, 2,
+        ToolsetConst$types$ghost$parabolic, 
+            0.55, "Parabolic", 0, 4,
+        ToolsetConst$types$ghost$hornybat, 
+            0.3, "HornyBat", llEuler2Rot(<0,0,-PI/4*.8>), 4,
+        ToolsetConst$types$ghost$motionDetector, 
+            0.15, "MotionDetector", 0, 3,
+        ToolsetConst$types$ghost$pills, 
+            0.15, "Pills", llEuler2Rot(<0,0,PI_BY_TWO>), 2,
+        ToolsetConst$types$ghost$glowstick, 
+            0.07, "Glowstick", 0, 3,
+        ToolsetConst$types$ghost$videoCamera, 
+            0.2, "VidCam", 0, 3
+        
+    ];
+    
+    
+    #define findInGsize( toolType ) llListFindList(llList2ListStrided(GSIZE, 0, -1, GSSTRIDE), (list)toolType)*GSSTRIDE
+    
+    list totalWidth = [
+        0,0,0,0,0
+    ];
+    // Measure width
+    integer i;
+    for(; i < count(gear); i += 2 ){
+        
+        integer type = l2i(gear, i);
+        integer amount = l2i(gear, i+1);
+        integer pos = findInGsize(type);
+        float scale = l2f(GSIZE, pos+1);
+        int shelf = l2i(GSIZE, pos+4);
+        
+        float tw = l2f(totalWidth, shelf);
+        tw += scale*amount;
+        totalWidth = llListReplaceList(totalWidth, (list)tw, shelf, shelf);
+        
+    }
+        
+    integer shelf;
+    for( ; shelf < count(totalWidth); ++shelf ){
+    
+        list data = llGetLinkPrimitiveParams(P_TABLE, (list)PRIM_POSITION + PRIM_ROT_LOCAL);
+        vector basePos = l2v(data, 0);
+        rotation baseRot = l2r(data, 1);
+        vector offs = <0,-.15,.44>;
+        if( shelf == 1 )
+            offs.z = -.14;
+        
+        if( shelf > 1 ){
+            data = llGetLinkPrimitiveParams(P_SIDE, (list)PRIM_POSITION + PRIM_ROT_LOCAL);
+            basePos = l2v(data, 0);
+            baseRot = l2r(data, 1);
+            offs = <0,-.1,0.124>;
+            if( shelf == 3 )
+                offs = <0,-.2,0.815>;
+            else if( shelf == 4 )
+                offs = <0,-.2,-0.57>;
+            
+        }
+    
+        float tw = l2f(totalWidth, shelf) / 2;
+        
+        list batch;
+        
+        float xPos;
+        // Spawn
+        integer n;
+        for( i = 0; i < count(gear); i += 2 ){
+
+            integer x;
+            integer type = l2i(gear, i);
+            integer amount = l2i(gear, i+1);
+            integer pos = findInGsize(type);
+            integer sh = l2i(GSIZE, pos+4);
+            
+            if( shelf == sh ){
+                
+                float scale = l2f(GSIZE, pos+1);
+                string name = l2s(GSIZE, pos+2);
+                rotation r = l2r(GSIZE, pos+3);
+                for(; x < amount; ++x ){
+                    
+                    vector offs = <-tw+xPos+scale/2, 0, 0>+offs;
+                    xPos += scale;
+                    offs *= baseRot;
+                    offs += basePos;
+                    
+                    //qd(name + offs);
+                    ++n;
+                    
+                    list data = [
+                        name, 
+                        offs, 
+                        (r*llEuler2Rot(<0,0,PI_BY_TWO>)*baseRot), 
+                        "",             // Desc
+                        "",             // Group
+                        TRUE            // Live
+                    ];
+                    batch += mkarr(data);
+                    if( count(batch) > 10 ){
+                        
+                        Rezzer$rezMulti(LINK_THIS, batch);
+                        batch = [];
+                        
+                    }
+                    
+                }
+            
+            }
+        
+        }
+        
+        if( count(batch) )
+            Rezzer$rezMulti(LINK_THIS, batch);
+        
+    }
+    
+    
+}
+
+destroyTool( key worldID ){
+    integer pos = llListFindList(spawnedTools, (list)worldID);
+    if( pos == -1 ){
+        qd("Destroyed tool not found");
+        return;
+    }
+    
+    key holder = l2k(spawnedTools, pos+2);
+    if( holder )
+        ToolSet$remTool( holder, worldID );
+    
+    Portal$kill(worldID);
+    spawnedTools = llDeleteSubList(spawnedTools, pos, pos+STSTRIDE-1);
+}
+
+integer numToolsHeldBy( key id ){
+    
+    integer out;
+    integer i;
+    for(; i < count(spawnedTools); i += STSTRIDE ){
+        
+        if( l2k(spawnedTools, i+2) == id )
+            ++out;
+        
+    }
+    return out;
+    
+}
+
+// Returns keys of sensors that are ON
+list getActiveSensors(){
+    
+    list out;
+    integer i;
+    for(; i < count(spawnedTools); i += STSTRIDE ){
+        
+        if( 
+            // Is a motion detector
+            l2i(spawnedTools, i+1) == ToolsetConst$types$ghost$motionDetector &&
+            // Not held
+            l2k(spawnedTools, i+2) == "" &&
+            // Active
+            l2i(spawnedTools, i+3)
+        )out += l2k(spawnedTools, i);
+        
+    }
+    return out;
+    
+}
+
+#define updateSensors()\
+    raiseEvent(0, "SEN_NAMES" + getActiveSensors())
+
+
+
+int P_DR;  // Door right
+int P_DL;  // Door left
+float doorPerc;
+int doorOpen = TRUE;
+toggleDoors( integer open ){
+    
+    if( doorOpen != open ){
+        
+        if( !open )
+            llTriggerSound("160a1e67-a56b-748b-1b77-2f915de2a991", 1);
+        else
+            llTriggerSound("f72f7248-8717-6b21-560d-4746025705f4", 1);
+        
+        doorOpen = open;
+    }
+    
+    unsetTimer("DO");
+    forLink( nr, name )
+        if( name == "DOOR_R" )
+            P_DR = nr;
+        else if( name == "DOOR_L" )
+            P_DL = nr;
+        else if( name == "TRUCK" ){
+            
+            //"WL$2c089a35-016d-4365-7370-15ac50a04ec7$$SS$ni$0.5"
+            list desc = split(l2s(llGetLinkPrimitiveParams(nr, (list)PRIM_DESC), 0), "$$");
+            integer i;
+            for(; i < count(desc); ++i ){
+                
+                str sub = l2s(desc, i);
+                if( llGetSubString(sub, 0, 2) == "SS$" ){
+                    
+                    list spl = split(sub, "$");
+                    string ss = "ni";
+                    if( !open )
+                        ss = "206436bb-6afd-ce82-1ebf-34c55a1bfa16";
+                    spl = llListReplaceList(spl, (list)ss, 1, 1);
+                    desc = llListReplaceList(desc, (list)join(spl, "$"), i, i);
+                    llSetLinkPrimitiveParamsFast(nr, (list)PRIM_DESC + join(desc, "$$"));
+                    
+                }
+                
+            }
+            
+        }
+    end
+        
+    doorPerc = 0;
+    if( !open ){
+        
+        llSetLinkPrimitiveParamsFast(P_DR, (list)
+            PRIM_ROT_LOCAL + DOOR_START_ROT +
+            PRIM_LINK_TARGET + P_DL +
+            PRIM_ROT_LOCAL + DOOR_START_ROT
+        );
+        
+        return;
+    }
+    
+    setInterval("DO",0.05);
+    
+}
+
+dropTool( key obj, key worldID, vector tPos, rotation tRot ){
+      
+    key player = llGetOwnerKey(obj);
+    integer pos = llListFindList(spawnedTools, (list)worldID);
+    if( pos == -1 ){
+        qd("Dropped tool not found");
+        return;
+    }
+    if( l2k(spawnedTools, pos+2) != player ){
+        qd("Invalid owner for drop of " + pos + obj);
+        qd(spawnedTools);
+        return;
+    }
+    
+    //qd("Successful drop for " + worldID + "held by" + obj);
+    int type = l2i(spawnedTools, pos+1);
+    spawnedTools = llListReplaceList(spawnedTools, (list)"", pos+2, pos+2);
+    GhostTool$dropped(worldID, tPos, tRot, llList2List(spawnedTools, pos+3, pos+3) );
+    ToolSet$remTool( obj, worldID );
+    updateSensors();    // Updates sensor names
+    
+    if( type == ToolsetConst$types$ghost$videoCamera )
+        raiseEvent(0, "CAM" + worldID + TRUE);
+    
+
+}
+
+
+
+
+
+
+#include "ObstacleScript/begin.lsl"
+
+onLevelCustomGtoolSpawned( tool )
+
+    list toolNames = (list)
+        "Owometer" + ToolsetConst$types$ghost$owometer +
+        "Flashlight" + ToolsetConst$types$ghost$flashlight +
+        "HOTS" + ToolsetConst$types$ghost$hots +
+        "Ecchisketch" + ToolsetConst$types$ghost$ecchisketch +
+        "Spiritbox" + ToolsetConst$types$ghost$spiritbox +
+        "Camera" + ToolsetConst$types$ghost$camera +
+        "Salt" + ToolsetConst$types$ghost$salt +
+        "Candle" + ToolsetConst$types$ghost$candle +
+        "Parabolic" + ToolsetConst$types$ghost$parabolic +
+        "MotionDetector" + ToolsetConst$types$ghost$motionDetector +
+        "Glowstick" + ToolsetConst$types$ghost$glowstick +
+        "Pills" + ToolsetConst$types$ghost$pills +
+        "Thermometer" + ToolsetConst$types$ghost$thermometer +
+        "Weegieboard" + ToolsetConst$types$ghost$weegieboard +
+        "Vape" + ToolsetConst$types$ghost$vape +
+        "HornyBat" +ToolsetConst$types$ghost$hornybat +
+        "SaltPile" + ToolsetConst$types$ghost$saltpile +
+        "VidCam" + ToolsetConst$types$ghost$videoCamera
+    ;
+    
+    integer pos = llListFindList(toolNames, (list)llKey2Name(tool));
+    if( pos == -1 ){
+        qd("Unknown tool spawned" + llKey2Name(tool));
+        return;
+    }
+    
+    integer tn = l2i(toolNames, pos+1);
+
+    pos = llListFindList(spawnedTools, (list)tool);
+    if( ~pos )
+        return;
+
+    spawnedTools += (list)tool + tn + "" + 0;
+
+    //qd(spawnedTools);
+
+end
+
+handleTimer( "DO" )
+
+    doorPerc += 0.05;
+    if( doorPerc > 1 ){
+        
+        doorPerc = 1;
+        unsetTimer("DO");
+        
+    }
+    
+    list pp;
+    pp += (list)PRIM_ROT_LOCAL + (DOOR_START_ROT*llEuler2Rot(<0,0,-PI/2*1.2*doorPerc>));
+    pp += (list)PRIM_LINK_TARGET + P_DL +
+        PRIM_ROT_LOCAL + (DOOR_START_ROT*llEuler2Rot(<0,0,PI/2*1.2*doorPerc>));
+    
+    llSetLinkPrimitiveParamsFast(P_DR, pp);
+
+end
+
+onLevelCustomGtoolData( sender, tooluuid, data )
+    
+    integer pos = llListFindList(spawnedTools, (list)tooluuid);
+    if( pos == -1 ){
+        qd("Trying to update data on unknown tool ID" + tooluuid);
+        return;
+    }
+    
+    
+    if(
+        l2i(spawnedTools, pos+1) == ToolsetConst$types$ghost$saltpile && 
+        (int)data == 1
+    ){
+        // GHOST BEHAVIOR :: Yuri - Smudge when stepping through salt
+        if( 
+            GHOST_TYPE == GhostConst$type$yuri && 
+            ~BFL&BFL_HUNTING
+        ){
+            Ghost$smudge();
+        }
+        
+        if( hasWeakAffix(ToolSetConst$affix$noEvidenceUntilSalted) )
+            raiseEvent(0, "SALTED");
+        
+    }
+    
+    spawnedTools = llListReplaceList(spawnedTools, (list)data, pos+3, pos+3);
+    //qd("Data update" + spawnedTools);
+    
+end
+
+// If a player leaves, drop their stuff
+onPlayersUpdated()
+    
+    integer i;
+    for(; i < count(spawnedTools); i += STSTRIDE ){
+        
+        key t = l2k(spawnedTools, i+2);
+        if( t != "" && llListFindList(PLAYERS, [(str)t]) == -1 )
+            dropTool(t, l2k(spawnedTools, i), ZERO_VECTOR, ZERO_ROTATION);
+        
+    }
+    
+end
+
+onStateEntry() 
+    
+    PLAYERS = (list)[(str)llGetOwner()];
+    toggleDoors(TRUE);
+    doorPerc = 1.0; // Makes it instant
+    
+    #ifdef DEBUG_SPAWN_GEAR
+    spawnGear(DEBUG_SPAWN_GEAR);
+    #endif
+                
+end
+
+onLevelCustomToolsetGet( toolsetuuid )
+
+    key ok = llGetOwnerKey(toolsetuuid);
+    integer i;
+    for(; i < count(spawnedTools); i += STSTRIDE ){
+        
+        if( l2k(spawnedTools, i+2) == ok )
+            ToolSet$addTool( 
+                toolsetuuid, 
+                l2i(spawnedTools, i+1), 
+                l2s(spawnedTools, i+3), 
+                l2k(spawnedTools, i)
+            );
+        
+    }
+    
+    
+
+end
+
+onLevelCustomToolsetDestroy( worldID )
+    destroyTool(worldID);
+end
+
+// Drop a tool
+onLevelCustomToolsetDrop( obj, worldID, tPos, tRot )
+    dropTool( obj, worldID, tPos, tRot);   
+end
+
+onLevelInteractStarted( obstacle, tPos )
+    
+    integer pos = llListFindList(spawnedTools, (list)obstacle);
+    if( pos == -1 )
+        return;
+        
+    key holder = l2k(spawnedTools, pos+2);
+    if( holder )
+        return;
+        
+    key sender = llGetOwnerKey(SENDER_KEY);
+    if( numToolsHeldBy(sender) >= 3 )
+        return;
+    
+    int type = l2i(spawnedTools, pos+1);
+    
+    spawnedTools = llListReplaceList(spawnedTools, (list)sender, pos+2, pos+2);
+    GhostTool$pickedUp( obstacle );
+    ToolSet$addTool( 
+        sender, 
+        type, 
+        llList2List(spawnedTools, pos+3, pos+3), 
+        obstacle
+    );
+    
+    if( type == ToolsetConst$types$ghost$videoCamera )
+        raiseEvent(0, "CAM" + obstacle + FALSE);
+    
+    updateSensors();
+
+end
+
+onLevelCustomToolsetSalt( pos, rot )
+    
+    Rezzer$rez( 
+        LINK_THIS, 
+        "SaltPile", 
+        pos, 
+        rot, 
+        "", 
+        "TOOLS", 
+        TRUE
+    );
+    
+end
+
+onLevelCustomGtoolGetGhost( sender ) 
+    
+    GhostTool$setGhostTarg( sender, GHOST, AFFIXES, EVIDENCE, DIFFICULTY );
+
+end
+
+handleEvent( "#Nodes", 0 )
+    
+    if( argStr(0) == "CTH" ){
+        
+        vector pos = prPos(GHOST);
+        // Check if ghost is near a horny bat
+        integer i;
+        for(; i < count(spawnedTools); i += STSTRIDE ){
+            
+            key id = l2k(spawnedTools, i);
+            integer type = l2i(spawnedTools, i+1);
+            if( type == ToolsetConst$types$ghost$hornybat ){
+                
+                float dist = 3.0;
+                // GHOST BEHAVIOR :: Succubus - Longer horny bat
+                if( GHOST_TYPE == GhostConst$type$succubus )
+                    dist = 5.0;
+                // Consume horny bat charge
+                if( llVecDist(prPos(id), pos) < 3 ){
+                    
+                    integer ch = l2i(spawnedTools, i+3)+1;
+                    if( ch == 1 ){
+                        
+                        spawnedTools = llListReplaceList(spawnedTools, (list)ch, i+3, i+3);
+                        GhostTool$trigger( id, [] );
+                        
+                    }
+                    else
+                        destroyTool(id);
+                    
+                    
+                    return;
+                }
+                
+            }
+            
+        }
+        
+        raiseEvent(0, "START_HUNT");   // Forward to nodes
+        
+    }
+    
+end
+
+handleEvent( "#Game", 0 )
+    
+    if( argStr(0) == "START_GAME" ){
+        
+        toggleDoors(FALSE);
+        spawnedTools = [];
+                
+    }
+    else if( argStr(0) == "SPAWN_GEAR" ){
+        
+        int nrPlayers = count(PLAYERS);
+        if( nrPlayers < 1 )
+            nrPlayers = 1;
+        int pills = nrPlayers+1;
+        if( pills > 4 )
+            pills = 4;
+            
+        int two = 2;
+        int three = 3;
+        int four = 4;
+        
+        
+        integer weakAffix = getWeakAffix();
+        integer strongAffix = getStrongAffix();
+        int noDuplicates = strongAffix == ToolSetConst$affix$noDuplicates;
+        if( noDuplicates )
+            two = four = three = pills = nrPlayers = 1;
+        
+            
+
+        list spawns = [
+            // Default gear
+            ToolsetConst$types$ghost$flashlight, nrPlayers,
+            ToolsetConst$types$ghost$owometer, (1+(nrPlayers>1)),
+            ToolsetConst$types$ghost$hots, two,
+            ToolsetConst$types$ghost$ecchisketch, two,
+            ToolsetConst$types$ghost$spiritbox, two,
+            
+            // Side gear
+            ToolsetConst$types$ghost$salt, two,
+            ToolsetConst$types$ghost$parabolic, 1,
+            ToolsetConst$types$ghost$motionDetector, four,
+            ToolsetConst$types$ghost$glowstick, (1+(nrPlayers>2)),
+            ToolsetConst$types$ghost$videoCamera, two
+        ];
+        
+        
+        if( weakAffix != ToolSetConst$affix$noHornyBats )
+            spawns += (list)ToolsetConst$types$ghost$hornybat + two;
+        if( weakAffix != ToolSetConst$affix$noVapes )
+            spawns += (list)ToolsetConst$types$ghost$vape + three;
+        
+        if( weakAffix != ToolSetConst$affix$noPills )
+            spawns += (list)ToolsetConst$types$ghost$pills + pills;
+        if( strongAffix != ToolSetConst$affix$noThermometer)
+            spawns += (list)ToolsetConst$types$ghost$thermometer + (1+(nrPlayers>2));
+        
+        
+        
+        spawnGear(spawns);
+                        
+        Rezzer$cb( LINK_THIS, "TOOLS" );
+        
+        if( hasWeakAffix(ToolSetConst$affix$fewerHidingSpots) )
+            Spawner$load( LINK_THIS, "CJ", TRUE, "" );
+        
+        forPlayer(i, targ)
+            ToolSet$reset( targ );
+        end
+        
+    }
+    else if( argStr(0) == "ROUND_START" ){
+        
+        toggleDoors(TRUE);
+        if( llFrand(1.0) < 0.4 )
+            Spawner$getGroups("ouija", "OUIJA");
+            
+    }
+    else if( argStr(0) == "DIFFICULTY" ){
+        
+        DIFFICULTY = argInt(1);
+                    
+    }
+    
+    else if( argStr(0) == "RESET_TOOLS" ){
+        
+        key player = argKey(1);
+        
+        integer i;
+        for(; i < count(spawnedTools); i += STSTRIDE ){
+            
+            key holder = l2k(spawnedTools, i+2);
+            if( holder == player )
+                dropTool( player, l2k(spawnedTools, i), ZERO_VECTOR, ZERO_ROTATION );
+        
+        }
+        
+    }
+    else if( argStr(0) == "END_GAME" ){
+        toggleDoors(FALSE);
+        setTimeout("RESET_DOOR", 5);
+    }
+    else if( argStr(0) == "DEBUG" ){
+        
+        // resetPlayerTools(llGetOwner());
+        
+    }
+    else if( argStr(0) == "EVIDENCE" ){
+        
+        EVIDENCE = argInt(1);
+        GHOST_TYPE = argInt(2);
+        
+    }
+    else if( argStr(0) == "AFFIXES" )
+        AFFIXES = argInt(1);
+    else if( argStr(0) == "HUNT" ){
+        
+        BFL = BFL&~BFL_HUNTING;
+        if( argInt(1) )
+            BFL = BFL|BFL_HUNTING;
+        
+    }
+    
+end
+
+handleTimer( "RESET_DOOR" )
+    toggleDoors(TRUE);
+end
+
+onLevelCustomMotiondetTrig( detector, perc, id )
+    
+    integer affix = hasStrongAffix(ToolSetConst$affix$reqMotionSensor);
+    // GHOST BEHAVIOR :: Jim - Chance not to trigger the truck detector
+    if( 
+        // Ignore if ghost requires motion sensor to start
+        !affix && 
+        GHOST_TYPE == GhostConst$type$jim && 
+        llFrand(1) < .75 
+    )return;
+    
+    list active = getActiveSensors();
+    integer pos = llListFindList(active, (list)detector);
+    if( pos == -1 )
+        return;
+        
+    GhostStatus$triggerSoundSensor( "*", pos, perc );
+    if( affix && prRoot(id) == GHOST )
+        raiseEvent(0, "REM_MOTION_AFFIX");
+
+end
+
+onGhostEvent( ghost, players, baseType, subType, dur )
+    
+    if( 
+        baseType == GhostEventsConst$IT_LIGHTS && 
+        subType == GhostEventsConst$ITL_ELECTRONICS 
+    ){
+        int i;
+        for(; i < count(spawnedTools); i+= STSTRIDE ){
+            
+            if( l2i(spawnedTools, i+1) == ToolsetConst$types$ghost$videoCamera )
+                raiseEvent(0, "CAM" + l2k(spawnedTools,i) + FALSE);
+            
+        }
+        
+        
+        
+    }
+    
+end
+
+onLevelCustomGhostSpawned( ghost )
+    GHOST = ghost;
+end
+
+onSpawnerGetGroups( callback, spawns )
+    
+    if( callback == "ouija" ){
+        
+        list el = llJson2List(randElem(spawns));
+        int id = l2i(el, -1);
+        Spawner$spawnByIndex( LINK_THIS, id );
+        
+    }
+    
+    
+end
+
+#include "ObstacleScript/end.lsl"
+
