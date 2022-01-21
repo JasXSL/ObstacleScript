@@ -51,9 +51,9 @@ int HUNTS;
 int AFFIXES;        // 4 bit array, rightmost are for easy affixes, left for hard
 int PIGR;           // Num players in ghost room
 key GHOST;
-integer GHOST_TYPE = GhostConst$type$powoltergeist;
+integer GHOST_TYPE;
 integer SEL = -1;   // Ghost selected by the player
-integer EVIDENCE_TYPES = GhostConst$evidence$writing;
+integer EVIDENCE_TYPES;
 float ACTIVITY = 1.0;  // Generic multiplier for ghost interacts.
 integer DIFFICULTY = 2; //
 float LAST_EVENT;

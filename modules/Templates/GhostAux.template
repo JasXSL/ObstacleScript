@@ -61,7 +61,7 @@ list P_CAMS;  // Camera prims
 list CAMS;      // uuids
 int BFL;
 #define BFL_STARTED 0x1 // Round started
-
+#define BFL_HUNTING 0x2
 
 
 // Name/age is handled here. Type is handled in #Game
@@ -339,7 +339,13 @@ handleEvent( "#Game", 0 )
     else if( type == "DIFFICULTY" ){
         DIFFICULTY = argInt(1);
     }
-
+	else if( type == "HUNT" ){
+		
+		BFL = BFL&~BFL_HUNTING;
+		if( argInt(1) )
+			BFL = BFL|BFL_HUNTING;
+		
+	}
 
 end
 
@@ -370,7 +376,9 @@ end
 // Sends a negative ouija board id with the text
 onLevelCustomToolsetOuija( type )
 
-    integer success = llFrand(1.0) < .666;
+	
+
+    integer success = llFrand(1.0) < .666 && ~BFL&BFL_HUNTING;
     
     int arousal = 5;
     if( success ){

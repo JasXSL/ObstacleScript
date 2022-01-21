@@ -63,7 +63,7 @@
 #define GhostGet$sucTarg( desc ) ((key)j(desc, GhostDesc$ghostCustom))
 
 
-#define GhostEvt$type 1						// int type, int evidence, int affixes - Ghost type received
+#define GhostEvt$type 1						// int type, int evidence, int affixes, int difficulty - Ghost type received
 #define GhostEvt$hunt 2						// bool hunting - Ghost is hunting
 #define GhostEvt$lights 3					// bool lights_on - Raised when lights on in the current room of the ghost is changed
 #define GhostEvt$caught 4					// key player, key chair - Caught a player. Carry them to the chair.
@@ -71,11 +71,12 @@
 #define GhostEvt$visible 6					// bool visible - Raised when the ghost goes visible or hidden
 
 
-#define onGhostType( type, evidence, affixes ) \
+#define onGhostType( type, evidence, affixes, difficulty ) \
 	if( SENDER_SCRIPT IS "Ghost" AND EVENT_TYPE IS GhostEvt$type ){ \
 		int type = argInt(0); \
 		int evidence = argInt(1); \
-		int affixes = argInt(2);
+		int affixes = argInt(2); \
+		int difficulty = argInt(3);
 #define onGhostCaught( player, chair ) \
 	if( SENDER_SCRIPT IS "Ghost" AND EVENT_TYPE IS GhostEvt$caught ){ \
 		key player = argKey(0); \

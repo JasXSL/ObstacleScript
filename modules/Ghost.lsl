@@ -107,7 +107,6 @@ list getDoorData( key door ){
 warpTo( vector pos ){
 
 	setState(STATE_IDLE);
-	lastWarp = llGetTime();
 	toggleWalking(FALSE);
 	llSetKeyframedMotion([], [KFM_COMMAND, KFM_CMD_STOP]);
 	llSleep(.25);
@@ -551,25 +550,6 @@ handleTimer( "A" )
 			)
 		){
 				
-			// GHOST BEHAVIOR - GOORYO - Request a room with plumbing
-			if( GHOST_TYPE == GhostConst$type$gooryo ){
-				
-				if( startRoom != curRoom ){
-					
-					warpTo(spawnPos);
-					lastReturn = llGetTime()+llFrand(20);	// gooryo warps more
-					
-				}
-				else{
-					
-					Nodes$getPlumbedRoom( "PL", GhostMethod$cbPlumbing );
-					lastReturn = llGetTime()-roamcd+2;	// Attempt every 2 sec until it succeeds
-					
-				}
-				return;
-				
-			}
-
 			// Go back
 			if( startRoom != curRoom ){
 			
@@ -581,16 +561,19 @@ handleTimer( "A" )
 					return;
 					
 				}
+				// GHOST BEHAVIOR :: Gooryo - Teleport back home
+				else if( GHOST_TYPE == GhostConst$type$gooryo )
+					warpTo(spawnPos);
 				else
 					Nodes$getPath( GhostMethod$followNodes, llGetPos(), spawnPos );
-				
-				float rand = 120;
+					
+				float rand = 100-10*DIF;		// Random stay time of 0-80/0-120 based on difficulty
 				// GHOST BEHAVIOR :: Orghast - Roam more often
 				if( GHOST_TYPE == GhostConst$type$orghast )
 					rand = 20;
 			
 				lastReturn = llGetTime()+10+llFrand(rand);	// Stay in the ghost room for longer than when it roams
-				lastReturn += 50-10*DIF;	// Less roamy on lower difficulties
+				lastReturn += 50-10*DIF;	// Enforced stay time of 30-50 sec, based on difficulty
 				
 				// GHOST BEHAVIOR :: EHEE - Don't leave the room as much
 				if( GHOST_TYPE == GhostConst$type$ehee )
@@ -600,12 +583,20 @@ handleTimer( "A" )
 			// Find a random room
 			else{
 				
-				vector rng = llGetPos()+<llFrand(20)-10,llFrand(20)-10,llFrand(15)-5>;
 				lastReturn = llGetTime()-roamcd+2;	// Attempt every 2 sec until it succeeds
-				int gRoom = pointInRoom(rng);
-				if( ~gRoom && gRoom != curRoom )
-					Nodes$getPath( GhostMethod$followNodes, llGetPos(), rng );
-			
+				// GHOST BEHAVIOR :: Gooryo - Find a plumbed room to teleport to
+				if( GHOST_TYPE == GhostConst$type$gooryo )
+					Nodes$getPlumbedRoom( "PL", GhostMethod$cbPlumbing );
+				else{
+				
+					vector rng = llGetPos()+<llFrand(20)-10,llFrand(20)-10,llFrand(15)-5>;
+					
+					int gRoom = pointInRoom(rng);
+					if( ~gRoom && gRoom != curRoom )
+						Nodes$getPath( GhostMethod$followNodes, llGetPos(), rng );
+					
+				}
+				
 			}
 		
 		}
@@ -932,7 +923,8 @@ onPortalLoadComplete( desc )
 	spawnPos = llGetPos();
 	Level$raiseEvent(LevelCustomType$GHOST, LevelCustomEvt$GHOST$spawned, []);
 	cacheNodes();
-	
+	if( DIF )
+		lastWarp = llGetTime()-20;	// Allow long roam immediately
 	
 end
 
@@ -941,19 +933,10 @@ onStateEntry()
 	spawnPos = llGetPos();
     stopAllObjectAnimations()
     llStartObjectAnimation("hugeman_idle");
-    //llStartObjectAnimation("hugeman_walk");
     setInterval("A", 0.25);
 	Portal$scriptOnline();
-	
-	/*
-	#ifdef FETCH_PLAYERS_ON_COMPILE
-	cacheNodes();
-	Level$forceRefreshPortal();
-    #endif
-	*/
-	
+
 	Level$raiseEvent(LevelCustomType$GHOST, LevelCustomEvt$GHOST$spawned, []);
-	//qd(llGetUsedMemory());
 	
 end
 
@@ -1002,6 +985,7 @@ handleOwnerMethod( GhostMethod$toggleHunt )
 			toggleMesh(false);
 			setState(STATE_IDLE);
 			warpTo(spawnPos);
+			lastWarp = llGetTime();			// Acts like a smudge
 			llStopSound();
 			lastReturn = llGetTime()+20;	// Act like a lesser smudge
 			
@@ -1044,7 +1028,7 @@ handleOwnerMethod( GhostMethod$setType )
 	int evidenceType = argInt(1);
 	DIF = argInt(2);
 	AFFIXES = argInt(3);
-	raiseEvent(GhostEvt$type, GHOST_TYPE + evidenceType + AFFIXES);
+	raiseEvent(GhostEvt$type, GHOST_TYPE + evidenceType + AFFIXES + DIF);
 	
 end
 
@@ -1052,6 +1036,7 @@ handleOwnerMethod( GhostMethod$smudge )
 	
 	lastReturn = llGetTime()+60;	// Don't use a long distance roam for 60 seconds
 	warpTo(spawnPos);
+	lastWarp = llGetTime();
 	
 end
 

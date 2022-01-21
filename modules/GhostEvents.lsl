@@ -119,7 +119,7 @@ onNoSensor()
 
 end
 
-onGhostType( type, evidence, affixes )
+onGhostType( type, evidence, affixes, dif )
 	
 	GHOST_TYPE = type;
 	EVIDENCE_TYPES = evidence;

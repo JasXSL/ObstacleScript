@@ -14,7 +14,7 @@ key lastSound;
 float LAST_SOUND_TIME;
 float LAST_POWER;
 int AFFIXES;
-
+int DIFFICULTY;
 
 // Searches desc for a specific type
 list getDescType( key id, str type ){
@@ -361,11 +361,12 @@ onNoSensor()
 
 end
 
-onGhostType( type, evidence, affixes )
+onGhostType( type, evidence, affixes, difficulty )
 	
 	GHOST_TYPE = type;
 	EVIDENCE_TYPES = evidence;
 	AFFIXES = affixes;
+	DIFFICULTY = difficulty;
 	
 end
 
@@ -588,8 +589,12 @@ handleOwnerMethod( GhostInteractionsMethod$interact )
 			else{
 				
 				integer flags; float speed = 1.0;
-				if( EVIDENCE_TYPES & GhostConst$evidence$stains && !hasWeakAffix(ToolSetConst$affix$noEvidenceUntilSalted) )
-					flags = flags|GhostInteractiveConst$INTERACT_ALLOW_STAINS;
+				
+				if( 
+					EVIDENCE_TYPES & GhostConst$evidence$stains && 
+					!hasWeakAffix(ToolSetConst$affix$noEvidenceUntilSalted) &&
+					(DIFFICULTY < 2 || llFrand(1.0) < 0.75)
+				)flags = flags|GhostInteractiveConst$INTERACT_ALLOW_STAINS;
 					
 				// GHOST BEHAVIOR :: POWOLTERGEIST
 				if( GHOST_TYPE == GhostConst$type$powoltergeist )
