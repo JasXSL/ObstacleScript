@@ -179,7 +179,7 @@ onGameStart(){
     
     // Generate ghost
     SEL = -1;   // Reset generated ghost
-    ACTIVITY = llFrand(.6)+.7;   // This is a shuffle multiplied against the ghost type's activity
+    ACTIVITY = llFrand(.8)+.4;   // This is a shuffle multiplied against the ghost type's activity
     GHOST_TYPE = 
     #ifdef FORCE_GHOST
         FORCE_GHOST

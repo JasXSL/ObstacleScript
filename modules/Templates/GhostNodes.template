@@ -373,7 +373,10 @@ onLevelCustomSpiritBoxTrigger( spiritBox )
 			
 			}
 			
-			success = nrPlayers < 2 && nrPlayers;
+			if( nrPlayers < 1 )
+				nrPlayers = 1;
+			
+			success = llFrand(1) < 1.0/nrPlayers;
 			/*
 			if( !success )
 				qd("SB Fail: Too many players" + nrPlayers);

@@ -1,12 +1,6 @@
 x = should be fixed, ? = not sure if fixed, - todo, u = unable to reproduce
 Phasmo:
-
-	m = model
-	u = uv mapped
-	t = textured
-	x = uploaded
-	
-	
+	- Gooryo doesn't leave the room?
 	
 	
 - Level manager

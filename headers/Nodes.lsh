@@ -1,7 +1,6 @@
 /*
 	Nodes maintains pathing nodes for navigation
 	!! Use #Nodes for the script name !!
-	Todo: Make this a template
 */
 #ifndef __Nodes
 #define __Nodes
