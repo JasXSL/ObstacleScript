@@ -525,12 +525,9 @@ handleTimer( "A" )
 
 	if( STATE == STATE_IDLE ){
 	
-		// Every 30 sec go back to ghost room or try to go to a completely random room if not at home
+		// Every 30 sec go back to ghost room or try to go to a completely random room if not at home. This is modified by lastReturn once it goes back to the room
 		float roamcd = 30;
-		// GHOST BEHAVIOR :: Orghast - Roam more often
-		if( GHOST_TYPE == GhostConst$type$orghast )
-			roamcd = 20;
-		
+
 		int startRoom = pointInRoom( spawnPos );
 		int curRoom = pointInRoom( llGetPos() );
 		// Exponentially grow the area it can go to
@@ -564,20 +561,20 @@ handleTimer( "A" )
 				// GHOST BEHAVIOR :: Gooryo - Teleport back home
 				else if( GHOST_TYPE == GhostConst$type$gooryo )
 					warpTo(spawnPos);
-				else
+				else{
 					Nodes$getPath( GhostMethod$followNodes, llGetPos(), spawnPos );
-					
-				float rand = 100-10*DIF;		// Random stay time of 0-80/0-120 based on difficulty
+				}
+				float rand = 120-10*DIF;		// Random stay time of 80-120 sec based on difficulty
 				// GHOST BEHAVIOR :: Orghast - Roam more often
 				if( GHOST_TYPE == GhostConst$type$orghast )
 					rand = 20;
-			
-				lastReturn = llGetTime()+10+llFrand(rand);	// Stay in the ghost room for longer than when it roams
+				lastReturn += 30;						// Fixed extra time to stay in the ghost room
+				lastReturn = llGetTime()+llFrand(rand);	// Stay in the ghost room for longer than when it roams
 				lastReturn += 50-10*DIF;	// Enforced stay time of 30-50 sec, based on difficulty
 				
 				// GHOST BEHAVIOR :: EHEE - Don't leave the room as much
 				if( GHOST_TYPE == GhostConst$type$ehee )
-					lastReturn += 40;
+					lastReturn += 60;
 					
 			}
 			// Find a random room
@@ -788,7 +785,6 @@ handleTimer( "A" )
 			}
 			
 			BFL = BFL&~BFL_HUNT_HAS_POS;
-			//qd("POS has been reached");
 			setState(STATE_IDLE);	// Go idle again
 			toggleWalking(FALSE);
 			return;
@@ -813,7 +809,6 @@ handleTimer( "A" )
 			else if( llGetTime()-chaseFailed > 1.5 ){
 			
 				llSetKeyframedMotion([], [KFM_COMMAND, KFM_CMD_STOP]);
-				//qd("Cheese it!");
 				list ray = llCastRay(pp, pp-<0,0,4>, RC_DEFAULT);
 				vector ppFloor = pp;
 				if( l2i(ray, -1) == 1 )
@@ -1034,7 +1029,7 @@ end
 
 handleOwnerMethod( GhostMethod$smudge )
 	
-	lastReturn = llGetTime()+60;	// Don't use a long distance roam for 60 seconds
+	lastReturn = llGetTime()+120;	// Don't use a long distance roam for 2 minutes
 	warpTo(spawnPos);
 	lastWarp = llGetTime();
 	
@@ -1079,7 +1074,6 @@ end
 handleOwnerMethod( GhostMethod$followNodes )
     
     gotoPortals = METHOD_ARGS;
-	//qd("Got portals " + gotoPortals);
     calculateAlignPos();
 	setState(STATE_PATHING);
 	lastReturn = llGetTime();	// Node follow should only happen when roaming or during a hunt. Both are good times to update the timer.

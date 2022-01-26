@@ -66,7 +66,7 @@ handleTimer( "TOUCH" )
         
     }
     
-    float activity = 0.5*(1.0-DIFFICULTY*0.15); // 15% less interactive per difficulty above easy
+    float activity = 0.5*llPow(0.85, DIFFICULTY); // 15% less interactive per difficulty above easy
     activity *= ACTIVITY;   // Add randomness
     // Get activity from ghost, such as asking for a sign
     activity += GhostGet$activity( prDesc(GHOST) )/100.0;

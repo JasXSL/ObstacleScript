@@ -402,6 +402,7 @@ onLevelCustomSpiritBoxTrigger( spiritBox )
 end
 
 
+
 onStateEntry()
 
 	rezPos = llGetPos();
@@ -409,56 +410,6 @@ onStateEntry()
     Spawner$getGroups("init", "rooms");
     
 	PLAYERS = [(str)llGetOwner()];
-    list unfoundRooms = llList2ListStrided(ROOMS, 0, -1, ROOMS_STRIDE);
-    // Sanity check our portals
-    links_each( nr, name,
-        
-        if( name == "PORTAL" ){
-            
-            list spl = split(prDesc(llGetLinkKey(nr)), ":");
-            integer i;
-            for(; i < count(spl); ++i ){
-                
-                string n = l2s(spl, i);
-                if( llListFindList(ROOMS, (list)n) == -1 )
-                    qd("Error: Please add" + n + " to the ROOMS list");
-                else{
-                    
-                    integer pos = llListFindList(unfoundRooms, (list)n);
-                    if( ~pos )
-                        unfoundRooms = llDeleteSubList(unfoundRooms, pos, pos);
-                       
-                }
-            }
-            
-        }
-        
-    )
-    
-    if( count(unfoundRooms) )
-        qd("Error: The following rooms require room markers:" + unfoundRooms);
-    
-    // Next make a 2-stride list of each portal with the first value containing the two room indexes, and the second being the UUID of the portal
-    links_each( nr, name,
-        
-        if( name == "PORTAL" ){
-            list spl = llParseString2List(
-            
-                l2s(llGetLinkPrimitiveParams(nr, (list)PRIM_DESC), 0), 
-                (list)":", 
-                []
-            );
-            portals +=  (list)(
-                getRoomIndexByName(l2s(spl, 0)) | 
-                (getRoomIndexByName(l2s(spl, 1)) << 8)
-            ) + llGetLinkKey(nr);
-            
-        }
-        
-    )
-    
-
-	
 	resetTempData();
 	setInterval("TICK", 10);
 	setInterval("POS", 1);
@@ -522,9 +473,63 @@ handleEvent( "#Game", 0 )
 	else if( type == "DIFFICULTY" )
 		DIFFICULTY = argInt(1);
 	else if( type == "ROUND_START" || type == "END_GAME" ){
-		
+			
 		GAME_ACTIVE = (type == "ROUND_START");
 		resetTempData();
+		
+		if( GAME_ACTIVE ){
+			
+			list unfoundRooms = llList2ListStrided(ROOMS, 0, -1, ROOMS_STRIDE);
+			portals = [];
+			// Sanity check our portals
+			links_each( nr, name,
+				
+				if( name == "PORTAL" ){
+					
+					list spl = split(prDesc(llGetLinkKey(nr)), ":");
+					integer i;
+					for(; i < count(spl); ++i ){
+						
+						string n = l2s(spl, i);
+						if( llListFindList(ROOMS, (list)n) == -1 )
+							qd("Error: Please add" + n + " to the ROOMS list");
+						else{
+							
+							integer pos = llListFindList(unfoundRooms, (list)n);
+							if( ~pos )
+								unfoundRooms = llDeleteSubList(unfoundRooms, pos, pos);
+							   
+						}
+					}
+					
+				}
+				
+			)
+			
+			if( count(unfoundRooms) )
+				qd("Error: The following rooms require room markers:" + unfoundRooms);
+			
+			// Next make a 2-stride list of each portal with the first value containing the two room indexes, and the second being the UUID of the portal
+			links_each( nr, name,
+				
+				if( name == "PORTAL" ){
+					list spl = llParseString2List(
+					
+						l2s(llGetLinkPrimitiveParams(nr, (list)PRIM_DESC), 0), 
+						(list)":", 
+						[]
+					);
+					portals +=  (list)(
+						getRoomIndexByName(l2s(spl, 0)) | 
+						(getRoomIndexByName(l2s(spl, 1)) << 8)
+					) + llGetLinkKey(nr);
+					
+				}
+				
+			)
+			
+		
+		}
 		
 	}	
 	else if( type == "DEBUG" ){
