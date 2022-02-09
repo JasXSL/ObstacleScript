@@ -44,6 +44,9 @@ key real_key;                        // If ROOT is used, then this is the sublin
 integer held;
 vector targPos;
 
+int AINFO;
+float tSEATED;						// Time the avatar sat down. Used to prevent SL fuckery.
+
 list NEARBY;
 
 // Caches for release on interact
@@ -293,6 +296,10 @@ end
 
 handleTimer( "CH" )
 
+	int inf = llGetAgentInfo(llGetOwner());
+	if( (inf & AGENT_SITTING) != (AINFO & AGENT_SITTING) && inf & AGENT_SITTING )
+		tSEATED = llGetTime();
+	AINFO = inf;
 	seek();
 
 end
@@ -331,8 +338,6 @@ onControlsKeyPress( pressed, released )
         #endif
         );
 		
-		
-
 	if( released & controls && INTERACT_TARG != "" ){
 	
 		if( INTERACT_LOCAL )
@@ -362,7 +367,7 @@ onControlsKeyPress( pressed, released )
 
         #ifndef InteractCfg$IGNORE_UNSIT
         integer ainfo = llGetAgentInfo(llGetOwner());
-        if( ainfo&AGENT_SITTING ){
+        if( ainfo&AGENT_SITTING && llGetTime()-tSEATED > 1.0 ){
             
             Rlv$unSit(LINK_THIS, FALSE);
             return;
