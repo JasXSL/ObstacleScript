@@ -109,7 +109,7 @@ spawnGear( list gear ){
     integer shelf;
     for( ; shelf < count(totalWidth); ++shelf ){
     
-        list data = llGetLinkPrimitiveParams(P_TABLE, (list)PRIM_POSITION + PRIM_ROT_LOCAL);
+        list data = llGetLinkPrimitiveParams(P_TABLE, (list)PRIM_POSITION + PRIM_ROTATION);
         vector basePos = l2v(data, 0);
         rotation baseRot = l2r(data, 1);
         vector offs = <0,-.15,.44>;
@@ -117,7 +117,7 @@ spawnGear( list gear ){
             offs.z = -.14;
         
         if( shelf > 1 ){
-            data = llGetLinkPrimitiveParams(P_SIDE, (list)PRIM_POSITION + PRIM_ROT_LOCAL);
+            data = llGetLinkPrimitiveParams(P_SIDE, (list)PRIM_POSITION + PRIM_ROTATION);
             basePos = l2v(data, 0);
             baseRot = l2r(data, 1);
             offs = <0,-.1,0.124>;

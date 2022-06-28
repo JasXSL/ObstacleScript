@@ -43,14 +43,20 @@ int DIFFICULTY;
 #define RM_ROT 2		// Rotation of the spawn
 #define RM_SCALE 3		// Scale of the spawn
 
-#define MAX_TEMP 35
+#define TEMP_OUTDOOR 16
+#define TEMP_INDOOR 20
+#define TEMP_HOT 30
+#define TEMP_MAX 34
+#define TEMP_MAX_NO_EVIDENCE 29
+
+#define TEMP_HOT_BREAKPOINT (TEMP_HOT-TEMP_INDOOR)/(TEMP_MAX_NO_EVIDENCE-TEMP_INDOOR)
 
 #define RM_STRIDE NodesConst$rmStride
 list ROOM_MARKERS = [];	// Contains data from the spawner library
 
 int breaker;		// Breaker on
 list roomLights;	// Lights of a room. Each index corresponds to an index in ROOMS. Note that this relies on readable name, which means only the first entry of that readable is toggled.
-list roomTemps;		// Temperatures of a room. Each index corresponds to an index in ROOMS. Same as above, it uses the first entry of readable name.
+list roomTemps;		// Temperatures of a room, float between 0 and 1 with no evidence, or 0 and (TEMP_MAX-TEMP_INDOOR)/(TEMP_MAX_NO_EVIDENCE-TEMP_INDOOR). Each index corresponds to an index in ROOMS. Same as above, it uses the first entry of readable name.
 float lastSweat;
 vector rezPos;
 int ghostInLight = -1;	// Sets if the ghost is in a lit room or not
@@ -282,25 +288,25 @@ resetTempData(){
 	breaker = false;
 	integer i;
 	for(; i < count(ROOMS); i += ROOMS_STRIDE ){
-		roomTemps += 20;
+		roomTemps += 0.0;
 		roomLights += FALSE;
 	}
 	
 }
 
 
-
+// Val is a value between 0 and 1
 setGhostTemp( int roomIndex, float val ){
 	
-	int cap = 29;
+	float maxTemp = 1.0;
 	if( HAS_TEMPS && !hasWeakAffix(ToolSetConst$affix$noEvidenceUntilSalted) )
-		cap = MAX_TEMP;
+		maxTemp = (TEMP_MAX-TEMP_INDOOR)/(TEMP_MAX_NO_EVIDENCE-TEMP_INDOOR);
 		
-	if( val < 23 )
-		val = 23;
-	else if( val > cap )
-		val = cap;
-
+	//qd("Setting " + val + "on" + roomIndex + "max" + maxTemp);
+	if( val < 0 )
+		val = 0;
+	if( val > maxTemp )
+		val = maxTemp;
 	roomTemps = llListReplaceList(roomTemps, (list)val, roomIndex, roomIndex);
 
 }
@@ -607,17 +613,21 @@ handleTimer( "TICK" )
 	// Update temperatures
 	integer i;
 	if( !hasStrongAffix(ToolSetConst$affix$reqMotionSensor) && !hasStrongAffix(ToolSetConst$affix$vibrator) ){
+	
 		for( ; i < count(roomTemps); ++i ){
 			
-			float val = l2i(roomTemps, i);
+			float val = l2f(roomTemps, i);
 			if( i == ghostRoomIdx ){
-				val += 2-DIFFICULTY*0.33;
+			
+				float add = 0.2/(DIFFICULTY+1);
+				val += add;	// About a minute for easy, plus 1 min per difficulty level
+
 			}
 			else 
-				val -= 1;
+				val -= 0.2;
 			setGhostTemp(i, val);
-			
 		}
+		
 	}
 	int npl = count(PLAYERS);
 	float multi = 1.0+(npl-1)*.2;	// 20% faster arousal per player above 1
@@ -646,8 +656,8 @@ handleTimer( "TICK" )
 				amt *= 1.5;
 			
 			// Next check temps
-			int temp = l2i(roomTemps, plRoomIdx);
-			if( temp >= MAX_TEMP-2 && ~llGetAgentInfo(player) & AGENT_SITTING )
+			float temp = l2f(roomTemps, plRoomIdx);
+			if( temp > TEMP_HOT_BREAKPOINT && ~llGetAgentInfo(player) & AGENT_SITTING )
 				swPlayers += player;
 			
 		}
@@ -674,7 +684,7 @@ onGhostEventsBegin( players, type, subtype )
 	str room = getPosReadable(ghostPos);
 	int tempRoom = getRoomIndexByReadable(room);
 	if( ~tempRoom )
-		setGhostTemp(tempRoom, l2f(roomTemps, tempRoom)+6);
+		setGhostTemp(tempRoom, l2f(roomTemps, tempRoom)+0.5);	// add 50% hot on a ghost event.
 	
 end
 
@@ -807,13 +817,17 @@ handleMethod( NodesMethod$getTemp )
 	str targScript = argStr(2);
 	int targMethod = argInt(3);
 	
-	int temp = 15;
+	float temp = 15;
 	string room = getPosRoom(vpos);
 	if( room ){
 	
 		integer ri = getRoomIndexByName(room);
 		ri = getRoomIndexByReadable(l2s(ROOMS, ri*ROOMS_STRIDE+1));	// Only the first readable is used, so we need to get the first one here
-		temp = l2i(roomTemps, ri);
+		temp = l2f(roomTemps, ri);
+		if( temp < 1 )
+			temp *= temp;
+		temp *= (TEMP_MAX_NO_EVIDENCE-TEMP_INDOOR);
+		temp += TEMP_INDOOR;
 		
 	}
 		

@@ -6,8 +6,8 @@
 #define PARALLEL 3
 
 integer IDX;
-list descQueue; // (int)idx, (float)time, (vector)pos, (str)desc, (str)group
-#define DQSTRIDE 5
+list descQueue; // (int)idx, (float)time, (vector)pos, (str)desc, (str)group, (str)name -- Name is only used for debugging
+#define DQSTRIDE 6
 list objQueue;  // contains JSON strings passed to RezzerMethod$rez
 
 // Removes a slice from dq, idx is the absolute index in the list to start from
@@ -54,7 +54,8 @@ rez(){
 			llGetTime() +
 			l2s(data, 1) +
 			l2s(data, 3) +
-			l2s(data, 4)
+			l2s(data, 4) +
+			l2s(data, 0)
 		;
 		
 		llRezAtRoot(
@@ -100,8 +101,9 @@ onTimer( label )
 	if( label == "C" )
 		rez();
 	else if( llGetSubString(label, 0, 4) == "FAIL:" ){
-
-		integer idx = (int)llGetSubString(label, 5, -1);
+	
+		list spl = split(label, ":");
+		integer idx = l2i(spl, 1);
 		integer pos = llListFindList(descQueue, (list)idx);
 		if( ~pos ){
 			
@@ -140,7 +142,7 @@ handleOwnerMethod( RezzerMethod$rezzed )
     integer pos = llListFindList(descQueue, (list)id);
     if( pos == -1 ){
         
-        llOwnerSay("Rezzer.lsl : Error: Asset trying to fetch desc, but desc not found "+(str)id + " in queue: " + mkarr(descQueue));
+        llOwnerSay("Rezzer.lsl : Error: '"+llKey2Name(SENDER_KEY)+"' trying to fetch desc, but id "+(str)id + " not found in descqueue: " + mkarr(descQueue));
 		llOwnerSay("Make sure you're not overriding llSetText until the portal is initialized");
         return;
         

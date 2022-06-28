@@ -64,8 +64,7 @@ loadComplete(){
 	if( ~BFL&(BFL_GOT_DESC|BFL_GOT_SCRIPTS) )
 		return;
 	
-	// Tell the rezzer that it can continue. It's put here so we don't overload the Screpo.
-	Rezzer$initialized( mySpawner() );
+	
 	
 	// Note: If the spawnID is 0 here, you may be overriding llSetText in your asset script
 	// Get players
@@ -89,6 +88,9 @@ loadComplete(){
 	
 	raiseEvent(PortalEvt$loadComplete, DESC);
 	
+	// Tell the rezzer that it can continue. It's put here so we don't overload the Screpo.
+	// Needs to go after desc set
+	Rezzer$initialized( mySpawner() );
     
 }
 

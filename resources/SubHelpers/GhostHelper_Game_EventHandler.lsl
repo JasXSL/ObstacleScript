@@ -101,6 +101,7 @@ handleTimer( "HUNT_END" )
     toggleHunt(FALSE);
 end
 
+// These can be run on channel 6
 onListen( ch, msg )
 
     if( msg == "SPAWNGHOST" ){
@@ -360,6 +361,7 @@ onLevelCustomDoorOpened( label, st )
     }
 end
 
+// Sent from GhostBoard
 onGhostBoardSpawn()
     GhostBoard$setAffixes( AFFIXES );
 end

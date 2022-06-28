@@ -603,7 +603,12 @@ onPortalLclickStarted( hud )
 		
 	}
 	
-	if( tool == ToolsetConst$types$ghost$hots || tool == ToolsetConst$types$ghost$ecchisketch || tool == ToolsetConst$types$ghost$videoCamera ){
+	if( 
+		tool == ToolsetConst$types$ghost$hots || 
+		tool == ToolsetConst$types$ghost$ecchisketch || 
+		tool == ToolsetConst$types$ghost$videoCamera || 
+		tool == ToolsetConst$types$ghost$hornybat 
+	){
 		
 		if( tool == ToolsetConst$types$ghost$hots ){
 			Level$raiseEvent( LevelCustomType$GTOOL, LevelCustomEvt$GTOOL$data, getActiveToolWorldId() + 1 );

@@ -1101,6 +1101,7 @@ end
 handleOwnerMethod( GhostMethod$cbNodes )
 	
 	Nodes$handleGetRooms(cNodes);
+	//qd("Nodes: "+METHOD_ARGS);
 			
 end
 

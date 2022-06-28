@@ -21,6 +21,8 @@ integer BFL = 0x4;
 #define BFL_HUNTING 0x2
 #define BFL_DROPPED 0x4
 
+#define hideResponse() llSetLinkAlpha(P_SPIRITBOX, 0, FACE)
+
 #define isDropped() (BFL&BFL_DROPPED && !llGetAttached())
 
 setSprite( integer sprite ){
@@ -76,12 +78,17 @@ respond(){
     integer response = l2i(responses, res);
 	key voice = l2k(responses, res+1);
 	
-	if( !SUCCESS )
-		response = 0x78;   // No signal
+	SWEEP = [];
+	 
+	if( !SUCCESS ){
+		hideResponse();
+		SWEEPING = 0;
+		return;
+	}
     else
 		llTriggerSound(voice, 0.3);
     
-    SWEEP = [];
+   
     
     integer i;
     for(; i < 8; ++i ){
@@ -96,6 +103,7 @@ respond(){
     
 	SWEEPING = 2;
     setSprite(l2i(SWEEP, 0));
+	
 	
 	SWEEP = llDeleteSubList(SWEEP, 0, 0);
     setInterval("S", .75);
@@ -340,7 +348,7 @@ handleTimer( "S" )
 	SWEEP = llDeleteSubList(SWEEP, 0, 0);
 
 	if( sprite == -1 )
-		llSetLinkAlpha(P_SPIRITBOX, 0, FACE);
+		hideResponse();
 	else
 		setSprite( sprite );
 	
