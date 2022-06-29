@@ -61,6 +61,7 @@
 		#define LevelCustomEvt$TOOLSET$motionDetector 6		// (bool)ghost - Motion detector triggered
 		#define LevelCustomEvt$TOOLSET$pills 7				// void - Pills used
 		#define LevelCustomEvt$TOOLSET$ouija 8				// str type(pos, age, sex, name) - Ouija board question asked
+		#define LevelCustomEvt$TOOLSET$vape 9				// void - Vape used
 		
 	#define onLevelCustomToolsetDrop( toolsetuuid, worldID, pos, rot ) \
 		if( isEventLevelCustom() AND argStr(1) == LevelCustomType$TOOLSET AND argInt(2) == LevelCustomEvt$TOOLSET$drop ){ \
@@ -91,6 +92,8 @@
 	#define onLevelCustomToolsetOuija( type ) \
 		if( isEventLevelCustom() AND argStr(1) == LevelCustomType$TOOLSET AND argInt(2) == LevelCustomEvt$TOOLSET$ouija ){ \
 			str type = argStr(3);
-	
+	#define onLevelCustomToolsetVape( type ) \
+		if( isEventLevelCustom() AND argStr(1) == LevelCustomType$TOOLSET AND argInt(2) == LevelCustomEvt$TOOLSET$vape ){
+			
 
 #endif

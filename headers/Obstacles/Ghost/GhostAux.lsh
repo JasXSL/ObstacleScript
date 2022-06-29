@@ -1,13 +1,17 @@
+/* This is for GhostAux in the ghost itself, not the #AUX script in the monitor */
 #ifndef __GhostAux
 #define __GhostAux
 
 #define GhostAuxMethod$setLight 1			// (bool)on - Sets whether the light is on in the room of the ghost.
 #define GhostAuxMethod$seatGhostEvent 2		// (key)player - Grabs and plays a ghost event
+#define GhostAuxMethod$salt 3				// void - Ghost has been salted
 
 #define GhostAux$setLight( on ) \
 	runOmniMethod("GhostAux", GhostAuxMethod$setLight, on)
 #define GhostAux$seatGhostEvent( player ) \
 	runOmniMethod("GhostAux", GhostAuxMethod$seatGhostEvent, player)
+#define GhostAux$salt() \
+	runOmniMethod("GhostAux", GhostAuxMethod$salt, [])
 
 
 #define GhostAuxEvt$caughtSat 1				// void - Caught player was sat on the ghost

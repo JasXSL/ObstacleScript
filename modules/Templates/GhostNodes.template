@@ -338,7 +338,7 @@ onSpawnerGetGroups( callback, spawns )
                 pos +
                 (vector)j(spawn, 1) +
                 (rotation)j(spawn, 2) +
-                (vector)j(spawn, 3 + 0)
+                (vector)j(spawn, 3 + 0) // Note: 3 + 0 is array [3, 0]
             ;
             
         }

@@ -205,7 +205,11 @@ handleOwnerMethod( GhostEventsMethod$trigger )
 		;
 		
 	}
-
+	// Succubus can only possess
+	if( GHOST_TYPE == GhostConst$type$succubus )
+		viable = (list)GhostEventsConst$IT_POSSESS;
+	
+		
 	viable = llListRandomize(viable, 1);
 	
 

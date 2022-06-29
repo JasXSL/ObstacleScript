@@ -185,6 +185,11 @@ triggerSound(){
 		"b7f92130-398b-ddab-5525-060cfca2f9da",
 		"66a0c5a8-3718-2126-d3f6-e4dfbdcda2df"
 	];
+	
+	// GHOST BEHAVIOR :: ORGHAST - Special moan
+	if( GHOST_TYPE == GhostConst$type$orghast && llFrand(1.0) < 0.3 )
+		sounds = (list)"743212e5-252e-3bf8-43fe-690b1fd3dd56";
+	
 	lastSound = randElem(sounds);
 	triggerParabolic(llGetPos(), TRUE);
 	LAST_SOUND_TIME = llGetTime();
@@ -281,20 +286,7 @@ int usePower(){
 		return TRUE;
 		
 	}
-	
-	// Leave an orb
-	if( GHOST_TYPE == GhostConst$type$stringoi ){
-	
-		forPlayer( i, k )
-		
-			Gui$setOrbs( k, llGetPos(), 60 );
-			
-		end
-		
-		return TRUE;
-	
-	}
-		
+
 	// Failed, reset last time we used power
 	return FALSE;
 	
@@ -327,6 +319,11 @@ handleTimer( "GI" )
 	
 end
 
+// Force a hunt to start if possible
+handleTimer( "HUNT" )
+	Level$raiseEvent(LevelCustomType$GHOSTINT, LevelCustomEvt$GHOSTINT$forceHunt, []);
+end
+
 onSensor( total )
     
 	//qd(total);
@@ -334,7 +331,7 @@ onSensor( total )
     cObjs = [];
     integer i;
 	list accepted;
-	list rejected;
+	//list rejected;
     for(; i < total; ++i ){
         
 		key dk = llDetectedKey(i);
@@ -344,9 +341,10 @@ onSensor( total )
 			cObjs += (list)dk;
 			accepted += llKey2Name(dk);
 		}
+		/*
 		else
 			rejected += (list)llDetectedName(i) + intr + llFabs(gp.z-dp.z);
-		
+		*/
     }
 	
 	//qd("R "+ llDumpList2String(rejected, ","));
@@ -435,6 +433,7 @@ handleOwnerMethod( GhostInteractionsMethod$interact )
 	int roomLit = !GhostGet$inLitRoom( llGetObjectDesc() );
 	int isBare = GHOST_TYPE == GhostConst$type$bare;
 	int isAsswang = GHOST_TYPE == GhostConst$type$asswang;
+	int unlitBare = isBare && !roomLit;
 	
 	float playerChance = 0.2;	// 20% chance of touching a player
 	// GHOST BEHAVIOR :: POWOLTERGEIST
@@ -444,7 +443,7 @@ handleOwnerMethod( GhostInteractionsMethod$interact )
 	else if( GHOST_TYPE == GhostConst$type$imp )
 		playerChance = 0.4;		// Imp is twice as high
 	// GHOST BEHAVIOR :: BARE
-	else if( isBare && !roomLit )
+	else if( unlitBare )
 		playerChance = 0.4;		// Bare gets same amount as imp if light is off
 	// GHOST BEHAVIOR :: ASSWANG - Higher chance of touching a player. But can only touch players who aren't looking at it.
 	else if( GHOST_TYPE == GhostConst$type$asswang )
@@ -469,13 +468,10 @@ handleOwnerMethod( GhostInteractionsMethod$interact )
 		
 			forPlayer( index, player )
 				
-				// GHOST BEHAVIOR :: Bare - Longer range for player interactions in darkness
 				float range = 2.5;
-				if( (isBare && !roomLit) || isAsswang )
-					range = 3.5;
-				// GHOST BEHAVIOR :: Stringoi - 30% longer interact radius
-				if( GHOST_TYPE == GhostConst$type$stringoi )
-					range *= 1.3;
+				// GHOST BEHAVIOR :: Stringoi Bare - Increased interact range.
+				if( GHOST_TYPE == GhostConst$type$stringoi || unlitBare )
+					range = 4;
 				
 				if( llVecDist(prPos(player), gp) < range && ~llGetAgentInfo(player) & AGENT_SITTING ){
 					
@@ -511,16 +507,29 @@ handleOwnerMethod( GhostInteractionsMethod$interact )
 				int clothes = Rlv$getDesc$clothes( hud )&1023;	// 1023 = 10 bit
 				float cc = 0.15;
 				if( isBare && !roomLit )
-					cc *= 4;
+					cc *= 5;
 				// GHOST BEHAVIOR :: Stringoi - Strip
 				if( GHOST_TYPE == GhostConst$type$stringoi )
-					cc *= 3;
+					cc *= 4;
 				
 				if( llFrand(1.0) < cc && clothes && power ){
 					
 					// 682 = fully dressed. +1 because 0 is ignore
 					stripPlayer(hud, clothes >= 682);
 					lastSound = "620fe5e8-9223-10fc-3a5c-0f5e0edc3a35";
+					
+					// GHOST BEHAVIOR :: Stringoi - Leave orbs behind for 5 min when stripping a player
+					if( GHOST_TYPE == GhostConst$type$stringoi ){
+						forPlayer( i, k )
+						
+							Gui$setOrbs( k, llGetPos(), 300 );
+							
+						end
+					}
+					
+					if( unlitBare ){
+						setTimeout("HUNT", 1+llFrand(3));
+					}
 					
 				}
 				else{
@@ -596,9 +605,9 @@ handleOwnerMethod( GhostInteractionsMethod$interact )
 					(DIFFICULTY < 2 || llFrand(1.0) < 0.75)
 				)flags = flags|GhostInteractiveConst$INTERACT_ALLOW_STAINS;
 					
-				// GHOST BEHAVIOR :: POWOLTERGEIST
-				if( GHOST_TYPE == GhostConst$type$powoltergeist )
-					speed += llPow(llFrand(2),2);
+				// GHOST BEHAVIOR :: POWOLTERGEIST - 20% chance to yeet an item
+				if( GHOST_TYPE == GhostConst$type$powoltergeist && llFrand(1.0) < 0.2 )
+					speed *= 2;
 
 				GhostInteractive$interact( targ, flags, speed );
 				

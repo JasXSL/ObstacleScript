@@ -418,8 +418,10 @@ onLevelCustomGtoolData( sender, tooluuid, data )
             GHOST_TYPE == GhostConst$type$yuri && 
             ~BFL&BFL_HUNTING
         ){
-            Ghost$smudge();
+            Ghost$smudge(sender, true);
         }
+		
+		GhostAux$salt();
         
         if( hasWeakAffix(ToolSetConst$affix$noEvidenceUntilSalted) )
             raiseEvent(0, "SALTED");
@@ -429,6 +431,10 @@ onLevelCustomGtoolData( sender, tooluuid, data )
     spawnedTools = llListReplaceList(spawnedTools, (list)data, pos+3, pos+3);
     //qd("Data update" + spawnedTools);
     
+end
+
+onLevelCustomToolsetVape()
+	Ghost$smudge(argKey(0), false);
 end
 
 // If a player leaves, drop their stuff

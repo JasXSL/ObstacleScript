@@ -546,6 +546,7 @@ onPortalLclickStarted( hud )
         BFL = BFL|BFL_USING;
         setTimeout("USE", 3);
 		setTimeout("DESTROY", 2.5);
+		Level$raiseEvent(LevelCustomType$TOOLSET, LevelCustomEvt$TOOLSET$vape, []);
 				
     }
 	

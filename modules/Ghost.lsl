@@ -5,7 +5,8 @@
 #include "ObstacleScript/resources/SubHelpers/GhostHelper.lsl"
 #include "ObstacleScript/index.lsl"
 
-list cNodes;	// Cache of pathing nodes, fetched from Nodes script
+list cNodes;	// Cache of room markers, fetched from Nodes script
+				// (int)roomIndex, (vec)globalPos, (rot)rotation, (vec)size
 #define cacheNodes() cNodes = []; Nodes$getRooms( GhostMethod$cbNodes )
 
 
@@ -43,23 +44,26 @@ integer STATE;
 // Settings
 #define BFL_PAUSE 0x1		// Pause the ghost, used for debugging.
 #define BFL_HUNTING 0x2		// Currently hunting for players
-#define BFL_SMUDGE 0x4		// Can only idle. Deaf and blind.
+#define BFL_ROAMING 0x4		// Ghost is currently exploring the house
 #define BFL_VISIBLE 0x8		// Player visible
 
 #define BFL_HUNT_HAS_LOS 0x10	// We currently have line of sight to our target
 #define BFL_HUNT_HAS_POS 0x20	// LOS lost, but we have their last visible coordinates
 #define BFL_ROAM_REACHED 0x40	// When roam starts this is unset. When roam ends by reaching the target, this is set.
+
 integer BFL;
 
 
 vector roamTarget;          // Position we're roaming towards
 key chaseTarget;            // Player we're chasting
 float nextRoam;       		// llGetTime() of when we finished the last roam
-float lastWarp;				// llGetTime of when we last went to the ghost room
 float lastReturn = -26;		// -26 means it'll have 4 sec to cache the nodes when spawned, then immediately roam
-float lastFootSound;		// Used when hunting to generate footsteps
 
+float lastFootSound;		// Used when hunting to generate footsteps
 float lastRoomChange;		// Used with hasStrongAffix(ToolSetConst$affix$ghostRoomChange)
+float lastSmudge;			// 
+#define SMUDGE_TIMEOUT 6
+#define isSmudged() (lastSmudge > 0 && llGetTime()-lastSmudge < SMUDGE_TIMEOUT)
 
 vector spawnPos;
 #define toggleMesh( visible ) raiseEvent(GhostEvt$visible, visible)
@@ -303,18 +307,14 @@ vector getPlayerVisibilityPos( key player ){
 }
 
 // Player walked or talked
-addFootsteps( key player, float trackChance ){
+addFootsteps( key player ){
 	
 	vector pos = prPos(player);
 	integer index = llListFindList(PLAYERS, (list)((str)player));
 	playerFootsteps = llListReplaceList(playerFootsteps, (list)pos, index, index);
 
-	// GHOST BEHAVIOR :: Succubus - Perfect tracking of its target
-	if( GHOST_TYPE == GhostConst$type$succubus )
-		trackChance = 1.0;
-	
 	// Random modifier to track down a hiding player in the room when they talk or move
-	if( llFrand(1.0) < trackChance || ~BFL&BFL_HUNTING || STATE == STATE_HUNT_PRE || llGetAgentInfo(player) & AGENT_SITTING )
+	if( ~BFL&BFL_HUNTING || STATE == STATE_HUNT_PRE || llGetAgentInfo(player) & AGENT_SITTING || isSmudged() )
 		return;
 		
 	// GHOST BEHAVIOR :: Succubus - Only hear victim
@@ -356,6 +356,8 @@ handleTimer( "A" )
 		return;
 		
 	}
+	
+	bool smudged = isSmudged();
 	
 	if( BFL&BFL_HUNTING ){
 
@@ -402,7 +404,7 @@ handleTimer( "A" )
 				}
 					
 				if( noisy )
-					addFootsteps(player, 0.5);
+					addFootsteps(player);
 			
 			end
 		
@@ -411,7 +413,7 @@ handleTimer( "A" )
 		
 		// Start chasing after the setup phase
 		// Find players with raycast
-		if( STATE != STATE_HUNT_PRE ){
+		if( STATE != STATE_HUNT_PRE && !smudged ){
 		
 			vector g = llGetPos();
 			
@@ -525,33 +527,33 @@ handleTimer( "A" )
 
 	if( STATE == STATE_IDLE ){
 	
-		// Every 30 sec go back to ghost room or try to go to a completely random room if not at home. This is modified by lastReturn once it goes back to the room
+		// Min time to stay in a room after going there (both roaming far and going home).
 		float roamcd = 30;
 
 		int startRoom = pointInRoom( spawnPos );
 		int curRoom = pointInRoom( llGetPos() );
-		// Exponentially grow the area it can go to
-		float maxDist = llPow(0.04*(DIF+1)*(llGetTime()-lastWarp), 1.3)+.25;
-		if( BFL&BFL_HUNTING )
-			maxDist = 1000;
-		
-		// Handle roaming far
+
+		int timedOut = llGetTime()-lastReturn > roamcd;
+		// Handle roaming
 		if( 
 			~BFL&BFL_HUNTING && 
 			(
-				llGetTime()-lastReturn > roamcd || 		// Timeout
-				(
-					startRoom != curRoom && 
-					llVecDist(llGetPos(), spawnPos) > maxDist 
-				)	// Not in the ghost room, and out of influence
+				timedOut || 			// Timeout
+				(~BFL&BFL_ROAMING && startRoom != curRoom)	// We accidentally left the ghost room while not roaming
 			)
 		){
 				
 			// Go back
 			if( startRoom != curRoom ){
 			
-				
-				// Set this as our new home location
+				// If we need to go back because we accidentally left the ghost room too early, just walk back and nothing else
+				if( !timedOut ){
+					Nodes$getPath( GhostMethod$followNodes, llGetPos(), spawnPos );
+					return;
+				}
+			
+				BFL = BFL&~BFL_ROAMING;
+				// Set this as our new home location (ghost room change affix)
 				if( hasStrongAffix(ToolSetConst$affix$ghostRoomChange) && llGetTime()-lastRoomChange > 420 && llFrand(1) < .5 && BFL&BFL_ROAM_REACHED ){
 				
 					spawnPos = llGetPos();
@@ -562,35 +564,45 @@ handleTimer( "A" )
 				else if( GHOST_TYPE == GhostConst$type$gooryo )
 					warpTo(spawnPos);
 				else{
+					// If not gooryo, request a path home
 					Nodes$getPath( GhostMethod$followNodes, llGetPos(), spawnPos );
 				}
-				float rand = 120-10*DIF;		// Random stay time of 80-120 sec based on difficulty
-				// GHOST BEHAVIOR :: Orghast - Roam more often
+				
+				lastReturn = llGetTime();	// Stay in the ghost room for longer than when it roams
+				lastReturn += 30+llFrand(30);			// Fixed extra time to stay in the ghost room. This is added to roamcd. At least 60-90 sec stay in the ghost room
+				lastReturn += 60-20*DIF;	// Increase stay time by up to another min on lower difficulties.
+				// GHOST BEHAVIOR :: Orghast - Roam 30% more often
 				if( GHOST_TYPE == GhostConst$type$orghast )
-					rand = 20;
-				lastReturn += 30;						// Fixed extra time to stay in the ghost room
-				lastReturn = llGetTime()+llFrand(rand);	// Stay in the ghost room for longer than when it roams
-				lastReturn += 50-10*DIF;	// Enforced stay time of 30-50 sec, based on difficulty
+					lastReturn = llFloor(lastReturn*0.7);
 				
 				// GHOST BEHAVIOR :: EHEE - Don't leave the room as much
 				if( GHOST_TYPE == GhostConst$type$ehee )
-					lastReturn += 60;
+					lastReturn = llFloor(lastReturn*1.5);
 					
 			}
 			// Find a random room
 			else{
 				
-				lastReturn = llGetTime()-roamcd+2;	// Attempt every 2 sec until it succeeds
+				BFL = BFL|BFL_ROAMING;
+				lastReturn = llGetTime()+llFrand(30);	// Return in 30-60 sec
 				// GHOST BEHAVIOR :: Gooryo - Find a plumbed room to teleport to
 				if( GHOST_TYPE == GhostConst$type$gooryo )
 					Nodes$getPlumbedRoom( "PL", GhostMethod$cbPlumbing );
+				// Pick a completely random room
 				else{
 				
 					vector rng = llGetPos()+<llFrand(20)-10,llFrand(20)-10,llFrand(15)-5>;
 					
-					int gRoom = pointInRoom(rng);
-					if( ~gRoom && gRoom != curRoom )
-						Nodes$getPath( GhostMethod$followNodes, llGetPos(), rng );
+					list viable;	// List of indexes to the first element of each cNode stride with a viable position
+					int slice;
+					for(; slice < count(cNodes); slice += NodesConst$rmStride ){
+						
+						if( slice != startRoom )
+							viable += slice;
+						
+					}
+					slice = l2i(viable, floor(llFrand(count(viable))));
+					Nodes$getPath( GhostMethod$followNodes, llGetPos(), l2v(cNodes, slice+1) );
 					
 				}
 				
@@ -601,14 +613,10 @@ handleTimer( "A" )
 		// Walk randomly after reaching a room
 		// Find a new place to walk to
 		if( llGetTime() > nextRoam || BFL&BFL_HUNTING ){
+		
 			vector dir = llRot2Fwd(llEuler2Rot(<0,0,llFrand(TWO_PI)>));
 
-			// It can walk max 2m at a time
-			float md = maxDist/2;
-			if( md > 3 )
-				md = 3;
-			
-			float dist = llFrand(md/2-.5)+.5;
+			float dist = 1+llFrand(3);	// Can walk 1-4 meters at a time
 			vector gp = llGetPos()-<0,0,.5>;
 			
 			list ray = llCastRay(gp, gp+dir*dist, RC_DEFAULT);
@@ -623,7 +631,6 @@ handleTimer( "A" )
 			
 			roamTarget = llGetPos()+dir*dist;
 			if( 
-				(llVecDist(spawnPos, roamTarget) > maxDist && ~BFL&BFL_HUNTING) || // Don't go if out of bounds while not hunting
 				pointInRoom(roamTarget) == -1 		// Never leave the house
 			)return;
 			
@@ -754,7 +761,7 @@ handleTimer( "A" )
 	
 	}
 	
-	else if( STATE == STATE_CHASING ){
+	else if( STATE == STATE_CHASING && !smudged ){
 	
 		// Chasing a player target
 		vector pp = prPos(huntTarget);
@@ -918,8 +925,6 @@ onPortalLoadComplete( desc )
 	spawnPos = llGetPos();
 	Level$raiseEvent(LevelCustomType$GHOST, LevelCustomEvt$GHOST$spawned, []);
 	cacheNodes();
-	if( DIF )
-		lastWarp = llGetTime()-20;	// Allow long roam immediately
 	
 end
 
@@ -940,7 +945,7 @@ onGhostAuxListen( ch, msg, sender )
 	if( ~BFL&BFL_HUNTING || ch != 0 )
 		return;
 
-	addFootsteps(SENDER_KEY, 0.75);
+	addFootsteps(SENDER_KEY);
 
 
 end
@@ -980,7 +985,6 @@ handleOwnerMethod( GhostMethod$toggleHunt )
 			toggleMesh(false);
 			setState(STATE_IDLE);
 			warpTo(spawnPos);
-			lastWarp = llGetTime();			// Acts like a smudge
 			llStopSound();
 			lastReturn = llGetTime()+20;	// Act like a lesser smudge
 			
@@ -1029,9 +1033,30 @@ end
 
 handleOwnerMethod( GhostMethod$smudge )
 	
-	lastReturn = llGetTime()+120;	// Don't use a long distance roam for 2 minutes
-	warpTo(spawnPos);
-	lastWarp = llGetTime();
+	key smudger = argKey(0);
+	vector spos = prPos(smudger);
+	bool force = argInt(1);
+
+	if( ~BFL&BFL_HUNTING ){
+		
+		// If not hunting, smudge only succeeds when used in the ghost room or near the ghost
+		if( 
+			( pointInRoom(spos) == pointInRoom(spawnPos) ) ||
+			llVecDist(llGetPos(), spos) < 6 ||
+			force
+		){
+			
+			lastReturn = llGetTime()+180;	// Don't use a long distance roam for 3 minutes
+			Level$raiseEvent( LevelCustomType$GHOST, LevelCustomEvt$GHOST$vaped, [] );
+			BFL = BFL&~BFL_ROAMING;
+			
+		}
+		
+	}
+	else{
+		lastSmudge = llGetTime();
+		setState(STATE_IDLE);
+	}
 	
 end
 
@@ -1076,7 +1101,6 @@ handleOwnerMethod( GhostMethod$followNodes )
     gotoPortals = METHOD_ARGS;
     calculateAlignPos();
 	setState(STATE_PATHING);
-	lastReturn = llGetTime();	// Node follow should only happen when roaming or during a hunt. Both are good times to update the timer.
     
 end
 

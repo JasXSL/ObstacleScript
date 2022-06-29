@@ -1,3 +1,5 @@
+// This is the #AUX scipt in the monitor
+// If you're looking for the script inside the ghost mesh, go to modules/GhostAux.lsl
 // Name the script #AUX
 /*
 	Used in ghost hunting games to handle:

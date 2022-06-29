@@ -109,16 +109,22 @@ integer allPlayersDead(){
     
 }
 
+// Checks if we can start a hunt
 // Forwards CTH to tools which checks hornybat
 // Tools then forwards CTH to nodes that makes sure players are in the building
-#define checkToggleHunt() \
-    LAST_HUNT = llGetTime(); \
-    raiseEvent(0, "CTH")
+checkStartHunt(){
 
-// Note: use checkToggleHunt instead since it checks horny bat
+	// Can't start if we're already hunting or an event is active
+	if( BFL&BFL_HUNTING || llGetTime() < LAST_EVENT )
+		return;
+    LAST_HUNT = llGetTime();
+    raiseEvent(0, "CTH");
+
+}
+// Note: use checkStartHunt on start instead since it checks horny bat
 toggleHunt( integer on ){
 
-    float dur = 30+DIFFICULTY*10;
+    float dur = 30+DIFFICULTY*10*(llFrand(0.5)+.5);
     if( on && ~BFL&BFL_HUNTING ){
         
         BFL = BFL|BFL_HUNTING;

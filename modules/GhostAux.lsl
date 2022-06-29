@@ -19,14 +19,33 @@ int AGG;	// More prone to being agressive. Inverse ADDITIVE (higher value lowers
 int ACT;	// more prone to being active. ADDITIVE
 float LAST_ANGER_ADD;
 float LAST_ACT_ADD;
+float LAST_SALTED;		// llGetTime of when we were last salted
+#define SALT_DUR 10
+#define isSalted() (llGetTime()-LAST_SALTED < SALT_DUR && LAST_SALTED > 0)
+
 int BFL;
 #define BFL_VISIBLE 0x1
 #define BFL_HUNT_CATCH 0x2 	// Next seated player should be handled like a hunt catch.
+#define BFL_HUNTING 0x4
 float LAST_HEART;
 
 key caughtHud;
 key SUCTARG;	// Succubus target
 
+footstep(){
+	list sounds = [
+		"fc3df235-c789-08b2-b09a-b45bce26684b", "631af33a-fde3-177c-8303-5e9af620a382",
+		"4ccb842d-4b5d-a7d3-56c6-b6a958ad7881", "c720ce7c-396e-c550-d8c0-1c3e6350debb",
+		"27282b3d-5731-3c9b-5940-09645d33f656", "37c2a5a6-07ed-725b-7425-d19a368bcdff"            
+	];
+	integer sound = floor(llFrand(count(sounds)/2));
+	key normal = l2k(sounds, sound*2);
+	key cut = l2k(sounds, sound*2+1);
+	vector gp = llGetPos();
+	llTriggerSoundLimited(normal, 1, <255,255,gp.z+2>, <0,0,gp.z-2>);
+	llTriggerSoundLimited(cut, .75, <255,255,gp.z-2>, <0,0,0>);
+	llTriggerSoundLimited(cut, .5, <255,255,gp.z+100>, <0,0,gp.z+2>);
+}
 
 // Sets DESC to a JSON array
 // [0] lit = Ghost room lit
@@ -227,7 +246,9 @@ onStateEntry()
 end	
 
 
+// 1 sec ticker
 // Checks yaoikai and handles aggro decay
+// Handles salt cloud
 handleTimer( "TC" )
 	
 	int pre = AGG;
@@ -267,6 +288,10 @@ handleTimer( "TC" )
 	// GHOST BEHAVIOR :: Succubus - Find a new target if old one is sitting
 	if( GHOST_TYPE == GhostConst$type$succubus && (llGetAgentInfo(SUCTARG)&AGENT_SITTING || llKey2Name(SUCTARG) == "") )
 		pickNewSucTarg();
+	
+	float vel = llVecMag(llGetVel());
+	if( isSalted() && vel > 0.5 )
+		footstep();
 		
 end
 
@@ -340,18 +365,7 @@ onChanged( change )
 end
 
 onGhostHuntStep()
-	list sounds = [
-		"fc3df235-c789-08b2-b09a-b45bce26684b", "631af33a-fde3-177c-8303-5e9af620a382",
-		"4ccb842d-4b5d-a7d3-56c6-b6a958ad7881", "c720ce7c-396e-c550-d8c0-1c3e6350debb",
-		"27282b3d-5731-3c9b-5940-09645d33f656", "37c2a5a6-07ed-725b-7425-d19a368bcdff"            
-	];
-	integer sound = floor(llFrand(count(sounds)/2));
-	key normal = l2k(sounds, sound*2);
-	key cut = l2k(sounds, sound*2+1);
-	vector gp = llGetPos();
-	llTriggerSoundLimited(normal, 1, <255,255,gp.z+2>, <0,0,gp.z-2>);
-	llTriggerSoundLimited(cut, .75, <255,255,gp.z-2>, <0,0,0>);
-	llTriggerSoundLimited(cut, .5, <255,255,gp.z+100>, <0,0,gp.z+2>);
+	footstep();
 end
 
 onGhostVisible( visible )
@@ -407,10 +421,13 @@ end
 
 onGhostHunt( hunting )
 	
+	BFL = BFL&~BFL_HUNTING;
 	llStopSound();
 	AGG = 0;
-	if( hunting )
+	if( hunting ){
+		BFL = BFL|BFL_HUNTING;
 		llLoopSound("5a67fa19-3dbb-74c6-3297-8cee2b66e897", .6);
+	}
 	updateDesc();
 	
 end
@@ -523,6 +540,9 @@ onGhostType( type, evidence, affixes, dif )
 	
 end
 
+handleOwnerMethod( GhostAuxMethod$salt )
+	LAST_SALTED = llGetTime();
+end
 
 handleOwnerMethod( GhostAuxMethod$setLight )
 	LIT = argInt(0);

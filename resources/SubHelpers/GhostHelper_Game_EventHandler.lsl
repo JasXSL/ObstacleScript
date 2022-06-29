@@ -37,7 +37,7 @@ handleTimer( "TOUCH" )
     ){
         
         GhostEvents$trigger( GHOST );
-        LAST_EVENT = llGetTime();
+        LAST_EVENT = llGetTime()+5;	// Adds 5 as a grace period. When onGhostEvent is received, this is updated with the end time of the event.
         ++GHOST_EVENTS;
         return;
         
@@ -45,7 +45,7 @@ handleTimer( "TOUCH" )
     
         
     // 20 sec min time between hunts on pro, 40 on intermediate and 60 on novice
-    if( llGetTime()-LAST_HUNT > 20+(2-DIFFICULTY)*20 && !huntBlocked && llGetTime()-LAST_EVENT > 15 ){
+    if( llGetTime()-LAST_HUNT > 20+(3-DIFFICULTY)*20 && !huntBlocked && llGetTime()-LAST_EVENT > 15 ){
         // Start hunting at 40 arousal. But small chance.
         
         // Ghost has a min thresh to hunt
@@ -58,7 +58,7 @@ handleTimer( "TOUCH" )
            
         if( average > thresh && llFrand(1.0) < llPow(average,3)*.75 ){
             
-            checkToggleHunt();
+            checkStartHunt();
             //qd("Attempting to trigger a hunt");
             return;
             
@@ -112,7 +112,7 @@ onListen( ch, msg )
     }
     else if( msg == "HUNT TEST" ){
         qd("Trying to start a hunt");
-        checkToggleHunt();
+        checkStartHunt();
     }
         
     else if( msg == "HUNT ON" ){
@@ -135,6 +135,15 @@ onListen( ch, msg )
     }
 end
 
+onGhostForceHunt()
+	checkStartHunt();
+end
+
+onGhostEvent( ghost, players, baseType, subType, dur )
+	LAST_EVENT = llGetTime()+dur;
+end
+
+
 onLevelCustomGhostSpawned( ghost )
 
     GHOST = ghost;
@@ -145,7 +154,7 @@ end
 
 onGhostPower( ghost, args )
     
-    // GHOST BEHAVIOR - Obukakke/jim. Adds arousal to players near it during a ghost event
+    // GHOST BEHAVIOR - Obukakke/jim. Adds arousal to players near it when it uses its power
     // Jim can only use it if the power is on tho
     if( GHOST_TYPE == GhostConst$type$obukakke || GHOST_TYPE == GhostConst$type$jim ){
         
@@ -160,6 +169,7 @@ onGhostPower( ghost, args )
                 if( GHOST_TYPE == GhostConst$type$jim )
                     amt = 3;
                 addArousal(player, amt);
+				
             }
             
         
@@ -359,6 +369,11 @@ onLevelCustomDoorOpened( label, st )
         if( hasWeakAffix(ToolSetConst$affix$powerOutage) )
             setTimeout("BRK", 360);  
     }
+end
+
+// Ghost successfully vaped
+onLevelCustomGhostVaped()
+	LAST_HUNT = llGetTime()+90;
 end
 
 // Sent from GhostBoard

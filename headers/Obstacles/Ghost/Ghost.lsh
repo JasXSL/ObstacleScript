@@ -5,7 +5,7 @@
 #define GhostMethod$followNodes 1		// portal1, portal2... - Follow path nodes
 #define GhostMethod$toggleHunt 2		// (bool)hunting - Start or stop hunting players
 #define GhostMethod$setType 3			// (int)ghost_type, (int)evidenceTypes, (int)difficulty, (int)affixes - Sets a ghost type and evidence, affecting its behavior
-#define GhostMethod$smudge 4			// void  - Player has used a smudge stick
+#define GhostMethod$smudge 4			// (key)player  - Player has used a smudge stick
 //#define GhostMethod$interact 5			// void - Interact with a nearby item
 #define GhostMethod$stop 6				// (bool)stop, (bool)verbose - Stops the ghost. Verbose is useful for debugging
 #define GhostMethod$sendToChair 7		// key chair, key hud, int temp - Tells the ghost to go to a chair and trap the player. If no chair is available, drop the player.
@@ -131,6 +131,7 @@
 	#define LevelCustomEvt$GHOST$spawned 1			// void - The ghost has been spawned
 	#define LevelCustomEvt$GHOST$caught 2			// key player - The ghost has caught a player
 	#define LevelCustomEvt$GHOST$arouse 3			// arr players, float points - Adds arousal to players
+	#define LevelCustomEvt$GHOST$vaped 4			// void - The ghost was successfully vaped
 
 #define onLevelCustomGhostSpawned( ghost ) \
 	if( isEventLevelCustom() AND argStr(1) == LevelCustomType$GHOST AND argInt(2) == LevelCustomEvt$GHOST$spawned ){ \
@@ -144,6 +145,8 @@
 		key ghost = argKey(0); \
 		list players = llJson2List(argStr(3)); \
 		float points = argFloat(4);
+#define onLevelCustomGhostVaped() \
+	if( isEventLevelCustom() AND argStr(1) == LevelCustomType$GHOST AND argInt(2) == LevelCustomEvt$GHOST$vaped ){
 
 
 #define Ghost$followNodes( nodes ) \
@@ -156,8 +159,8 @@
 	runOmniMethod("Ghost", GhostMethod$toggleHunt, on)
 #define Ghost$setType( type, evidence, difficulty, affixes ) \
 	runOmniMethod("Ghost", GhostMethod$setType, (type) + (evidence) + (difficulty) + (affixes))
-#define Ghost$smudge() \
-	runOmniMethod("Ghost", GhostMethod$smudge, [])
+#define Ghost$smudge( player, force ) \
+	runOmniMethod("Ghost", GhostMethod$smudge, (player) + (force))
 #define Ghost$interact() \
 	runOmniMethod("Ghost", GhostMethod$interact, [])
 #define Ghost$sendToChair( chair, hud, temp ) \
