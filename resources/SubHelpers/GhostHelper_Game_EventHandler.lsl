@@ -9,9 +9,11 @@ gameHelperEventHandler() // Parent
 // Ghost interactions, hunt timer etc
 handleTimer( "TOUCH" )
     
-    // Check if it should hunt
-    if( BFL & BFL_HUNTING )
+	// Interact every 5 when hunting
+    if( BFL & BFL_HUNTING ){
+		GhostInteractions$interact(FALSE);  
         return;
+	}
         
     float plDist = getNearestGhostPlayerDistance(0);
     float plDistLos = getNearestGhostPlayerDistance(1);

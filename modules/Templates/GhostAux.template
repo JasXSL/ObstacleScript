@@ -99,9 +99,10 @@ setGameRestrictions( key player, integer forceDead ){
         ) 
     ){
         
-        Rlv$disableChatLevels( player, 
-            RlvConst$dcl$all|RlvConst$dcl$recAll|
-            RlvConst$dcl$gesture|RlvConst$dcl$emote 
+		Rlv$redirectChat( player, GhostRadioConst$REDIR_CHAN, TRUE);
+        Rlv$disableChatLevels( player,
+            RlvConst$dcl$gesture|
+			RlvConst$dcl$emote 
         );
         Rlv$setCamMaxDist(player, -1);
         Rlv$toggleFreeCam(player, TRUE);
@@ -109,7 +110,7 @@ setGameRestrictions( key player, integer forceDead ){
         
     }
         
-    
+    Rlv$redirectChat( player, GhostRadioConst$REDIR_CHAN, FALSE);
     Rlv$setMaxSprint( player, 0 );
     Rlv$setCamMaxDist( player, 3 );
     Rlv$disableChatLevels( player, RlvConst$dcl$normal|RlvConst$dcl$shout );
@@ -322,6 +323,7 @@ handleEvent( "#Game", 0 )
             Rlv$setCamMaxDist( player, -1 );
             Rlv$setMaxSprint( player, -1 );
             Rlv$disableChatLevels( player, 0);
+			Rlv$redirectChat( player, GhostRadioConst$REDIR_CHAN, FALSE);
             Rlv$toggleFreeCam( player, TRUE );
             Rlv$toggleFlying( player, TRUE );
             LevelRepo$detach( player, "HUD:PhasmTools");

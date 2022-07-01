@@ -220,7 +220,7 @@ onPortalLoadComplete( desc )
 	list tasks = (list)
 		join((list)Desc$TASK_DESC + "Drag", "$") +
 		join((list)Desc$TASK_INTERACT + 1, "$") +
-		join((list)Desc$TASK_DOOR_STAT + 0, "$")
+		join((list)Desc$TASK_DOOR_STAT + 0 + ID, "$")
 	;
 	
 	// Update desc

@@ -37,6 +37,14 @@ setEMF( integer emf ){
         return;
         
     C_EMF = emf;
+	
+	list COLORS = [
+		<0.188, 1.000, 0.188>,
+		<0.784, 1.000, 0.188>,
+		<1.000, 0.911, 0.188>,
+		<1.000, 0.626, 0.188>,
+		<1.000, 0.188, 0.188>
+	];
 
     float vol = 0.001;
     if( emf > 1 )
@@ -49,9 +57,13 @@ setEMF( integer emf ){
         
         integer face = i+1;
         integer on = emf > i;
+		vector color = l2v(COLORS, i);
+		if( !on )
+			color *= 0.5;
         set += (list)
             PRIM_FULLBRIGHT + face + on +
-            PRIM_GLOW + face + on*.1
+            PRIM_GLOW + face + on*.1 +
+			PRIM_COLOR + face + color + 1
         ;
         
     }

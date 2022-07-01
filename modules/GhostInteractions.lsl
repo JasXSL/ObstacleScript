@@ -15,6 +15,8 @@ float LAST_SOUND_TIME;
 float LAST_POWER;
 int AFFIXES;
 int DIFFICULTY;
+int BFL;
+#define BFL_HUNTING 0x1
 
 // Searches desc for a specific type
 list getDescType( key id, str type ){
@@ -178,6 +180,7 @@ interactPlayer( key hud, int power ){
     
 }
 
+
 triggerSound(){
 	list sounds = [
 		"edb881de-3d1c-775a-7e35-46a00f6b7a30",
@@ -266,12 +269,6 @@ int usePower(){
 		Level$raiseEvent(LevelCustomType$GHOSTINT, LevelCustomEvt$GHOSTINT$power, []);
 
 		return TRUE;
-	}
-	if( GHOST_TYPE == GhostConst$type$succubus ){
-		
-		Ghost$succubusPower();		
-		return TRUE;
-		
 	}
 	if( GHOST_TYPE == GhostConst$type$orghast ){
 		
@@ -368,6 +365,16 @@ onGhostType( type, evidence, affixes, difficulty )
 	
 end
 
+onGhostHunt( hunting )
+	BFL = BFL&~BFL_HUNTING;
+	if( hunting )
+		BFL = BFL|BFL_HUNTING;
+end
+
+
+
+
+
 handleMethod( GhostInteractionsMethod$playSoundOnMe )
 	
 	vector pos = prPos(SENDER_KEY);
@@ -455,11 +462,14 @@ handleOwnerMethod( GhostInteractionsMethod$interact )
 	else if( GHOST_TYPE == GhostConst$type$yuri || GHOST_TYPE == GhostConst$type$yaoikai || GHOST_TYPE == GhostConst$type$stringoi )
 		playerChance = 0.3;		// Yuri/yaoikai are lightly more touchy
 	
+	// Don't touch players when hunting
+	if( BFL&BFL_HUNTING )
+		playerChance = 0;
 		
 	key targ;	// Target of the interact
 
 	// Needs to be motion sensed before it can touch anything
-	if( !hasStrongAffix(ToolSetConst$affix$reqMotionSensor) && !hasStrongAffix(ToolSetConst$affix$vibrator) ){
+	if( (!hasStrongAffix(ToolSetConst$affix$reqMotionSensor) && !hasStrongAffix(ToolSetConst$affix$vibrator)) || BFL&BFL_HUNTING ){
 		
 		if( llFrand(1.0) < playerChance ){
 			
@@ -522,7 +532,7 @@ handleOwnerMethod( GhostInteractionsMethod$interact )
 					if( GHOST_TYPE == GhostConst$type$stringoi ){
 						forPlayer( i, k )
 						
-							Gui$setOrbs( k, llGetPos(), 300 );
+							Gui$setOrbs( k, llGetPos(), 600 );
 							
 						end
 					}
@@ -577,16 +587,33 @@ handleOwnerMethod( GhostInteractionsMethod$interact )
 				qd(("Unfiltered ("+(str)(count(dbg)/3)+")") + llDumpList2String(dbg, ","));
 			}
 			list door = getDescType(targ, Desc$TASK_DOOR_STAT);
+			list doorId = split(l2s(door, 2), ":");
 			
 			if( debug )
 				llOwnerSay("Touching ITEM "+llKey2Name(targ));
 			// Door interactions
-			if( door ){
+			if( 
+				count(door) && 							// Is a door
+				l2s(doorId, 1) != "EXT" && 				// Can't touch exits
+				(DIFFICULTY > 1 || ~BFL&BFL_HUNTING) 	// Can't touch doors during a hunt on intermediate and below
+			){
 			
 				integer st = l2i(door, 1);
+				
+				
 				float perc = 0;
-				if( !st || st == 2 )
+				// When hunting, if the door is fully closed, open it 25%
+				// Otherwise swing it right open
+				if( BFL&BFL_HUNTING ){
+					if( !st )
+						perc = 0.25;
+					else
+						perc = 1.0;
+				}
+				// Fully opened or fully closed
+				else if( !st || st == 2 ){
 					perc = 0.5;
+				}
 				else if( llFrand(1) < 0.5 )
 					perc = 1.0;
 				Door$setRotPercTarg( targ, "*", perc );

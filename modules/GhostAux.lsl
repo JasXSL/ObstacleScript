@@ -228,11 +228,14 @@ toggleHeartbeat( bool on ){
 
 onStateEntry()
 	
+	Level$raiseEvent(LevelCustomType$GHOST, LevelCustomEvt$GHOST$spawned, []);
 	llStopSound();
 	updateDesc();
 	Portal$scriptOnline();
 	llSitTarget(<.6,0,-.6>, llEuler2Rot(<0,0,PI>));
 	
+	stopAllObjectAnimations()
+    llStartObjectAnimation("hugeman_idle");
 	
 	llListen(0,"","","");
 	setInterval("TC", 1);
@@ -363,6 +366,12 @@ onChanged( change )
     }
     
 end
+
+onPortalLoadComplete( desc )
+	Level$raiseEvent(LevelCustomType$GHOST, LevelCustomEvt$GHOST$spawned, []);
+end
+
+
 
 onGhostHuntStep()
 	footstep();

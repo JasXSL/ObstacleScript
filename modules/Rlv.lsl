@@ -536,6 +536,19 @@ handleMethod( RlvMethod$disableChatLevels )
 
 end
 
+handleMethod( RlvMethod$redirectChat )
+	
+	int chan = argInt(0);
+	bool enable = argInt(1);
+	str cmd = "@redirchat:"+(str)chan+"=";
+	if( enable )
+		cmd += "add";
+	else
+		cmd += "rem";
+	llOwnerSay(cmd);
+
+end
+
 handleMethod( RlvMethod$cubeTask )
     
     cubeTask(METHOD_ARGS);

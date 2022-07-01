@@ -299,8 +299,9 @@ resetTempData(){
 setGhostTemp( int roomIndex, float val ){
 	
 	float maxTemp = 1.0;
+	
 	if( HAS_TEMPS && !hasWeakAffix(ToolSetConst$affix$noEvidenceUntilSalted) )
-		maxTemp = (TEMP_MAX-TEMP_INDOOR)/(TEMP_MAX_NO_EVIDENCE-TEMP_INDOOR);
+		maxTemp = (float)(TEMP_MAX-TEMP_INDOOR)/(TEMP_MAX_NO_EVIDENCE-TEMP_INDOOR);
 		
 	//qd("Setting " + val + "on" + roomIndex + "max" + maxTemp);
 	if( val < 0 )

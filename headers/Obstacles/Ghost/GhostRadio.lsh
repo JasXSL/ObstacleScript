@@ -1,14 +1,19 @@
+/*
+	Lives in a cube beneath the GhostTools attachment
+*/
 #ifndef __GhostRadio
 #define __GhostRadio
 
 #define GhostRadioConst$CHAN (OBSTACLE_CHAN+0x15)	// 3145 Listener
+#define GhostRadioConst$REDIR_CHAN 69420			// When dead, chat is redirected here
+
 
 #define GhostRadioTask$message 1						// (str)message - Relays a message
 #define GhostRadioTask$garble 2							// (bool)garble - Sets whether the radio should garble or not
 
 
-#define GhostRadio$message( label, message ) \
-	llShout(GhostRadioConst$CHAN, mkarr(label + GhostRadioTask$message + message))
+#define GhostRadio$message( label, message, dead ) \
+	llShout(GhostRadioConst$CHAN, mkarr(label + GhostRadioTask$message + (message) + (dead)))
 #define GhostRadio$garble( label, garble ) \
 	llShout(GhostRadioConst$CHAN, mkarr(label + GhostRadioTask$garble + garble))
 

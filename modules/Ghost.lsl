@@ -9,6 +9,8 @@ list cNodes;	// Cache of room markers, fetched from Nodes script
 				// (int)roomIndex, (vec)globalPos, (rot)rotation, (vec)size
 #define cacheNodes() cNodes = []; Nodes$getRooms( GhostMethod$cbNodes )
 
+// Behavior debug
+#define bdbg(message) llOwnerSay(message)
 
 int AFFIXES;
 
@@ -50,6 +52,7 @@ integer STATE;
 #define BFL_HUNT_HAS_LOS 0x10	// We currently have line of sight to our target
 #define BFL_HUNT_HAS_POS 0x20	// LOS lost, but we have their last visible coordinates
 #define BFL_ROAM_REACHED 0x40	// When roam starts this is unset. When roam ends by reaching the target, this is set.
+#define BFL_RESET_LFU_ON_FOOTSTEPS 0x80	// Reset last footsteps update when footsteps are heard (applied when rand roaming during a hunt)
 
 integer BFL;
 
@@ -85,6 +88,9 @@ setState( int st ){
 		roamTimeout = llGetTime()+60;
 		
 	}
+	
+	if( STATE != STATE_PATHING )
+		BFL = BFL&~BFL_RESET_LFU_ON_FOOTSTEPS;
 		
 	STATE = st;
 	//llSetText((str)STATE, ONE_VECTOR, 1);
@@ -171,9 +177,11 @@ integer walkTowards( vector pos ){
 	}
 	
 	float speed = 1.0;
+	if( BFL & BFL_HUNTING )
+		speed = 1.2;
 	if( BFL & BFL_HUNTING && BFL & BFL_HUNT_HAS_LOS ){
 		
-		speed = 0.75+(llGetTime()-timeLOS)/3;
+		speed = 1.2+(llGetTime()-timeLOS)/4;
 		
 		// GHOST BEHAVIOR :: Asswang - Slow down while chasing a player if observed
 		if( GHOST_TYPE == GhostConst$type$asswang ){
@@ -285,7 +293,7 @@ integer pointInRoom( vector point ){
 
 key huntTarget;				// Target we're currently tracking
 vector huntLastSeenPos;		// Position we last saw them
-list playerFootsteps;
+list playerFootsteps;		// Same index as PLAYERS. Contains vector positions of where players 
 float huntLastFootstepReq;
 float chaseFailed;			// Time when ghost got stuck with LOS
 float lastFootstepsUpdate;	// Limits how often we can run the footstep check
@@ -320,7 +328,6 @@ addFootsteps( key player ){
 	// GHOST BEHAVIOR :: Succubus - Only hear victim
 	if( GHOST_TYPE == GhostConst$type$succubus && player != GhostGet$sucTarg(llGetObjectDesc()) )
 		return;
-
 	// If there's a hunt target and it's not this player, ignore
 	if( huntTarget != "" && huntTarget != player )
 		return;
@@ -334,11 +341,30 @@ addFootsteps( key player ){
 	huntLastSeenPos = pos;
 	huntTarget = player;
 	BFL = BFL|BFL_HUNT_HAS_POS;
+	if( BFL&BFL_RESET_LFU_ON_FOOTSTEPS ){
+		BFL = BFL&~BFL_RESET_LFU_ON_FOOTSTEPS;
+		lastFootstepsUpdate = 0;
+	}
 	setState(STATE_CHASING);
 		
 }
 
+// Fetches a random room you're not currently in to walk to
+// ignore is the cNodes index of a room to ignore
+randomRoam( int ignore ){
 
+	list viable;	// List of indexes to the first element of each cNode stride with a viable position
+	int slice;
+	for(; slice < count(cNodes); slice += NodesConst$rmStride ){
+		
+		if( slice != ignore )
+			viable += slice;
+		
+	}
+	slice = l2i(viable, floor(llFrand(count(viable))));
+	Nodes$getPath( GhostMethod$followNodes, llGetPos(), l2v(cNodes, slice+1) );
+	
+}
 
 
 
@@ -357,12 +383,14 @@ handleTimer( "A" )
 		
 	}
 	
+	vector g = llGetPos();
+	int curRoom = pointInRoom(g);
+	
 	bool smudged = isSmudged();
 	
 	if( BFL&BFL_HUNTING ){
 
 		// listen for player footsteps
-		
 		if( llGetTime()-lastFootstepsUpdate > 1.0 ){
 		
 			lastFootstepsUpdate = llGetTime();
@@ -371,13 +399,14 @@ handleTimer( "A" )
 				bool noisy;
 				integer ainfo = llGetAgentInfo(player);
 				vector pp = prPos(player);
-				vector gp = llGetPos();
 				
 				// GHOST BEHAVIOR :: yaoikai - No footsteps
-				int walking = ainfo & AGENT_WALKING && ~ainfo & AGENT_CROUCHING && (GHOST_TYPE != GhostConst$type$hantuwu || llVecDist(pp, gp) < 3);
+				int walking = ainfo & AGENT_WALKING && ~ainfo & AGENT_CROUCHING && (GHOST_TYPE != GhostConst$type$hantuwu || llVecDist(pp, g) < 3);
 				// Check if walking
 				if( walking || ainfo & AGENT_TYPING )
-					noisy = true;
+					addFootsteps(player);
+				/*
+				// Voice detection taken out for memory reasons
 				// Check if talking
 				else{
 					// Memory saving hex conversion. Checks medium/loud speech gestures
@@ -402,9 +431,7 @@ handleTimer( "A" )
 							noisy = true;
 					}
 				}
-					
-				if( noisy )
-					addFootsteps(player);
+				*/
 			
 			end
 		
@@ -414,14 +441,13 @@ handleTimer( "A" )
 		// Start chasing after the setup phase
 		// Find players with raycast
 		if( STATE != STATE_HUNT_PRE && !smudged ){
-		
-			vector g = llGetPos();
-			
+					
 			// First see if we can still see our tracked target
 			if( llKey2Name(huntTarget) != "" ){
 			
 				vector tp = getPlayerVisibilityPos(huntTarget);
-				list ray = llCastRay(llGetPos(), tp, RC_DEFAULT);
+				list ray = llCastRay(g, tp, RC_DEFAULT);
+				// we have LOS to the player
 				if( l2i(ray, -1) == 0 && ~pointInRoom(tp) && ~llGetAgentInfo(huntTarget) & AGENT_SITTING ){
 					
 					if( ~BFL&BFL_HUNT_HAS_LOS ){
@@ -433,57 +459,35 @@ handleTimer( "A" )
 						
 						//qd("Now have LOS and last seen pos" + huntLastSeenPos);
 						setState(STATE_CHASING);
+						bdbg("LOS to "+llKey2Name(huntTarget)+" ("+(str)huntLastSeenPos+")");
 					
 					}
 					
 				}
+				// We no longer have LOS. BFL_HUNT_HAS_POS will still be set tho
 				else if( BFL & BFL_HUNT_HAS_LOS ){
 				
 					BFL = BFL &~BFL_HUNT_HAS_LOS;
+					bdbg("Lost LOS, tracking last seen position");
 					//qd("No longer have LOS, but we have POS");
 					
 				}
 			
 			}
 			
-
-			// We don't have position or line of sight. But do we have footsteps? 
-			if( huntTarget != "" && !(BFL&(BFL_HUNT_HAS_POS|BFL_HUNT_HAS_POS)) && STATE != STATE_PATHING ){
 			
-				integer loc = llListFindList(PLAYERS, (list)((string)huntTarget));
-				vector pos = l2v(playerFootsteps, loc);
-				
-				if( pos ){
-					
-					// We're in the room, search it for a while
-					if( pointInRoom(pos) == pointInRoom(llGetPos()) ){
-						
-						//qd("Searching room");
-						huntTarget = "";
-						huntLastFootstepReq = llGetTime()+10;	// Give him 10 sec before going elsewhere
-						
-					}else{
-					
-						//qd("We have TARGET footsteps");
-						Nodes$getPath( GhostMethod$followNodes, llGetPos(), pos );
-						huntLastFootstepReq = llGetTime()+4;	// Give it 4 sec to request the path before assuming a failure
-						
-					}
-				}
-			
-			}
-			
-			// We're not chasing after anyone. We can try a LOS check
+			// Next we'll do a LOS check. Because LOS can allow you to change target.
+			// We're not directly chasing a player. Try a LOS check. This one can override above.
 			if( !(BFL&(BFL_HUNT_HAS_POS|BFL_HUNT_HAS_LOS)) ){
 			
-				vector gp = llGetPos();
 				forPlayer( index, player )
 					
 					vector pp = getPlayerVisibilityPos(player);
-					list ray = llCastRay(gp, pp, RC_DEFAULT);
-					if( l2i(ray, -1) == 0 ){
+					list ray = llCastRay(g, pp, RC_DEFAULT);
+					if( l2i(ray, -1) == 0 && ~llGetAgentInfo(player) & AGENT_SITTING ){
 						
 						huntTarget = player;
+						bdbg("Starting hunt on "+llKey2Name(player));
 						//qd("Now hunting " + player);
 						index = 9001;
 						
@@ -492,22 +496,51 @@ handleTimer( "A" )
 				end
 				
 			}
+
+			// If we have a hunt target, but no LOS and aren't pathing towards their last position. Try to find the target's last heard position.
+			if( huntTarget != "" && !(BFL&(BFL_HUNT_HAS_POS|BFL_HUNT_HAS_POS)) && STATE != STATE_PATHING ){
+			
+				integer loc = llListFindList(PLAYERS, (list)((string)huntTarget));
+				vector pos = l2v(playerFootsteps, loc);
+				if( pos ){
 					
-			// Nothing nearby. We could try going to some footsteps
-			if( llGetTime() > huntLastFootstepReq+2 && STATE != STATE_PATHING && huntTarget == "" ){
+					// We're already in the room, search it for a while
+					if( pointInRoom(pos) == curRoom ){
+						
+						//qd("Searching room");
+						bdbg("Reached last seen target's room. Searching for a bit.");
+						huntTarget = "";
+						huntLastFootstepReq = llGetTime()+10;	// Give him 10 sec before going elsewhere
+						
+					}
+					// We're not in the room, attempt a path fetch
+					else{
+					
+						//qd("We have TARGET footsteps");
+						bdbg("Pathing to last seen position "+(str)pos);
+						Nodes$getPath( GhostMethod$followNodes, g, pos );
+						huntLastFootstepReq = llGetTime()+4;	// Give it 4 sec to request the path before assuming a failure
+						
+					}
+					
+				}
+			
+			}
+			
+			
+					
+			// At this point we've searched a room for long enough, and should try somewhere else.
+			if( llGetTime() > huntLastFootstepReq+4 && STATE != STATE_PATHING && huntTarget == "" ){
 				
-				huntLastFootstepReq = llGetTime();
-				vector gp = llGetPos();
-				integer r = pointInRoom(gp);
-				
+				huntLastFootstepReq = llGetTime()+llFrand(12);	// Randomize the time to search a room.
 				float closest; vector pathTo;
 				integer i;
 				for(; i < count(playerFootsteps); ++i ){
 					
 					vector v = l2v(playerFootsteps, i);
-					float dist = llVecDist(gp, v);
+					float dist = llVecDist(g, v);
 					// Look for the shortest place not in this room
-					if( v != ZERO_VECTOR && (dist < closest || pathTo == ZERO_VECTOR) && r != pointInRoom(v) ){
+					if( v != ZERO_VECTOR && (dist < closest || pathTo == ZERO_VECTOR) && curRoom != pointInRoom(v) ){
 						
 						pathTo = v;
 						closest = dist;
@@ -515,9 +548,19 @@ handleTimer( "A" )
 					}
 				
 				}
+				// We've found a new location where we've heard a player.
+				if( pathTo ){
 				
-				if( pathTo )
-					Nodes$getPath( GhostMethod$followNodes, llGetPos(), pathTo );
+					bdbg("Pathing to footsteps at "+(str)pathTo);
+					Nodes$getPath( GhostMethod$followNodes, g, pathTo );
+					return;
+					
+				}
+				
+				bdbg("Pathing to random room");
+				// Otherwise, we can just go search elsewhere.
+				BFL = BFL|BFL_RESET_LFU_ON_FOOTSTEPS;
+				randomRoam(curRoom);
 				
 			}
 		
@@ -531,7 +574,6 @@ handleTimer( "A" )
 		float roamcd = 30;
 
 		int startRoom = pointInRoom( spawnPos );
-		int curRoom = pointInRoom( llGetPos() );
 
 		int timedOut = llGetTime()-lastReturn > roamcd;
 		// Handle roaming
@@ -548,7 +590,7 @@ handleTimer( "A" )
 			
 				// If we need to go back because we accidentally left the ghost room too early, just walk back and nothing else
 				if( !timedOut ){
-					Nodes$getPath( GhostMethod$followNodes, llGetPos(), spawnPos );
+					Nodes$getPath( GhostMethod$followNodes, g, spawnPos );
 					return;
 				}
 			
@@ -556,7 +598,7 @@ handleTimer( "A" )
 				// Set this as our new home location (ghost room change affix)
 				if( hasStrongAffix(ToolSetConst$affix$ghostRoomChange) && llGetTime()-lastRoomChange > 420 && llFrand(1) < .5 && BFL&BFL_ROAM_REACHED ){
 				
-					spawnPos = llGetPos();
+					spawnPos = g;
 					return;
 					
 				}
@@ -565,7 +607,7 @@ handleTimer( "A" )
 					warpTo(spawnPos);
 				else{
 					// If not gooryo, request a path home
-					Nodes$getPath( GhostMethod$followNodes, llGetPos(), spawnPos );
+					Nodes$getPath( GhostMethod$followNodes, g, spawnPos );
 				}
 				
 				lastReturn = llGetTime();	// Stay in the ghost room for longer than when it roams
@@ -582,29 +624,23 @@ handleTimer( "A" )
 			}
 			// Find a random room
 			else{
+			
+				vector st;	// Succubus target pos
+				// GHOST BEHAVIOR :: Succubus - Always wander to your target
+				if( GHOST_TYPE == GhostConst$type$succubus )
+					st = prPos(GhostGet$sucTarg( llGetObjectDesc() ));
 				
 				BFL = BFL|BFL_ROAMING;
 				lastReturn = llGetTime()+llFrand(30);	// Return in 30-60 sec
 				// GHOST BEHAVIOR :: Gooryo - Find a plumbed room to teleport to
 				if( GHOST_TYPE == GhostConst$type$gooryo )
 					Nodes$getPlumbedRoom( "PL", GhostMethod$cbPlumbing );
+				else if( st != ZERO_VECTOR && ~pointInRoom(st) ){
+					Nodes$getPath( GhostMethod$followNodes, g, st );
+				}	
 				// Pick a completely random room
-				else{
-				
-					vector rng = llGetPos()+<llFrand(20)-10,llFrand(20)-10,llFrand(15)-5>;
-					
-					list viable;	// List of indexes to the first element of each cNode stride with a viable position
-					int slice;
-					for(; slice < count(cNodes); slice += NodesConst$rmStride ){
-						
-						if( slice != startRoom )
-							viable += slice;
-						
-					}
-					slice = l2i(viable, floor(llFrand(count(viable))));
-					Nodes$getPath( GhostMethod$followNodes, llGetPos(), l2v(cNodes, slice+1) );
-					
-				}
+				else
+					randomRoam(startRoom);
 				
 			}
 		
@@ -617,7 +653,7 @@ handleTimer( "A" )
 			vector dir = llRot2Fwd(llEuler2Rot(<0,0,llFrand(TWO_PI)>));
 
 			float dist = 1+llFrand(3);	// Can walk 1-4 meters at a time
-			vector gp = llGetPos()-<0,0,.5>;
+			vector gp = g-<0,0,.5>;
 			
 			list ray = llCastRay(gp, gp+dir*dist, RC_DEFAULT);
 			if( l2i(ray, -1) == 1 ){
@@ -629,7 +665,7 @@ handleTimer( "A" )
 								
 			}
 			
-			roamTarget = llGetPos()+dir*dist;
+			roamTarget = g+dir*dist;
 			if( 
 				pointInRoom(roamTarget) == -1 		// Never leave the house
 			)return;
@@ -644,8 +680,7 @@ handleTimer( "A" )
 	else if( STATE == STATE_ROAM ){
 	
 		// Reached destination
-		vector gp = llGetPos();
-		if( llVecDist(<gp.x, gp.y, 0>, <roamTarget.x, roamTarget.y, 0>) < .3 ){
+		if( llVecDist(<g.x, g.y, 0>, <roamTarget.x, roamTarget.y, 0>) < .3 ){
 		
 			toggleWalking(false);
 			setState(STATE_IDLE);
@@ -679,7 +714,6 @@ handleTimer( "A" )
 			toggleWalking(false);
 			BFL = BFL|BFL_ROAM_REACHED;
 			int startRoom = pointInRoom( spawnPos );
-			int curRoom = pointInRoom( llGetPos() );
 			// Gone home
 			if( startRoom == curRoom ){
 			
@@ -699,7 +733,6 @@ handleTimer( "A" )
 			(list)OBJECT_POS + OBJECT_ROT
 		);
 		
-		vector gp = llGetPos();
 		vector pp = l2v(data, 0);
 		rotation pr = l2r(data, 1);
 		
@@ -711,7 +744,7 @@ handleTimer( "A" )
 			zAllow = 10;
 			
 		// Reached the node, find the next
-		if( (llVecDist(<gp.x, gp.y, 0>, <pp.x, pp.y, 0>) < .25 && llFabs(gp.z-pp.z) < zAllow) || llGetTime() > roamTimeout ){
+		if( (llVecDist(<g.x, g.y, 0>, <pp.x, pp.y, 0>) < .25 && llFabs(g.z-pp.z) < zAllow) || llGetTime() > roamTimeout ){
 			
 			roamTimeout = llGetTime()+60;	// If it hasn't been able to reach the node in a minute, give up and call an unstuck 
 			if( portalState == PS_SEEKING ){
@@ -750,7 +783,7 @@ handleTimer( "A" )
 			list ray = llCastRay(pp, pp-<0,0,5>, RC_DEFAULT);
 			if( l2i(ray, -1) == 1 ){
 				
-				float dist = llVecDist(pp, gp);
+				float dist = llVecDist(pp, g);
 				llSetKeyframedMotion([], [KFM_COMMAND, KFM_CMD_STOP]);
 				llSleep(dist/2);
 				llSetRegionPos(l2v(ray, 1)+<0,0,hover>);
@@ -768,9 +801,7 @@ handleTimer( "A" )
 		if( ~BFL&BFL_HUNT_HAS_LOS )
 			pp = huntLastSeenPos;
 			
-		vector gp = llGetPos();
-
-		list ray = llCastRay(gp, pp, RC_DEFAULT);
+		list ray = llCastRay(g, pp, RC_DEFAULT);
 		
 		// Player catch distance is greater than range to reach their last seen position
 		float catchDist = 0.5;
@@ -778,7 +809,7 @@ handleTimer( "A" )
 			catchDist = 0.75;
 			
 		// Caught a player
-		if( llVecDist(<gp.x, gp.y, 0>, <pp.x, pp.y, 0>) < catchDist && l2i(ray, -1) == 0 ){
+		if( llVecDist(<g.x, g.y, 0>, <pp.x, pp.y, 0>) < catchDist && l2i(ray, -1) == 0 ){
 		
 			
 			if( BFL&BFL_HUNT_HAS_LOS ){
@@ -825,11 +856,11 @@ handleTimer( "A" )
 				integer i;
 				for( ; i < 100 && !walkTowards(pp); ++i ){
 					
-					float dist = llVecDist(llGetPos(), ppFloor);
+					float dist = llVecDist(g, ppFloor);
 					if( dist > .25 )
 						dist = .25;
 					
-					llSetRegionPos(gp+(ppFloor-gp)*dist);
+					llSetRegionPos(g+(ppFloor-g)*dist);
 					llSleep(.2);
 					if( dist <= .25 ){
 					
@@ -923,7 +954,6 @@ end
 onPortalLoadComplete( desc )
 
 	spawnPos = llGetPos();
-	Level$raiseEvent(LevelCustomType$GHOST, LevelCustomEvt$GHOST$spawned, []);
 	cacheNodes();
 	
 end
@@ -931,12 +961,8 @@ end
 onStateEntry()
         
 	spawnPos = llGetPos();
-    stopAllObjectAnimations()
-    llStartObjectAnimation("hugeman_idle");
     setInterval("A", 0.25);
 	Portal$scriptOnline();
-
-	Level$raiseEvent(LevelCustomType$GHOST, LevelCustomEvt$GHOST$spawned, []);
 	
 end
 
@@ -946,7 +972,6 @@ onGhostAuxListen( ch, msg, sender )
 		return;
 
 	addFootsteps(SENDER_KEY);
-
 
 end
 
@@ -1078,24 +1103,6 @@ handleOwnerMethod( GhostMethod$cbPlumbing )
 	
 end
 
-handleInternalMethod( GhostMethod$succubusPower )
-	
-	key targ = GhostGet$sucTarg( llGetObjectDesc() );
-	vector pos = prPos(targ);
-	if( pointInRoom(pos) == -1 )
-		return;
-		
-	list ray = llCastRay(pos, pos-<0,0,5>, RC_DEFAULT);
-	if( l2i(ray, -1) == 1 ){
-		
-		warpTo(l2v(ray, 1)+<0,0,hover>);
-		lastReturn = llGetTime()-15;
-		
-	}
-	
-
-end
-
 handleOwnerMethod( GhostMethod$followNodes )
     
     gotoPortals = METHOD_ARGS;
@@ -1114,8 +1121,8 @@ handleOwnerMethod( GhostMethod$stop )
 		
 	if( verbose ){
 	
-		qd("Stop status: " + ((BFL&BFL_PAUSE)>0));
-		qd("Players:" + PLAYERS);
+		llOwnerSay("Stop status: " + (str)((BFL&BFL_PAUSE)>0));
+		llOwnerSay("Players: " + mkarr(PLAYERS));
 		
 	}
 	

@@ -86,11 +86,11 @@
 	#define RlvConst$dcl$gesture 0x20	// Disables Sending gestures
 	#define RlvConst$dcl$emote 0x40		// Disables Sending emotes
 	
-	
 #define RlvMethod$toggleFreeCam 17		// (bool)allow - Enables or disables free look
 #define RlvMethod$toggleFlying 18		// (bool)allow - Enables or disables flying
 
 #define RlvMethod$setCamera 19			// (vec)pos, (rot)rotation, (bool)allowUnlock, (bool)filmGrain - Sets the camera and ejects from mouselook. If allowUnlock is true, it lets the user clear the camera by hitting e
+#define RlvMethod$redirectChat 20		// (int)channel, (bool)enable - Adds or removes a redirect of channel 0 chat to a different channel
 
 
 
@@ -116,6 +116,9 @@
 
 #define Rlv$setClothSlot( target, slot, state ) \
 	runMethod( target, "Rlv", RlvMethod$setClothes, (state<<(slot*2)))
+
+#define Rlv$redirectChat( target, chan, enable ) \
+	runMethod( target, "Rlv", RlvMethod$redirectChat, (chan) + (enable))
 
 #define Rlv$disableChatLevels( target, levels ) \
 	runMethod( target, "Rlv", RlvMethod$disableChatLevels, (levels) )
