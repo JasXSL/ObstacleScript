@@ -67,7 +67,7 @@ updateDesc(){
 		}
 		else{
 			agg += 10;
-			act += 25;
+			act += 40;
 		}
 	}
 	

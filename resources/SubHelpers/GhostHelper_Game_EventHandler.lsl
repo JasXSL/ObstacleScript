@@ -28,7 +28,21 @@ handleTimer( "TOUCH" )
         )
     ;
     
-    float avgArousalPerc = getAverageArousal()/100;
+    // Get average arousal
+	float avg;
+	int tot;
+    integer i;
+    for(; i < count(PLAYERS); ++i ){
+        if( ~llGetAgentInfo(l2k(PLAYERS, i)) & AGENT_SITTING ){
+            avg += getPlayerArousal(l2k(PLAYERS, i));
+			++tot;
+		}
+    }
+	float avgArousalPerc;
+	if( tot )
+		avgArousalPerc = avg/tot/100;
+	
+	
     float evtChance = 0.05+0.05*avgArousalPerc;
     
     if( 
@@ -251,7 +265,7 @@ onLevelCustomGhostArouse( ghost, players, points )
 end
 
 onLevelCustomGsboardSpawned( board )
-    updateStatusBoard();
+    addArousal("",0); // update status board
 end
 
 onLevelCustomToolsetPills( player )
@@ -263,9 +277,7 @@ end
 
 handleEvent( "#AUX", 0 )
 
-    if( argStr(0) == "AROUSE" )
-        addArousal(argKey(1), argFloat(2));
-    else if( argStr(0) == "ENDGAME" )
+    if( argStr(0) == "ENDGAME" )
         endGame();
 
 end
@@ -296,7 +308,7 @@ end
 onLevelCustomBondagePlayerDied( chair, player, dead )
     
     setPlayerDead(player, dead);
-    updateStatusBoard();
+    addArousal("",0); // update status board
 
     // Player died not on easy mode
     if( DIFFICULTY ){
@@ -306,15 +318,19 @@ onLevelCustomBondagePlayerDied( chair, player, dead )
     
 end
 
+// Checks if all players are dead
 handleTimer( "CW" )
     
+	forPlayer( index, player )
+        
+        if( !isPlayerDead(player) )
+            return;
+        
+    end
+	
     // Team wipe
-    if( allPlayersDead() ){
-        
-        SEL = -1;
-        endGame();
-        
-    }
+	SEL = -1;
+	endGame();
 
 end
 
@@ -339,6 +355,15 @@ handleEvent( "#Nodes", 0 )
         
         
     }
+	else if( type == "AROUSE" ){
+	
+		//qd("Arousing" + llKey2Name(argKey(1)) + argFloat(2));
+		if( getPlayerArousal(argKey(0)) >= 100 && ~BFL_HUNTING )
+			checkStartHunt();
+		else
+			addArousal(argKey(0), argFloat(1));
+			
+	}
     
     else if( type == "PIGR" )
         PIGR = argInt(0);

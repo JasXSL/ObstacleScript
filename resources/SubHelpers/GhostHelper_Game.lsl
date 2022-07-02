@@ -80,35 +80,6 @@ key CAUGHT_PLAYER;  // We're waiting for a bondage seat for this player
 #define setPlayerClothes( uuid, amount ) \
     setPlayerData(uuid, PD_CLOTHES, amount)
 
-float getAverageArousal(){
-    
-    if( PLAYERS == [] )
-        return 0;
-    list out;
-    integer i;
-    for(; i < count(PLAYERS); ++i ){
-        if( ~llGetAgentInfo(l2k(PLAYERS, i)) & AGENT_SITTING )
-            out += getPlayerArousal(l2k(PLAYERS, i));
-    }
-    if( out == [] )
-        return 0;
-    return llListStatistics(LIST_STAT_MEAN, out);
-    
-}
-
-// Checks if all players are dead
-integer allPlayersDead(){
-
-    forPlayer( index, player )
-        
-        if( !isPlayerDead(player) )
-            return FALSE;
-        
-    end
-    return TRUE;
-    
-}
-
 // Checks if we can start a hunt
 // Forwards CTH to tools which checks hornybat
 // Tools then forwards CTH to nodes that makes sure players are in the building
@@ -157,22 +128,6 @@ toggleHunt( integer on ){
     GhostTool$toggleHunt( hunting, GHOST );
     Lamp$flicker( "*", hunting, dur );
     raiseEvent(0, "HUNT" + hunting);
-    
-}
-
-
-updateStatusBoard(){
-    
-    list arousals;
-    forPlayer( i, player )
-    
-        float arousal = getPlayerArousal(player);
-        if( isPlayerDead(player) || hasStrongAffix(ToolSetConst$affix$noArousalMonitor) )
-            arousal = -1;
-        arousals += (int)arousal;
-        
-    end
-    GhostStatus$updatePlayers( "*", arousals );
     
 }
 
@@ -268,17 +223,28 @@ list onGameEnd(){
 
 
 
-
+// Adds arousal and updates the status board. A "" player can be supplied to only update the board.
 addArousal( key player, float arousal ){
     
-    float cur = getPlayerArousal(player)+arousal;
-    if( cur > 100 )
-        cur = 100;
-    else if( cur < 0 )
-        cur = 0;
-    setPlayerArousal(player, cur);
+	if( player != "" ){
+		float cur = getPlayerArousal(player)+arousal;
+		if( cur > 100 )
+			cur = 100;
+		else if( cur < 0 )
+			cur = 0;
+		setPlayerArousal(player, cur);
+    }
+	
+	list arousals;
+    forPlayer( i, pl )
     
-    updateStatusBoard();
+        float arousal = getPlayerArousal(pl);
+        if( isPlayerDead(pl) || hasStrongAffix(ToolSetConst$affix$noArousalMonitor) )
+            arousal = -1;
+        arousals += (int)arousal;
+        
+    end
+    GhostStatus$updatePlayers( "*", arousals );
             
 }
 

@@ -454,7 +454,7 @@ handleOwnerMethod( GhostInteractionsMethod$interact )
 		playerChance = 0.4;		// Imp is twice as high
 	// GHOST BEHAVIOR :: BARE
 	else if( unlitBare )
-		playerChance = 0.4;		// Bare gets same amount as imp if light is off
+		playerChance = 0.5;		// Bare gets very high if lights are off
 	// GHOST BEHAVIOR :: ASSWANG - Higher chance of touching a player. But can only touch players who aren't looking at it.
 	else if( GHOST_TYPE == GhostConst$type$asswang )
 		playerChance = 0.4;		// Asswang also has double touch chance, but it's on the condition that the player is facing away

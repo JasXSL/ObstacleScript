@@ -89,9 +89,11 @@
 	#define onLevelCustomToolsetMotionDetector( ghost ) \
 		if( isEventLevelCustom() AND argStr(1) == LevelCustomType$TOOLSET AND argInt(2) == LevelCustomEvt$TOOLSET$motionDetector ){ \
 			bool ghost = argInt(3);
-	#define onLevelCustomToolsetOuija( type ) \
+	#define onLevelCustomToolsetOuija( sender, type ) \
 		if( isEventLevelCustom() AND argStr(1) == LevelCustomType$TOOLSET AND argInt(2) == LevelCustomEvt$TOOLSET$ouija ){ \
+			key sender = argKey(0); \
 			str type = argStr(3);
+			
 	#define onLevelCustomToolsetVape( type ) \
 		if( isEventLevelCustom() AND argStr(1) == LevelCustomType$TOOLSET AND argInt(2) == LevelCustomEvt$TOOLSET$vape ){
 			

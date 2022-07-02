@@ -316,28 +316,34 @@ vector getPlayerVisibilityPos( key player ){
 
 // Player walked or talked
 addFootsteps( key player ){
+	// Ignore dead
+	if( llGetAgentInfo(player) & AGENT_SITTING )
+		return;
 	
 	vector pos = prPos(player);
 	integer index = llListFindList(PLAYERS, (list)((str)player));
-	playerFootsteps = llListReplaceList(playerFootsteps, (list)pos, index, index);
-
-	// Random modifier to track down a hiding player in the room when they talk or move
-	if( ~BFL&BFL_HUNTING || STATE == STATE_HUNT_PRE || llGetAgentInfo(player) & AGENT_SITTING || isSmudged() )
-		return;
-		
-	// GHOST BEHAVIOR :: Succubus - Only hear victim
+	// GHOST BEHAVIOR :: Succubus - Only hear victim footsteps
 	if( GHOST_TYPE == GhostConst$type$succubus && player != GhostGet$sucTarg(llGetObjectDesc()) )
 		return;
-	// If there's a hunt target and it's not this player, ignore
+		
+	playerFootsteps = llListReplaceList(playerFootsteps, (list)pos, index, index);	// Added footsteps
+
+	// Now figure out if we should force go to the footsteps (walking/talking in the same room as the ghost)
+
+	// Only valid when hunting, not waiting for hunt to start, and we're not smudged
+	if( ~BFL&BFL_HUNTING || STATE == STATE_HUNT_PRE || isSmudged() )
+		return;
+	
+	// If there's a hunt target and it's not this player, ignore. Because we should have LoS to that one.
 	if( huntTarget != "" && huntTarget != player )
 		return;
 
-	// If footsteps are in a different room, we'll want to go there
+	// Don't directly walk to target if they're in a different room
 	if( pointInRoom(pos) != pointInRoom(llGetPos()) )
 		return;
-			
+	
 	//qd("Updating POS by footsteps");
-	// If player is in the same room, we want to force the ghost to go there
+	// Home in through walls and cover
 	huntLastSeenPos = pos;
 	huntTarget = player;
 	BFL = BFL|BFL_HUNT_HAS_POS;
@@ -391,37 +397,44 @@ handleTimer( "A" )
 	if( BFL&BFL_HUNTING ){
 
 		// listen for player footsteps
-		if( llGetTime()-lastFootstepsUpdate > 1.0 ){
+		// GHOST BEHAVIOR :: yaoikai - Deaf
+		if( llGetTime()-lastFootstepsUpdate > 1.0 && GHOST_TYPE != GhostConst$type$yaoikai ){
 		
 			lastFootstepsUpdate = llGetTime();
 			forPlayer( index, player )
 				
-				bool noisy;
 				integer ainfo = llGetAgentInfo(player);
 				vector pp = prPos(player);
 				
-				// GHOST BEHAVIOR :: yaoikai - No footsteps
-				int walking = ainfo & AGENT_WALKING && !(ainfo&(AGENT_CROUCHING|AGENT_SITTING)) && (GHOST_TYPE != GhostConst$type$hantuwu || llVecDist(pp, g) < 3);
 				// Check if walking
-				if( walking || ainfo & AGENT_TYPING )
-					addFootsteps(player);
+				if( 
+					// Walk detect, only when not sneaking
+					(
+						ainfo & AGENT_WALKING &&
+						!(ainfo&(AGENT_CROUCHING|AGENT_SITTING)) 
+					) ||
+					// Type detect, always
+					ainfo & AGENT_TYPING
+				)addFootsteps(player);
 			
 			end
 		
 		}
-			
 		
 		// Start chasing after the setup phase
 		// Find players with raycast
 		if( STATE != STATE_HUNT_PRE && !smudged ){
 					
 			// First see if we can still see our tracked target
-			if( llKey2Name(huntTarget) != "" ){
+			if( llKey2Name(huntTarget) != "" && ~llGetAgentInfo(huntTarget) & AGENT_SITTING ){
 			
 				vector tp = getPlayerVisibilityPos(huntTarget);
 				list ray = llCastRay(g, tp, RC_DEFAULT);
 				// we have LOS to the player
-				if( l2i(ray, -1) == 0 && ~pointInRoom(tp) && ~llGetAgentInfo(huntTarget) & AGENT_SITTING ){
+				if( 
+					l2i(ray, -1) == 0 && 						// Have LoS
+					~pointInRoom(tp)	 						// Inside house
+				){
 					
 					if( ~BFL&BFL_HUNT_HAS_LOS ){
 						
@@ -477,13 +490,14 @@ handleTimer( "A" )
 				vector pos = l2v(playerFootsteps, loc);
 				if( pos ){
 					
+					huntLastFootstepReq = llGetTime()+10;	// Give him 10 sec
+					
 					// We're already in the room, search it for a while
 					if( pointInRoom(pos) == curRoom ){
 						
 						//qd("Searching room");
 						bdbg("Reached last seen target's room. Searching for a bit.");
 						huntTarget = "";
-						huntLastFootstepReq = llGetTime()+10;	// Give him 10 sec before going elsewhere
 						
 					}
 					// We're not in the room, attempt a path fetch
@@ -492,7 +506,6 @@ handleTimer( "A" )
 						//qd("We have TARGET footsteps");
 						bdbg("Pathing to last seen position "+(str)pos);
 						Nodes$getPath( GhostMethod$followNodes, g, pos );
-						huntLastFootstepReq = llGetTime()+4;	// Give it 4 sec to request the path before assuming a failure
 						
 					}
 					
