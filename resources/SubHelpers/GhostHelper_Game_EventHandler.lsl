@@ -47,7 +47,11 @@ handleTimer( "TOUCH" )
     
         
     // 20 sec min time between hunts on pro, 40 on intermediate and 60 on novice
-    if( llGetTime()-LAST_HUNT > 20+(3-DIFFICULTY)*20 && !huntBlocked && llGetTime()-LAST_EVENT > 15 ){
+	float graceTime = 20+(3-DIFFICULTY)*20;
+	if( graceTime < 30 )
+		graceTime = 30;
+	
+    if( llGetTime()-LAST_HUNT > graceTime && !huntBlocked && llGetTime()-LAST_EVENT > 15 ){
         // Start hunting at 40 arousal. But small chance.
         
         // Ghost has a min thresh to hunt
@@ -105,33 +109,33 @@ end
 
 // These can be run on channel 6
 onListen( ch, msg )
-
+	
     if( msg == "SPAWNGHOST" ){
         
-        qd("Spawning a ghost");
+        dbg("Spawning a ghost");
         raiseEvent(0, "SPAWN_GHOST");
         
     }
     else if( msg == "HUNT TEST" ){
-        qd("Trying to start a hunt");
+        dbg("Trying to start a hunt");
         checkStartHunt();
     }
         
     else if( msg == "HUNT ON" ){
-        qd("Force starting a hunt");
+        dbg("Force starting a hunt");
         toggleHunt(TRUE);
     }
     else if( msg == "HUNT OFF" ){
-        qd("Stopping hunt");
+        dbg("Stopping hunt");
         toggleHunt(FALSE);
     }
     else if( msg == "AROUSEME" ){
-        qd("Adding 10 arousal to " + SENDER_KEY);
+        dbg("Adding 10 arousal to " + SENDER_KEY);
         addArousal(SENDER_KEY, 10);
     }
     else if( msg == "DEBUG" ){
         
-        qd("Evidence" + EVIDENCE_TYPES + "GHOST" + GHOST_TYPE + "PIGR" + PIGR + "ANGER" + GhostGet$aggression(prDesc(GHOST)) + "INTERACT" + GhostGet$activity(prDesc(GHOST)));
+        dbg("Evidence" + EVIDENCE_TYPES + "GHOST" + GHOST_TYPE + "PIGR" + PIGR + "ANGER" + GhostGet$aggression(prDesc(GHOST)) + "INTERACT" + GhostGet$activity(prDesc(GHOST)));
         raiseEvent(0, "DEBUG");
         
     }
@@ -230,7 +234,7 @@ onGhostInteraction( ghost, asset, power )
         
     end
     
-    float dur = 20-DIFFICULTY*4;
+    float dur = 20-DIFFICULTY*2;
     Owometer$addPoint( asset, level, dur );
 
 end
@@ -271,7 +275,7 @@ onLevelCustomGhostCaught( ghost, player )
     toggleHunt(FALSE);
     int pos = llListFindList(PLAYERS, [(str)player]);
     if( pos == -1 ){
-        qd("Caught player HUD not found");
+        dbg("Caught player HUD not found");
         return;
     }
         

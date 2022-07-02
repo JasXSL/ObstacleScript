@@ -413,19 +413,22 @@ handleOwnerMethod( GhostInteractionsMethod$interact )
 	
 	lastSound = "";
 	
+	float powChance = 0.25;
 	// Power gets priority
 	// 20% chance of using its power. Can only use its power every 30 sec by default
 	float powCD = 40;
 	// Orghast just plays a sound
-	if( GHOST_TYPE == GhostConst$type$orghast )
+	if( GHOST_TYPE == GhostConst$type$orghast ){
 		powCD = 15;
+		powChance = 0.35;	// Orghast should have a significantly larger chance of doing a ghost event
+	}
 	// Jim uses it a little more often
 	if( GHOST_TYPE == GhostConst$type$jim )
 		powCD = 25;
 	if( GHOST_TYPE == GhostConst$type$obukakke )
 		powCD = 20;
 	
-	if( llFrand(1.0) < 0.25 && llGetTime()-LAST_POWER > powCD ){
+	if( llFrand(1.0) < powChance && llGetTime()-LAST_POWER > powCD ){
 		
 		if( usePower() ){
 			

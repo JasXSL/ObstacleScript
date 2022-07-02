@@ -202,10 +202,12 @@ updateButtonPositions(){
 
 }
 
-// Returns a list of (vec)pos, (vec)size or an empty list on fail
+// Returns a list of (vec)pos, (vec)size, (float)alpha or an empty list on fail
 list getOrbs(){
 
 	float dist = llVecDist(CAM_POS, ORBS);
+	if( dist < 0.5 )
+		dist = 0.5;
 	
 	// Make sure it's not blocked
 	list ray = llCastRay(CAM_POS, ORBS, []);
@@ -227,7 +229,11 @@ list getOrbs(){
 	// two other components to "map" them to a lower dimension. (3D -> 2D)
 	hud.y = relative.y / relative.x;
 	hud.z = relative.z / relative.x;
-    return [(hud * 0.87), (<.2,.2,.1>/llPow(dist, 1.25)), 0.05+0.2*(1.0-dist/10)]; // FOV ratio fix. ZERO_VECTOR if behind the camera.
+    return [
+		(hud * 0.87), 
+		(<.2,.2,.1>/dist), 
+		0.05+0.2*(1.0-dist/10)
+	]; // FOV ratio fix. ZERO_VECTOR if behind the camera.
 	
 }
 

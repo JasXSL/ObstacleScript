@@ -4,7 +4,7 @@
 #ifndef __GhostHelper_Game
 #define __GhostHelper_Game
 
-
+#define dbg(data) llOwnerSay(mkarr(data))
 
 // Handled by #AUX
 #define setGameRestrictions(player)
@@ -185,7 +185,7 @@ onGameStart(){
     
     // Generate ghost
     SEL = -1;   // Reset generated ghost
-    ACTIVITY = llFrand(.8)+.4;   // This is a shuffle multiplied against the ghost type's activity
+    ACTIVITY = llFrand(.4)+.6;   // This is a shuffle multiplied against the ghost type's activity
     GHOST_TYPE = 
     #ifdef FORCE_GHOST
         FORCE_GHOST
@@ -200,7 +200,35 @@ onGameStart(){
     if( DIFFICULTY > 1 )
         AFFIXES = AFFIXES | (llCeil(llFrand(8))<<4);
         
-    EVIDENCE_TYPES = getEvidenceTypes( GHOST_TYPE );
+	int full = getFullEvidenceTypes(GHOST_TYPE);
+    EVIDENCE_TYPES = getDefaultEvidenceTypes(full);
+	// Nightmare mode
+	if( DIFFICULTY > 2 ){
+		
+		int forced = getForcedEvidenceTypes(full);
+		list all; int numSet;
+		EVIDENCE_TYPES = forced;
+		int i;
+		for(; i < 16; ++i ){
+		
+			int n = (1<<i);
+			if( forced & n )
+				++numSet;
+			else if( full & n )
+				all += n;
+		}
+		
+		all = llListRandomize(all, 1);
+		for( i = 0; i < count(all) && numSet < 2; ++i ){
+		
+			++numSet;
+			EVIDENCE_TYPES = EVIDENCE_TYPES|l2i(all, i);
+			
+		}
+	
+	}
+	
+	
     raiseEvent(0, "EVIDENCE" + EVIDENCE_TYPES + GHOST_TYPE);
     raiseEvent(0, "DIFFICULTY" + DIFFICULTY );
     sendAffixes();

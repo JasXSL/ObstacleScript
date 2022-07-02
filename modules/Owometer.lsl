@@ -11,11 +11,11 @@ integer BFL;
 #define BFL_ON 0x1
 #define BFL_HUNTING 0x2
 #define BFL_DROPPED 0x4
+#define BFL_VISIBLE 0x8
 float DUR = 8;	// Set when receiving an EMF
 
 list EMF_POINTS;    // key id, int strength(1-5), (float)time
 
-#define isDropped() (BFL&BFL_DROPPED && )
 
 integer C_EMF = -1;
 // EMF changed
@@ -50,6 +50,10 @@ setEMF( integer emf ){
     if( emf > 1 )
         vol = llPow((1.0/4*(emf-1))*.6+.2, 2);
     
+	float alpha;
+	if( BFL&BFL_VISIBLE || !llGetAttached() )
+		alpha = 1.0;
+	
 	vol *= .25;
     list set;
     integer i;
@@ -63,7 +67,7 @@ setEMF( integer emf ){
         set += (list)
             PRIM_FULLBRIGHT + face + on +
             PRIM_GLOW + face + on*.1 +
-			PRIM_COLOR + face + color + 1
+			PRIM_COLOR + face + color + alpha
         ;
         
     }
@@ -142,9 +146,12 @@ end
 
 onToolSetActiveTool( tool, data )
 
-    if( tool != ToolsetConst$types$ghost$owometer )
+    if( tool != ToolsetConst$types$ghost$owometer ){
+		BFL = BFL&~BFL_VISIBLE;
         toggleOn(FALSE);
+	}
     else{
+		BFL = BFL|BFL_VISIBLE;
 		if( (int)data )
 			llSleep(.1);	// Fixes audio race conditions with spirit box
         onDataChanged((int)data);

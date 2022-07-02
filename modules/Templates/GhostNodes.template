@@ -393,7 +393,7 @@ onLevelCustomSpiritBoxTrigger( spiritBox )
 		
 	}
 	
-	float mDist = 4-0.25*DIFFICULTY;
+	float mDist = 4-0.2*DIFFICULTY;
 	float dist = llVecDist(prPos(spiritBox), prPos(GHOST));
 	if( 
 		success && (
@@ -621,6 +621,8 @@ handleTimer( "TICK" )
 			if( i == ghostRoomIdx ){
 			
 				float add = 0.2/(DIFFICULTY+1);
+				if( add < 0.07 )	// caps it as pro rate
+					add = 0.07;
 				val += add;	// About a minute for easy, plus 1 min per difficulty level
 
 			}
@@ -632,8 +634,10 @@ handleTimer( "TICK" )
 	}
 	int npl = count(PLAYERS);
 	float multi = 1.0+(npl-1)*.2;	// 20% faster arousal per player above 1
+	if( multi > 1.4 )
+		multi = 1.4;
 	
-	// Handle sanity decay
+	// Handle arousal gain
 	// Check if player is in a room
 	list decay;	// Corresponds to player index
 	list swPlayers;	// Keys of players that are in hot rooms

@@ -96,16 +96,24 @@ list _ghGGS( integer utimeLit ){
     "- Weak affix" \
     , \
     "- Pills clear 25% arousal\n"+ \
-    "- Hunts last the longest\n"+ \
+    "- Longer hunts\n"+ \
+    "- Doors start open\n"+ \
+    "- Much less active ghosts\n"+ \
+    "- Weak and strong affix" \
+	, \
+    "- Only 2 evidence types\n"+ \
+    "- Pills clear 20% arousal\n"+ \
+    "- Longest hunts\n"+ \
     "- Doors start open\n"+ \
     "- Much less active ghosts\n"+ \
     "- Weak and strong affix" \
 ]
 
 list ghostHelper_DIFFICULTIES = [
-    "Casual",
-    "Intermediate",
-    "Professional"
+    "Virgin",
+    "Amateur",
+    "Professional",
+	"Hardcore"
 ];
 
 

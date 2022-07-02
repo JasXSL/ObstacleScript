@@ -662,7 +662,7 @@ handleEvent( "#Game", 0 )
     else if( argStr(0) == "ROUND_START" ){
         
         toggleDoors(TRUE);
-        if( llFrand(1.0) < 0.4 )
+        if( llFrand(1.0) < 0.4 || (DIFFICULTY > 2 && GHOST_TYPE == GhostConst$type$imp) )
             Spawner$getGroups("ouija", "OUIJA");
             
     }

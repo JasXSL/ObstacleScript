@@ -102,7 +102,7 @@
 
 
 
-// Corresponds to the ghost type indexes
+// Corresponds to the ghost type indexes. The leftmost 16 bits are forced evidence types for nightmare
 // When changing these, you need to recompile #Game, Ghost, and the GHOST_BOARD
 #define GhostConst$evidenceTypes [\
 	GhostConst$evidence$stains|GhostConst$evidence$spiritbox|GhostConst$evidence$temps, /* Succubus */ \
@@ -113,16 +113,23 @@
 	GhostConst$evidence$temps|GhostConst$evidence$spiritbox|GhostConst$evidence$owometer, /* Imp */ \
 	GhostConst$evidence$writing|GhostConst$evidence$spiritbox|GhostConst$evidence$temps, /* Hantuwu */ \
 	GhostConst$evidence$writing|GhostConst$evidence$temps|GhostConst$evidence$stains, /* Inugami */ \
-	GhostConst$evidence$stains|GhostConst$evidence$temps|GhostConst$evidence$hots, /* Obukakke */ \
+	GhostConst$evidence$stains|GhostConst$evidence$temps|GhostConst$evidence$hots|(GhostConst$evidence$stains<<16), /* Obukakke */ \
 	GhostConst$evidence$hots|GhostConst$evidence$writing|GhostConst$evidence$stains, /* Gooryo */ \
-	GhostConst$evidence$owometer|GhostConst$evidence$hots|GhostConst$evidence$stains, /* Ehee */  \
+	GhostConst$evidence$owometer|GhostConst$evidence$hots|GhostConst$evidence$stains|(GhostConst$evidence$owometer<<16), /* Ehee */  \
 	GhostConst$evidence$writing|GhostConst$evidence$stains|GhostConst$evidence$spiritbox,/* Bare */  \
 	GhostConst$evidence$spiritbox|GhostConst$evidence$temps|GhostConst$evidence$hots, /* Stringoi */ \
 	GhostConst$evidence$owometer|GhostConst$evidence$stains|GhostConst$evidence$spiritbox, /* Orghast */ \
 	GhostConst$evidence$writing|GhostConst$evidence$temps|GhostConst$evidence$hots /* Jim */ \
 ]
-#define getEvidenceTypes( ghostType ) \
+// Gets the FULL bitwise array, including nightmare mode forced types
+#define getFullEvidenceTypes( ghostType ) \
 	l2i(GhostConst$evidenceTypes, ghostType)
+// Use with the value above to get the three evidence types from the int returned by getFullEvidenceTypes
+#define getDefaultEvidenceTypes( arr ) \
+	(arr&0xFFFF)
+// Similar to above, but returns the forced evidence types for above
+#define getForcedEvidenceTypes( arr ) \
+	((arr>>16)&0xFFFF)
 
 
 

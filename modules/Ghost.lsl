@@ -401,37 +401,10 @@ handleTimer( "A" )
 				vector pp = prPos(player);
 				
 				// GHOST BEHAVIOR :: yaoikai - No footsteps
-				int walking = ainfo & AGENT_WALKING && ~ainfo & AGENT_CROUCHING && (GHOST_TYPE != GhostConst$type$hantuwu || llVecDist(pp, g) < 3);
+				int walking = ainfo & AGENT_WALKING && !(ainfo&(AGENT_CROUCHING|AGENT_SITTING)) && (GHOST_TYPE != GhostConst$type$hantuwu || llVecDist(pp, g) < 3);
 				// Check if walking
 				if( walking || ainfo & AGENT_TYPING )
 					addFootsteps(player);
-				/*
-				// Voice detection taken out for memory reasons
-				// Check if talking
-				else{
-					// Memory saving hex conversion. Checks medium/loud speech gestures
-					list anims = (list)
-						0xa71890f1 +
-						0x593e9a3d +
-						0x55fe6788 +
-						0xc1802201 +
-						0x69d5a8ed +
-						0x37694185 +
-						0xcb1139b6 +
-						0x28a3f544 +
-						0xcc340155 +
-						0xbbf194d1
-					;
-					list pl = llGetAnimationList(player);
-					
-					int i;
-					for(; i < count(pl) && !noisy; ++i ){
-						integer n = (int)("0x"+llGetSubString(l2s(pl, i), 0, 7));
-						if( ~llListFindList(anims, (list)n) )
-							noisy = true;
-					}
-				}
-				*/
 			
 			end
 		
@@ -498,7 +471,7 @@ handleTimer( "A" )
 			}
 
 			// If we have a hunt target, but no LOS and aren't pathing towards their last position. Try to find the target's last heard position.
-			if( huntTarget != "" && !(BFL&(BFL_HUNT_HAS_POS|BFL_HUNT_HAS_POS)) && STATE != STATE_PATHING ){
+			if( huntTarget != "" && !(BFL&(BFL_HUNT_HAS_LOS|BFL_HUNT_HAS_POS)) && STATE != STATE_PATHING ){
 			
 				integer loc = llListFindList(PLAYERS, (list)((string)huntTarget));
 				vector pos = l2v(playerFootsteps, loc);
@@ -532,7 +505,7 @@ handleTimer( "A" )
 			// At this point we've searched a room for long enough, and should try somewhere else.
 			if( llGetTime() > huntLastFootstepReq+4 && STATE != STATE_PATHING && huntTarget == "" ){
 				
-				huntLastFootstepReq = llGetTime()+llFrand(12);	// Randomize the time to search a room.
+				huntLastFootstepReq = llGetTime()+llFrand(16);	// Randomize the time to search a room.
 				float closest; vector pathTo;
 				integer i;
 				for(; i < count(playerFootsteps); ++i ){
@@ -544,6 +517,7 @@ handleTimer( "A" )
 						
 						pathTo = v;
 						closest = dist;
+						playerFootsteps = llListReplaceList(playerFootsteps, (list)0, i, i);
 					
 					}
 				
