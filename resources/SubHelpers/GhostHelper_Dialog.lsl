@@ -4,6 +4,7 @@
 
 #define GhostHelper$dialog$MENU_DIFFICULTY 100
 
+int GUESS_WRONG;
 
 // Globals 
 int DIFFICULTY;
@@ -78,6 +79,8 @@ updateGconf(){
          \
     } \
     else if( GSETTINGS & DialogHelper$GS_GAME_STARTED && GSETTINGS & DialogHelper$GS_GAME_LOADED ){ \
+		if( GUESS_WRONG ) \
+			return "Incorrect ghost!\nTry again after the next hunt!"; \
         return "Use the keypad after\nfinding the ghost type!"; \
     }
 	
@@ -88,6 +91,10 @@ updateGconf(){
 		str evt = argStr(0); \
 		if( evt == "END_GAME" ) \
 			GSETTINGS = GSETTINGS & ~DialogHelper$GS_GAME_LOADED; \
+		else if( evt == "GUESS_WRONG" ){ \
+			GUESS_WRONG = argInt(1); \
+			_dtxt(); \
+		} \
 		 \
 	end
 		

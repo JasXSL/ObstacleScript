@@ -86,10 +86,12 @@ handleTimer( "TOUCH" )
         
     }
     
-    float activity = 0.5*llPow(0.85, DIFFICULTY); // 15% less interactive per difficulty above easy
+    float activity = 0.5*llPow(0.9, DIFFICULTY); // 10% less interactive per difficulty above easy
     activity *= ACTIVITY;   // Add randomness
     // Get activity from ghost, such as asking for a sign
     activity += GhostGet$activity( prDesc(GHOST) )/100.0;
+	if( activity < 0.1 )
+		activity = 0.1;
     
     // GHOST BEHAVIOR :: Hantuwu - Interactivity
     if( GHOST_TYPE == GhostConst$type$hantuwu )
@@ -275,10 +277,29 @@ onLevelCustomToolsetPills( player )
     
 end
 
+// This is the event raised when interacting with the keypad
 handleEvent( "#AUX", 0 )
 
-    if( argStr(0) == "ENDGAME" )
-        endGame();
+    if( argStr(0) != "ENDGAME" )
+		return;
+    
+	if( BFL&BFL_INCORRECT_HOLD )
+		return;
+	
+	// Correct. End the game
+	if( GHOST_TYPE == SEL ){
+		endGame();
+		return;
+	}
+	
+	// Incorrect. Todo: Activate sudden death?
+	forPlayer( index, player )
+		Rlv$playSound( player, "679d11af-eb84-eb25-32e8-b146de9a80eb", 1.0 );
+		addArousal(player, 40);
+	end
+	raiseEvent(0, "GUESS_WRONG" + 1);
+	Ghost$incorrect();
+	BFL = BFL|BFL_INCORRECT_HOLD|BFL_INCORRECT;
 
 end
 

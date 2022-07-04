@@ -10,6 +10,7 @@
 #define GhostMethod$stop 6				// (bool)stop, (bool)verbose - Stops the ghost. Verbose is useful for debugging
 #define GhostMethod$sendToChair 7		// key chair, key hud, int temp - Tells the ghost to go to a chair and trap the player. If no chair is available, drop the player.
 #define GhostMethod$succubusPower 8		// void - Triggers the succubus power
+#define GhostMethod$incorrect 9			// void - Players tried ending the game with the wrong ghost.
 
 #define GhostMethod$cbNodes 100			// Callback for Nodes.lsh getNodes method
 #define GhostMethod$cbPlumbing 101		// Callback for getting a position to teleport with plumbing
@@ -166,6 +167,8 @@
 	runOmniMethod("Ghost", GhostMethod$toggleHunt, on)
 #define Ghost$setType( type, evidence, difficulty, affixes ) \
 	runOmniMethod("Ghost", GhostMethod$setType, (type) + (evidence) + (difficulty) + (affixes))
+#define Ghost$incorrect() \
+	runOmniMethod("Ghost", GhostMethod$incorrect, [])
 #define Ghost$smudge( player, force ) \
 	runOmniMethod("Ghost", GhostMethod$smudge, (player) + (force))
 #define Ghost$interact() \

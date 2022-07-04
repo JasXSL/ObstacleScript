@@ -54,6 +54,8 @@ integer STATE;
 #define BFL_ROAM_REACHED 0x40	// When roam starts this is unset. When roam ends by reaching the target, this is set.
 #define BFL_RESET_LFU_ON_FOOTSTEPS 0x80	// Reset last footsteps update when footsteps are heard (applied when rand roaming during a hunt)
 
+#define BFL_GUESS_WRONG 0x100		// Players picked the wrong ghost
+
 integer BFL;
 
 
@@ -327,6 +329,10 @@ addFootsteps( key player ){
 		return;
 		
 	playerFootsteps = llListReplaceList(playerFootsteps, (list)pos, index, index);	// Added footsteps
+	if( BFL&BFL_RESET_LFU_ON_FOOTSTEPS ){
+		BFL = BFL&~BFL_RESET_LFU_ON_FOOTSTEPS;
+		lastFootstepsUpdate = 0;
+	}
 
 	// Now figure out if we should force go to the footsteps (walking/talking in the same room as the ghost)
 
@@ -347,10 +353,7 @@ addFootsteps( key player ){
 	huntLastSeenPos = pos;
 	huntTarget = player;
 	BFL = BFL|BFL_HUNT_HAS_POS;
-	if( BFL&BFL_RESET_LFU_ON_FOOTSTEPS ){
-		BFL = BFL&~BFL_RESET_LFU_ON_FOOTSTEPS;
-		lastFootstepsUpdate = 0;
-	}
+	
 	setState(STATE_CHASING);
 		
 }
@@ -421,6 +424,9 @@ handleTimer( "A" )
 		
 		}
 		
+		
+		int lospos = BFL&(BFL_HUNT_HAS_LOS|BFL_HUNT_HAS_POS);
+		
 		// Start chasing after the setup phase
 		// Find players with raycast
 		if( STATE != STATE_HUNT_PRE && !smudged ){
@@ -464,7 +470,7 @@ handleTimer( "A" )
 			
 			// Next we'll do a LOS check. Because LOS can allow you to change target.
 			// We're not directly chasing a player. Try a LOS check. This one can override above.
-			if( !(BFL&(BFL_HUNT_HAS_POS|BFL_HUNT_HAS_LOS)) ){
+			if( ~BFL&BFL_HUNT_HAS_LOS ){
 			
 				forPlayer( index, player )
 					
@@ -473,6 +479,7 @@ handleTimer( "A" )
 					if( l2i(ray, -1) == 0 && ~llGetAgentInfo(player) & AGENT_SITTING ){
 						
 						huntTarget = player;
+						BFL = BFL|BFL_HUNT_HAS_LOS;
 						bdbg("Starting hunt on "+llKey2Name(player));
 						//qd("Now hunting " + player);
 						index = 9001;
@@ -484,7 +491,7 @@ handleTimer( "A" )
 			}
 
 			// If we have a hunt target, but no LOS and aren't pathing towards their last position. Try to find the target's last heard position.
-			if( huntTarget != "" && !(BFL&(BFL_HUNT_HAS_LOS|BFL_HUNT_HAS_POS)) && STATE != STATE_PATHING ){
+			if( huntTarget != "" && !lospos && STATE != STATE_PATHING ){
 			
 				integer loc = llListFindList(PLAYERS, (list)((string)huntTarget));
 				vector pos = l2v(playerFootsteps, loc);
@@ -516,7 +523,7 @@ handleTimer( "A" )
 			
 					
 			// At this point we've searched a room for long enough, and should try somewhere else.
-			if( llGetTime() > huntLastFootstepReq+4 && STATE != STATE_PATHING && huntTarget == "" ){
+			if( llGetTime() > huntLastFootstepReq+4 && STATE != STATE_PATHING && huntTarget == "" && !lospos ){
 				
 				huntLastFootstepReq = llGetTime()+llFrand(16);	// Randomize the time to search a room.
 				float closest; vector pathTo;
@@ -769,7 +776,7 @@ handleTimer( "A" )
 			// Try to teleport
 			list ray = llCastRay(pp, pp-<0,0,5>, RC_DEFAULT);
 			if( l2i(ray, -1) == 1 ){
-				
+								
 				float dist = llVecDist(pp, g);
 				llSetKeyframedMotion([], [KFM_COMMAND, KFM_CMD_STOP]);
 				llSleep(dist/2);
@@ -796,7 +803,7 @@ handleTimer( "A" )
 			catchDist = 0.75;
 			
 		// Caught a player
-		if( llVecDist(<g.x, g.y, 0>, <pp.x, pp.y, 0>) < catchDist && l2i(ray, -1) == 0 ){
+		if( llVecDist(<g.x, g.y, 0>, <pp.x, pp.y, 0>) < catchDist /*&& l2i(ray, -1) == 0*/ ){
 		
 			
 			if( BFL&BFL_HUNT_HAS_LOS ){
@@ -825,6 +832,7 @@ handleTimer( "A" )
 			// Start the warp timer
 			if( chaseFailed <= 0 ){
 			
+				bdbg("Attempting warp in 1.5");
 				chaseFailed = llGetTime();
 				return;
 				
@@ -833,6 +841,7 @@ handleTimer( "A" )
 			// Warp timer hit, start warping
 			else if( llGetTime()-chaseFailed > 1.5 ){
 			
+				bdbg("Warping");
 				llSetKeyframedMotion([], [KFM_COMMAND, KFM_CMD_STOP]);
 				list ray = llCastRay(pp, pp-<0,0,4>, RC_DEFAULT);
 				vector ppFloor = pp;
@@ -858,6 +867,7 @@ handleTimer( "A" )
 					
 				}
 				
+				bdbg("Warp failed");
 				// If we got to this point, nothing else can be done. Just return to idle.
 				BFL = BFL&~BFL_HUNT_HAS_LOS;
 				BFL = BFL&~BFL_HUNT_HAS_POS;
@@ -884,6 +894,10 @@ handleTimer( "A" )
 	*/
     
 
+end
+
+handleMethod( GhostMethod$incorrect )
+	BFL = BFL|BFL_GUESS_WRONG;
 end
 
 handleMethod( GhostMethod$sendToChair )
@@ -983,7 +997,10 @@ handleOwnerMethod( GhostMethod$toggleHunt )
 		toggleMesh(true);
 		raiseEvent(GhostEvt$hunt, TRUE);
 		llSetKeyframedMotion([], [KFM_COMMAND, KFM_CMD_STOP]);
-		setTimeout("HUNT", 3);	// Start walking
+		float time = 3;
+		if( BFL&BFL_GUESS_WRONG )
+			time = 1;
+		setTimeout("HUNT", time);	// Start walking
 		
 	}	
 	else{
@@ -1067,8 +1084,9 @@ handleOwnerMethod( GhostMethod$smudge )
 	}
 	else{
 		lastSmudge = llGetTime();
-		setState(STATE_IDLE);
 	}
+	
+	setState(STATE_IDLE);
 	
 end
 

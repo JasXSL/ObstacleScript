@@ -310,7 +310,6 @@ handleEvent( "#Game", 0 )
         
         BFL = BFL&~BFL_STARTED;
         
-        
         // Unsit first
         warpToStart(TRUE);
         llSleep(1);
@@ -437,7 +436,7 @@ onLevelInteractStarted( obstacle, pos )
         if( playersNotInTruck )
             return;
         
-        BFL = BFL&~BFL_STARTED;
+        
         raiseEvent(0, "ENDGAME");
         
     }

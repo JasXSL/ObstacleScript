@@ -60,6 +60,8 @@ float LAST_EVENT;
 integer BFL;
 #define BFL_HUNTING 0x1
 #define BFL_FRONT_DOOR 0x2
+#define BFL_INCORRECT 0x4			// Players have guessed incorrectly at least once
+#define BFL_INCORRECT_HOLD 0x8		// Players can't guess again until after the next hunt
 float LAST_HUNT;
 key CAUGHT_PLAYER;  // We're waiting for a bondage seat for this player
 
@@ -121,6 +123,8 @@ toggleHunt( integer on ){
         GhostRadio$garble( "*", TRUE );
     }
     else{
+		BFL = BFL&~BFL_INCORRECT_HOLD;	// Allow players to exit
+		raiseEvent(0, "GUESS_WRONG" + 0);
         GhostRadio$garble( "*", FALSE );
     }
     LAST_HUNT = llGetTime();
@@ -147,7 +151,7 @@ onGameStart(){
     #else
         llFloor(llFrand(15))
     #endif
-    ;    
+	;
     
     AFFIXES = 0;
     if( DIFFICULTY > 0 )    // 4 rightmost bits = basic affixes

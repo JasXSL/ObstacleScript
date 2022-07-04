@@ -152,6 +152,7 @@ interactPlayer( key hud, int power ){
         
     }
     
+	llOwnerSay("Interacting " + llKey2Name(hud) + " anim " + anim);
     AnimHandler$anim(
         hud, 
         anim, 
@@ -229,7 +230,7 @@ int getGhostPower(){
 	float max = 2;
 	// GHOST BEHAVIOR :: EHEE - Higher chance of strong EMF
 	if( GHOST_TYPE == GhostConst$type$ehee )
-		max = 2.5;	// Higher chance of a strong EMF
+		max = 3;	// Higher chance of a strong EMF
 	return llFrand(max) > 1;
 	
 }
@@ -440,10 +441,12 @@ handleOwnerMethod( GhostInteractionsMethod$interact )
 	}
 	
 	// Next check if we can interact with player
-	int roomLit = !GhostGet$inLitRoom( llGetObjectDesc() );
+	int roomLit = GhostGet$inLitRoom( llGetObjectDesc() );
 	int isBare = GHOST_TYPE == GhostConst$type$bare;
 	int isAsswang = GHOST_TYPE == GhostConst$type$asswang;
 	int unlitBare = isBare && !roomLit;
+	
+	
 	
 	float playerChance = 0.2;	// 20% chance of touching a player
 	// GHOST BEHAVIOR :: POWOLTERGEIST
@@ -454,9 +457,9 @@ handleOwnerMethod( GhostInteractionsMethod$interact )
 		playerChance = 0.4;		// Imp is twice as high
 	// GHOST BEHAVIOR :: BARE
 	else if( unlitBare )
-		playerChance = 0.5;		// Bare gets very high if lights are off
+		playerChance = 0.4;		// Bare is also high when lights are off
 	// GHOST BEHAVIOR :: ASSWANG - Higher chance of touching a player. But can only touch players who aren't looking at it.
-	else if( GHOST_TYPE == GhostConst$type$asswang )
+	else if( isAsswang )
 		playerChance = 0.4;		// Asswang also has double touch chance, but it's on the condition that the player is facing away
 	// GHOST BEHAVIOR :: SUCCUBUS - Touch a bit more
 	else if( GHOST_TYPE == GhostConst$type$succubus )
@@ -481,15 +484,18 @@ handleOwnerMethod( GhostInteractionsMethod$interact )
 		
 			forPlayer( index, player )
 				
-				float range = 2.5;
+				myAngX(player, ang)
+				bool isFacingAway = llFabs(ang) > PI_BY_TWO;
+				float range = 3;
 				// GHOST BEHAVIOR :: Stringoi Bare - Increased interact range.
 				if( GHOST_TYPE == GhostConst$type$stringoi || unlitBare )
 					range = 4;
+				if( isAsswang && isFacingAway )
+					range = 4.5;
+				
 				
 				if( llVecDist(prPos(player), gp) < range && ~llGetAgentInfo(player) & AGENT_SITTING ){
 					
-					myAngX(player, ang)
-
 					key hud = l2k(HUDS, index);
 					int genitals = Rlv$getDesc$sex( hud );
 					if( 
@@ -498,7 +504,7 @@ handleOwnerMethod( GhostInteractionsMethod$interact )
 						// GHOST BEHAVIOR :: yuri - Female preference
 						(GHOST_TYPE != GhostConst$type$yuri || ~genitals&GENITALS_PENIS) &&
 						// GHOST BEHAVIOR :: asswang - Only touch players not looking at it
-						(GHOST_TYPE != GhostConst$type$asswang || llFabs(ang) > PI_BY_TWO) &&
+						(!isAsswang || isFacingAway) &&
 						// GHOST BEHAVIOR :: succubus - Only touch one player
 						(GHOST_TYPE != GhostConst$type$succubus || player == GhostGet$sucTarg( llGetObjectDesc() ))
 					)viable += player;
@@ -513,6 +519,7 @@ handleOwnerMethod( GhostInteractionsMethod$interact )
 			integer pos = llListFindList(PLAYERS, (list)((str)targ));
 			if( debug )
 				llOwnerSay("Touching player " + llGetDisplayName(targ) + (str)pos);
+				
 			if( ~pos ){
 			
 				key hud = l2k(HUDS, pos);
@@ -520,10 +527,10 @@ handleOwnerMethod( GhostInteractionsMethod$interact )
 				int clothes = Rlv$getDesc$clothes( hud )&1023;	// 1023 = 10 bit
 				float cc = 0.15;
 				if( isBare && !roomLit )
-					cc *= 5;
+					cc *= 4;
 				// GHOST BEHAVIOR :: Stringoi - Strip
 				if( GHOST_TYPE == GhostConst$type$stringoi )
-					cc *= 4;
+					cc *= 3;
 				
 				if( llFrand(1.0) < cc && clothes && power ){
 					
@@ -540,8 +547,8 @@ handleOwnerMethod( GhostInteractionsMethod$interact )
 						end
 					}
 					
-					if( unlitBare ){
-						setTimeout("HUNT", 1+llFrand(3));
+					if( unlitBare && llFrand(1) < 0.75 ){
+						setTimeout("HUNT", 1+llFrand(6));
 					}
 					
 				}
@@ -631,8 +638,7 @@ handleOwnerMethod( GhostInteractionsMethod$interact )
 				
 				if( 
 					EVIDENCE_TYPES & GhostConst$evidence$stains && 
-					!hasWeakAffix(ToolSetConst$affix$noEvidenceUntilSalted) &&
-					(DIFFICULTY < 2 || llFrand(1.0) < 0.75)
+					!hasWeakAffix(ToolSetConst$affix$noEvidenceUntilSalted)
 				)flags = flags|GhostInteractiveConst$INTERACT_ALLOW_STAINS;
 					
 				// GHOST BEHAVIOR :: POWOLTERGEIST - 20% chance to yeet an item
