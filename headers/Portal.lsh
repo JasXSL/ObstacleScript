@@ -43,6 +43,10 @@
 
 #define PortalEvt$loadComplete 1		// (str)desc - All scripts have finished loading
 #define PortalEvt$custom 2				// (key)sender, (str)script, (int)evt, (var)data1, (var)data2... - Used for custom portal events
+#define PortalEvt$playersChanged 3		// void - Player table has been altered
+#define PortalEvt$hudsChanged 4			// void - HUD table has been altered
+
+
 
 #define PortalMethod$reset 0		// Resets all scripts
 #define PortalMethod$fetch 1		// Fetches all scripts from DB
@@ -68,6 +72,16 @@
 #define onPortalLoadComplete( desc ) \
 	if( SENDER_SCRIPT IS "Portal" AND EVENT_TYPE IS PortalEvt$loadComplete ){ \
 		str desc = argStr(0);
+
+
+#define onPortalPlayersChanged() \
+	if( SENDER_SCRIPT IS "Portal" AND EVENT_TYPE IS PortalEvt$playersChanged ){
+
+
+#define onPortalHudsChanged() \
+	if( SENDER_SCRIPT IS "Portal" AND EVENT_TYPE IS PortalEvt$hudsChanged ){
+
+
 
 #define Portal$killAll() \
 	runOmniMethod( "Portal", PortalMethod$kill, PortalConst$KILL_ALL )
@@ -99,7 +113,7 @@
 #define isEventPortalCustom() \
 	(SENDER_SCRIPT IS "Portal" AND EVENT_TYPE IS PortalEvt$custom)
 	
-	
+
 	
 	
 	

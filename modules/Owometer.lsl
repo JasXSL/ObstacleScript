@@ -1,6 +1,5 @@
 #include "ObstacleScript/resources/SubHelpers/GhostHelper.lsl"
 #define USE_STATE_ENTRY
-#define USE_PLAYERS
 #define USE_TIMER
 #include "ObstacleScript/index.lsl"
 string ID;

@@ -1,6 +1,5 @@
 #define USE_STATE_ENTRY
 #define USE_TIMER
-#define USE_PLAYERS
 #define USE_COLLISION_START
 #define USE_COLLISION_END 
 #define USE_LISTEN
@@ -185,7 +184,7 @@ onCollisionStart( total )
 	
 		string k = llDetectedKey(i);
 	
-		if( ~llListFindList(PLAYERS, (list)k) && llListFindList(COLLIDERS, (list)k) == -1 )
+		if( isPlayer(k) && llListFindList(COLLIDERS, (list)k) == -1 )
 			COLLIDERS += k;
 			
 	}

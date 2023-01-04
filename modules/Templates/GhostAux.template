@@ -125,7 +125,7 @@ warpToStart( integer unsit ){
     
     // We only have one round in this level
     // So in this case, it's only raised when the level has loaded
-    forPlayer( index, player )
+    forPlayer( t, index, player )
         
         if( unsit )
             Rlv$unSit( player, TRUE ); 
@@ -206,10 +206,12 @@ onChanged( change )
     
 end
 
+onRez( tot )
+	globalAction$resetAll();
+end
+
 onStateEntry() 
-    
-    PLAYERS = (list)[(str)llGetOwner()];
-    
+        
     list cams;
     forLink( nr, name )
         
@@ -277,7 +279,7 @@ handleEvent( "#Game", 0 )
         CAMS = [];
         pCams = [];
          // We can initiate the players here, by configuring them, setting up bars etc
-        forPlayer( index, player )
+        forPlayer( t, index, player )
             
             // Rlv$enforceMouselook(player); -- Currently busted in firestorm
             integer armor = 3;
@@ -295,7 +297,7 @@ handleEvent( "#Game", 0 )
         
         Lamp$togglePower( "*", FALSE );
         
-        forPlayer( idx, player )
+        forPlayer( t, idx, player )
             Rlv$playSound(player, "dbc0792a-a286-86b1-bed4-07ad8727db68", .75);
         end
         
@@ -315,7 +317,7 @@ handleEvent( "#Game", 0 )
         llSleep(1);
         warpToStart(FALSE); // Then back to the truck
         
-        forPlayer( idx, player )
+        forPlayer( t, idx, player )
             // Rlv$exitMouselook(player); -- Currently busted in firestorm
             Rlv$stopLoopSound(player);
             Rlv$playSound(player, "de1bb563-3df0-bdff-f73c-bb813c77b4d8", .5);
@@ -426,7 +428,7 @@ onLevelInteractStarted( obstacle, pos )
         end
         
         int playersNotInTruck;
-        forPlayer( i, pl )
+        forPlayer( t, i, pl )
             
             if( ~llGetAgentInfo(pl) & AGENT_SITTING && llKey2Name(pl) != "" )
                 playersNotInTruck += !isPosInLink(prPos(pl), P_TRUCK);

@@ -1,6 +1,5 @@
 #include "ObstacleScript/resources/SubHelpers/GhostHelper.lsl"
 #define USE_STATE_ENTRY
-#define USE_PLAYERS
 #define USE_TIMER
 #define USE_LISTEN
 #include "ObstacleScript/index.lsl"
@@ -220,7 +219,6 @@ onStateEntry()
 	llSetAlpha(0, FACE);
     llListen(0, "", "", "");
     toggleOn(FALSE);
-	PLAYERS = [(str)llGetOwner()];
     Portal$scriptOnline();
 	
 	//Level$forceRefreshPortal();
@@ -312,7 +310,7 @@ onListen( ch, msg )
 	}
 	// Any player can use a dropped on
 	else{
-		if( llListFindList(PLAYERS, [(str)SENDER_KEY]) == -1 )
+		if( !isPlayer(SENDER_KEY) )
 			return;
 			
 		if( llVecDist(llGetPos(), prPos(SENDER_KEY)) > 3 )

@@ -20,12 +20,20 @@
 	#define LevelEvt$custom 2				// (key)sender, (str)script, (int)evt, (var)data1, (var)data2... These events are defined in resources/LevelCustomEvents
 	#define LevelEvt$init 3					// Level initialized
 	#define LevelEvt$playerJoined 4			// (key)player, (key)hud - Raised when a player joins or re-joins
+	#define LevelEvt$playersChanged 5		// void - Player table has changed
+	#define LevelEvt$hudsChanged 6			// void - HUD table has changed
+	
 
 	#define LevelConst$REMOTE_SCRIPTS (list)\
 		"Rezzer" + \
 		"Spawner"
 
-
+	#define onLevelPlayersChanged() \
+		if( SENDER_SCRIPT IS "Level" AND EVENT_TYPE IS LevelEvt$playersChanged ){
+	
+	#define onLevelHudsChanged() \
+		if( SENDER_SCRIPT IS "Level" AND EVENT_TYPE IS LevelEvt$hudsChanged ){
+	
 	#define onLevelMainMenu() \
 		if( SENDER_SCRIPT IS "Level" AND EVENT_TYPE IS LevelEvt$mainMenu ){
 		

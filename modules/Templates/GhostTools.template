@@ -16,7 +16,6 @@
 #include "ObstacleScript/resources/SubHelpers/GhostHelper.lsl"
 #define USE_STATE_ENTRY
 #define USE_TIMER
-#define USE_PLAYERS
 #include "ObstacleScript/index.lsl"
 
 int AFFIXES;
@@ -438,13 +437,14 @@ onLevelCustomToolsetVape()
 end
 
 // If a player leaves, drop their stuff
-onPlayersUpdated()
+onLevelPlayersChanged()
     
+	list players = getPlayers();
     integer i;
     for(; i < count(spawnedTools); i += STSTRIDE ){
         
         key t = l2k(spawnedTools, i+2);
-        if( t != "" && llListFindList(PLAYERS, [(str)t]) == -1 )
+        if( t != "" && llListFindList(players, [(str)t]) == -1 )
             dropTool(t, l2k(spawnedTools, i), ZERO_VECTOR, ZERO_ROTATION);
         
     }
@@ -453,7 +453,6 @@ end
 
 onStateEntry() 
     
-    PLAYERS = (list)[(str)llGetOwner()];
     toggleDoors(TRUE);
     doorPerc = 1.0; // Makes it instant
     
@@ -598,7 +597,7 @@ handleEvent( "#Game", 0 )
     }
     else if( argStr(0) == "SPAWN_GEAR" ){
         
-        int nrPlayers = count(PLAYERS);
+        int nrPlayers = numPlayers();
         if( nrPlayers < 1 )
             nrPlayers = 1;
         int pills = nrPlayers+1;
@@ -654,7 +653,7 @@ handleEvent( "#Game", 0 )
         if( hasWeakAffix(ToolSetConst$affix$fewerHidingSpots) )
             Spawner$load( LINK_THIS, "CJ", TRUE, "" );
         
-        forPlayer(i, targ)
+        forPlayer(t, i, targ)
             ToolSet$reset( targ );
         end
         
@@ -662,9 +661,10 @@ handleEvent( "#Game", 0 )
     else if( argStr(0) == "ROUND_START" ){
         
         toggleDoors(TRUE);
+		// Spawn weegie board
         if( llFrand(1.0) < 0.4 || (DIFFICULTY > 2 && GHOST_TYPE == GhostConst$type$imp) )
-            Spawner$getGroups("ouija", "OUIJA");
-            
+			Spawner$nFromGroup( LINK_THIS, 1, "OUIJA" );
+			            
     }
     else if( argStr(0) == "DIFFICULTY" ){
         
@@ -761,19 +761,6 @@ end
 
 onLevelCustomGhostSpawned( ghost )
     GHOST = ghost;
-end
-
-onSpawnerGetGroups( callback, spawns )
-    
-    if( callback == "ouija" ){
-        
-        list el = llJson2List(randElem(spawns));
-        int id = l2i(el, -1);
-        Spawner$spawnByIndex( LINK_THIS, id );
-        
-    }
-    
-    
 end
 
 #include "ObstacleScript/end.lsl"

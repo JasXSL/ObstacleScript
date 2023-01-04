@@ -8,7 +8,11 @@
 
 
 #define SpawnerMethod$load 10				// (str)callback, (bool)live, (str)group1, group2... - Loads one or more groups of objects. Callback is raised as an event in the linkset. Use JSON_INVALID if you don't want an event
-#define SpawnerMethod$listSpawns 11			// Outputs an indexed list of spawns
+#define SpawnerMethod$listSpawns 11			// (int)start=0/(str)search, (int)amount - 
+											// Outputs an indexed list of spawns. 
+											// Start can also be a filter like (int)field=val | Ex 4=OUIJA for spawnround ouija. You can use % to end with a wildcard ex 4=OUI% to find all that start with OUI
+											// Or a string which is does a complete search in both name and spawnround if any of them CONTAIN the entry. Ex LIST int would match both InteriorDoor and Painting because both contain int.
+											// Search is case insensitive.
 #define SpawnerMethod$purge 12				// Purges all spawns
 #define SpawnerMethod$delete 13				// (int)index
 #define SpawnerMethod$add 14				// void - Adds said object, use $ notation to save description
@@ -24,7 +28,14 @@
 
 
 #define SpawnerEvt$loadStart 1				// (str)callback, (bool)live, (str)group1, (str)group2... - A group of spawns has started. Use RezzerEvt$cb for detecting when the group is done.
-#define SpawnerEvt$getGroups 2				// (str)callback, data...
+
+// Spawn table columns
+#define SpawnerConst$E_NAME 0
+#define SpawnerConst$E_POS 1
+#define SpawnerConst$E_ROT 2
+#define SpawnerConst$E_DESC 3
+#define SpawnerConst$E_GROUP 4
+
 
 #define Spawner$add( targ ) \
 	runMethod(targ, "Spawner", SpawnerMethod$add, [])
@@ -37,9 +48,6 @@
 
 #define Spawner$spawnGame() \
 	Spawner$load( LINK_THIS, "", TRUE, SpawnerConst$CB_GAME_START )
-
-#define Spawner$getGroups( callback, groups ) \
-	runMethod(LINK_THIS, "Spawner", SpawnerMethod$getGroups, callback + groups)
 
 #define Spawner$fetchFromHud( targ ) \
 	runMethod(targ, "Spawner", SpawnerMethod$fetchFromHud, [])

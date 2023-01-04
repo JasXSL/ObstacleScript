@@ -57,7 +57,7 @@
 	for(; i < count(players); ++i ){ \
 		 \
 		key p = l2k(players, i); \
-		if( ~llListFindList(PLAYERS, [(str)p])  ){ \
+		if( isPlayer(p) ){ \
 			 \
 			if( filterFunction(trap, p) ){ \
 			 \

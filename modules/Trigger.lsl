@@ -1,6 +1,5 @@
 #define USE_STATE_ENTRY
 #define USE_COLLISION_START
-#define USE_PLAYERS
 #include "ObstacleScript/index.lsl"
 
 string ID;

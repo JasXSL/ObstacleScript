@@ -1,6 +1,5 @@
 #define USE_TIMER
 #define USE_STATE_ENTRY
-#define USE_PLAYERS
 #include "ObstacleScript/headers/Obstacles/Ghost/Ghost.lsh"
 #include "ObstacleScript/resources/SubHelpers/GhostHelper.lsl"
 #include "ObstacleScript/index.lsl"
@@ -10,7 +9,7 @@ list cNodes;	// Cache of room markers, fetched from Nodes script
 #define cacheNodes() cNodes = []; Nodes$getRooms( GhostMethod$cbNodes )
 
 // Behavior debug
-#define bdbg(message) llOwnerSay(message)
+#define bdbg(message) //llOwnerSay(message)
 
 int AFFIXES;
 
@@ -190,14 +189,14 @@ integer walkTowards( vector pos ){
 			
 			vector gp = llGetPos();
 			speed = 2.5;
-			forPlayer( i, p )
+			forPlayer( tot, i, p )
 				
 				vector pp = prPos(p);
 				list ray = llCastRay(gp, pp, RC_DEFAULT);
 				myAngX(p, ang)
 				if( llFabs(ang) < PI_BY_TWO && l2i(ray, -1) < 1 ){
 					speed = 0.75;
-					i = count(PLAYERS);
+					i = tot;
 				}
 				
 			end
@@ -323,7 +322,7 @@ addFootsteps( key player ){
 		return;
 	
 	vector pos = prPos(player);
-	integer index = llListFindList(PLAYERS, (list)((str)player));
+	integer index = llListFindList(getPlayers(), (list)((str)player));
 	// GHOST BEHAVIOR :: Succubus - Only hear victim footsteps
 	if( GHOST_TYPE == GhostConst$type$succubus && player != GhostGet$sucTarg(llGetObjectDesc()) )
 		return;
@@ -331,7 +330,7 @@ addFootsteps( key player ){
 	playerFootsteps = llListReplaceList(playerFootsteps, (list)pos, index, index);	// Added footsteps
 	if( BFL&BFL_RESET_LFU_ON_FOOTSTEPS ){
 		BFL = BFL&~BFL_RESET_LFU_ON_FOOTSTEPS;
-		lastFootstepsUpdate = 0;
+		huntLastFootstepReq = 0;
 	}
 
 	// Now figure out if we should force go to the footsteps (walking/talking in the same room as the ghost)
@@ -404,7 +403,7 @@ handleTimer( "A" )
 		if( llGetTime()-lastFootstepsUpdate > 1.0 && GHOST_TYPE != GhostConst$type$yaoikai ){
 		
 			lastFootstepsUpdate = llGetTime();
-			forPlayer( index, player )
+			forPlayer( tot, index, player )
 				
 				integer ainfo = llGetAgentInfo(player);
 				vector pp = prPos(player);
@@ -469,10 +468,10 @@ handleTimer( "A" )
 			
 			
 			// Next we'll do a LOS check. Because LOS can allow you to change target.
-			// We're not directly chasing a player. Try a LOS check. This one can override above.
-			if( ~BFL&BFL_HUNT_HAS_LOS ){
+			// However, the ghost will force itself to your POS if POS is set, so don't look if we have EITHER pos OR los
+			if( !lospos ){
 			
-				forPlayer( index, player )
+				forPlayer( tot, index, player )
 					
 					vector pp = getPlayerVisibilityPos(player);
 					list ray = llCastRay(g, pp, RC_DEFAULT);
@@ -493,7 +492,7 @@ handleTimer( "A" )
 			// If we have a hunt target, but no LOS and aren't pathing towards their last position. Try to find the target's last heard position.
 			if( huntTarget != "" && !lospos && STATE != STATE_PATHING ){
 			
-				integer loc = llListFindList(PLAYERS, (list)((string)huntTarget));
+				integer loc = llListFindList(getPlayers(), (list)((string)huntTarget));
 				vector pos = l2v(playerFootsteps, loc);
 				if( pos ){
 					
@@ -792,9 +791,15 @@ handleTimer( "A" )
 	
 		// Chasing a player target
 		vector pp = prPos(huntTarget);
-		if( ~BFL&BFL_HUNT_HAS_LOS )
+		if( ~BFL&BFL_HUNT_HAS_LOS ){
+		
 			pp = huntLastSeenPos;
-			
+			// Reached last seen pos
+			if( llVecDist(<g.x, g.y, 0>, <pp.x, pp.y, 0>) < 0.25 )
+				BFL = BFL&~BFL_HUNT_HAS_POS;
+				
+		}
+		
 		list ray = llCastRay(g, pp, RC_DEFAULT);
 		
 		// Player catch distance is greater than range to reach their last seen position
@@ -805,7 +810,6 @@ handleTimer( "A" )
 		// Caught a player
 		if( llVecDist(<g.x, g.y, 0>, <pp.x, pp.y, 0>) < catchDist /*&& l2i(ray, -1) == 0*/ ){
 		
-			
 			if( BFL&BFL_HUNT_HAS_LOS ){
 				
 				// Tell level
@@ -825,6 +829,7 @@ handleTimer( "A" )
 		
 		// Try walking
 		integer att = walkTowards(pp);
+		
 		
 		// Failed walking, return to idle
 		if( !att ){
@@ -879,8 +884,7 @@ handleTimer( "A" )
 		}
 		else
 			chaseFailed = 0;
-		
-		
+					
 		
 	}
 	/*
@@ -983,7 +987,7 @@ handleOwnerMethod( GhostMethod$toggleHunt )
 	if( argInt(0) ){
 	
 		playerFootsteps = [];
-		forPlayer(index, player)
+		forPlayer(tot, index, player)
 			playerFootsteps += 0;
 		end
 		BFL = BFL&~BFL_HUNT_HAS_LOS;
@@ -1127,7 +1131,7 @@ handleOwnerMethod( GhostMethod$stop )
 	if( verbose ){
 	
 		llOwnerSay("Stop status: " + (str)((BFL&BFL_PAUSE)>0));
-		llOwnerSay("Players: " + mkarr(PLAYERS));
+		llOwnerSay("Players: " + mkarr(getPlayers()));
 		
 	}
 	

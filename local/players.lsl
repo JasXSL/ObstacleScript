@@ -1,42 +1,26 @@
-// #define SCRIPT_IS_PLAYER_MANAGER - Use this in portal/level/COM to mark that this script manages the players
+// #define SCRIPT_IS_PLAYER_MANAGER - Use this in portal/level/COM to mark that this script manages the players (prevents recursion)
 
-// Adds definitions for player management
-#ifdef USE_PLAYERS
+#define numPlayers() idbGetIndex(idbTable$PLAYERS)
+#define numHuds() idbGetIndex(idbTable$HUDS)
+
+
+#define forPlayer( tot, index, player ) \
+	int index; int tot = numPlayers(); \
+	for(; index < tot; ++index ){ \
+		key player = idbGetByIndex(idbTable$PLAYERS, index); 
+
+
+#define forHuds( tot, index, hud ) \
+	int index; int tot = numHuds(); \
+	for(; index < tot; ++index ){ \
+		key hud = idbGetByIndex(idbTable$HUDS, index); 
+
+#define getPlayers() idbValues(idbTable$PLAYERS, true)
+#define getHuds() idbValues(idbTable$HUDS, true)
+
+#define isPlayer( id ) \
+	( id == llGetOwner() || ~llListFindList(getPlayers(), (list)id) )
 	
-	list _P;
-	#define PLAYERS _P
-	
-	
-	// Player list
-	#define isPlayer( targ ) \
-		(~llListFindList(PLAYERS, (list)((str)targ)))
 
-
-	#define forPlayer( index, player ) \
-		int index; \
-		for(; index < count(_P); ++index ){ \
-			key player = l2k(_P, index); 
-
-
-#else
-	#define forPlayer(index,player) #error Add #define USE_PLAYERS to enable players
-	#define _P #error Add #define USE_PLAYERS to enable player tracking
-	#define PLAYERS _P
-#endif
-
-#ifdef USE_HUDS
-	
-	list _H;		// Stores a list of HUDs
-	#define HUDS _H
-	
-	#define forHuds( index, hud ) \
-		int index; \
-		for(; index < count(_H); ++index ){ \
-			key hud = l2k(_H, index); 
-
-#else
-	#define _H #error Add #define USE_HUDS to the top of your script to enable HUD tracking
-	#define HUDS _H
-#endif
 
 

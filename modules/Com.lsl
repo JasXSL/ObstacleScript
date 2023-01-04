@@ -1,16 +1,26 @@
 #define USE_TIMER
 #define USE_LISTEN
-#define USE_PLAYERS
 #define USE_HUDS
 #define USE_STATE_ENTRY
 #define SCRIPT_IS_PLAYER_MANAGER
+// Not added to the player list, but is allowed to call methods on us
+#define COM_ADDITIONAL (list)((str)llGetOwnerKey(HOST))
+
+#include "ObstacleScript/index.lsl"
 
 float ACC_HOST;     // Timer
 key PENDING_HOST;
 key HOST;
 
-// Not added to the player list, but is allowed to call methods on us
-#define COM_ADDITIONAL (list)((str)llGetOwnerKey(HOST))
+resetPlayersAndHuds(){
+	// Add ourselves to players and HUDs
+	idbSetByIndex(idbTable$PLAYERS, 0, llGetOwner());
+	idbSetIndex(idbTable$PLAYERS, 1);
+	idbSetByIndex(idbTable$HUDS, 0, llGetKey());
+	idbSetIndex(idbTable$HUDS, 1);
+}
+
+
 
 #include "ObstacleScript/begin.lsl"
     
@@ -19,13 +29,12 @@ key HOST;
 
     onStateEntry()
         
+		resetPlayersAndHuds();
+		
         setupListenTunnel();
         setupDebug(0);
         llListen(123321, "", llGetOwner(), "");
         
-        _H = (list)llGetKey();
-        _P = (list)llGetOwner();
-		
 		Level$autoJoin();
 		
 		llListen(3, "", llGetOwner(), "");
@@ -79,7 +88,12 @@ key HOST;
 					PENDING_HOST = "";
 					ACC_HOST = 0;
 					HOST = SENDER_KEY;
-					_P = (list)((str)llGetOwner()) + (str)llGetOwnerKey(HOST);
+					
+					// Rebuild the player table
+					idbSetByIndex(idbTable$PLAYERS, 0, llGetOwner());
+					idbSetByIndex(idbTable$PLAYERS, 1, llGetOwnerKey(HOST));
+					idbSetIndex(idbTable$PLAYERS, 2);
+		
 					raiseEvent(ComEvt$hostChanged, HOST);
 						
 					if( inv )
@@ -117,10 +131,9 @@ key HOST;
     
     handleOwnerMethod( ComMethod$updatePortal )
 		
-		runMethod(prRoot(SENDER_KEY), "Portal", PortalMethod$cbPlayers, PLAYERS);
-		runMethod(prRoot(SENDER_KEY), "Portal", PortalMethod$cbHUDs, HUDS);
+		runMethod(prRoot(SENDER_KEY), "Portal", PortalMethod$cbPlayers, getPlayers());
+		runMethod(prRoot(SENDER_KEY), "Portal", PortalMethod$cbHUDs, getHuds());
 		runMethod(prRoot(SENDER_KEY), "Portal", PortalMethod$cbHost, HOST);
-		
 	
 	end
     
@@ -129,9 +142,11 @@ key HOST;
 		// Must be HOST or owner. Owner is to update the host's HUD with players regardless of if they're in the game. As portals must fetch from the host's HUD.
         if( SENDER_KEY == HOST || llGetOwnerKey(SENDER_KEY) == llGetOwner() ){
             
-            PLAYERS = METHOD_ARGS;
-            globalAction$setPlayers();
-			runOmniMethod("Portal", PortalMethod$cbPlayers, PLAYERS);
+			integer i;
+			for(; i < count(METHOD_ARGS); ++i )
+				idbSetByIndex(idbTable$PLAYERS, i, argStr(i));
+			idbSetIndex(idbTable$PLAYERS, count(METHOD_ARGS));
+			runOmniMethod("Portal", PortalMethod$cbPlayers, METHOD_ARGS);
 			
         }
         
@@ -141,9 +156,13 @@ key HOST;
 		// Must be HOST or owner. Owner is to update the host's HUD with players regardless of if they're in the game. As portals must fetch from the host's HUD.
         if( SENDER_KEY == HOST || llGetOwnerKey(SENDER_KEY) == llGetOwner() ){
             
-            HUDS = METHOD_ARGS;
-            globalAction$setHUDs();
-			runOmniMethod("Portal", PortalMethod$cbHUDs, HUDS);
+			integer i;
+			for(; i < count(METHOD_ARGS); ++i ){
+				idbSetByIndex(idbTable$HUDS, i, argStr(i));
+			}
+			idbSetIndex(idbTable$HUDS, count(METHOD_ARGS));
+			
+			runOmniMethod("Portal", PortalMethod$cbHUDs, METHOD_ARGS);
 	
         }
         
@@ -152,12 +171,10 @@ key HOST;
 		
 		if( SENDER_KEY == HOST || llGetOwnerKey(SENDER_KEY) == llGetOwner() ){
 			
-			PLAYERS = [llGetOwner()];
-			HUDS = [llGetKey()];
-			globalAction$setPlayers();
-			globalAction$setHUDs();
-			runOmniMethod("Portal", PortalMethod$cbPlayers, PLAYERS);
-			runOmniMethod("Portal", PortalMethod$cbHUDs, HUDS);
+			resetPlayersAndHuds();
+			
+			runOmniMethod("Portal", PortalMethod$cbPlayers, getPlayers());
+			runOmniMethod("Portal", PortalMethod$cbHUDs, getHuds());
 			
 		}
 	

@@ -31,13 +31,15 @@ handleTimer( "TOUCH" )
     // Get average arousal
 	float avg;
 	int tot;
-    integer i;
-    for(; i < count(PLAYERS); ++i ){
-        if( ~llGetAgentInfo(l2k(PLAYERS, i)) & AGENT_SITTING ){
-            avg += getPlayerArousal(l2k(PLAYERS, i));
+    forPlayer(all, i, k)
+    
+	    if( ~llGetAgentInfo(k) & AGENT_SITTING ){
+            avg += getPlayerArousal(k);
 			++tot;
 		}
-    }
+		
+    end
+	
 	float avgArousalPerc;
 	if( tot )
 		avgArousalPerc = avg/tot/100;
@@ -181,7 +183,7 @@ onGhostPower( ghost, args )
     if( GHOST_TYPE == GhostConst$type$obukakke || GHOST_TYPE == GhostConst$type$jim ){
         
         vector gpos = prPos(ghost);
-        forPlayer( idx, player )
+        forPlayer( t, idx, player )
             
             vector pp = prPos(player);
             list ray = llCastRay(gpos, pp+<0,0,.5>, RC_DEFAULT);
@@ -227,7 +229,7 @@ onGhostInteraction( ghost, asset, power )
     else
         ++OBJ_INTERACTS;
     
-    forPlayer( index, player )
+    forPlayer( t, index, player )
 
         float arousal;
         if( player == asset )
@@ -293,7 +295,7 @@ handleEvent( "#AUX", 0 )
 	}
 	
 	// Incorrect. Todo: Activate sudden death?
-	forPlayer( index, player )
+	forPlayer( t, index, player )
 		Rlv$playSound( player, "679d11af-eb84-eb25-32e8-b146de9a80eb", 1.0 );
 		addArousal(player, 40);
 	end
@@ -306,13 +308,14 @@ end
 onLevelCustomGhostCaught( ghost, player )
     
     toggleHunt(FALSE);
-    int pos = llListFindList(PLAYERS, [(str)player]);
+	list players = getPlayers();
+    int pos = llListFindList(players, [(str)player]);
     if( pos == -1 ){
         dbg("Caught player HUD not found");
         return;
     }
-        
-    CAUGHT_PLAYER = l2k(HUDS, pos);
+    
+    CAUGHT_PLAYER = idbGetByIndex(idbTable$HUDS, pos);
     Bondage$getFree();
     
 end
@@ -342,7 +345,7 @@ end
 // Checks if all players are dead
 handleTimer( "CW" )
     
-	forPlayer( index, player )
+	forPlayer( t, index, player )
         
         if( !isPlayerDead(player) )
             return;
@@ -365,12 +368,13 @@ handleEvent( "#Nodes", 0 )
     METHOD_ARGS = llDeleteSubList(METHOD_ARGS, 0, 0);
     if( type == "DECAY" ){
         
+		list players = getPlayers();
         integer i;
-        for(; i < count(METHOD_ARGS) && i < count(PLAYERS); ++i ){
+        for(; i < count(METHOD_ARGS) && i < count(players); ++i ){
             
             float amt = argFloat(i);
             if( amt > 0 )
-                addArousal(l2k(PLAYERS, i), amt);
+                addArousal(l2k(players, i), amt);
             
         }
         

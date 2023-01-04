@@ -15,6 +15,68 @@ _tsr( key sound, float vol, float radius ){
 #define triggerSoundRadius( sound, vol, radius ) _tsr(sound, vol, radius)
 
 
+// LSD functions
+// Note: Do not start your idx with a unicode value below 32
+// Warning: Indexed table names should be exactly 1 character to prevent collissions with other tables.
+// Warning: Non indexed table names should have at least 3 characters.
+// To save memory, there are no guardrails preventing you from fucking that up.
+#define idbSet(table, field, val) llLinksetDataWrite(table+(str)(field), (str)(val))
+#define idbGet(table, field) llLinksetDataRead(table+(str)(field))
+
+#define idbGetByIndex(table, index) llLinksetDataRead(table+llChar(index+32))
+#define idbSetByIndex(table, index, val) llLinksetDataWrite(table+llChar(index+32), (val))
+
+#define idbSetIndex(table, val) llLinksetDataWrite(table, (str)(val))
+#define idbResetIndex(table) llLinksetDataWrite(table, "0")
+#define idbGetIndex(table) (int)llLinksetDataRead(table)
+// Inserts and maintains an index
+integer _dbi( string table, string data ){
+
+	integer nr = idbGetIndex(table);
+	idbSet(table, llChar(nr+32), data);
+	idbSetIndex(table, nr+1);
+	return nr;
+
+}
+#define idbInsert(table, data) _dbi((table), (string)(data))
+
+// Get all values from a table
+#define idbValues(table, full) _ia(table, full)
+list _ia( string t, integer f ){
+	integer max = idbGetIndex(t);
+	integer i; list out;
+	for(; i < max; ++i ){
+		str data = idbGetByIndex(t, i);
+		if( data != "" || f )
+			out += data;
+	}
+	return out;
+}
+
+// Drop an indexed table. Relatively memory intensive.
+#define idbDropInline(table) \
+	/* Delete the index table */ \
+	llLinksetDataDelete(table); \
+	list found; integer i; \
+	/* Delete any data that matches table+1char */  \
+	while( (found = llLinksetDataFindKeys("^"+table+".{1}$", 0, 100)) != [] ){ \
+		for( i = 0; i < count(found); ++i ) \
+			llLinksetDataDelete(l2s(found, i)); \
+	}
+
+
+_dbd( string table ){
+	idbDropInline()
+}
+#define idbDrop(table) _dbd(table)
+
+#define idbForeach(table, idx, row) \
+	integer idx; \
+	for(; idx < idbGetIndex(table); ++idx ){ \
+		string row = idbGetByIndex(table, idx);
+
+
+
 
 // Lets you round floats, vectors, and rotations
 #define allRound(input, places) _allRound((list)(input), places)

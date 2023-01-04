@@ -6,65 +6,10 @@
 #define FACE_SIZE 1016
 #define TABLE_SIZE (FACE_SIZE*2-1)
 
-#define E_NAME 0
-#define E_POS 1
-#define E_ROT 2
-#define E_DESC 3
-#define E_GROUP 4
 
-// DB tables are structured as [TABLE_NAME, data1, data2...]
-integer P_DB;   // Database prim
-list DB_TABLES = [-1, -1, -1, -1];  // contains faces, index mapped to TABLE_* below
-list DB_MAP = ["SPA","SPB", "SPC", "SPD"];    // Shorthand labels for above
-#define TABLE_SPAWNS_A 0
-#define TABLE_SPAWNS_B 1
-#define TABLE_SPAWNS_C 2
-#define TABLE_SPAWNS_D 3
-
-
-list ASSET_TABLES = [
-    TABLE_SPAWNS_A, TABLE_SPAWNS_B, TABLE_SPAWNS_C, TABLE_SPAWNS_D
-];
 
 string SAVE_ROUND;      // When calling a save, this is the label
 integer SAVE_NR;        // When calling a save, this store nr of items saved
-
-string stripHTTP( string input ){
-    
-    if( input == "https://" || input == "http://" )
-        return "";
-    
-    integer pos = llSubStringIndex(input, "//");
-    if( ~pos )
-        return llGetSubString(input, pos+2, -1);
-    return input;
-}
-list getTableData( integer table ){
-    
-    integer face = l2i(DB_TABLES, table);
-    return llDeleteSubList(llJson2List(
-        stripHTTP(
-            (string)llGetLinkMedia(P_DB, face, [PRIM_MEDIA_HOME_URL])
-        )+
-        stripHTTP(
-            (string)llGetLinkMedia(P_DB, face, [PRIM_MEDIA_CURRENT_URL])
-        )
-    ), 0, 0);
-    
-}
-setTableData( integer table, list data ){
-    
-    integer face = l2i(DB_TABLES, table);
-    string output = mkarr(l2s(DB_MAP, table) + data);
-	
-    llSetLinkMedia(P_DB, face, (list)
-        PRIM_MEDIA_PERMS_INTERACT + PRIM_MEDIA_PERM_NONE +
-        PRIM_MEDIA_PERMS_CONTROL + PRIM_MEDIA_PERM_NONE +
-        PRIM_MEDIA_HOME_URL + ("http://"+llGetSubString(output, 0, FACE_SIZE-1)) +
-        PRIM_MEDIA_CURRENT_URL + ("http://"+llGetSubString(output, FACE_SIZE, FACE_SIZE*2-1))
-    );
-    
-}
 
 fetchAssets(){
 
@@ -77,82 +22,26 @@ fetchAssets(){
 }
 
 
+string getBatchData( list spawnData, integer live ){
+	return mkarr(
+		l2s(spawnData, SpawnerConst$E_NAME) +
+		(llGetRootPosition()+(vector)l2s(spawnData, SpawnerConst$E_POS)) +
+		l2s(spawnData, SpawnerConst$E_ROT) + 
+		l2s(spawnData, SpawnerConst$E_DESC) + 
+		l2s(spawnData, SpawnerConst$E_GROUP) +  
+		live
+	);
+}
+
+
+
+// XMOD BEGIN //
 #include "ObstacleScript/begin.lsl"
 
 onStateEntry()
 
 	if( llGetStartParameter() == 1 )
 		Level$scriptInit();
-    	
-	integer i;
-    for( i = 1; i <= llGetNumberOfPrims(); ++i ){
-        
-        string name = llGetLinkName(i);
-        if( name == "DB" )
-            P_DB = i;
-        
-    } 
-    
-    if( !P_DB ){
-        llDialog(llGetOwner(), "DB prim missing! Please make a box, name it DB, link it to the level, and then say debug Spawner", [], 123);
-        return;
-    }
-    
-    integer nrFaces = llGetLinkNumberOfSides(P_DB);
-    if( nrFaces < count(DB_TABLES) ){
-        llDialog(llGetOwner(), "DB prim does not have enough sides! Please use a cube.", [], 123);
-        return;
-    }
-    
-
-    list emptyFaces;
-    
-    // Find existing tables
-    for( i = 0; i < nrFaces; ++i ){
-        
-        list data = llJson2List(
-            stripHTTP(
-                (string)llGetLinkMedia(P_DB, i, [PRIM_MEDIA_HOME_URL])
-            )+
-            stripHTTP(
-                (string)llGetLinkMedia(P_DB, i, [PRIM_MEDIA_CURRENT_URL])
-            )
-        );
-        
-        string table = l2s(data, 0);
-        integer pos = llListFindList(DB_MAP, (list)table);
-        if( ~pos )
-            DB_TABLES = llListReplaceList(DB_TABLES, (list)i, pos, pos);
-        else
-            emptyFaces += i;
-        
-    }
-    
-    // Create missing tables
-    for( i = 0; i < count(DB_TABLES); ++i ){
-        
-        if( l2i(DB_TABLES, i) == -1 ){
-            
-			if( emptyFaces == [] ){
-				llOwnerSay("Fatal error: Out of DB faces");
-				return;
-			}
-			
-            integer face = l2i(emptyFaces, 0);
-            emptyFaces = llDeleteSubList(emptyFaces, 0, 0);
-            string table = l2s(DB_MAP, i);
-            
-            llSetLinkMedia(P_DB, face, (list)
-                PRIM_MEDIA_PERMS_INTERACT + PRIM_MEDIA_PERM_NONE +
-                PRIM_MEDIA_PERMS_CONTROL + PRIM_MEDIA_PERM_NONE +
-                PRIM_MEDIA_HOME_URL + ("http://"+mkarr(table)) +
-                PRIM_MEDIA_CURRENT_URL + "http://"
-            );
-            llOwnerSay("Created table: " + table);
-            
-        }
-        
-    }    
     
 end
 
@@ -190,23 +79,65 @@ end
 
 handleOwnerMethod( SpawnerMethod$listSpawns )
     
+	integer start = argInt(0);
+	str filter;
+	integer filterField; // When set to -1, quick filter
+	integer filterLen = -1;
+	integer ch0 = llOrd(argStr(0), 0);
+	if( ch0 < 0x30 || ch0 > 0x39 ){
+		// Quick filter that searches spawns by name
+		filter = argStr(0);
+		filterField = -1;
+	}
+	else if( ~llSubStringIndex(argStr(0), "=") ){
+		
+		list spl = split(argStr(0), "=");
+		start = 0;
+		filterField = l2i(spl, 0);
+		filter = llToLower(l2s(spl, 1));
+		
+		// A percent sign allows wildcards after that point
+		filterLen = llSubStringIndex(filter, "%");
+		if( ~filterLen ){
+			--filterLen;
+			filter = llDeleteSubString(filter, -1, -1);
+		}
+				
+	}
+	integer nr = argInt(1);
+	if( !nr )
+		nr = -1;
     
-    integer index;
     integer i;
     llOwnerSay("== SPAWNS ==");
-    for( ; i < count(ASSET_TABLES); ++i ){
-        
-        list data = getTableData(l2i(ASSET_TABLES, i));
-        integer spawn;
-        for(; spawn < count(data); ++spawn ){
-            
-            llOwnerSay("["+(str)index+"] "+l2s(data, spawn));
-            ++index;
-            
-        }
-        
-    }
-    
+	integer max = idbGetIndex(idbTable$SPAWNS);
+	integer found;
+	for( i = start; i < max && (found < nr || nr == -1); ++i ){
+		str row = idbGetByIndex(idbTable$SPAWNS, i);
+		integer valid = TRUE;
+		
+		// Quick filter
+		if( filterField == -1 ){
+			
+			string fd0 = llToLower(join(split(j(row, SpawnerConst$E_NAME), " "), "_"));
+			string fd1 = llToLower(join(split(j(row, SpawnerConst$E_GROUP), " "), "_"));
+			valid = ~llSubStringIndex(fd0, filter) || ~llSubStringIndex(fd1, filter);
+		}
+		else if( filter ){
+						
+			// Quick filter
+			// Escape space with underscore
+			string fd = llGetSubString(j(row, filterField), 0, filterLen);
+			fd = join(split(fd, " "), "_");
+			valid = (filter == llToLower(fd));
+			
+		}
+		
+		if( valid ){
+			llOwnerSay("["+(str)i+"] "+row);
+			++found;
+		}
+	}
 
 end
 
@@ -216,35 +147,20 @@ handleOwnerMethod( SpawnerMethod$setSpawnValue )
 	int param = argInt(1);
 	string desc = argStr(2);
 	
-    integer index;
-    integer i;
-    for( ; i < count(ASSET_TABLES); ++i ){
-        
-        list data = getTableData(l2i(ASSET_TABLES, i));
-        // The object is in this table
-        if( index+count(data) > targ ){
-            
-            integer de = targ-index;
-			
-			llOwnerSay("Updating ("+(str)(index+i)+") "+l2s(data, de)+" field "+(str)param+" with '"+desc+"'");
-			
-			// Get object settings
-			list settings = llJson2List(l2s(data, de));
-			settings = llListReplaceList(settings, (list)desc, param, param);
-			
-			
-			data = llListReplaceList(data, (list)mkarr(settings), de, de);
-            setTableData(l2i(ASSET_TABLES, i), data);
-            
-            return;
-            
-        }
-        index += count(data);
-        
-    }
-    
-    llOwnerSay("Object not found");
-    
+	integer max = idbGetIndex(idbTable$SPAWNS);
+	if( targ >= max || targ < 0 ){
+		
+		llOwnerSay("Unable to modify: Index out of bounds.");
+		return;
+		
+	}
+	
+	
+	string cur = idbGetByIndex(idbTable$SPAWNS, targ);
+	list set = llJson2List(cur);
+	set = llListReplaceList(set, (list)desc, param, param);
+	llOwnerSay("["+(str)targ+"]\nPre: "+cur+"\nPost: "+mkarr(set));
+	idbSetByIndex(idbTable$SPAWNS, targ, mkarr(set));
 
 end
 
@@ -257,9 +173,7 @@ end
 
 handleOwnerMethod( SpawnerMethod$purge )
 
-    integer i;
-    for( ; i < count(ASSET_TABLES); ++i )
-        setTableData(l2i(ASSET_TABLES, i), []);
+    idbDropInline(idbTable$SPAWNS);
     llOwnerSay("Purge complete");
     
 end
@@ -268,30 +182,16 @@ end
 handleOwnerMethod( SpawnerMethod$delete )
     
     integer delIndex = argInt(0);
-
-    
-    integer index;
-    integer i;
-    for( ; i < count(ASSET_TABLES); ++i ){
-        
-        list data = getTableData(l2i(ASSET_TABLES, i));
-        // The object is in this table
-        if( index+count(data) > delIndex ){
-            
-            integer de = delIndex-index;
-			
-			llOwnerSay("Object deleted: "+l2s(data, de));
-            
-            data = llDeleteSubList(data, de, de);
-            setTableData(l2i(ASSET_TABLES, i), data);
-            return;
-            
-        }
-        index += count(data);
-        
-    }
-    
-    llOwnerSay("Object not found");
+    integer max = idbGetIndex(idbTable$SPAWNS);
+	if( delIndex >= max || delIndex < 0 ){
+		
+		llOwnerSay("Unable to delete: Index out of bounds.");
+		return;
+		
+	}
+	
+	string cur = idbGetByIndex(idbTable$SPAWNS, delIndex);
+	llOwnerSay("Spawn deleted ["+(str)delIndex+"]: "+cur);
     
 end
 
@@ -317,22 +217,25 @@ handleOwnerMethod( SpawnerMethod$add )
         SAVE_ROUND
     );
     
-    integer i;
-    for( ; i < count(ASSET_TABLES); ++i ){
-        
-        list data = getTableData(l2i(ASSET_TABLES, i));
-        if( llStringLength(mkarr(data))+llStringLength(saveData)+8 <= TABLE_SIZE ){
-            
-            data += saveData;
-            setTableData(l2i(ASSET_TABLES, i), data);
-            ++SAVE_NR;
-            return;
-            
-        }
-        
-    }
+	// First off, find an empty slot to put it in
+	int max = idbGetIndex(idbTable$SPAWNS);
+	integer i; integer out = -1;
+	for(; i < max && out == -1; ++i ){
+		
+		if( idbGetByIndex(idbTable$SPAWNS, i) == "" ){
+
+			out = i;
+			idbSetByIndex(idbTable$SPAWNS, i, saveData);
+			
+		}
+		
+	}
 	
-	qd("Error: out of DB space");
+	// No free slot, INSERT new
+	if( out == -1 )
+		out = idbInsert(idbTable$SPAWNS, saveData);
+	
+	llOwnerSay("Insert ["+(str)out+"]: "+saveData);
 
 end
 
@@ -345,30 +248,13 @@ handleMethod( SpawnerMethod$nFromGroup )
 		
 	str group = argStr(1);
 	list batch; integer i;
-	for( ; i < count(ASSET_TABLES); ++i ){
-		list data = getTableData(l2i(ASSET_TABLES, i));
+	idbForeach(idbTable$SPAWNS, idx, data)
 		
-		integer idx;
-        for( ; idx < count(data); ++idx ){
-            
-            list spawn = llJson2List(l2s(data, idx));
-            if( l2s(spawn, 4) == group ){
-			
-				list data = [
-					l2s(spawn, E_NAME),
-                    (llGetRootPosition()+(vector)l2s(spawn, E_POS)), 
-                    l2s(spawn, E_ROT),
-                    l2s(spawn, E_DESC),
-                    l2s(spawn, E_GROUP), 
-                    true
-				];
-				batch += mkarr(data);
-				
-			}
-            
-        }
-		
-	}
+		list spawn = llJson2List(data);
+		if( l2s(spawn, 4) == group )
+			batch += getBatchData(spawn, TRUE);
+	
+	end
 	
 	Rezzer$rezMulti( 
 		LINK_THIS, 
@@ -391,41 +277,27 @@ handleOwnerMethod( SpawnerMethod$load )
 	raiseEvent(SpawnerEvt$loadStart, cb + live + METHOD_ARGS);
 	
 	list batch;
-    integer i;
-    for( ; i < count(ASSET_TABLES); ++i ){
-        
-        list data = getTableData(l2i(ASSET_TABLES, i));
-        integer idx;
-        for( ; idx < count(data); ++idx ){
-            
-            list spawn = llJson2List(l2s(data, idx));
-            if( ~llListFindList(METHOD_ARGS, (list)l2s(spawn, 4)) ){
+	idbForeach(idbTable$SPAWNS, idx, data)
+	
+		list spawn = llJson2List(data);
+		if( ~llListFindList(METHOD_ARGS, (list)l2s(spawn, 4)) ){
+		
+			batch += getBatchData(spawn, live);
 			
-				list data = [
-					l2s(spawn, E_NAME),
-                    (llGetRootPosition()+(vector)l2s(spawn, E_POS)), 
-                    l2s(spawn, E_ROT),
-                    l2s(spawn, E_DESC),
-                    l2s(spawn, E_GROUP), 
-                    live
-				];
-				batch += mkarr(data);
-				
-				if( count(batch) > 10 ){
-				
-					Rezzer$rezMulti( 
-						LINK_THIS, 
-						batch
-					);
-					batch = [];
-				
-				}
-				
+			if( count(batch) > 10 ){
+			
+				Rezzer$rezMulti( 
+					LINK_THIS, 
+					batch
+				);
+				batch = [];
+			
 			}
-            
-        }
-        
-    }
+			
+		}
+		
+	end
+
 	
 	if( count(batch) )
 		Rezzer$rezMulti(LINK_THIS, batch);
@@ -441,35 +313,17 @@ handleOwnerMethod( SpawnerMethod$spawnByIndex )
     
     integer live = argInt(0);
     METHOD_ARGS = llDeleteSubList(METHOD_ARGS, 0, 0);
-    	
-	integer I;
-    integer i;
-    for( ; i < count(ASSET_TABLES); ++i ){
-        
-        list data = getTableData(l2i(ASSET_TABLES, i));
-        integer idx;
-        for( ; idx < count(data); ++idx ){
-            
-            list spawn = llJson2List(l2s(data, idx));
-            if( ~llListFindList(METHOD_ARGS, (list)I) ){
-			
-                Rezzer$rez( 
-                    LINK_THIS, 
-                    l2s(spawn, E_NAME),
-                    (llGetRootPosition()+(vector)l2s(spawn, E_POS)), 
-                    l2s(spawn, E_ROT),
-                    l2s(spawn, E_DESC),
-                    l2s(spawn, E_GROUP), 
-                    live
-                );
-			}
-			
-			++I;
-            
-        }
-        
-    }
     
+	integer i; list batch;
+	for(; i < count(METHOD_ARGS); ++i ){
+	
+		list spawn = llJson2List(idbGetByIndex(idbTable$SPAWNS, l2i(METHOD_ARGS, i)));
+		batch += getBatchData(spawn, live);
+			
+	}
+	
+	if( count(batch) )
+		Rezzer$rezMulti(LINK_THIS, batch);
 
 end
 
@@ -477,38 +331,6 @@ end
 handleOwnerMethod( SpawnerMethod$fetchFromHud )
 	fetchAssets();
 end
-
-
-handleInternalMethod( SpawnerMethod$getGroups )
-	
-	str callback = argStr(0);
-	METHOD_ARGS = llDeleteSubList(METHOD_ARGS, 0, 0);
-	
-	list out;
-	integer x;
-	integer i;
-    for( ; i < count(ASSET_TABLES); ++i ){
-        
-        list data = getTableData(l2i(ASSET_TABLES, i));
-        integer idx;
-        for( ; idx < count(data); ++idx ){
-            
-            list spawn = llJson2List(l2s(data, idx));
-            if( ~llListFindList(METHOD_ARGS, (list)l2s(spawn, E_GROUP)) ){
-				out += mkarr(spawn + x);
-			}
-			
-			++x;
-			
-        }
-        
-    }
-	
-	raiseEvent(SpawnerEvt$getGroups, callback + out);
-
-end
-
-
 
 handleOwnerMethod( SpawnerMethod$savePortals )
 

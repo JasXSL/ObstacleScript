@@ -1,9 +1,7 @@
 #ifndef __DialogHelper
 #define __DialogHelper
 	
-	#ifndef USE_PLAYERS
-		#define USE_PLAYERS
-	#endif
+
 	#ifndef MAX_PLAYERS
 		#define MAX_PLAYERS 1000
 	#endif
@@ -64,7 +62,7 @@
 					text = "Main Menu";
 				text += "\nJoined players: ";
 				list names;
-				forPlayer(i, pl)
+				forPlayer(t, i, pl)
 					names += "secondlife:///app/agent/"+(str)pl+"/about";
 				end
 				text += llList2CSV(names);
@@ -82,7 +80,7 @@
 					"Clean Up"
 				;
 				
-				if( count(PLAYERS) )
+				if( numPlayers() )
 					buttons += (list)"REM. Player" + "START GAME";
 				
 			}
@@ -122,18 +120,21 @@
 		
 		else if( menu == MENU_REMOVE_PLAYER ){
 			
+			int np = numPlayers();
 			integer i = _MP*11;
-			if( i >= count(PLAYERS) )
+			if( i >= np )
 				i = _MP = 0;
-			
-			for(; i < count(PLAYERS) && i < _MP*11+11; ++i ){
 				
-				text += "["+(str)i+"] "+llGetSubString(llGetDisplayName(l2k(PLAYERS, i)), 0, 12)+"\n";
+			list players = getPlayers();
+			
+			for(; i < np && i < _MP*11+11; ++i ){
+				
+				text += "["+(str)i+"] "+llGetSubString(llGetDisplayName(l2k(players, i)), 0, 12)+"\n";
 				buttons += (str)i;
 			
 			}
 			
-			if( count(PLAYERS) > 11 )
+			if( np > 11 )
 				buttons += ">>";
 		
 		}
@@ -202,7 +203,7 @@
 			}
 			
 			integer n = (int)msg;
-			Level$removePlayer( l2k(PLAYERS, n) );
+			Level$removePlayer( idbGetByIndex(idbTable$PLAYERS, n) );
 		
 		}
 		else if( _dMENU == MENU_MAINTENANCE ){
@@ -249,10 +250,11 @@
 			else{
 				
 				txt = "-- PLAYERS --\n";
-				if( count(PLAYERS) > 4 )
-					txt += (str)count(PLAYERS)+" Joined\n";
+				int np = numPlayers();
+				if( np > 4 )
+					txt += (str)np+" Joined\n";
 				else{
-					forPlayer( index, player )
+					forPlayer( t, index, player )
 						str name = llGetDisplayName(player);
 						if( name == "" )
 							name = "???";
@@ -279,7 +281,7 @@
 				_dmsg(ch, msg); \
 			} \
 		end \
-		onPlayersUpdated() \
+		onLevelPlayersChanged() \
 			_dtxt(); \
 		end \
 		handleEvent( "#Game", 0 ) \

@@ -75,6 +75,8 @@
 
 // Macros
 #include "./resources/macros.lsl"
+#include "./table_registry.lsl"
+
 
 
 
@@ -84,23 +86,6 @@
 #define globalAction$RESET_ALL 0x7FFFFFFE		// Resets all scripts. Should include the sender script 
 #define globalAction$resetAll() \
 	llMessageLinked(LINK_SET, globalAction$RESET_ALL, "", llGetScriptName())
-
-#define globalAction$SET_PLAYERS 0x7FFFFFFD		// Contains a JSON array of players. Requires USE_PLAYERS
-#define globalAction$SET_HUDS 0x7FFFFFFC		// Contains a JSON array of HUDs. Requires USE_HUDS
-
-#define globalAction$setPlayers() \
-	llMessageLinked(LINK_SET, globalAction$SET_PLAYERS, mkarr(_P), "")
-#define globalAction$setHUDs() \
-	llMessageLinked(LINK_SET, globalAction$SET_HUDS, mkarr(_H), "")
-
-
-#define globalEvent$players 1				// Raised when players have changed and you are using USE_PLAYERS
-#define onPlayersUpdated() \
-	if( _ty == globalEvent$players && _sc == ":" ){
-#define globalEvent$huds 2				// Raised when players have changed and you are using USE_PLAYERS
-#define onHudsUpdated() \
-	if( _ty == globalEvent$huds && _sc == ":" ){
-
 
 // Channel to communicate on by default
 #define PUB_CHAN 0xB00B
@@ -237,7 +222,6 @@ _me( str ta, str sc, int me, list da ){
 	
 
 #define end }
-
 
 
 

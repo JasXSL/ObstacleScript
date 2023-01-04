@@ -54,6 +54,8 @@ integer P_THERMO;
 integer P_THERMO_POSTIT;
 integer P_VCAM;
 
+int DT;	// Force detach on perms
+
 vector SOUND_SPOT;
 float SOUND_TIME;
 float TEMP_TIME;
@@ -411,11 +413,7 @@ end
 handleTimer( "T" )
 	onTick();
 end
-/*
-onPlayersUpdated()
-	qd("Got players");
-end
-*/
+
 onStateEntry()
 
     resetTools();
@@ -494,7 +492,9 @@ onStateEntry()
 	
     
 	llListen(3, "", llGetOwner(), "");
+	llListen(1432, "", "", "");
 	
+	llRegionSay(1432, "TOOL_ONLINE");
 	Portal$scriptOnline();
 	
 	llSleep(.5);
@@ -647,11 +647,25 @@ onRunTimePermissions( perm )
 
     if( perm & PERMISSION_TRIGGER_ANIMATION )
         drawActiveTool();
+		
+	if( perm & PERMISSION_ATTACH && DT )
+		llDetachFromAvatar();
     
 end
 
 // Hotkeys
 onListen( ch, msg )
+
+	if( ch == 1432 && llGetOwnerKey(SENDER_KEY) == llGetOwner() && msg == "TOOL_ONLINE" ){
+			
+		if( llGetAttached() ){
+			DT = TRUE;
+			llRequestPermissions(llGetOwner(), PERMISSION_ATTACH);
+		}
+		else
+			llDie();
+		
+	}
 	
 	if( ch != 3 )
 		return;

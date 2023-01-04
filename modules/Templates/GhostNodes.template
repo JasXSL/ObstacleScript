@@ -21,7 +21,6 @@
 */
 #define USE_STATE_ENTRY
 #define USE_TIMER
-#define USE_PLAYERS
 #include "ObstacleScript/resources/SubHelpers/GhostHelper.lsl"
 #include "ObstacleScript/index.lsl"
 
@@ -324,36 +323,6 @@ setGhostTemp( int roomIndex, float val ){
 
 #include "ObstacleScript/begin.lsl"
 
-// Caching from the spawner
-onSpawnerGetGroups( callback, spawns )
-    
-    list rindex = llList2ListStrided( ROOMS, 0, -1, ROOMS_STRIDE );
-    if( callback == "init" ){
-        integer i;
-        for(; i < count(spawns); ++i ){
-            
-            string spawn = l2s(spawns, i);
-            string label = j(spawn, 3 + 1);
-            
-            integer pos = llListFindList(rindex, (list)label);
-            if( pos == -1 )
-                qd("Warn" + label + "room index not found");
-            ROOM_MARKERS += (list)
-                pos +
-                (vector)j(spawn, 1) +
-                (rotation)j(spawn, 2) +
-                (vector)j(spawn, 3 + 0) // Note: 3 + 0 is array [3, 0]
-            ;
-            
-        }
-        
-        //qd("Cached" + count(ROOM_MARKERS)/4 + "Markers");
-        
-    }
-
-end
-
-
 onLevelCustomSpiritBoxTrigger( spiritBox ) 
 	
 	integer success = TRUE;
@@ -373,15 +342,13 @@ onLevelCustomSpiritBoxTrigger( spiritBox )
 		else{
 		
 			int nrPlayers;
-			integer i;
-			for(; i < count(PLAYERS); ++i ){
-				
-				key t = l2k(PLAYERS, i);
+			forPlayer(tot, i, t)
+			
 				str pl = getPosReadable(prPos(t));
 				if( pl == room && ~llGetAgentInfo(t) & AGENT_SITTING )
 					++nrPlayers;
 			
-			}
+			end
 			
 			if( nrPlayers < 1 )
 				nrPlayers = 1;
@@ -416,10 +383,34 @@ end
 onStateEntry()
 
 	rezPos = llGetPos();
-    // Get room markers
-    Spawner$getGroups("init", "rooms");
+	
+	// Gets room indexes
+	list rindex = llList2ListStrided( ROOMS, 0, -1, ROOMS_STRIDE );
+	// Iterate the spawn table
+	idbForeach(idbTable$SPAWNS, idx, data)
+		
+		list spawn = llJson2List(data);
+		if( l2s(spawn, SpawnerConst$E_GROUP) == "rooms" ){
+		
+            string label = j(l2s(spawn, SpawnerConst$E_DESC), 1); // Room label is stored as second param of desc
+            
+            integer pos = llListFindList(rindex, (list)label);
+            if( pos == -1 )
+                qd("Warn" + label + "room index not found");
+            ROOM_MARKERS += (list)
+                pos +	// index of stride slice
+                (vector)l2s(spawn, SpawnerConst$E_POS) +
+                (rotation)l2s(spawn, SpawnerConst$E_ROT) +
+                (vector)j(l2s(spawn, SpawnerConst$E_DESC), 0) // Size
+            ;
+	
+		}
+		
+	end
+	
+	qd("Cached" + count(ROOM_MARKERS)/4 + "Markers");
+
     
-	PLAYERS = [(str)llGetOwner()];
 	resetTempData();
 	setInterval("TICK", 10);
 	setInterval("POS", 1);
@@ -443,7 +434,7 @@ handleTimer( "POS" )
 		}
 		
 		int playersInGhostRoom;
-		forPlayer( idx, player )
+		forPlayer( t, idx, player )
 			
 			if( getPosReadable(prPos(player)) == room )
 				++playersInGhostRoom;
@@ -558,7 +549,7 @@ handleEvent( "#Game", 0 )
     }	
 	else if( type == "CTH" ){
 		
-		forPlayer( idx, player )
+		forPlayer( t, idx, player )
 			
 			// Lazy way of checking if player is dead
 			if( getPosRoom(prPos(player)) != "" && ~llGetAgentInfo(player) & AGENT_SITTING ){
@@ -669,7 +660,7 @@ handleTimer( "TICK" )
 		}
 		
 	}
-	int npl = count(PLAYERS);
+	int npl = numPlayers();
 	float multi = 1.0+(npl-1)*.2;	// 20% faster arousal per player above 1
 	if( multi > 1.4 )
 		multi = 1.4;
@@ -682,7 +673,7 @@ handleTimer( "TICK" )
 			
 		float amt;	// Start at 0 in case player is outdoors
 		
-		key player = l2k(PLAYERS, i);
+		key player = idbGetByIndex(idbTable$PLAYERS, i);
 		str plRoom = getPosReadable(prPos(player));
 		// Player is inside a room in the house
 		if( plRoom != "" ){

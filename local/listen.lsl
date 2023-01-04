@@ -33,7 +33,7 @@
 			if( ch == PUB_CHAN ){ \
 				 \
 				str o = llGetOwnerKey(SENDER_KEY); \
-				if( ~llListFindList(PLAYERS+COM_ADDITIONAL, (list)o) || o == llGetOwner() ){ \
+				if( isPlayer(o) ){ \
 					\
 					list parse = llJson2List(msg); \
 					sendLinkMessage( LINK_SET, l2s(parse, 0), os$lmtype$method, l2i(parse, 1)&0xFF, llJson2List(l2s(parse, 2)), SENDER_KEY ); \

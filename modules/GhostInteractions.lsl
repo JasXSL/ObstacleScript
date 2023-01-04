@@ -1,7 +1,6 @@
 #define USE_STATE_ENTRY
 #define USE_SENSOR
 #define USE_NO_SENSOR
-#define USE_PLAYERS
 #define USE_HUDS
 #define USE_TIMER
 #include "ObstacleScript/resources/SubHelpers/GhostHelper.lsl"
@@ -43,7 +42,7 @@ integer isInteractive( key id ){
 		
 		// GHOST BEHAVIOR :: Gooryo - Don't touch hots if a player is within 4m
 		vector g = llGetPos();
-		forPlayer(i, k)
+		forPlayer(t,i,k)
 			if( llVecDist(g, prPos(k)) < 4 && ~llGetAgentInfo(k) & AGENT_SITTING )
 				return -1;
 		end
@@ -152,7 +151,7 @@ interactPlayer( key hud, int power ){
         
     }
     
-	llOwnerSay("Interacting " + llKey2Name(hud) + " anim " + anim);
+	//llOwnerSay("Interacting " + llKey2Name(hud) + " anim " + anim);
     AnimHandler$anim(
         hud, 
         anim, 
@@ -219,7 +218,7 @@ stripPlayer( key targ, integer slot ){
 
 triggerParabolic( vector pos, integer sound ){
 
-	forPlayer( idx, targ )
+	forPlayer( t, idx, targ )
 		ToolSet$trigger( targ, ToolsetConst$types$ghost$parabolic, pos + sound );
 	end
 	
@@ -230,7 +229,7 @@ int getGhostPower(){
 	float max = 2;
 	// GHOST BEHAVIOR :: EHEE - Higher chance of strong EMF
 	if( GHOST_TYPE == GhostConst$type$ehee )
-		max = 3;	// Higher chance of a strong EMF
+		max = 4;	// Higher chance of a strong EMF
 	return llFrand(max) > 1;
 	
 }
@@ -298,11 +297,6 @@ onStateEntry()
     llSensorRepeat("", "", ACTIVE|PASSIVE, 6, PI, 1);
 	
 	Portal$scriptOnline();
-	/*
-	#ifdef FETCH_PLAYERS_ON_COMPILE
-	Level$forceRefreshPortal();
-    #endif
-	*/
 	//qd(llGetUsedMemory());
     
 end
@@ -478,11 +472,13 @@ handleOwnerMethod( GhostInteractionsMethod$interact )
 	if( (!hasStrongAffix(ToolSetConst$affix$reqMotionSensor) && !hasStrongAffix(ToolSetConst$affix$vibrator)) || BFL&BFL_HUNTING ){
 		
 		if( llFrand(1.0) < playerChance ){
+		
+			list huds = getHuds();
 			
 			if( debug )
 				llOwnerSay("Rolled player");
 		
-			forPlayer( index, player )
+			forPlayer( t, index, player )
 				
 				myAngX(player, ang)
 				bool isFacingAway = llFabs(ang) > PI_BY_TWO;
@@ -496,7 +492,7 @@ handleOwnerMethod( GhostInteractionsMethod$interact )
 				
 				if( llVecDist(prPos(player), gp) < range && ~llGetAgentInfo(player) & AGENT_SITTING ){
 					
-					key hud = l2k(HUDS, index);
+					key hud = l2k(huds, index);
 					int genitals = Rlv$getDesc$sex( hud );
 					if( 
 						// GHOST BEHAVIOR :: yaoikai - Male preference
@@ -516,13 +512,13 @@ handleOwnerMethod( GhostInteractionsMethod$interact )
 			targ = randElem(viable);	// Handled at the end through onGhostTouch
 				
 			// Touch player
-			integer pos = llListFindList(PLAYERS, (list)((str)targ));
+			integer pos = llListFindList(getPlayers(), (list)((str)targ));
 			if( debug )
 				llOwnerSay("Touching player " + llGetDisplayName(targ) + (str)pos);
 				
 			if( ~pos ){
 			
-				key hud = l2k(HUDS, pos);
+				key hud = l2k(huds, pos);
 				//qd(HUDS);
 				int clothes = Rlv$getDesc$clothes( hud )&1023;	// 1023 = 10 bit
 				float cc = 0.15;
@@ -540,7 +536,7 @@ handleOwnerMethod( GhostInteractionsMethod$interact )
 					
 					// GHOST BEHAVIOR :: Stringoi - Leave orbs behind for 5 min when stripping a player
 					if( GHOST_TYPE == GhostConst$type$stringoi ){
-						forPlayer( i, k )
+						forPlayer( t, i, k )
 						
 							Gui$setOrbs( k, llGetPos(), 600 );
 							

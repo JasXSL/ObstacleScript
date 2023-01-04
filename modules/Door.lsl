@@ -1,5 +1,4 @@
 #define USE_STATE_ENTRY
-#define USE_PLAYERS
 #define USE_INTERACT
 #define USE_TIMER
 #define USE_LISTEN

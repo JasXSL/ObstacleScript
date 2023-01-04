@@ -3,7 +3,6 @@
 #define USE_TOUCH_START
 #define USE_LISTEN
 #define USE_TIMER
-#define USE_PLAYERS
 #define USE_HUDS
 #define USE_CHANGED
 #define SCRIPT_IS_PLAYER_MANAGER
@@ -16,26 +15,28 @@ integer BFL;
 list INVITES;   // key player, int time
 list WAITING_SCRIPTS;
 
-int MAX_PLAYERS = 1000;
+int MAX_PLAYERS = 64;
 
 updateOwnerPlayers(){
-	Com$players( llGetOwner(), PLAYERS );
-	Com$huds( llGetOwner(), HUDS );
+	Com$players( llGetOwner(), getPlayers() );
+	Com$huds( llGetOwner(), getHuds() );
 }
 
 updatePlayers(){
     
-    globalAction$setPlayers();  
-	globalAction$setHUDs();  
 	
-    forPlayer( i, player )
-        Com$players( player, PLAYERS );
-		Com$huds( player, HUDS );
+	list players = getPlayers();
+	list huds = getHuds();
+    forPlayer( t, i, player )
+        Com$players( player, players );
+		Com$huds( player, huds );
     end
 	
-	if( llListFindList(PLAYERS, [(str)llGetOwner()]) == -1 )
+	if( llListFindList(players, [(str)llGetOwner()]) == -1 )
 		updateOwnerPlayers();
 
+	raiseEvent(LevelEvt$playersChanged, []);
+	raiseEvent(LevelEvt$hudsChanged, []);
 	// The HUDs update portals, since portals will only fetch users from the owner
 	
 }
@@ -106,11 +107,12 @@ onStateEntry()
 	
 end
 
+// I'm not quite sure why this is needed. I wish past me could have left a note.
 onChanged( ch )
 	
 	llSleep(1);
-	globalAction$setPlayers();  
-	globalAction$setHUDs();  
+	raiseEvent(LevelEvt$playersChanged, []);
+	raiseEvent(LevelEvt$hudsChanged, []);
 	
 end
 
@@ -130,15 +132,15 @@ onListen( ch, msg )
         if( method == LevelMethod$acceptInvite ){
             
 			key owner = llGetOwnerKey(SENDER_KEY);
-			integer pos = llListFindList(PLAYERS, [(str)owner]);
+			integer pos = llListFindList(getPlayers(), [(str)owner]);
 			
 			if( BFL & BFL_GAME_ACTIVE && pos == -1 )
 				return;
             
 			
+			list players = getPlayers();
 			
-			
-			if( count(PLAYERS) >= MAX_PLAYERS && pos == -1 ){
+			if( count(players) >= MAX_PLAYERS && pos == -1 ){
 				llRegionSayTo(llGetOwnerKey(SENDER_KEY), 0, "Game is full");
 				return;
 			}
@@ -148,7 +150,7 @@ onListen( ch, msg )
                 
 				
                 float time = l2f(INVITES, invPos+1);
-                if( time+60 < llGetTime() && llListFindList(PLAYERS, [(str)owner]) == -1 )
+                if( time+60 < llGetTime() && llListFindList(players, [(str)owner]) == -1 )
                     llRegionSayTo(llGetOwnerKey(SENDER_KEY), 0, "Invite timed out, ask for a new one!");
                 else{
 				
@@ -156,14 +158,14 @@ onListen( ch, msg )
 					
 					if( pos == -1 ){
 					
-						PLAYERS += (str)owner;
-						HUDS += (str)SENDER_KEY;
+						idbInsert(idbTable$PLAYERS, owner);
+						idbInsert(idbTable$HUDS, SENDER_KEY);
 						
 					}
 					// Player already in the game, but we need to update their HUD
 					else{
 						
-						HUDS = llListReplaceList(HUDS, (list)((str)SENDER_KEY), pos, pos);
+						idbSetByIndex(idbTable$HUDS, pos, SENDER_KEY);
 						
 					}
 					
@@ -187,7 +189,7 @@ onListen( ch, msg )
 				updateOwnerPlayers();
 			
 			
-			int pos = llListFindList(PLAYERS, [(str)owner]);
+			int pos = llListFindList(getPlayers(), [(str)owner]);
 			if( BFL & BFL_GAME_ACTIVE && pos == -1 )
 				return;
 		
@@ -215,14 +217,10 @@ onTouchStart( total )
         return;
         
     
-    integer pos = llListFindList(PLAYERS, (list)targ);
-    if( ~pos ){
+    if( isPlayer(targ) ){
 	
 		/* Todo: menu to leave game
-			PLAYERS = llDeleteSubList(PLAYERS, pos, pos);
-			HUDS = ...
-			updatePlayers();
-			llSay(0, "secondlife:///app/agent/"+targ+"/about has left the game.");
+			
 		*/
 		
     }
@@ -237,12 +235,12 @@ end
 // Method
 handleInternalMethod( LevelMethod$resetPlayers )
     
-	forPlayer( index, player )
+	forPlayer( t, index, player )
 		Com$uninvite( player );
 	end
 	
-    PLAYERS = [];
-	HUDS = [];
+	idbResetIndex(idbTable$PLAYERS);
+	idbResetIndex(idbTable$HUDS);
     updatePlayers();
     
 end
@@ -262,7 +260,10 @@ handleInternalMethod( LevelMethod$invite )
     string player = llToLower(argStr(0));
 	MAX_PLAYERS = argInt(1);
 	if( MAX_PLAYERS < 1 )
-		MAX_PLAYERS = 1000;
+		MAX_PLAYERS = 64;
+		
+	list players = getPlayers();
+	int nrPlayers = count(players);
 	
     integer l = AGENT_LIST_PARCEL;
     float DIST = 30;
@@ -278,7 +279,7 @@ handleInternalMethod( LevelMethod$invite )
     if( player == "" )
         return;
     
-	int nrInvites = MAX_PLAYERS-count(PLAYERS);
+	int nrInvites = MAX_PLAYERS-nrPlayers;
 	if( nrInvites < 1 ){
 		qd("Error, trying to invite more than max players allow");
 		return;
@@ -290,7 +291,7 @@ handleInternalMethod( LevelMethod$invite )
         
         string pl = l2s(all, i);
         // Not already joined
-        if( llListFindList(PLAYERS, (list)pl) == -1 ){
+        if( llListFindList(players, (list)pl) == -1 ){
             
             integer len = llStringLength(player);
             string name = llGetSubString(
@@ -330,13 +331,27 @@ handleInternalMethod( LevelMethod$removePlayer )
 	
 	if( BFL&BFL_GAME_ACTIVE )
 		return;
-		
-	integer pos = llListFindList(PLAYERS, (list)argStr(0));
+	
+	list players = getPlayers();
+	integer pos = llListFindList(players, (list)argStr(0));
 	if( pos == -1 )
 		return;
-		
-	PLAYERS = llDeleteSubList(PLAYERS, pos, pos);
-	HUDS = llDeleteSubList(HUDS, pos, pos);
+	list huds = getHuds();
+	
+	players = llDeleteSubList(players, pos, pos);
+	huds = llDeleteSubList(huds, pos, pos);
+	
+	// Reindex players
+	integer i;
+	for(; i < count(players); ++i )
+		idbSetByIndex(idbTable$PLAYERS, i, l2s(players, i));
+	idbSetIndex(idbTable$PLAYERS, count(players));
+	
+	// Reindex huds
+	for( i = 0; i < count(huds); ++i )
+		idbSetByIndex(idbTable$HUDS, i, l2s(huds, i));
+	idbSetIndex(idbTable$HUDS, count(huds));
+	
 	Com$uninvite( argStr(0) );
 	updatePlayers();
 
@@ -352,7 +367,7 @@ end
 
 handleOwnerMethod( LevelMethod$updateAllHudAssets )
 
-	forPlayer( index, player )
+	forPlayer( t, index, player )
 		
 		LevelRepo$requestNewAssets( player );
 	

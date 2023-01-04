@@ -28,7 +28,6 @@
 
 // Include the basic stuff, allowing you to only include the ghosthelper in your code
 #define USE_STATE_ENTRY
-#define USE_PLAYERS
 #define USE_TIMER       
 #define USE_LISTEN          // Undefine this when not debugging to save memory
 #define USE_HUDS
@@ -240,7 +239,7 @@ addArousal( key player, float arousal ){
     }
 	
 	list arousals;
-    forPlayer( i, pl )
+    forPlayer( t, i, pl )
     
         float arousal = getPlayerArousal(pl);
         if( isPlayerDead(pl) || hasStrongAffix(ToolSetConst$affix$noArousalMonitor) )
@@ -260,7 +259,7 @@ float gnptgd( int reqLos ){
     
     vector ghost = prPos(GHOST);
     float dist = -1;
-    forPlayer( idx, pl )
+    forPlayer( t, idx, pl )
         
         vector pp = prPos(pl);
         float d = llVecDist(ghost, pp);
@@ -292,7 +291,7 @@ onToolsSpawned(){
 
     raiseEvent(0, "ROUND_START");
     ROUND_START_TIME = llGetTime();
-    forPlayer( index, player )
+    forPlayer( t, index, player )
         Rlv$unSit( player, TRUE );
     end
     GSETTINGS = GSETTINGS | GS_ROUND_STARTED;

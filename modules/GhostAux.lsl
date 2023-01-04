@@ -3,7 +3,6 @@
 #define USE_CHANGED
 #define USE_RUN_TIME_PERMISSIONS
 #define USE_LISTEN
-#define USE_PLAYERS
 #include "ObstacleScript/headers/Obstacles/Ghost/Ghost.lsh"
 #include "ObstacleScript/resources/SubHelpers/GhostHelper.lsl"
 #include "ObstacleScript/index.lsl"
@@ -130,7 +129,7 @@ bool isVoiceTalking( key player ){
 
 pickNewSucTarg(){
 	
-	list pl = llListRandomize(PLAYERS, 1);
+	list pl = llListRandomize(getPlayers(), 1);
 	integer i;
 	for(; i < count(pl); ++i ){
 		
@@ -212,7 +211,7 @@ bool hasActivityPhrase( str input ){
 toggleHeartbeat( bool on ){
 	
 	SEEN_PLAYERS = [];
-	forPlayer(idx, targ)
+	forPlayer(tot, idx, targ)
 		Rlv$stopLoopSound( targ );
 	end
 	
@@ -274,7 +273,7 @@ handleTimer( "TC" )
 		
 		vector gp = llGetPos();
 		// Check if a player is talking
-		forPlayer(idx, targ )
+		forPlayer(tot, idx, targ )
 			
 			vector pp = prPos(targ);
 			integer ai = llGetAgentInfo(targ);
@@ -303,7 +302,7 @@ end
 onListen( ch, msg )
 	
 	// Only listen to players
-	if( llListFindList(PLAYERS, [(str)SENDER_KEY]) == -1 || llGetAgentSize(SENDER_KEY) == ZERO_VECTOR )
+	if( llListFindList(getPlayers(), [(str)SENDER_KEY]) == -1 || llGetAgentSize(SENDER_KEY) == ZERO_VECTOR )
 		return;
 
 	// Send to Ghost for hunt talk detection
@@ -467,7 +466,7 @@ handleTimer( "HEART" )
 	
 	list found;
 	vector gp = llGetPos();
-	forPlayer( idx, targ )
+	forPlayer( tot, idx, targ )
 		
 		vector pp = prPos(targ);
 		list ray = llCastRay(gp, pp, RC_DEFAULT);

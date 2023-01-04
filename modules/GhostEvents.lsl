@@ -1,7 +1,6 @@
 #define USE_STATE_ENTRY
 #define USE_SENSOR
 #define USE_NO_SENSOR
-#define USE_PLAYERS
 #define USE_HUDS
 #define USE_TIMER
 #include "ObstacleScript/resources/SubHelpers/GhostHelper.lsl"
@@ -47,7 +46,7 @@ integer isInteractive( key id ){
 		
 		// GHOST BEHAVIOR :: Gooryo - Don't touch hots if a player is within 4m
 		vector g = llGetPos();
-		forPlayer(i, k)
+		forPlayer(tot, i, k)
 			if( llVecDist(g, prPos(k)) < 4 && ~llGetAgentInfo(k) & AGENT_SITTING )
 				return -1;
 		end
@@ -214,7 +213,7 @@ handleOwnerMethod( GhostEventsMethod$trigger )
 	
 
 	key closest; float dist;
-	forPlayer(i,k)
+	forPlayer(t,i,k)
 		float d = llVecDist(llGetPos(), prPos(closest));
 		if( dist <= 0 || d < dist ){
 			
@@ -294,7 +293,7 @@ handleOwnerMethod( GhostEventsMethod$trigger )
 			
 			list targets;
 			vector gp = llGetPos();
-			forHuds( idx, k )
+			forHuds( tot, idx, k )
 				
 				list ray = llCastRay(gp, prPos(k), RC_DEFAULT);
 				if( l2i(ray, -1) == 0 && ~llGetAgentInfo(k) & AGENT_SITTING )

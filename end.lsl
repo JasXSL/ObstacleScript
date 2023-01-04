@@ -3,18 +3,11 @@
 
 default{
 	
-	
+	#ifdef USE_STATE_ENTRY
 	state_entry(){
-		#ifdef DEFAULT_PLAYERS
-			PLAYERS = DEFAULT_PLAYERS;
-		#endif
-		#ifdef DEFAULT_HUDS
-			HUDS = DEFAULT_HUDS;
-		#endif
-		
-	
 		onEvent(evt$STATE_ENTRY, "", "", []);
 	} 
+	#endif
 	
 	#ifdef USE_TIMER
 	timer(){_mt([]);}
@@ -41,25 +34,7 @@ default{
 		if( nr == globalAction$RESET_ALL && (str)id != llGetScriptName() )
 			llResetScript();
 			
-		#ifndef SCRIPT_IS_PLAYER_MANAGER
-			
-			if( nr == globalAction$SET_PLAYERS ){
-				#ifdef USE_PLAYERS
-				_P = llJson2List(s);
-				onEvent(globalEvent$players, ":", "", []);
-				#endif
-				return;
-			}
-			if( nr == globalAction$SET_HUDS ){
-				#ifdef USE_HUDS
-				_H = llJson2List(s);
-				onEvent(globalEvent$huds, ":", "", []);
-				#endif
-				return;
-			}
-			
-		#endif
-		
+
 		int type = (nr>>8)&3;
 		str ids = (string)id;
 		

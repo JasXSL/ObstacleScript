@@ -44,16 +44,13 @@ list GCONF;	// This is custom data passed from DialogHelper
 #define getPlayerDataFloat( id, index ) l2f(_gpd(id, index), 0)
 #define getPlayerDataKey( id, index ) l2k(_gpd(id, index), 0)
 
-
-#ifdef USE_PLAYERS
-
 	// Add this to your state entry handler
 	#define gameHelperStateEntry() \
 		//resetPlayerData(llGetOwner())
 		
 	#define gameHelperEventHandler() \
-		onPlayersUpdated() \
-			forPlayer( index, player ) \
+		onLevelPlayersChanged() \
+			forPlayer( tot, index, player ) \
 				if( llListFindList(PLAYER_DATA, (list)player) == -1 ){ \
 					 \
 					resetPlayerData(player); \
@@ -87,7 +84,7 @@ list GCONF;	// This is custom data passed from DialogHelper
 		end \
 		handleTimer( "_COUNTDOWN" ) \
 			ROUND_START_TIME = llGetTime(); \
-			forPlayer( index, player ) \
+			forPlayer( t, index, player ) \
 				Rlv$unSit( player, TRUE ); \
 			end \
 			GSETTINGS = GSETTINGS | GS_ROUND_STARTED; \
@@ -105,7 +102,7 @@ list GCONF;	// This is custom data passed from DialogHelper
 		handleTimer( "_WATER" ) \
 			vector gpos = llGetRootPosition(); \
 			if( GSETTINGS & GS_ROUND_STARTED ){ \
-				forPlayer( index, player ) \
+				forPlayer( t, index, player ) \
 					vector pos = prPos(player); \
 					if( pos.z < gpos.z+Z ){ \
 						warpPlayerToSurface( player, getPlayerCheckpoint(player), ZERO_ROTATION, TRUE ); \
@@ -164,7 +161,7 @@ list GCONF;	// This is custom data passed from DialogHelper
 	resetAllPlayers(){
 
 		PLAYER_DATA = [];
-		forPlayer( index, player )
+		forPlayer( t, index, player )
 			
 			resetPlayerData(player);
 		
@@ -181,7 +178,7 @@ list GCONF;	// This is custom data passed from DialogHelper
 		
 		Level$toggleGame(TRUE);
 		
-		forPlayer( idx, player )
+		forPlayer( t, idx, player )
 			setGameRestrictions(player);
 		end
 		onGameStart();
@@ -206,7 +203,7 @@ list GCONF;	// This is custom data passed from DialogHelper
 		ROUND_START_TIME = llGetTime();
 		onRoundStart();
 		
-		forPlayer( index, player )
+		forPlayer( t, index, player )
 			
 			Gui$startCountdown( player );
 		
@@ -255,10 +252,6 @@ list GCONF;	// This is custom data passed from DialogHelper
 			 \
 		end
 
-
-#else
-	#define gameHelperEventHandler() #error Please use USE_PLAYERS
-#endif
 
 
 #endif

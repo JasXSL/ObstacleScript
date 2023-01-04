@@ -1,7 +1,6 @@
 #define USE_STATE_ENTRY
 #define USE_ON_REZ
 #define USE_LISTEN
-#define USE_PLAYERS
 #define USE_HUDS
 #define USE_TIMER
 #define SCRIPT_IS_PLAYER_MANAGER
@@ -57,7 +56,7 @@ fetchSelf( bool noDeferred ){
 }
 // Raised when desc is gotten and scripts have loaded
 loadComplete(){
-    
+
 	if( BFL&BFL_GOT_SCRIPTS )
 		unsetTimer("SC");	// Stop retrying scripts
 
@@ -70,7 +69,8 @@ loadComplete(){
 	// Get players
 	Com$updatePortal();
 
-	llSetRegionPos(SPAWN_POS);
+	if( SPAWN_POS != ZERO_VECTOR )
+		llSetRegionPos(SPAWN_POS);
 	string descOut = DESC;
 	if( !PortalHelper$isLive() && descOut != "" )
 		descOut = "$"+descOut;
@@ -178,14 +178,22 @@ end
 
 handleOwnerMethod( PortalMethod$cbPlayers )
 
-	PLAYERS = METHOD_ARGS;
-	globalAction$setPlayers();
+	integer i;
+	for(; i < count(METHOD_ARGS); ++i )
+		idbSetByIndex(idbTable$PLAYERS, i, argStr(i));
+	idbSetIndex(idbTable$PLAYERS, count(METHOD_ARGS));
+	
+	raiseEvent(PortalEvt$playersChanged, []);
 	
 end
 handleOwnerMethod( PortalMethod$cbHUDs )
 
-	HUDS = METHOD_ARGS;
-	globalAction$setHUDs();
+	integer i;
+	for(; i < count(METHOD_ARGS); ++i )
+		idbSetByIndex(idbTable$HUDS, i, argStr(i));
+	idbSetIndex(idbTable$HUDS, count(METHOD_ARGS));
+	
+	raiseEvent(PortalEvt$hudsChanged, []);
 
 end
 handleOwnerMethod( PortalMethod$cbHost )
