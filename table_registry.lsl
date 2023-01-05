@@ -10,8 +10,10 @@
 */
 
 #define idbTable$SPAWNS " "			// char(32) - Owned by Spawner
-#define idbTable$PLAYERS "!"		// char(33) - Owned by Com / Portal
-#define idbTable$HUDS "\""			// char(34) - Owned by Com / Portal
+#define idbTable$PLAYERS "!"		// char(33) - Owned by Com / Level / Portal
+#define idbTable$HUDS "\""			// char(34) - Owned by Com / Level / Portal
+#define idbTable$TOOLS "#"			// char(35) - Owned by GhostTools.template. Note: This table isn't indexed, it uses idbTable$TOOLS+itemUUID
 
+// $&%'()*+,-./0123456789:;<=>?
 
 #endif

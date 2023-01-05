@@ -27,9 +27,17 @@ int BFL;
 #define BFL_HUNTING 0x1
 
 key GHOST;
-list spawnedTools = [];  // key tool, int type, key heldBy, var data
-#define STSTRIDE 4
 
+// use table idbTable$TOOLS. Not indexed, it instead uses idbTable$TOOLS+(str)assetUUID. Each row is a JSON array: int type, key heldBy, var data
+#define TOOL_TYPE 0
+#define TOOL_HELDBY 1
+#define TOOL_DATA 2
+
+// Get linksetdata keys starting with idbTable$TOOLS followed by exactly 36 characters
+#define getToolTableKeys() llLinksetDataFindKeys(idbTable$TOOLS+".{36}", 0, -1)
+#define forTool(...) OVERLOAD(forTool, __VA_ARGS__)
+#define forTool2(index, tool) list _k = getToolTableKeys(); integer index; for(; index < count(_k); ++index ){ str tool = llLinksetDataRead(l2s(_k,index));
+#define forTool3(index, uuid, tool) forTool2(index, tool) key uuid = llGetSubString(l2s(_k, index), 1,-1);
 
 // Gear is a 2-stride int list of (int)toolIndex, (int)amount
 // ToolIndex is defined in GhostHelper.lsl
@@ -80,7 +88,6 @@ spawnGear( list gear ){
             0.07, "Glowstick", 0, 3,
         ToolsetConst$types$ghost$videoCamera, 
             0.2, "VidCam", 0, 3
-        
     ];
     
     
@@ -188,30 +195,30 @@ spawnGear( list gear ){
 }
 
 destroyTool( key worldID ){
-    integer pos = llListFindList(spawnedTools, (list)worldID);
-    if( pos == -1 ){
-        qd("Destroyed tool not found");
-        return;
-    }
-    
-    key holder = l2k(spawnedTools, pos+2);
-    if( holder )
-        ToolSet$remTool( holder, worldID );
-    
-    Portal$kill(worldID);
-    spawnedTools = llDeleteSubList(spawnedTools, pos, pos+STSTRIDE-1);
+
+	str table = idbTable$TOOLS+(str)worldID;
+	str data = llLinksetDataRead(table);
+	if( data == "" ){
+		qd("Tool to destroy not found");
+		return;
+	}
+	
+	key holder = j(data, TOOL_HELDBY);
+	if( holder )
+		ToolSet$remTool( holder, worldID );
+	
+	Portal$kill(worldID);
+	llLinksetDataDelete(table);
+		
 }
 
 integer numToolsHeldBy( key id ){
     
     integer out;
-    integer i;
-    for(; i < count(spawnedTools); i += STSTRIDE ){
-        
-        if( l2k(spawnedTools, i+2) == id )
+	forTool(i, tool)
+        if( j(tool, TOOL_HELDBY) == id )
             ++out;
-        
-    }
+    end
     return out;
     
 }
@@ -220,19 +227,18 @@ integer numToolsHeldBy( key id ){
 list getActiveSensors(){
     
     list out;
-    integer i;
-    for(; i < count(spawnedTools); i += STSTRIDE ){
-        
-        if( 
+    forTool( index, uuid, tool )
+		
+		if( 
             // Is a motion detector
-            l2i(spawnedTools, i+1) == ToolsetConst$types$ghost$motionDetector &&
+            (int)j(tool, TOOL_TYPE) == ToolsetConst$types$ghost$motionDetector &&
             // Not held
-            l2k(spawnedTools, i+2) == "" &&
+            j(tool, TOOL_HELDBY) == "" &&
             // Active
-            l2i(spawnedTools, i+3)
-        )out += l2k(spawnedTools, i);
-        
-    }
+            (int)j(tool, TOOL_DATA)
+        )out += uuid;
+		
+	end
     return out;
     
 }
@@ -242,6 +248,7 @@ list getActiveSensors(){
 
 
 
+// Toggles truck doors
 int P_DR;  // Door right
 int P_DL;  // Door left
 float doorPerc;
@@ -308,21 +315,26 @@ toggleDoors( integer open ){
 dropTool( key obj, key worldID, vector tPos, rotation tRot ){
       
     key player = llGetOwnerKey(obj);
-    integer pos = llListFindList(spawnedTools, (list)worldID);
-    if( pos == -1 ){
+	string table = idbTable$TOOLS+(str)worldID;
+	string tool = llLinksetDataRead(table);
+	
+    if( tool == "" ){
         qd("Dropped tool not found");
         return;
     }
-    if( l2k(spawnedTools, pos+2) != player ){
-        qd("Invalid owner for drop of " + pos + obj);
-        qd(spawnedTools);
+	
+    if( j(tool, TOOL_HELDBY) != player ){
+		// Todo: Should probably force refresh target toolset
+        qd("Invalid owner for drop of " + llKey2Name(obj) + obj);
         return;
     }
     
     //qd("Successful drop for " + worldID + "held by" + obj);
-    int type = l2i(spawnedTools, pos+1);
-    spawnedTools = llListReplaceList(spawnedTools, (list)"", pos+2, pos+2);
-    GhostTool$dropped(worldID, tPos, tRot, llList2List(spawnedTools, pos+3, pos+3) );
+    int type = (int)j(tool, TOOL_TYPE);
+    tool = llJsonSetValue(tool, (list)TOOL_HELDBY, "");
+	llLinksetDataWrite(table, tool);
+	
+	GhostTool$dropped(worldID, tPos, tRot, j(tool, TOOL_DATA) );
     ToolSet$remTool( obj, worldID );
     updateSensors();    // Updates sensor names
     
@@ -370,13 +382,12 @@ onLevelCustomGtoolSpawned( tool )
     
     integer tn = l2i(toolNames, pos+1);
 
-    pos = llListFindList(spawnedTools, (list)tool);
-    if( ~pos )
+	string table = idbTable$TOOLS+(str)tool;
+	// This tool is already spawned
+	if( llLinksetDataRead(table) != "" )
         return;
 
-    spawnedTools += (list)tool + tn + "" + 0;
-
-    //qd(spawnedTools);
+	llLinksetDataWrite(table, mkarr(tn + "" + 0));
 
 end
 
@@ -401,15 +412,15 @@ end
 
 onLevelCustomGtoolData( sender, tooluuid, data )
     
-    integer pos = llListFindList(spawnedTools, (list)tooluuid);
-    if( pos == -1 ){
+	str table = idbTable$TOOLS+(str)tooluuid;
+	str tool = llLinksetDataRead(table);
+    if( tool == "" ){
         qd("Trying to update data on unknown tool ID" + tooluuid);
         return;
     }
     
-    
     if(
-        l2i(spawnedTools, pos+1) == ToolsetConst$types$ghost$saltpile && 
+        (int)j(tool, TOOL_TYPE) == ToolsetConst$types$ghost$saltpile && 
         (int)data == 1
     ){
         // GHOST BEHAVIOR :: Yuri - Smudge when stepping through salt
@@ -427,8 +438,8 @@ onLevelCustomGtoolData( sender, tooluuid, data )
         
     }
     
-    spawnedTools = llListReplaceList(spawnedTools, (list)data, pos+3, pos+3);
-    //qd("Data update" + spawnedTools);
+	tool = llJsonSetValue(tool, (list)TOOL_DATA, data);
+	llLinksetDataWrite(table, tool);
     
 end
 
@@ -440,14 +451,13 @@ end
 onLevelPlayersChanged()
     
 	list players = getPlayers();
-    integer i;
-    for(; i < count(spawnedTools); i += STSTRIDE ){
+	forTool(idx, uuid, tool)
+		
+		key t = j(tool, TOOL_HELDBY);
+		if( t != "" && llListFindList(players, [(str)t]) == -1 )
+            dropTool(t, uuid, ZERO_VECTOR, ZERO_ROTATION);
         
-        key t = l2k(spawnedTools, i+2);
-        if( t != "" && llListFindList(players, [(str)t]) == -1 )
-            dropTool(t, l2k(spawnedTools, i), ZERO_VECTOR, ZERO_ROTATION);
-        
-    }
+	end
     
 end
 
@@ -455,31 +465,29 @@ onStateEntry()
     
     toggleDoors(TRUE);
     doorPerc = 1.0; // Makes it instant
-    
     #ifdef DEBUG_SPAWN_GEAR
     spawnGear(DEBUG_SPAWN_GEAR);
     #endif
-                
+	//qd(llGetFreeMemory());
+		
 end
 
+// Player has requested their held tools
 onLevelCustomToolsetGet( toolsetuuid )
 
     key ok = llGetOwnerKey(toolsetuuid);
-    integer i;
-    for(; i < count(spawnedTools); i += STSTRIDE ){
-        
-        if( l2k(spawnedTools, i+2) == ok )
+	forTool( i, uuid, tool )
+		
+		if( j(tool, TOOL_HELDBY ) == ok )
             ToolSet$addTool( 
                 toolsetuuid, 
-                l2i(spawnedTools, i+1), 
-                l2s(spawnedTools, i+3), 
-                l2k(spawnedTools, i)
+                j(tool, TOOL_TYPE ), 
+                j(tool, TOOL_DATA ), 
+                uuid
             );
-        
-    }
+	
+	end
     
-    
-
 end
 
 onLevelCustomToolsetDestroy( worldID )
@@ -491,13 +499,15 @@ onLevelCustomToolsetDrop( obj, worldID, tPos, tRot )
     dropTool( obj, worldID, tPos, tRot);   
 end
 
+// Interacted with a tool (obstacle)
 onLevelInteractStarted( obstacle, tPos )
     
-    integer pos = llListFindList(spawnedTools, (list)obstacle);
-    if( pos == -1 )
+	string table = idbTable$TOOLS+(str)obstacle;
+	str tool = llLinksetDataRead(table);
+    if( tool == "" )
         return;
         
-    key holder = l2k(spawnedTools, pos+2);
+    key holder = j(tool, TOOL_HELDBY );
     if( holder )
         return;
         
@@ -505,14 +515,16 @@ onLevelInteractStarted( obstacle, tPos )
     if( numToolsHeldBy(sender) >= 3 )
         return;
     
-    int type = l2i(spawnedTools, pos+1);
+    int type = (int)j(tool, TOOL_TYPE);
     
-    spawnedTools = llListReplaceList(spawnedTools, (list)sender, pos+2, pos+2);
+    tool = llJsonSetValue(tool, (list)TOOL_HELDBY, sender);
+	llLinksetDataWrite(table, tool);
+	
     GhostTool$pickedUp( obstacle );
     ToolSet$addTool( 
         sender, 
         type, 
-        llList2List(spawnedTools, pos+3, pos+3), 
+        j(tool, TOOL_DATA), 
         obstacle
     );
     
@@ -543,17 +555,18 @@ onLevelCustomGtoolGetGhost( sender )
 
 end
 
+
 handleEvent( "#Nodes", 0 )
     
+	// Part of the check toggle hunt chain.
+	// This script checks if the player is near a horny bat
     if( argStr(0) == "CTH" ){
         
         vector pos = prPos(GHOST);
         // Check if ghost is near a horny bat
-        integer i;
-        for(; i < count(spawnedTools); i += STSTRIDE ){
-            
-            key id = l2k(spawnedTools, i);
-            integer type = l2i(spawnedTools, i+1);
+        forTool(i, id, tool)
+			
+            integer type = (int)j(tool, TOOL_TYPE);
             if( type == ToolsetConst$types$ghost$hornybat ){
                 
                 float dist = 3.0;
@@ -563,10 +576,11 @@ handleEvent( "#Nodes", 0 )
                 // Consume horny bat charge
                 if( llVecDist(prPos(id), pos) < 3 ){
                     
-                    integer ch = l2i(spawnedTools, i+3)+1;
+                    integer ch = (int)j(tool, TOOL_DATA)+1;
                     if( ch == 1 ){
                         
-                        spawnedTools = llListReplaceList(spawnedTools, (list)ch, i+3, i+3);
+                        tool = llJsonSetValue(tool, (list)TOOL_DATA, (str)ch);
+						llLinksetDataWrite(idbTable$TOOLS+(str)id, tool);
                         GhostTool$trigger( id, [] );
                         
                     }
@@ -579,7 +593,7 @@ handleEvent( "#Nodes", 0 )
                 
             }
             
-        }
+        end
         
         raiseEvent(0, "START_HUNT");   // Forward to nodes
         
@@ -592,7 +606,10 @@ handleEvent( "#Game", 0 )
     if( argStr(0) == "START_GAME" ){
         
         toggleDoors(FALSE);
-        spawnedTools = [];
+		list keys = getToolTableKeys();
+		integer i;
+		for(; i < count(keys); ++i )
+			llLinksetDataDelete(l2s(keys, i));
                 
     }
     else if( argStr(0) == "SPAWN_GEAR" ){
@@ -675,15 +692,12 @@ handleEvent( "#Game", 0 )
     else if( argStr(0) == "RESET_TOOLS" ){
         
         key player = argKey(1);
+		forTool(i, uuid, data)
+
+            if( j(data, TOOL_HELDBY ) == player )
+                dropTool( player, uuid, ZERO_VECTOR, ZERO_ROTATION );
         
-        integer i;
-        for(; i < count(spawnedTools); i += STSTRIDE ){
-            
-            key holder = l2k(spawnedTools, i+2);
-            if( holder == player )
-                dropTool( player, l2k(spawnedTools, i), ZERO_VECTOR, ZERO_ROTATION );
-        
-        }
+        end
         
     }
     else if( argStr(0) == "END_GAME" ){
@@ -745,13 +759,13 @@ onGhostEvent( ghost, players, baseType, subType, dur )
         baseType == GhostEventsConst$IT_LIGHTS && 
         subType == GhostEventsConst$ITL_ELECTRONICS 
     ){
-        int i;
-        for(; i < count(spawnedTools); i+= STSTRIDE ){
+	
+		forTool(i, uuid, data)
+        
+			if( (int)j(data, TOOL_TYPE) == ToolsetConst$types$ghost$videoCamera )
+                raiseEvent(0, "CAM" + uuid + FALSE);
             
-            if( l2i(spawnedTools, i+1) == ToolsetConst$types$ghost$videoCamera )
-                raiseEvent(0, "CAM" + l2k(spawnedTools,i) + FALSE);
-            
-        }
+        end
         
         
         

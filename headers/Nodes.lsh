@@ -40,7 +40,7 @@
 #define NodesConst$defaultRmSlice \
 	(list)0 + ZERO_VECTOR + ZERO_ROTATION + ZERO_VECTOR			// Needs to be a prototype for what's stored in the room marker list
 
-
+// ouija used event
 #define onGhostNodesOuija( player, type, roomName ) \
 	if( SENDER_SCRIPT IS "#Nodes" AND EVENT_TYPE IS NodesEvt$ouija ){ \
 		key player = argKey(0); \
