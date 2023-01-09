@@ -8,11 +8,10 @@
 #include "ObstacleScript/index.lsl"
 
 int GHOST_TYPE = -1;
-int EVIDENCE_TYPES;
+int AFFIXES;
 int VIS;
 list SEEN_PLAYERS;
-int AFFIXES;
-
+key SUCTARG;	// Needed here because it goes in desc, since the level needs it.
 int LIT;	// Ghost is in a lit room
 int AGG;	// More prone to being agressive. Inverse ADDITIVE (higher value lowers hunt threshold)
 int ACT;	// more prone to being active. ADDITIVE
@@ -27,9 +26,6 @@ int BFL;
 #define BFL_HUNT_CATCH 0x2 	// Next seated player should be handled like a hunt catch.
 #define BFL_HUNTING 0x4
 float LAST_HEART;
-
-key caughtHud;
-key SUCTARG;	// Succubus target
 
 footstep(){
 	list sounds = [
@@ -83,7 +79,7 @@ updateDesc(){
 list P_MESH;
 toggleMesh( float alpha ){
 	
-	if( hasStrongAffix(ToolSetConst$affix$ghostInvisible) )
+	if( hasStrongAffix(AFFIXES, ToolSetConst$affix$ghostInvisible) )
 		alpha = 0;
 	
 	BFL = BFL&~BFL_VISIBLE;
@@ -287,8 +283,9 @@ handleTimer( "TC" )
 	if( pre != AGG || apre != ACT )
 		updateDesc();
 		
+	key st = GhostGet$sucTarg(llGetObjectDesc());
 	// GHOST BEHAVIOR :: Succubus - Find a new target if old one is sitting
-	if( GHOST_TYPE == GhostConst$type$succubus && (llGetAgentInfo(SUCTARG)&AGENT_SITTING || llKey2Name(SUCTARG) == "") )
+	if( GHOST_TYPE == GhostConst$type$succubus && (llGetAgentInfo(st)&AGENT_SITTING || llKey2Name(st) == "") )
 		pickNewSucTarg();
 	
 	float vel = llVecMag(llGetVel());
@@ -344,7 +341,7 @@ onChanged( change )
         key ast = llAvatarOnSitTarget();
         if( ast ){
 			
-			if( ast == llGetOwnerKey(caughtHud) ){
+			if( ast == llGetOwnerKey(GhostGet$caughtHud()) ){
 				
 				llRequestPermissions(ast, PERMISSION_TRIGGER_ANIMATION);
 				
@@ -452,6 +449,8 @@ handleTimer( "UNSIT" )
 	
 end
 
+/*
+This was supposed to be an event where the ghost grabs a player. But was never implemented
 handleOwnerMethod( GhostAuxMethod$seatGhostEvent )
 	
 	BFL = BFL&~BFL_HUNT_CATCH;
@@ -459,6 +458,7 @@ handleOwnerMethod( GhostAuxMethod$seatGhostEvent )
 	Rlv$sit( caughtHud, llGetKey(), TRUE );
 	
 end
+*/
 
 handleTimer( "HEART" )
 	
@@ -515,11 +515,10 @@ handleTimer( "CH0" )
 	
 end
 
-onGhostCaught( player, chair )
+onGhostCaught()
 
-	caughtHud = player;
 	BFL = BFL|BFL_HUNT_CATCH;
-	Rlv$sit( caughtHud, llGetKey(), TRUE );
+	Rlv$sit( GhostGet$caughtHud(), llGetKey(), TRUE );
 	
 }
 
@@ -537,13 +536,12 @@ onRunTimePermissions( perm )
 
 end
 
-onGhostType( type, evidence, affixes, dif )
+onGhostType()
 
-	GHOST_TYPE = type;
-	EVIDENCE_TYPES = evidence;
-	AFFIXES = affixes;
+	GHOST_TYPE = GhostGet$type();  // Cache it. We need it a lot
+	AFFIXES = GhostGet$affixes();	// Also needed a lot, we'll have to cache it
 	// GHOST BEHAVIOR :: SUCCUBUS - Pick a target
-	if( SUCTARG == "" && GHOST_TYPE == GhostConst$type$succubus )
+	if( GhostGet$sucTarg(llGetObjectDesc()) == "" && GHOST_TYPE == GhostConst$type$succubus )
 		pickNewSucTarg();
 	
 end

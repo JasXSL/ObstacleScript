@@ -30,11 +30,8 @@
 
 #define ROOMS_STRIDE 3
 
-key GHOST;
-int EVIDENCE_TYPES;
-int GHOST_TYPE;
-#define HAS_TEMPS (EVIDENCE_TYPES & GhostConst$evidence$temps)
-int DIFFICULTY;
+#define HAS_TEMPS (GhostGet$evidence() & GhostConst$evidence$temps)
+
 
 int BFL;
 #define BFL_HUNTING 0x1
@@ -63,7 +60,6 @@ float lastSweat;
 vector rezPos;
 int ghostInLight = -1;	// Sets if the ghost is in a lit room or not
 int poppedLight = -1;	// Set to the room index of readable of a room that's got a popped light
-int AFFIXES;
 int PIGR;	// Players in ghost room
 
 list portals;      // 8bArray roomIndexes, uuid
@@ -302,7 +298,7 @@ setGhostTemp( int roomIndex, float val ){
 	
 	float maxTemp = 1.0;
 	
-	if( HAS_TEMPS && !hasWeakAffix(ToolSetConst$affix$noEvidenceUntilSalted) )
+	if( HAS_TEMPS && !hasWeakAffix(GhostGet$affixes(), ToolSetConst$affix$noEvidenceUntilSalted) )
 		maxTemp = (float)(TEMP_MAX-TEMP_INDOOR)/(TEMP_MAX_NO_EVIDENCE-TEMP_INDOOR);
 		
 	//qd("Setting " + val + "on" + roomIndex + "max" + maxTemp);
@@ -328,7 +324,7 @@ onLevelCustomSpiritBoxTrigger( spiritBox )
 	integer success = TRUE;
 	
 	str room = getPosReadable(prPos(spiritBox));
-	if( room == "" || hasWeakAffix(ToolSetConst$affix$noEvidenceUntilSalted) )
+	if( room == "" || hasWeakAffix(GhostGet$affixes(), ToolSetConst$affix$noEvidenceUntilSalted) )
 		success = FALSE;
 	else{
 	
@@ -363,11 +359,11 @@ onLevelCustomSpiritBoxTrigger( spiritBox )
 		
 	}
 	
-	float mDist = 4-0.2*DIFFICULTY;
-	float dist = llVecDist(prPos(spiritBox), prPos(GHOST));
+	float mDist = 4-0.2*GhostGet$difficulty();
+	float dist = llVecDist(prPos(spiritBox), prPos(GhostGet$ghost()));
 	if( 
 		success && (
-			~EVIDENCE_TYPES&GhostConst$evidence$spiritbox || 
+			~GhostGet$evidence()&GhostConst$evidence$spiritbox || 
 			dist > mDist
 		)
     ){
@@ -419,10 +415,10 @@ end
 
 // Checks if the level has moved, and also tracks the ghost
 handleTimer( "POS" )
-
-	if( llKey2Name(GHOST) ){
+	key ghost = GhostGet$ghost();	
+	if( llKey2Name(ghost) ){
 		
-		str room = getPosReadable(prPos(GHOST));
+		str room = getPosReadable(prPos(ghost));
 		int index = getRoomIndexByReadable(room);
 		int lit = l2i(roomLights, index) && breaker && poppedLight != index;
 		
@@ -464,15 +460,7 @@ end
 handleEvent( "#Game", 0 )
 
 	str type = argStr(0);
-	if( type == "EVIDENCE" ){
-		EVIDENCE_TYPES = argInt(1);
-		GHOST_TYPE == argInt(2);
-	}
-	else if( type == "AFFIXES" )
-		AFFIXES = argInt(1);
-	else if( type == "DIFFICULTY" )
-		DIFFICULTY = argInt(1);
-	else if( type == "HUNT" ){
+	if( type == "HUNT" ){
 		
 		BFL = BFL&~BFL_HUNTING;
 		if( argInt(1) )
@@ -577,8 +565,8 @@ onLevelCustomToolsetOuija( sender, type )
     int arousal = 20;
     if( success ){
 	
-        raiseEvent(NodesEvt$ouija, argKey(0) + type + getPosReadable(prPos(GHOST)));    
-		if( GHOST_TYPE == GhostConst$type$imp )
+        raiseEvent(NodesEvt$ouija, argKey(0) + type + getPosReadable(prPos(GhostGet$ghost())));    
+		if( GhostGet$type() == GhostConst$type$imp )
 			return;	/// Don't arouse on imp, return here saves memory
 			
     }
@@ -630,25 +618,28 @@ handleTimer( "TICK" )
 	if( !GAME_ACTIVE )
 		return;
 	
-	if( llKey2Name(GHOST) == "" )
+	key ghost = GhostGet$ghost();
+	if( llKey2Name(ghost) == "" )
 		return;
 	
 	// Check for ghost
-	vector ghostPos = prPos(GHOST);
+	vector ghostPos = prPos(ghost);
 	str room = getPosReadable(ghostPos);	// Only the first readable is used, so we need to get the first one here.
 	int ghostRoomIdx = getRoomIndexByReadable(room);
+	int affixes = GhostGet$affixes();
+	int difficulty = GhostGet$difficulty();
+	int type = GhostGet$type();
 	
-
 	// Update temperatures
 	integer i;
-	if( !hasStrongAffix(ToolSetConst$affix$reqMotionSensor) && !hasStrongAffix(ToolSetConst$affix$vibrator) ){
+	if( !hasStrongAffix(affixes, ToolSetConst$affix$reqMotionSensor) && !hasStrongAffix(affixes, ToolSetConst$affix$vibrator) ){
 	
 		for( ; i < count(roomTemps); ++i ){
 			
 			float val = l2f(roomTemps, i);
 			if( i == ghostRoomIdx ){
 			
-				float add = 0.2/(DIFFICULTY+1);
+				float add = 0.2/(difficulty+1);
 				if( add < 0.07 )	// caps it as pro rate
 					add = 0.07;
 				val += add;	// About a minute for easy, plus 1 min per difficulty level
@@ -685,7 +676,7 @@ handleTimer( "TICK" )
 				
 				
 			// GHOST BEHAVIOR :: Yuri - drains 50% faster in the same room
-			if( plRoom == room && GHOST_TYPE == GhostConst$type$yuri )	// Player is in the ghost's current room
+			if( plRoom == room && type == GhostConst$type$yuri )	// Player is in the ghost's current room
 				amt *= 1.5;
 			
 			// Next check temps
@@ -713,7 +704,7 @@ end
 
 onGhostEventsBegin( players, type, subtype )
 	
-	vector ghostPos = prPos(GHOST);
+	vector ghostPos = prPos(GhostGet$ghost());
 	str room = getPosReadable(ghostPos);
 	int tempRoom = getRoomIndexByReadable(room);
 	if( ~tempRoom )
@@ -870,7 +861,6 @@ handleMethod( NodesMethod$getTemp )
 end
 
 onLevelCustomGhostSpawned( ghost )
-    GHOST = ghost;
 	ghostInLight = -1;
 end
 

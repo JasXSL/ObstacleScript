@@ -140,10 +140,12 @@ onGameStart(){
     
     LEVEL_START = llGetUnixTime();  // Set both here and when opening the door
     DIFFICULTY = l2i(GCONF, 0);
-    
+    idbSetByIndex(idbTable$GHOST_SETTINGS, idbTable$GHOST_SETTINGS$DIFFICULTY, DIFFICULTY);
+	
     // Generate ghost
     SEL = -1;   // Reset generated ghost
     ACTIVITY = llFrand(.4)+.6;   // This is a shuffle multiplied against the ghost type's activity
+	
     GHOST_TYPE = 
     #ifdef FORCE_GHOST
         FORCE_GHOST
@@ -151,15 +153,19 @@ onGameStart(){
         llFloor(llFrand(15))
     #endif
 	;
-    
+    idbSetByIndex(idbTable$GHOST_SETTINGS, idbTable$GHOST_SETTINGS$TYPE, GHOST_TYPE); // Update DB ghost type
+	
     AFFIXES = 0;
     if( DIFFICULTY > 0 )    // 4 rightmost bits = basic affixes
         AFFIXES = AFFIXES | llCeil(llFrand(8));
     if( DIFFICULTY > 1 )
         AFFIXES = AFFIXES | (llCeil(llFrand(8))<<4);
-        
+    // Affixes are not constant during a level. DB is written to in sendAffixes
+		
 	int full = getFullEvidenceTypes(GHOST_TYPE);
     EVIDENCE_TYPES = getDefaultEvidenceTypes(full);
+	idbSetByIndex(idbTable$GHOST_SETTINGS, idbTable$GHOST_SETTINGS$EVIDENCE, EVIDENCE_TYPES);
+	
 	// Nightmare mode
 	if( DIFFICULTY > 2 ){
 		
@@ -187,8 +193,8 @@ onGameStart(){
 	}
 	
 	
-    raiseEvent(0, "EVIDENCE" + EVIDENCE_TYPES + GHOST_TYPE);
-    raiseEvent(0, "DIFFICULTY" + DIFFICULTY );
+    raiseEvent(0, "GAMESTART");
+    //raiseEvent(0, "DIFFICULTY" + DIFFICULTY );
     sendAffixes();
     
     BFL = 0;
@@ -196,7 +202,8 @@ onGameStart(){
 }
 
 sendAffixes(){
-    raiseEvent(0, "AFFIXES" + AFFIXES);
+	idbSetByIndex(idbTable$GHOST_SETTINGS, idbTable$GHOST_SETTINGS$AFFIXES, AFFIXES); // Update DB affixes
+    //raiseEvent(0, "AFFIXES" + AFFIXES);
     GhostBoard$setAffixes( AFFIXES );
     GhostTool$setGhost(GHOST, AFFIXES, EVIDENCE_TYPES, DIFFICULTY);
     Ghost$setType( GHOST_TYPE, EVIDENCE_TYPES, DIFFICULTY, AFFIXES );
@@ -242,7 +249,7 @@ addArousal( key player, float arousal ){
     forPlayer( t, i, pl )
     
         float arousal = getPlayerArousal(pl);
-        if( isPlayerDead(pl) || hasStrongAffix(ToolSetConst$affix$noArousalMonitor) )
+        if( isPlayerDead(pl) || hasStrongAffix(AFFIXES, ToolSetConst$affix$noArousalMonitor) )
             arousal = -1;
         arousals += (int)arousal;
         
@@ -296,7 +303,7 @@ onToolsSpawned(){
     end
     GSETTINGS = GSETTINGS | GS_ROUND_STARTED;
     
-    if( hasStrongAffix(ToolSetConst$affix$vibrator) ){ 
+    if( hasStrongAffix(AFFIXES, ToolSetConst$affix$vibrator) ){ 
         Spawner$nFromGroup( LINK_THIS, 1, "VIB" ); 
     }
     

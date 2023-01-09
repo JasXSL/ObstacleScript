@@ -14,6 +14,8 @@ handleTimer( "TOUCH" )
 		GhostInteractions$interact(FALSE);  
         return;
 	}
+	key ghost = GhostGet$ghost();
+	str desc = prDesc(ghost);
         
     float plDist = getNearestGhostPlayerDistance(0);
     float plDistLos = getNearestGhostPlayerDistance(1);
@@ -54,7 +56,7 @@ handleTimer( "TOUCH" )
         llFrand(1.0) < evtChance // 5% chance per tick
     ){
         
-        GhostEvents$trigger( GHOST );
+        GhostEvents$trigger( ghost );
         LAST_EVENT = llGetTime()+5;	// Adds 5 as a grace period. When onGhostEvent is received, this is updated with the end time of the event.
         ++GHOST_EVENTS;
         return;
@@ -72,7 +74,7 @@ handleTimer( "TOUCH" )
         
         // Ghost has a min thresh to hunt
         float thresh = 0.4;
-        float offs = (float)GhostGet$aggression(prDesc(GHOST))/100.0;
+        float offs = (float)GhostGet$aggression(desc)/100.0;
         thresh -= offs/4;   // The threshold is only affected by 1/4th, offs has more impact on chance
         
         float average = avgArousalPerc;
@@ -91,7 +93,7 @@ handleTimer( "TOUCH" )
     float activity = 0.5*llPow(0.9, DIFFICULTY); // 10% less interactive per difficulty above easy
     activity *= ACTIVITY;   // Add randomness
     // Get activity from ghost, such as asking for a sign
-    activity += GhostGet$activity( prDesc(GHOST) )/100.0;
+    activity += GhostGet$activity( desc )/100.0;
 	if( activity < 0.1 )
 		activity = 0.1;
     
@@ -153,7 +155,8 @@ onListen( ch, msg )
     }
     else if( msg == "DEBUG" ){
         
-        dbg("Evidence" + EVIDENCE_TYPES + "GHOST" + GHOST_TYPE + "PIGR" + PIGR + "ANGER" + GhostGet$aggression(prDesc(GHOST)) + "INTERACT" + GhostGet$activity(prDesc(GHOST)));
+		key ghost = GhostGet$ghost();
+        dbg("Evidence" + EVIDENCE_TYPES + "GHOST" + GHOST_TYPE + "PIGR" + PIGR + "ANGER" + GhostGet$aggression(prDesc(ghost)) + "INTERACT" + GhostGet$activity(prDesc(ghost)));
         raiseEvent(0, "DEBUG");
         
     }
@@ -170,7 +173,7 @@ end
 
 onLevelCustomGhostSpawned( ghost )
 
-    GHOST = ghost;
+	idbSetByIndex(idbTable$GHOST_SETTINGS, idbTable$GHOST_SETTINGS$GHOST, ghost);
     Ghost$setType( GHOST_TYPE, EVIDENCE_TYPES, DIFFICULTY, AFFIXES );
     GhostTool$setGhost(ghost, AFFIXES, EVIDENCE_TYPES, DIFFICULTY);
     
@@ -214,7 +217,7 @@ onGhostInteraction( ghost, asset, power )
         float plDistLos = getNearestGhostPlayerDistance(true);
         
         if( 
-            !hasWeakAffix(ToolSetConst$affix$noEvidenceUntilSalted) &&
+            !hasWeakAffix(GhostGet$affixes(), ToolSetConst$affix$noEvidenceUntilSalted) &&
             EVIDENCE_TYPES & GhostConst$evidence$owometer && llFrand(1.0) < .5 &&
             // GHOST BEHAVIOR - EHEE - No EMF5 if observed
             (GHOST_TYPE != GhostConst$type$ehee || plDistLos < 0 || plDistLos > 8)
@@ -422,7 +425,7 @@ onLevelCustomDoorOpened( label, st )
         setTimeout("startGhost", llFrand(5)+1);
         LEVEL_START = llGetUnixTime();
         GHOST_EVENTS = OBJ_INTERACTS = PL_INTERACTS = HUNTS = 0;
-        if( hasWeakAffix(ToolSetConst$affix$powerOutage) )
+        if( hasWeakAffix(GhostGet$affixes(), ToolSetConst$affix$powerOutage) )
             setTimeout("BRK", 360);  
     }
 end

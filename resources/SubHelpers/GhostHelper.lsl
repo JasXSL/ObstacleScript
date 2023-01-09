@@ -43,12 +43,11 @@
 
 
 
-#define getWeakAffix() (AFFIXES&0xF)
-#define getStrongAffix() ((AFFIXES>>4)&0xF)
-#define hasWeakAffix(affix) (getWeakAffix()==affix)
-#define hasStrongAffix(affix) (getStrongAffix()==affix)
+#define getWeakAffix(affixes) (affixes&0xF)
+#define getStrongAffix(affixes) ((affixes>>4)&0xF)
+#define hasWeakAffix(affixes, affix) (getWeakAffix(affixes)==affix)
+#define hasStrongAffix(affixes, affix) (getStrongAffix(affixes)==affix)
 
-#define GhostHelper$CAM_MAX_PICS 5
 #define GhostHelper$SALT_MAX_CHARGES 3
 
 #define GhostHelper$flashlightSettings (list)PRIM_POINT_LIGHT + on + <1.000, 0.928, 0.710> + 1 + (4-((AFFIXES&0xF)==ToolSetConst$affix$weakFlashlights)*2) + 1

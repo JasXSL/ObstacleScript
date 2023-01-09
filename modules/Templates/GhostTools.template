@@ -18,15 +18,9 @@
 #define USE_TIMER
 #include "ObstacleScript/index.lsl"
 
-int AFFIXES;
-int EVIDENCE;
-int GHOST_TYPE;
-int DIFFICULTY;
-
 int BFL;
 #define BFL_HUNTING 0x1
 
-key GHOST;
 
 // use table idbTable$TOOLS. Not indexed, it instead uses idbTable$TOOLS+(str)assetUUID. Each row is a JSON array: int type, key heldBy, var data
 #define TOOL_TYPE 0
@@ -425,7 +419,7 @@ onLevelCustomGtoolData( sender, tooluuid, data )
     ){
         // GHOST BEHAVIOR :: Yuri - Smudge when stepping through salt
         if( 
-            GHOST_TYPE == GhostConst$type$yuri && 
+            GhostGet$type() == GhostConst$type$yuri && 
             ~BFL&BFL_HUNTING
         ){
             Ghost$smudge(sender, true);
@@ -433,7 +427,7 @@ onLevelCustomGtoolData( sender, tooluuid, data )
 		
 		GhostAux$salt();
         
-        if( hasWeakAffix(ToolSetConst$affix$noEvidenceUntilSalted) )
+        if( hasWeakAffix(GhostGet$affixes(), ToolSetConst$affix$noEvidenceUntilSalted) )
             raiseEvent(0, "SALTED");
         
     }
@@ -551,7 +545,7 @@ end
 
 onLevelCustomGtoolGetGhost( sender ) 
     
-    GhostTool$setGhostTarg( sender, GHOST, AFFIXES, EVIDENCE, DIFFICULTY );
+    GhostTool$setGhostTarg( sender, (GhostGet$ghost()), GhostGet$affixes(), GhostGet$evidence(), GhostGet$difficulty() );
 
 end
 
@@ -562,7 +556,7 @@ handleEvent( "#Nodes", 0 )
 	// This script checks if the player is near a horny bat
     if( argStr(0) == "CTH" ){
         
-        vector pos = prPos(GHOST);
+        vector pos = prPos(GhostGet$ghost());
         // Check if ghost is near a horny bat
         forTool(i, id, tool)
 			
@@ -571,7 +565,7 @@ handleEvent( "#Nodes", 0 )
                 
                 float dist = 3.0;
                 // GHOST BEHAVIOR :: Succubus - Longer horny bat
-                if( GHOST_TYPE == GhostConst$type$succubus )
+                if( GhostGet$type() == GhostConst$type$succubus )
                     dist = 5.0;
                 // Consume horny bat charge
                 if( llVecDist(prPos(id), pos) < 3 ){
@@ -625,9 +619,9 @@ handleEvent( "#Game", 0 )
         int three = 3;
         int four = 4;
         
-        
-        integer weakAffix = getWeakAffix();
-        integer strongAffix = getStrongAffix();
+        int affixes = GhostGet$affixes();
+        integer weakAffix = getWeakAffix(affixes);
+        integer strongAffix = getStrongAffix(affixes);
         int noDuplicates = strongAffix == ToolSetConst$affix$noDuplicates;
         if( noDuplicates )
             two = four = three = pills = nrPlayers = 1;
@@ -667,7 +661,7 @@ handleEvent( "#Game", 0 )
                         
         Rezzer$cb( LINK_THIS, "TOOLS" );
         
-        if( hasWeakAffix(ToolSetConst$affix$fewerHidingSpots) )
+        if( weakAffix == ToolSetConst$affix$fewerHidingSpots )
             Spawner$load( LINK_THIS, "CJ", TRUE, "" );
         
         forPlayer(t, i, targ)
@@ -679,14 +673,9 @@ handleEvent( "#Game", 0 )
         
         toggleDoors(TRUE);
 		// Spawn weegie board
-        if( llFrand(1.0) < 0.4 || (DIFFICULTY > 2 && GHOST_TYPE == GhostConst$type$imp) )
+        if( llFrand(1.0) < 0.4 || (GhostGet$difficulty() > 2 && GhostGet$type() == GhostConst$type$imp) )
 			Spawner$nFromGroup( LINK_THIS, 1, "OUIJA" );
 			            
-    }
-    else if( argStr(0) == "DIFFICULTY" ){
-        
-        DIFFICULTY = argInt(1);
-                    
     }
     
     else if( argStr(0) == "RESET_TOOLS" ){
@@ -709,14 +698,6 @@ handleEvent( "#Game", 0 )
         // resetPlayerTools(llGetOwner());
         
     }
-    else if( argStr(0) == "EVIDENCE" ){
-        
-        EVIDENCE = argInt(1);
-        GHOST_TYPE = argInt(2);
-        
-    }
-    else if( argStr(0) == "AFFIXES" )
-        AFFIXES = argInt(1);
     else if( argStr(0) == "HUNT" ){
         
         BFL = BFL&~BFL_HUNTING;
@@ -733,12 +714,12 @@ end
 
 onLevelCustomMotiondetTrig( detector, perc, id )
     
-    integer affix = hasStrongAffix(ToolSetConst$affix$reqMotionSensor);
+    integer affix = hasStrongAffix(GhostGet$affixes(), ToolSetConst$affix$reqMotionSensor);
     // GHOST BEHAVIOR :: Jim - Chance not to trigger the truck detector
     if( 
         // Ignore if ghost requires motion sensor to start
         !affix && 
-        GHOST_TYPE == GhostConst$type$jim && 
+        GhostGet$type() == GhostConst$type$jim && 
         llFrand(1) < .75 
     )return;
     
@@ -748,7 +729,7 @@ onLevelCustomMotiondetTrig( detector, perc, id )
         return;
         
     GhostStatus$triggerSoundSensor( "*", pos, perc );
-    if( affix && prRoot(id) == GHOST )
+    if( affix && prRoot(id) == GhostGet$ghost() )
         raiseEvent(0, "REM_MOTION_AFFIX");
 
 end
@@ -771,10 +752,6 @@ onGhostEvent( ghost, players, baseType, subType, dur )
         
     }
     
-end
-
-onLevelCustomGhostSpawned( ghost )
-    GHOST = ghost;
 end
 
 #include "ObstacleScript/end.lsl"

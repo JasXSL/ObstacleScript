@@ -24,6 +24,7 @@
 	#define DialogHelper$GS_GAME_LOADED 0x4
 	
 	list GSCORE;
+	// Todo: Replace with LSD
 	list GCONF;		// Sent alongside the game start command. Store your game mode etc here
 
 	int _dMENU;		// Tracks the menu

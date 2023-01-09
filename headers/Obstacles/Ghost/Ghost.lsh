@@ -1,6 +1,25 @@
 #ifndef __Ghost
 #define __Ghost
 
+#define GhostTable$caughtSeat "caS"		// Key of the seat we need to place the player on
+#define GhostTable$caughtHud "caH"		// Key of the hud of the player we need to place on the bondage seat
+
+#define GhostGet$caughtSeat() llLinksetDataRead(GhostTable$caughtSeat)
+#define GhostGet$caughtHud() llLinksetDataRead(GhostTable$caughtHud)
+
+#define GhostGet$type() (int)idbGetByIndex(idbTable$GHOST_SETTINGS, idbTable$GHOST_SETTINGS$TYPE)
+#define GhostGet$evidence() (int)idbGetByIndex(idbTable$GHOST_SETTINGS, idbTable$GHOST_SETTINGS$EVIDENCE)
+#define GhostGet$affixes() (int)idbGetByIndex(idbTable$GHOST_SETTINGS, idbTable$GHOST_SETTINGS$AFFIXES)
+#define GhostGet$difficulty() (int)idbGetByIndex(idbTable$GHOST_SETTINGS, idbTable$GHOST_SETTINGS$DIFFICULTY)
+#define GhostGet$ghost() (key)idbGetByIndex(idbTable$GHOST_SETTINGS, idbTable$GHOST_SETTINGS$GHOST) // GhostHelper only
+
+
+// These use the description (for ease of debugging)
+#define GhostGet$inLitRoom( desc ) ((int)j(desc, GhostDesc$inLitRoom))
+#define GhostGet$aggression( desc ) ((int)j(desc, GhostDesc$aggression))
+#define GhostGet$activity( desc ) ((int)j(desc, GhostDesc$activity))
+#define GhostGet$sucTarg( desc ) ((key)j(desc, GhostDesc$ghostCustom))
+
 // Ghost uses standard methods
 #define GhostMethod$followNodes 1		// portal1, portal2... - Follow path nodes
 #define GhostMethod$toggleHunt 2		// (bool)hunting - Start or stop hunting players
@@ -57,32 +76,20 @@
 #define GhostDesc$activity 2				// int - Modifier for doing an interaction
 #define GhostDesc$ghostCustom 3				// var - Currently only used for succubus, stores its current target
 
-
-#define GhostGet$inLitRoom( desc ) ((int)j(desc, GhostDesc$inLitRoom))
-#define GhostGet$aggression( desc ) ((int)j(desc, GhostDesc$aggression))
-#define GhostGet$activity( desc ) ((int)j(desc, GhostDesc$activity))
-#define GhostGet$sucTarg( desc ) ((key)j(desc, GhostDesc$ghostCustom))
-
-
 #define GhostEvt$type 1						// int type, int evidence, int affixes, int difficulty - Ghost type received
 #define GhostEvt$hunt 2						// bool hunting - Ghost is hunting
 #define GhostEvt$lights 3					// bool lights_on - Raised when lights on in the current room of the ghost is changed
-#define GhostEvt$caught 4					// key player, key chair - Caught a player. Carry them to the chair.
+#define GhostEvt$caught 4					// void - Caught a player. Carry them to the chair. Use GhostGet$caughtHud() and GhostGet$caughtSeat() to get player and seat
 #define GhostEvt$huntStep 5					// void - Raised when the ghost makes a footstep while hunting
 #define GhostEvt$visible 6					// bool visible - Raised when the ghost goes visible or hidden
 
 
-#define onGhostType( type, evidence, affixes, difficulty ) \
-	if( SENDER_SCRIPT IS "Ghost" AND EVENT_TYPE IS GhostEvt$type ){ \
-		int type = argInt(0); \
-		int evidence = argInt(1); \
-		int affixes = argInt(2); \
-		int difficulty = argInt(3);
-#define onGhostCaught( player, chair ) \
-	if( SENDER_SCRIPT IS "Ghost" AND EVENT_TYPE IS GhostEvt$caught ){ \
-		key player = argKey(0); \
-		key chair = argKey(1);
-#define onGhostHuntStep(  ) \
+#define onGhostType() \
+	if( SENDER_SCRIPT IS "Ghost" AND EVENT_TYPE IS GhostEvt$type ){
+#define onGhostCaught() \
+	if( SENDER_SCRIPT IS "Ghost" AND EVENT_TYPE IS GhostEvt$caught ){
+
+#define onGhostHuntStep() \
 	if( SENDER_SCRIPT IS "Ghost" AND EVENT_TYPE IS GhostEvt$huntStep ){
 
 #define onGhostVisible( visible ) \
@@ -144,7 +151,7 @@
 #define onLevelCustomGhostSpawned( ghost ) \
 	if( isEventLevelCustom() AND argStr(1) == LevelCustomType$GHOST AND argInt(2) == LevelCustomEvt$GHOST$spawned ){ \
 		key ghost = argKey(0);
-#define onLevelCustomGhostCaught( ghost, player ) \
+#define onLevelCustomGhostCaught(ghost, player) \
 	if( isEventLevelCustom() AND argStr(1) == LevelCustomType$GHOST AND argInt(2) == LevelCustomEvt$GHOST$caught ){ \
 		key ghost = argKey(0); \
 		key player = argKey(3);

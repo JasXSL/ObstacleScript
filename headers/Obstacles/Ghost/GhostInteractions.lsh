@@ -6,6 +6,17 @@
 #ifndef __GhostInteractions
 #define __GhostInteractions
 
+#define GhostInteractionsGet$nrItems() idbGetIndex(idbTable$INTERACT_OBJS)
+#define GhostInteractionsGet$item(idx) idbGetByIndex(idbTable$INTERACT_OBJS, idx)
+#define GhostInteractionsGet$foreachItem(total, index, uuid) \
+	int total = GhostInteractionsGet$nrItems(); \
+	int index; \
+	for(; index < total; ++index ){ \
+		key uuid = idbGetByIndex(idbTable$INTERACT_OBJS, index);
+
+
+
+
 #define GhostInteractionsMethod$interact 1		// bool debug - Trigger an interaction in your local area
 #define GhostInteractionsMethod$playSoundOnMe 2		// (float)vol - Callback for when the ghost sends ToolSet$trigger with parabolic
 #define GhostInteractionsMethod$objectTouched 3		// (key)door - Used primarily by Ghost when it opens a door while walking

@@ -4,6 +4,7 @@
 #include "ObstacleScript/resources/SubHelpers/GhostHelper.lsl"
 #include "ObstacleScript/index.lsl"
 
+// Sadly needs to be cached here instead of IDB because of speed
 list cNodes;	// Cache of room markers, fetched from Nodes script
 				// (int)roomIndex, (vec)globalPos, (rot)rotation, (vec)size
 #define cacheNodes() cNodes = []; Nodes$getRooms( GhostMethod$cbNodes )
@@ -59,7 +60,6 @@ integer BFL;
 
 
 vector roamTarget;          // Position we're roaming towards
-key chaseTarget;            // Player we're chasting
 float nextRoam;       		// llGetTime() of when we finished the last roam
 float lastReturn = -26;		// -26 means it'll have 4 sec to cache the nodes when spawned, then immediately roam
 
@@ -71,6 +71,20 @@ float lastSmudge;			//
 
 vector spawnPos;
 #define toggleMesh( visible ) raiseEvent(GhostEvt$visible, visible)
+
+key huntTarget;				// Target we're currently tracking
+vector huntLastSeenPos;		// Position we last saw them
+list playerFootsteps;		// Same index as PLAYERS. Contains vector positions of where players were walking
+float huntLastFootstepReq;
+float chaseFailed;			// Time when ghost got stuck with LOS
+float lastFootstepsUpdate;	// Limits how often we can run the footstep check
+float timeLOS;				// Time when we got line of sight
+int easyMode = TRUE;
+#define caughtSeat llLinksetDataRead(GhostTable$caughtSeat)
+#define caughtHud llLinksetDataRead(GhostTable$caughtHud)
+float roamTimeout;
+
+
 
 setState( int st ){
 	
@@ -98,8 +112,6 @@ setState( int st ){
 	
 }
 
-
-// 
 list getDoorData( key door ){
 	
 	list desc = split(prDesc(prRoot(door)), "$$");
@@ -208,7 +220,7 @@ integer walkTowards( vector pos ){
 	
 	}
 	
-	if( hasStrongAffix(ToolSetConst$affix$ghostSpeed) )
+	if( hasStrongAffix(AFFIXES, ToolSetConst$affix$ghostSpeed) )
 		speed *= 1.2;
 
 	// Find where to step
@@ -292,17 +304,6 @@ integer pointInRoom( vector point ){
 
 }
 
-key huntTarget;				// Target we're currently tracking
-vector huntLastSeenPos;		// Position we last saw them
-list playerFootsteps;		// Same index as PLAYERS. Contains vector positions of where players 
-float huntLastFootstepReq;
-float chaseFailed;			// Time when ghost got stuck with LOS
-float lastFootstepsUpdate;	// Limits how often we can run the footstep check
-float timeLOS;				// Time when we got line of sight
-int easyMode = TRUE;
-key caughtSeat;				// UUID of seat to put player on
-key caughtHud;				// HUD of caught player
-float roamTimeout;
 
 vector getPlayerVisibilityPos( key player ){
 	
@@ -589,7 +590,7 @@ handleTimer( "A" )
 			
 				BFL = BFL&~BFL_ROAMING;
 				// Set this as our new home location (ghost room change affix)
-				if( hasStrongAffix(ToolSetConst$affix$ghostRoomChange) && llGetTime()-lastRoomChange > 420 && llFrand(1) < .5 && BFL&BFL_ROAM_REACHED ){
+				if( hasStrongAffix(AFFIXES, ToolSetConst$affix$ghostRoomChange) && llGetTime()-lastRoomChange > 420 && llFrand(1) < .5 && BFL&BFL_ROAM_REACHED ){
 				
 					spawnPos = g;
 					return;
@@ -621,7 +622,7 @@ handleTimer( "A" )
 				vector st;	// Succubus target pos
 				// GHOST BEHAVIOR :: Succubus - Always wander to your target
 				if( GHOST_TYPE == GhostConst$type$succubus )
-					st = prPos(GhostGet$sucTarg( llGetObjectDesc() ));
+					st = prPos(GhostGet$sucTarg(llGetObjectDesc()));
 				
 				BFL = BFL|BFL_ROAMING;
 				lastReturn = llGetTime()+llFrand(30);	// Return in 30-60 sec
@@ -906,17 +907,17 @@ end
 
 handleMethod( GhostMethod$sendToChair )
 	
-	caughtSeat = argKey(0);
-	caughtHud = argKey(1);
+	llLinksetDataWrite(GhostTable$caughtSeat, argStr(0));
+	llLinksetDataWrite(GhostTable$caughtHud, argStr(1));
 	easyMode = argInt(2);
 	
 	// failed
-	if( caughtSeat == "" ){
+	if( argStr(0) == "" ){
 		setState(STATE_IDLE);
 		return;
 	}
 	
-	raiseEvent(GhostEvt$caught, caughtHud + caughtSeat);
+	raiseEvent(GhostEvt$caught, []);
 	setTimeout("IDL", 10);	// Go idle again
 	
 end
@@ -1057,10 +1058,14 @@ end
 handleOwnerMethod( GhostMethod$setType )
 
 	GHOST_TYPE = argInt(0);
-	int evidenceType = argInt(1);
 	DIF = argInt(2);
 	AFFIXES = argInt(3);
-	raiseEvent(GhostEvt$type, GHOST_TYPE + evidenceType + AFFIXES + DIF);
+	str table = idbTable$GHOST_SETTINGS;
+	idbSetByIndex(table, idbTable$GHOST_SETTINGS$TYPE, GHOST_TYPE);
+	idbSetByIndex(table, idbTable$GHOST_SETTINGS$EVIDENCE, argInt(1));
+	idbSetByIndex(table, idbTable$GHOST_SETTINGS$AFFIXES, AFFIXES);
+	idbSetByIndex(table, idbTable$GHOST_SETTINGS$DIFFICULTY, DIF);
+	raiseEvent(GhostEvt$type, []);
 	
 end
 

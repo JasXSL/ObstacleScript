@@ -6,14 +6,10 @@
 #include "ObstacleScript/resources/SubHelpers/GhostHelper.lsl"
 #include "ObstacleScript/index.lsl"
 
-list cObjs; // (key)id
 int GHOST_TYPE;
-int EVIDENCE_TYPES;
 key lastSound;
 float LAST_SOUND_TIME;
 float LAST_POWER;
-int AFFIXES;
-int DIFFICULTY;
 int BFL;
 #define BFL_HUNTING 0x1
 
@@ -38,19 +34,6 @@ list getDescType( key id, str type ){
 integer isInteractive( key id ){
     
 	str name = llKey2Name(id);
-	if( name == "HOTS" && EVIDENCE_TYPES & GhostConst$evidence$hots && !hasWeakAffix(ToolSetConst$affix$noEvidenceUntilSalted) ){
-		
-		// GHOST BEHAVIOR :: Gooryo - Don't touch hots if a player is within 4m
-		vector g = llGetPos();
-		forPlayer(t,i,k)
-			if( llVecDist(g, prPos(k)) < 4 && ~llGetAgentInfo(k) & AGENT_SITTING )
-				return -1;
-		end
-		
-		return 0;
-		
-	}
-	
 	if( getDescType(id, Desc$TASK_DOOR_STAT) )
 		return 1;
 	if( getDescType(id, Desc$TASK_GHOST_INTERACTIVE) ){
@@ -244,7 +227,7 @@ onGhostTouch( key targ, int power ){
 		LAST_SOUND_TIME = llGetTime();
 	}
 	// Lazily sent to any target
-	if( EVIDENCE_TYPES&GhostConst$evidence$stains && !hasWeakAffix(ToolSetConst$affix$noEvidenceUntilSalted) ){
+	if( GhostGet$evidence() & GhostConst$evidence$stains && !hasWeakAffix(GhostGet$affixes(), ToolSetConst$affix$noEvidenceUntilSalted) ){
 		//qd("Setting stains on " + llKey2Name(targ));
 		Door$setStainsTarg( targ, "*", TRUE );
 	}
@@ -256,16 +239,12 @@ onGhostTouch( key targ, int power ){
 int usePower(){
 
 	// GHOST BEHAVIOR - Obukakke - Leave stains on everything nearby without EMF
-	if( GHOST_TYPE == GhostConst$type$obukakke && cObjs != [] ){
+	if( GHOST_TYPE == GhostConst$type$obukakke && GhostInteractionsGet$nrItems() ){
 		
-		integer i;
-		for(; i < count(cObjs); ++i ){
-		
-			key targ = l2k(cObjs, i);
+		GhostInteractionsGet$foreachItem(total, index, targ)
 			Door$setStainsTarg( targ, "*", TRUE );
 			GhostInteractive$interact( targ, GhostInteractiveConst$INTERACT_ALLOW_STAINS|GhostInteractiveConst$NO_EVENT, 0 );
-			
-		}
+		end
 		Level$raiseEvent(LevelCustomType$GHOSTINT, LevelCustomEvt$GHOSTINT$power, []);
 
 		return TRUE;
@@ -320,43 +299,37 @@ onSensor( total )
     
 	//qd(total);
 	vector gp = llGetPos();
-    cObjs = [];
+	// Reset index
+	
+	str table = idbTable$INTERACT_OBJS;
+	int idx;
     integer i;
-	list accepted;
-	//list rejected;
     for(; i < total; ++i ){
         
 		key dk = llDetectedKey(i);
 		vector dp = llDetectedPos(i);
 		integer intr = isInteractive(llDetectedKey(i));
 		if( ~intr && llFabs(gp.z-dp.z) < 1.8 ){
-			cObjs += (list)dk;
-			accepted += llKey2Name(dk);
+		
+			idbSetByIndex(table, idx, dk);
+			++idx;
+			
 		}
-		/*
-		else
-			rejected += (list)llDetectedName(i) + intr + llFabs(gp.z-dp.z);
-		*/
     }
-	
-	//qd("R "+ llDumpList2String(rejected, ","));
-	//qd("A "+llDumpList2String(accepted, ","));
+	idbSetIndex(table, idx);
 	
     
 end
 
 onNoSensor()
     
-    cObjs = [];
+	idbResetIndex(idbTable$INTERACT_OBJS);
 
 end
 
-onGhostType( type, evidence, affixes, difficulty )
+onGhostType()
 	
-	GHOST_TYPE = type;
-	EVIDENCE_TYPES = evidence;
-	AFFIXES = affixes;
-	DIFFICULTY = difficulty;
+	GHOST_TYPE = GhostGet$type();
 	
 end
 
@@ -405,6 +378,7 @@ handleOwnerMethod( GhostInteractionsMethod$interact )
 	vector gp = llGetPos();
 	int power = getGhostPower();
 	int debug = argInt(0);
+	int affixes = GhostGet$affixes();
 	
 	lastSound = "";
 	
@@ -469,7 +443,7 @@ handleOwnerMethod( GhostInteractionsMethod$interact )
 	key targ;	// Target of the interact
 
 	// Needs to be motion sensed before it can touch anything
-	if( (!hasStrongAffix(ToolSetConst$affix$reqMotionSensor) && !hasStrongAffix(ToolSetConst$affix$vibrator)) || BFL&BFL_HUNTING ){
+	if( (!hasStrongAffix(affixes, ToolSetConst$affix$reqMotionSensor) && !hasStrongAffix(affixes, ToolSetConst$affix$vibrator)) || BFL&BFL_HUNTING ){
 		
 		if( llFrand(1.0) < playerChance ){
 		
@@ -502,7 +476,7 @@ handleOwnerMethod( GhostInteractionsMethod$interact )
 						// GHOST BEHAVIOR :: asswang - Only touch players not looking at it
 						(!isAsswang || isFacingAway) &&
 						// GHOST BEHAVIOR :: succubus - Only touch one player
-						(GHOST_TYPE != GhostConst$type$succubus || player == GhostGet$sucTarg( llGetObjectDesc() ))
+						(GHOST_TYPE != GhostConst$type$succubus || player == GhostGet$sucTarg(llGetObjectDesc()))
 					)viable += player;
 					
 				}
@@ -567,10 +541,9 @@ handleOwnerMethod( GhostInteractionsMethod$interact )
 			
 			list dbg;
 			
-			int i; vector gp = llGetPos();
-			for(; i < count(cObjs); ++i ){
-				
-				key k = l2k(cObjs, i);
+			vector gp = llGetPos();
+			GhostInteractionsGet$foreachItem(total, i, k)
+			
 				vector offs = prPos(k);
 				float dist = 3;
 				float d = llVecDist(<gp.x, gp.y, 0>, <offs.x, offs.y, 0>);
@@ -585,11 +558,11 @@ handleOwnerMethod( GhostInteractionsMethod$interact )
 				if( debug )
 					dbg += (list)llKey2Name(k) + d;
 				
-			}
+			end
 			
 			targ = randElem(viable);
 			if( debug ){
-				qd("Targ" + llKey2Name(targ) + "weak affix" + getWeakAffix() +"strong" + getStrongAffix());
+				qd("Targ" + llKey2Name(targ) + "weak affix" + getWeakAffix(affixes) +"strong" + getStrongAffix(affixes));
 				qd(("Unfiltered ("+(str)(count(dbg)/3)+")") + llDumpList2String(dbg, ","));
 			}
 			list door = getDescType(targ, Desc$TASK_DOOR_STAT);
@@ -601,7 +574,7 @@ handleOwnerMethod( GhostInteractionsMethod$interact )
 			if( 
 				count(door) && 							// Is a door
 				l2s(doorId, 1) != "EXT" && 				// Can't touch exits
-				(DIFFICULTY > 1 || ~BFL&BFL_HUNTING) 	// Can't touch doors during a hunt on intermediate and below
+				(GhostGet$difficulty() > 1 || ~BFL&BFL_HUNTING) 	// Can't touch doors during a hunt on intermediate and below
 			){
 			
 				integer st = l2i(door, 1);
@@ -633,8 +606,8 @@ handleOwnerMethod( GhostInteractionsMethod$interact )
 				integer flags; float speed = 1.0;
 				
 				if( 
-					EVIDENCE_TYPES & GhostConst$evidence$stains && 
-					!hasWeakAffix(ToolSetConst$affix$noEvidenceUntilSalted)
+					GhostGet$evidence() & GhostConst$evidence$stains && 
+					!hasWeakAffix(affixes, ToolSetConst$affix$noEvidenceUntilSalted)
 				)flags = flags|GhostInteractiveConst$INTERACT_ALLOW_STAINS;
 					
 				// GHOST BEHAVIOR :: POWOLTERGEIST - 20% chance to yeet an item

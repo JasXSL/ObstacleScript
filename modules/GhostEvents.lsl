@@ -10,79 +10,18 @@
 int BFL;
 #define BFL_LIGHT_POPPED 0x1		// Can only pop one light
 
-list cObjs; // (key)id
-int GHOST_TYPE;
-int EVIDENCE_TYPES;
-
-
-int evtHit;
-int evtType;
-int subType;
-list evtPlayers;
-float evtDur;
-
-// Searches desc for a specific type
-list getDescType( key id, str type ){
-	
-	list d = split(prDesc(id), "$$");
-	
-    integer s;
-    for(; s < count(d); ++s ){
-        
-		list sub = split(l2s(d, s), "$");
-        if( l2s(sub, 0) == type )
-			return sub;
-			
-    }
-	return [];
-
-}
-
-// Returns 1 if door, 0 if not door, -1 if not interactive
-integer isInteractive( key id ){
-    
-	str name = llKey2Name(id);
-	if( name == "HOTS" && EVIDENCE_TYPES & GhostConst$evidence$hots ){
-		
-		// GHOST BEHAVIOR :: Gooryo - Don't touch hots if a player is within 4m
-		vector g = llGetPos();
-		forPlayer(tot, i, k)
-			if( llVecDist(g, prPos(k)) < 4 && ~llGetAgentInfo(k) & AGENT_SITTING )
-				return -1;
-		end
-		
-		return 0;
-		
-	}
-	
-	if( name == "Ecchisketch" && EVIDENCE_TYPES & GhostConst$evidence$writing )
-		return 0;
-	
-	if( getDescType(id, Desc$TASK_DOOR_STAT) )
-		return 1;
-	if( getDescType(id, Desc$TASK_GHOST_INTERACTIVE) ){
-		
-		// GHOST BEHAVIOR :: BARE - Don't turn on lights
-		list ls = getDescType(id, Desc$TASK_LIGHT_SWITCH);
-		if( GHOST_TYPE == GhostConst$type$bare && ls != [] && !l2i(ls, 1) )
-			return -1;
-			
-		return 0;
-		
-	}
-	
-    return -1;
-
-}
-
+int evtHit;				// Used to pick between multiple animations in a looping event (such as wall spanking)
+int evtType;			// Type of ghost event, such as GhostEventsConst$IT_LIGHTS
+int subType;			// Subtype, such as GhostEventsConst$ITL_BREAKER being a subtype of IT_LIGHTS
+list evtPlayers;		// Player involved in the event
+float evtDur;			// How long the event should last
 
 onGhostEventStart(){
 
 	Level$raiseEvent(LevelCustomType$GHOSTEVT, LevelCustomEvt$GHOSTEVT$evt, mkarr(evtPlayers) + evtType + subType + evtDur);
 	raiseEvent(GhostEventsEvt$begin, mkarr(evtPlayers) + evtType + subType + evtDur );
 	llLoopSound("5a67fa19-3dbb-74c6-3297-8cee2b66e897", .2);
-	
-	
+
 }
 
 #include "ObstacleScript/begin.lsl"
@@ -92,37 +31,6 @@ onStateEntry()
     llSensorRepeat("", "", ACTIVE|PASSIVE, 8, PI, 1);
 	Portal$scriptOnline();
     
-end
-
-onSensor( total )
-    
-	vector gp = llGetPos();
-    cObjs = [];
-    integer i;
-    for(; i < total; ++i ){
-        
-		
-		key dk = llDetectedKey(i);
-		vector dp = llDetectedPos(i);
-		integer intr = isInteractive(llDetectedKey(i));
-		if( ~intr && llFabs(gp.z-dp.z) < 1.5 )
-			cObjs += (list)dk;
-		
-    }
-    
-end
-
-onNoSensor()
-    
-    cObjs = [];
-
-end
-
-onGhostType( type, evidence, affixes, dif )
-	
-	GHOST_TYPE = type;
-	EVIDENCE_TYPES = evidence;
-	
 end
 
 handleTimer( "END" )
@@ -193,10 +101,12 @@ end
 
 handleOwnerMethod( GhostEventsMethod$trigger )
 	
+	int ghostType = GhostGet$type();
+	
 	list viable = (list)
 		GhostEventsConst$IT_LIGHTS
 	;
-	if( GHOST_TYPE != GhostConst$type$jim ){
+	if( ghostType != GhostConst$type$jim ){
 		
 		viable += (list)
 			GhostEventsConst$IT_DOORS +
@@ -205,7 +115,7 @@ handleOwnerMethod( GhostEventsMethod$trigger )
 		
 	}
 	// Succubus can only possess
-	if( GHOST_TYPE == GhostConst$type$succubus )
+	if( ghostType == GhostConst$type$succubus )
 		viable = (list)GhostEventsConst$IT_POSSESS;
 	
 		
@@ -230,6 +140,7 @@ handleOwnerMethod( GhostEventsMethod$trigger )
 		int type = l2i(viable, v);
 		evtType = type;
 		
+		// Do something with the lights
 		if( type == GhostEventsConst$IT_LIGHTS ){
 			
 			list viable = (list)
@@ -249,7 +160,9 @@ handleOwnerMethod( GhostEventsMethod$trigger )
 				
 				evtDur = 2.5;
 				// #AUX handles the rest through the ghost event
-				BFL = BFL|BFL_LIGHT_POPPED;
+				BFL = BFL|BFL_LIGHT_POPPED; // Can only pop one light for ease of things
+											// If they ever make LSD remote readable, you could allow for more rooms
+											// but as it stands now, it would use too much memory
 				
 			}
 			/*
@@ -270,6 +183,7 @@ handleOwnerMethod( GhostEventsMethod$trigger )
 				
 		}
 		
+		// Slam doors event
 		if( type == GhostEventsConst$IT_DOORS ){
 			
 			subType = 0;
@@ -281,6 +195,8 @@ handleOwnerMethod( GhostEventsMethod$trigger )
 		
 		}
 		
+		// Possession events. These are the fun ones.
+		// Todo: Figure out a way to offload these into a notecard.
 		if( type == GhostEventsConst$IT_POSSESS ){
 			
 			list vi = llListRandomize((list)

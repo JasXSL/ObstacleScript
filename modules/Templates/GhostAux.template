@@ -53,14 +53,10 @@
 
 
 list pCams; // (key)player, (int)camera - Players currently watching cameras
-key GHOST;
-int DIFFICULTY;
 integer GHOST_AGE;
 string GHOST_NAME;
-int EVIDENCE_TYPES;
-int GHOST_TYPE;
 list P_CAMS;  // Camera prims
-list CAMS;      // uuids
+list CAMS;      // uuids. Todo: LSD
 int BFL;
 #define BFL_STARTED 0x1 // Round started
 
@@ -304,7 +300,7 @@ handleEvent( "#Game", 0 )
         BFL = BFL|BFL_STARTED;
         
         // Game Loaded
-        if( DIFFICULTY > 1 )
+        if( GhostGet$difficulty() > 1 )
             Door$setRandomPerc( "*" );
             
     }
@@ -334,15 +330,8 @@ handleEvent( "#Game", 0 )
         setTimeout("END", 3);   // Unsit after getting back
         
     }
-    else if( type == "EVIDENCE" ){
-        
+    else if( type == "GAMESTART" ){
         generateGhost();
-        EVIDENCE_TYPES = argInt(1);
-        GHOST_TYPE = argInt(2);
-        
-    }
-    else if( type == "DIFFICULTY" ){
-        DIFFICULTY = argInt(1);
     }
 	
 
@@ -366,10 +355,6 @@ onLevelCustomBondagePlayerDied( chair, player, dead )
 
     setGameRestrictions(player, dead);
 
-end
-
-onLevelCustomGhostSpawned( ghost )
-    GHOST = ghost;
 end
 
 onGhostNodesOuija( player, type, roomName )

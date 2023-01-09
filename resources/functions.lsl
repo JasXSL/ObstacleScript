@@ -48,7 +48,7 @@ _tsr( key sound, float vol, float radius ){
 #define idbGet(table, field) llLinksetDataRead(table+(str)(field))
 
 #define idbGetByIndex(table, index) llLinksetDataRead(table+llChar(index+32))
-#define idbSetByIndex(table, index, val) llLinksetDataWrite(table+llChar(index+32), (val))
+#define idbSetByIndex(table, index, val) llLinksetDataWrite(table+llChar(index+32), (str)(val))
 
 #define idbSetIndex(table, val) llLinksetDataWrite(table, (str)(val))
 #define idbResetIndex(table) llLinksetDataWrite(table, "0")
