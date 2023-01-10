@@ -18,10 +18,6 @@
 #define USE_TIMER
 #include "ObstacleScript/index.lsl"
 
-int BFL;
-#define BFL_HUNTING 0x1
-
-
 // use table idbTable$TOOLS. Not indexed, it instead uses idbTable$TOOLS+(str)assetUUID. Each row is a JSON array: int type, key heldBy, var data
 #define TOOL_TYPE 0
 #define TOOL_HELDBY 1
@@ -420,7 +416,7 @@ onLevelCustomGtoolData( sender, tooluuid, data )
         // GHOST BEHAVIOR :: Yuri - Smudge when stepping through salt
         if( 
             GhostGet$type() == GhostConst$type$yuri && 
-            ~BFL&BFL_HUNTING
+            !isHunting()
         ){
             Ghost$smudge(sender, true);
         }
@@ -552,8 +548,8 @@ end
 
 handleEvent( "#Nodes", 0 )
     
-	// Part of the check toggle hunt chain.
-	// This script checks if the player is near a horny bat
+	// Third step of the hunt chain. Forwarding START_HUNT to GhostBehavior
+	// Checks if the ghost is near a horny bat
     if( argStr(0) == "CTH" ){
         
         vector pos = prPos(GhostGet$ghost());
@@ -589,7 +585,8 @@ handleEvent( "#Nodes", 0 )
             
         end
         
-        raiseEvent(0, "START_HUNT");   // Forward to nodes
+		
+        raiseEvent(0, "START_HUNT"); 
         
     }
     
@@ -698,15 +695,9 @@ handleEvent( "#Game", 0 )
         // resetPlayerTools(llGetOwner());
         
     }
-    else if( argStr(0) == "HUNT" ){
-        
-        BFL = BFL&~BFL_HUNTING;
-        if( argInt(1) )
-            BFL = BFL|BFL_HUNTING;
-        
-    }
     
 end
+
 
 handleTimer( "RESET_DOOR" )
     toggleDoors(TRUE);

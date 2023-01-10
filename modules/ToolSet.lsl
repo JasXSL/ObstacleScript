@@ -49,7 +49,7 @@ integer P_BAT;
 integer P_GSTICK;
 integer P_PARA;
 integer P_PARAMON;
-integer P_CAM;
+//integer P_CAM;
 integer P_THERMO;
 integer P_THERMO_POSTIT;
 integer P_VCAM;
@@ -113,6 +113,7 @@ onDataUpdate(){
         onTick();
         
     }
+	/*
 	else if( tool == ToolsetConst$types$ghost$camera ){
 		
 		integer pics = GhostHelper$CAM_MAX_PICS-on;
@@ -124,7 +125,7 @@ onDataUpdate(){
 		);
 		
 	}
-	
+	*/
 	
     else if( tool == ToolsetConst$types$ghost$thermometer ){
 	
@@ -179,7 +180,7 @@ drawActiveTool(){
     AL(P_PARAMON, tool == ToolsetConst$types$ghost$parabolic, ALL_SIDES);
     AL(P_PARA, tool == ToolsetConst$types$ghost$parabolic, ALL_SIDES);
     AL(P_PARA, (tool == ToolsetConst$types$ghost$parabolic)*.5, 1);
-    AL(P_CAM, tool == ToolsetConst$types$ghost$camera, ALL_SIDES);
+    //AL(P_CAM, tool == ToolsetConst$types$ghost$camera, ALL_SIDES);
     AL(P_THERMO, tool == ToolsetConst$types$ghost$thermometer, ALL_SIDES);
 	AL(P_THERMO_POSTIT, tool == ToolsetConst$types$ghost$thermometer, ALL_SIDES);
 	AL(P_VCAM, tool == ToolsetConst$types$ghost$videoCamera, ALL_SIDES);
@@ -197,9 +198,11 @@ drawActiveTool(){
 			integer on = getActiveToolInt();
             if( tool == ToolsetConst$types$ghost$parabolic )
                 anim = "paramic_hold";
+			/*
             else if( tool == ToolsetConst$types$ghost$camera )
                 anim = "camera_hold";
-            else if( tool == ToolsetConst$types$ghost$thermometer )
+            */
+			else if( tool == ToolsetConst$types$ghost$thermometer )
                 anim = "thermometer_hold";
 			else if( tool == ToolsetConst$types$ghost$hornybat )
 				anim = "bat_idle";
@@ -454,8 +457,8 @@ onStateEntry()
             P_PARA = nr;
         else if( name == "PARAMON" )
             P_PARAMON = nr;
-        else if( name == "CAM" )
-            P_CAM = nr;
+		//else if( name == "CAM" )
+        //    P_CAM = nr;
 		else if( name == "VCAM" )
 			P_VCAM = nr;
         else if( name == "THERMO" )
@@ -558,7 +561,7 @@ onPortalLclickStarted( hud )
 		setTimeout("DESTROY", 3);
 				
     }
-	
+	/*
 	if( tool == ToolsetConst$types$ghost$camera ){
 		
 		int pics = getActiveToolInt();
@@ -576,7 +579,7 @@ onPortalLclickStarted( hud )
 		setTimeout("USE", 1);
 	
 	}
-	
+	*/
 	if( tool == ToolsetConst$types$ghost$salt ){
 			
 		int ch = getActiveToolInt();

@@ -31,18 +31,18 @@ integer GSETTINGS;
 
 
 #define PD_KEY 0            // Element 1 is the player UUID
-list PLAYER_DATA;
 float ROUND_START_TIME;
-list GCONF;	// This is custom data passed from DialogHelper
 
-#define resetPlayerData( id ) _rpd(id)
-#define setPlayerData( id, index, val ) _spd( id, index, (list)(val))
-#define getPlayerDataInt( id, index ) l2i(_gpd(id, index), 0)
-#define getPlayerDataStr( id, index ) l2s(_gpd(id, index), 0)
-#define getPlayerDataVec( id, index ) l2v(_gpd(id, index), 0)
-#define getPlayerDataRot( id, index ) l2r(_gpd(id, index), 0)
-#define getPlayerDataFloat( id, index ) l2f(_gpd(id, index), 0)
-#define getPlayerDataKey( id, index ) l2k(_gpd(id, index), 0)
+// Player data: Tables start from idbTable$PDATA_START and go to but not including idbTable$PDATA_START+PDATA_START
+// The first value is always a uuid. The rest are set by the game.
+
+#define setPlayerData( plIndex, field, val ) setPdata(plIndex, field, val)
+#define getPlayerDataInt( plIndex, field ) (int)getPdata(plIndex, field)
+#define getPlayerDataStr( plIndex, field ) getPdata(plIndex, field)
+#define getPlayerDataVec( plIndex, field ) (vector)getPdata(plIndex, field)
+#define getPlayerDataRot( plIndex, field ) (rotation)getPdata(plIndex, field)
+#define getPlayerDataFloat( plIndex, field ) (float)getPdata(plIndex, field)
+#define getPlayerDataKey( plIndex, field ) (key)getPdata(plIndex, field)
 
 	// Add this to your state entry handler
 	#define gameHelperStateEntry() \
@@ -51,9 +51,10 @@ list GCONF;	// This is custom data passed from DialogHelper
 	#define gameHelperEventHandler() \
 		onLevelPlayersChanged() \
 			forPlayer( tot, index, player ) \
-				if( llListFindList(PLAYER_DATA, (list)player) == -1 ){ \
-					 \
-					resetPlayerData(player); \
+				/* Player doesn't exist yet. We need to add it. */ \
+				if( findPdata(player) == -1 ){ \
+					 /* Reset function also adds */ \
+					_rpd(player); \
 					 \
 				} \
 			end \
@@ -67,7 +68,6 @@ list GCONF;	// This is custom data passed from DialogHelper
 			string type = argStr(0); \
 			if( type == "START_GAME" ){ \
 				 \
-				GCONF = llDeleteSubList(METHOD_ARGS, 0, 0); \
 				startGame(); \
 				 \
 			} \
@@ -115,56 +115,35 @@ list GCONF;	// This is custom data passed from DialogHelper
 	// Resets player data, if player doesn't exists, it adds
 	_rpd( key id ){
 		
-		// Default values, except uuid
-		list DEFAULTS = PD_DEFAULTS;
+		int i; int idx = -1; int empty = -1;
+		for(; i < XMOD_MAX_PLAYERS && idx == -1; ++i ){
+			str cur = getPdata(i, 0);
+			if( id == cur )
+				idx = i;
+			else if( cur == "" && empty == -1 )
+				empty = i;
+		}
 		
-		integer pos = llListFindList(PLAYER_DATA, (list)id);
-		if( ~pos )
-			PLAYER_DATA = llListReplaceList(
-				PLAYER_DATA, 
-				DEFAULTS, 
-				pos+1, 
-				pos+PD_STRIDE-1
-			);
-		else
-			PLAYER_DATA += (list)id + DEFAULTS;    
-		
-	}
-
-	list _gpd( key player, integer index ){
-		
-		integer pos = llListFindList(PLAYER_DATA, (list)player);
-		if( ~pos )
-			return llList2List(PLAYER_DATA, pos+index, pos+index);
-		
-		return [];
-		
-	}
-
-	_spd( key id, integer index, list val ){
-		
-		integer pos = llListFindList(PLAYER_DATA, (list)id);
-		if( pos == -1 )
+		if( idx == -1 )
+			idx = empty;
+		if( empty == -1 ){
+			llOwnerSay("Players full, yo");
 			return;
+		}
 		
-		val = llList2List(val, 0, 0);
-		PLAYER_DATA = llListReplaceList(PLAYER_DATA, val, pos+index, pos+index);
+		list data = (list)id + PD_DEFAULTS;
+		for( i = 0; i < count(data); ++i )
+			setPdata(idx, i, l2s(data, i));
 		
 	}
-
-	#define shufflePlayerData() \
-		PLAYER_DATA = llListRandomize(PLAYER_DATA, PD_STRIDE)
-
-
-
 
 	resetAllPlayers(){
 
-		PLAYER_DATA = [];
+		int i;
+		for(; i < XMOD_MAX_PLAYERS; ++i )
+			idbDrop(getPdataTableChar(i));
 		forPlayer( t, index, player )
-			
-			resetPlayerData(player);
-		
+			_rpd(player);
 		end
 
 	}

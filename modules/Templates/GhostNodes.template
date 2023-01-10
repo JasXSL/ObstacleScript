@@ -32,10 +32,6 @@
 
 #define HAS_TEMPS (GhostGet$evidence() & GhostConst$evidence$temps)
 
-
-int BFL;
-#define BFL_HUNTING 0x1
-
 // Note that the same index can appear multiple times
 #define RM_INDEX 0      // (Position in ROOMS list divided by ROOMS stride)
 #define RM_POS 1		// Position of the spawn
@@ -440,7 +436,7 @@ handleTimer( "POS" )
 		if( playersInGhostRoom != PIGR ){
 			
 			PIGR = playersInGhostRoom;
-			raiseEvent(0, "PIGR" + PIGR);
+			idbSetByIndex(idbTable$NODES, idbTable$NODES$PIGR, (str)PIGR);
 		
 		}
 	
@@ -460,14 +456,7 @@ end
 handleEvent( "#Game", 0 )
 
 	str type = argStr(0);
-	if( type == "HUNT" ){
-		
-		BFL = BFL&~BFL_HUNTING;
-		if( argInt(1) )
-			BFL = BFL|BFL_HUNTING;
-		
-	}
-	else if( type == "ROUND_START" || type == "END_GAME" ){
+	if( type == "ROUND_START" || type == "END_GAME" ){
 			
 		GAME_ACTIVE = (type == "ROUND_START");
 		resetTempData();
@@ -535,7 +524,15 @@ handleEvent( "#Game", 0 )
 		qd("Lights" + roomLights + "popped" + poppedLight);
 		
     }	
-	else if( type == "CTH" ){
+
+end
+
+handleEvent( "#GhostBehavior", 0 )
+
+	str type = argStr(0);
+	
+	// Second step of hunt check. Makes sure at least one player is in the house. Forwards to GhostTools
+	if( type == "CTH" ){
 		
 		forPlayer( t, idx, player )
 			
@@ -547,15 +544,14 @@ handleEvent( "#Game", 0 )
 
 		end
 
-	
 	}
-
+	
 end
 
 // Sends a negative ouija board id with the text
 onLevelCustomToolsetOuija( sender, type )
 	
-	if( BFL&BFL_HUNTING )
+	if( isHunting() )
 		return;
 	str room = getPosReadable(prPos(sender));
 	if( room == "" )
@@ -565,6 +561,7 @@ onLevelCustomToolsetOuija( sender, type )
     int arousal = 20;
     if( success ){
 	
+		// Defer to GhostAux which stores the responses
         raiseEvent(NodesEvt$ouija, argKey(0) + type + getPosReadable(prPos(GhostGet$ghost())));    
 		if( GhostGet$type() == GhostConst$type$imp )
 			return;	/// Don't arouse on imp, return here saves memory
@@ -574,7 +571,7 @@ onLevelCustomToolsetOuija( sender, type )
 		Lamp$flicker( room, TRUE, 3 );	// Todo: Test
     }
     
-	
+	// Tell level to add arousal
 	raiseEvent(0, "AROUSE" + llGetOwnerKey(sender) + arousal);
 
 end

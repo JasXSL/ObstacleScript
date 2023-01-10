@@ -33,7 +33,7 @@ end
 
 onCollisionStart( total )
 	
-	if( !isPlayer( llDetectedKey(0) ) )
+	if( !isPlayer( ((str)llDetectedKey(0)) ) )
 		return;
 	
 	

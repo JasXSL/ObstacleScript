@@ -1,0 +1,391 @@
+// This is the main controller that handles all the ghost stuff as far as the level linkset goes
+
+key GHOST;
+integer GHOST_TYPE;		// Cached from GhostHelper_Game
+int EVIDENCE_TYPES;		// Cached from GhostHelper_Game
+int AFFIXES;			// Cached from GhostHelper_Game
+float ACTIVITY = 1.0;  // Generic multiplier for ghost interacts.
+float LAST_EVENT;
+integer BFL;
+#define BFL_HUNTING 0x1
+float LAST_HUNT;
+key CAUGHT_PLAYER;  // We're waiting for a bondage seat for this player
+
+int HUNTS;
+int GHOST_EVENTS;
+int OBJ_INTERACTS;
+int PL_INTERACTS;
+
+
+// Gets distance to the nearest player, reqLos is line of sight:
+// 0 = no LOS req
+// 1 = LOS req
+// 2 = LOS and looking towards the ghost
+float gnptgd( int reqLos ){
+    
+    vector ghost = prPos(GHOST);
+    float dist = -1;
+    forPlayer( t, idx, pl )
+        
+		int plIdx = findPdata(pl);
+        vector pp = prPos(pl);
+        float d = llVecDist(ghost, pp);
+        if( (dist < 0 || d < dist) && !isPlayerDead(plIdx) && ~plIdx ){
+            
+            list ray;
+            if( reqLos )
+                ray = llCastRay(ghost+<0,0,1>, pp+<0,0,1>, RC_DEFAULT);
+            
+            prAngX(pl, ang);
+            if( reqLos == 2 && llFabs(ang) < PI_BY_TWO )
+                ray = [];    
+            
+            if( l2i(ray, -1) == 0 )
+                dist = d;
+
+        }
+    
+    end
+    return dist;
+    
+}
+#define getNearestGhostPlayerDistance( reqLos ) gnptgd( reqLos )
+
+
+saveStats(){
+	idbSetByIndex(idbTable$GHOST_BEHAVIOR, idbTable$GHOST_BEHAVIOR$STATS, mkarr(GHOST_EVENTS + OBJ_INTERACTS + PL_INTERACTS + HUNTS));
+}
+
+// Checks if we can start a hunt
+// First step in the check hunt chain. Forwarding to GhostNodes
+// Tools then forwards CTH to nodes that makes sure players are in the building
+checkStartHunt(){
+
+	// Can't start if we're already hunting or an event is active
+	if( BFL&BFL_HUNTING || llGetTime() < LAST_EVENT )
+		return;
+    LAST_HUNT = llGetTime();
+    raiseEvent(0, "CTH");
+
+}
+// Note: use checkStartHunt on start instead since it checks horny bat
+toggleHunt( integer on ){
+
+
+    float dur = 30+GhostGet$difficulty()*10*(llFrand(0.5)+.5);
+	// Hunt just started
+    if( on && ~BFL&BFL_HUNTING ){
+        
+        BFL = BFL|BFL_HUNTING;
+        setTimeout("HUNT_END", dur);
+        ++HUNTS;
+		saveStats();
+		
+    }
+	// Hunt just ended
+    else if( !on && BFL&BFL_HUNTING ){
+        
+        BFL = BFL&~BFL_HUNTING;
+        unsetTimer("HUNT_END");
+        
+    }
+	// No change. Ignore
+    else
+        return;
+		
+	// Either state change
+    
+    int hunting = (BFL&BFL_HUNTING)>0;
+	idbSetByIndex(idbTable$GHOST_BEHAVIOR, idbTable$GHOST_BEHAVIOR$HUNTING, hunting);
+    Door$lock( "DO:EXT", hunting );
+    if( BFL & BFL_HUNTING ){
+        Door$setRotPerc( "DO:EXT", 0 );
+        GhostRadio$garble( "*", TRUE );
+    }
+    else{
+        GhostRadio$garble( "*", FALSE );
+    }
+    LAST_HUNT = llGetTime();
+    Ghost$toggleHunt( hunting );
+    GhostTool$toggleHunt( hunting, GHOST );
+    Lamp$flicker( "*", hunting, dur );
+    raiseEvent(0, "HUNT" + hunting);
+    
+}
+
+
+#include "ObstacleScript/begin.lsl"
+
+
+handleEvent( "#Game", 0 )
+	str type = argStr(0);
+	
+	if( type == "FRONT_DOOR" )
+		setInterval("TOUCH", 5);
+	
+	if( type == "GAMESTART" ){
+		
+		GHOST_TYPE = GhostGet$type();
+		EVIDENCE_TYPES = GhostGet$evidence();
+		AFFIXES = GhostGet$affixes();
+		ACTIVITY = llFrand(.4)+.6;   // This is a shuffle multiplied against the ghost type's activity
+		GHOST_EVENTS = OBJ_INTERACTS = PL_INTERACTS = HUNTS = 0;	// Reset stats
+		
+		BFL = 0;
+		idbSetByIndex(idbTable$GHOST_BEHAVIOR, idbTable$GHOST_BEHAVIOR$HUNTING, 0);
+		saveStats();
+		
+	}
+	else if( type == "START_HUNT" ){
+		// Try to start a hunt checking things like crucifix, smudge etc
+		checkStartHunt();
+		
+	}
+	else if( type == "TOGGLE_HUNT" ){
+		
+        toggleHunt(argInt(1));
+		
+	}
+	else if( type == "DEBUG" ){
+		str desc = prDesc(GHOST);
+		qd("PIGR" + (int)idbGetByIndex(idbTable$NODES, idbTable$NODES$PIGR) + "ANGER" + GhostGet$aggression(desc) + "INTERACT" + GhostGet$activity(desc));
+	}
+end
+
+
+
+// Ghost interactions, hunt timer etc
+handleTimer( "TOUCH" )
+    
+	// Interact every 5 when hunting
+    if( BFL & BFL_HUNTING ){
+		GhostInteractions$interact(FALSE);  
+        return;
+	}
+	key ghost = GhostGet$ghost();
+	str desc = prDesc(ghost);
+    int difficulty = GhostGet$difficulty();
+    float plDist = getNearestGhostPlayerDistance(0);
+    float plDistLos = getNearestGhostPlayerDistance(1);
+    
+    int huntBlocked = 
+        ( // GHOST BEHAVIOR - EHEE No hunt while a player is close or observing
+            GHOST_TYPE == GhostConst$type$ehee && 
+            (
+                (plDist < 2 && plDist >= 0) || 
+                (plDistLos < 8 && plDistLos >= 0)
+            )
+        )
+    ;
+    
+    // Get average arousal
+	float avg;
+	int tot;
+    forPlayer(all, i, k)
+		
+	    if( ~llGetAgentInfo(k) & AGENT_SITTING ){
+			int idx = findPdata(k);
+            avg += getPlayerArousal(idx);
+			++tot;
+		}
+		
+    end
+	
+	float avgArousalPerc;
+	if( tot )
+		avgArousalPerc = avg/tot/100;
+	
+	
+    float evtChance = 0.05+0.05*avgArousalPerc;
+    
+    if( 
+        llGetTime()-LAST_EVENT > 60 && // Min 60 sec between
+        plDistLos > 0 && plDistLos < 5 && // Needs to be a player within 5m
+        avgArousalPerc > 0.3 && // Average arousal needs to be above 30
+        llFrand(1.0) < evtChance // 5% chance per tick
+    ){
+        
+        GhostEvents$trigger( ghost );
+        LAST_EVENT = llGetTime()+5;	// Adds 5 as a grace period. When onGhostEvent is received, this is updated with the end time of the event.
+        ++GHOST_EVENTS;
+		saveStats();
+        return;
+        
+    }
+    
+        
+    // 20 sec min time between hunts on pro, 40 on intermediate and 60 on novice
+	float graceTime = 20+(3-difficulty)*20;
+	if( graceTime < 30 )
+		graceTime = 30;
+	
+    if( llGetTime()-LAST_HUNT > graceTime && !huntBlocked && llGetTime()-LAST_EVENT > 15 ){
+        // Start hunting at 40 arousal. But small chance.
+        
+        // Ghost has a min thresh to hunt
+        float thresh = 0.4;
+        float offs = (float)GhostGet$aggression(desc)/100.0;
+        thresh -= offs/4;   // The threshold is only affected by 1/4th, offs has more impact on chance
+        
+        float average = avgArousalPerc;
+        average += offs; // Ghost aggression also increases average, adding a higher chance
+           
+        if( average > thresh && llFrand(1.0) < llPow(average,3)*.75 ){
+            
+            checkStartHunt();
+            //qd("Attempting to trigger a hunt");
+            return;
+            
+        }
+        
+    }
+    
+    float activity = 0.5*llPow(0.9, difficulty); // 10% less interactive per difficulty above easy
+    activity *= ACTIVITY;   // Add randomness
+    // Get activity from ghost, such as asking for a sign
+    activity += GhostGet$activity( desc )/100.0;
+	if( activity < 0.1 )
+		activity = 0.1;
+    
+    // GHOST BEHAVIOR :: Hantuwu - Interactivity
+    if( GHOST_TYPE == GhostConst$type$hantuwu )
+        activity *= (avgArousalPerc/2+0.75);
+    
+    // GHOST BEHAVIOR :: INUGAMI - Activity based on players in room
+    if( GHOST_TYPE == GhostConst$type$inugami ){
+        
+        if( (int)idbGetByIndex(idbTable$NODES, idbTable$NODES$PIGR) ) // Players in ghost room
+            activity *= 0.15;   // -85% activity if players are in the room
+        else
+            activity *= 1.5;    // +50% activity if players are not in the room
+        
+    }
+    
+    if( llFrand(1.0) > activity )
+        return;
+        
+    // GHOST BEHAVIOR :: HANTUWU
+    if( GHOST_TYPE == GhostConst$type$hantuwu && llFrand(1) > avgArousalPerc )
+        return;
+    
+    GhostInteractions$interact(FALSE);   
+    //qd("Sending interact"); 
+    
+end
+
+handleTimer( "HUNT_END" )
+    toggleHunt(FALSE);
+end
+
+
+
+onGhostForceHunt()
+	checkStartHunt();
+end
+
+onGhostEvent( ghost, players, baseType, subType, dur )
+	LAST_EVENT = llGetTime()+dur;
+end
+
+
+
+onGhostInteraction( ghost, asset, power )
+    
+    int level = 1+llFloor(llFrand(2));  // 2-3
+    if( power ){
+        
+        level = 3;
+        
+        
+        float plDistLos = getNearestGhostPlayerDistance(true);
+        
+        if( 
+            !hasWeakAffix(AFFIXES, ToolSetConst$affix$noEvidenceUntilSalted) &&
+            EVIDENCE_TYPES & GhostConst$evidence$owometer && llFrand(1.0) < .5 &&
+            // GHOST BEHAVIOR - EHEE - No EMF5 if observed
+            (GHOST_TYPE != GhostConst$type$ehee || plDistLos < 0 || plDistLos > 8)
+        ) // 4-5
+            ++level;
+        
+    }
+    
+    if( llGetAgentSize(asset) != ZERO_VECTOR ){
+        ++PL_INTERACTS;
+    }
+    else{
+        ++OBJ_INTERACTS;
+    }
+	saveStats();
+	
+    forPlayer( t, index, player )
+
+        float arousal;
+        if( player == asset )
+            arousal = 2*((power>0)+1);
+        else if( agentLookingAt( player, asset) ){
+            
+            vector as = llGetAgentSize(player);
+            list ray = llCastRay(prPos(player)+<0,0,as.z*.2>, prPos(asset), RC_DEFAULT);
+            if( l2i(ray, -1) < 1 || prRoot(l2k(ray, 0)) == asset )
+                arousal = 2;
+            
+            // GHOST BEHAVIOR :: Powoltergeist - More arousal when witnessing a yeet
+            if( GHOST_TYPE == GhostConst$type$powoltergeist )
+                arousal *= 1.5;
+            
+        }
+    
+        if( arousal > 0 )
+			raiseEvent(0, "AROUSE" + player + arousal);
+        
+    end
+    
+    float dur = 20-GhostGet$difficulty()*2;
+    Owometer$addPoint( asset, level, dur );
+
+end
+
+
+
+onLevelCustomGhostCaught( ghost, player )
+    
+    toggleHunt(FALSE);
+	list players = getPlayers();
+    int pos = llListFindList(players, [(str)player]);
+    if( pos == -1 ){
+        return;
+    }
+    
+    CAUGHT_PLAYER = idbGetByIndex(idbTable$HUDS, pos);
+    Bondage$getFree();
+    
+end
+
+onLevelCustomBondageFree( chair )
+    
+    if( CAUGHT_PLAYER == "" )
+        return;
+        
+    Ghost$sendToChair( chair, CAUGHT_PLAYER, (!GhostGet$difficulty()) );
+    
+end
+
+// Ghost successfully vaped
+onLevelCustomGhostVaped()
+	LAST_HUNT = llGetTime()+90;
+end
+
+
+handleEvent( "#Tools", 0 )
+    
+	// Final step of the hunt chain. Starts the actual hunt
+    str type = argStr(0);
+    if( type == "START_HUNT" ){
+        toggleHunt(TRUE);
+    }
+end
+
+
+#include "ObstacleScript/end.lsl"
+
+

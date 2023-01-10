@@ -18,12 +18,30 @@
 	#define idbTable$GHOST_SETTINGS$TYPE 0			// int - Ghost type
 	#define idbTable$GHOST_SETTINGS$EVIDENCE 1		// int - Evidence types
 	#define idbTable$GHOST_SETTINGS$AFFIXES 2		// int - Ghost Affixes
-	#define idbTable$GHOST_SETTINGS$DIFFICULTY 3	// int - Difficulty
+	#define idbTable$GHOST_SETTINGS$DIFFICULTY 3	// int - Difficulty : NOTE: In the level, this var is handled by GhostHelper_Dialog
 	#define idbTable$GHOST_SETTINGS$GHOST 4			// key - UUID of the ghost. GhostHelper_Game only
 	
 	
 #define idbTable$INTERACT_OBJS "%"	// char(37) - Owned by GhostInteractions
 
-// &'()*+,-./0123456789:;<=>?
+#define idbTable$GCONF "&"			// char(38) - Owned by DialogHelper
+
+#define idbTable$NODES "'"			// char(39) - Owned by GhostNodes
+	#define idbTable$NODES$PIGR 0		// int - Players in ghost room
+
+#define idbTable$COM "("			// char(40) - Owned by Com
+	#define idbTable$COM$HOST 0			// key - UUID of level PRIM the HUD is bound to
+
+
+#define idbTable$GHOST_BEHAVIOR ")"	// char(41) - Owned by #GhostBehavior
+	#define idbTable$GHOST_BEHAVIOR$HUNTING 0	// bool - hunting status
+	#define idbTable$GHOST_BEHAVIOR$STATS 1		// [int ghost_events, int obj_interacts, int pl_interactions, int hunts] - Nr hunts this game
+	
+
+#define idbTable$PDATA_START 223	// char(223) - Owned by GameHelper. Each table from 223 to 255 represents a player. The field index is different from game to game.
+// WARNING: PDATA_START reserves char 223-255
+
+
+// *+,-./0123456789:;<=>?
 
 #endif

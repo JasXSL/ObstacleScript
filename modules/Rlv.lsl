@@ -470,7 +470,7 @@ handleMethod( RlvMethod$setClothes )
         
         integer st = (n >> (i*2))&3;
         if( st ){
-            
+		
             --st;
 			cSTATE = cSTATE &~ (3<<(i*2));
 			cSTATE = cSTATE | (st << (i*2));

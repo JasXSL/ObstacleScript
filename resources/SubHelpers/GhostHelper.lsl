@@ -42,6 +42,31 @@
 #define ToolSetConst$affix$vibrator 8
 
 
+// Game data for the level linkset
+// The game data is stored in a list. Index 0 is ALWAYS the uuid of the player.
+// We can define the other data we need to store about each player here, starting from 1
+#define PD_DEAD 1           // (int)is_dead
+#define PD_AROUSAL 2        // We'll put an llGetTime timestamp here for invul. 0 -> 100
+#define PD_CLOTHES 3        // 20 points total, <= 10 for underwear, 0 for naked
+
+#define isHunting() (int)idbGetByIndex(idbTable$GHOST_BEHAVIOR, idbTable$GHOST_BEHAVIOR$HUNTING)
+
+// Helper macros for the level linkset
+#define isPlayerDead(idx) \
+    getPlayerDataInt(idx, PD_DEAD)
+#define setPlayerDead( idx, dead ) \
+    setPlayerData(idx, PD_DEAD, dead)
+
+#define getPlayerArousal( idx ) \
+    getPlayerDataFloat(idx, PD_AROUSAL)
+#define setPlayerArousal( idx, arousal ) \
+    setPlayerData(idx, PD_AROUSAL, arousal)
+
+#define getPlayerClothes( idx ) \
+    getPlayerDataInt(idx, PD_CLOTHES)
+#define setPlayerClothes(idx, amount ) \
+    setPlayerData(idx, PD_CLOTHES, amount)
+
 
 #define getWeakAffix(affixes) (affixes&0xF)
 #define getStrongAffix(affixes) ((affixes>>4)&0xF)

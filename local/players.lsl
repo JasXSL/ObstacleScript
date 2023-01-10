@@ -18,8 +18,9 @@
 #define getPlayers() idbValues(idbTable$PLAYERS, true)
 #define getHuds() idbValues(idbTable$HUDS, true)
 
-#define isPlayer( id ) \
-	( id == llGetOwner() || ~llListFindList(getPlayers(), (list)id) )
+// note: ID 
+#define isPlayer( stringID ) \
+	( stringID == llGetOwner() || ~llListFindList(getPlayers(), (list)stringID) )
 	
 
 

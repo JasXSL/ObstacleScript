@@ -6,7 +6,6 @@
 
 #define MAX_REQS 10
 int REQS = MAX_REQS; 
-key HOST;
 
 int BFL;
 #define BFL_REQ_CD 0x1
@@ -64,8 +63,7 @@ requestAssets(){
 #include "ObstacleScript/begin.lsl"
 
 onStateEntry()
-    HOST = llGetOwner();
-	setInterval("reqs", 20);
+    setInterval("reqs", 20);
 end
 
 onChanged( change )
@@ -102,9 +100,8 @@ onChanged( change )
 end
 
 
-onComHostChanged( host )
+onComHostChanged()
     
-    HOST = host;
     requestAssets();
     
 end
@@ -115,7 +112,7 @@ onAnimHandlerPurge()
 
     llAllowInventoryDrop(TRUE);
     setTimeout("close", 10);
-    Level$getHudAssets(HOST);
+    Level$getHudAssets(ComGet$host());
     
 end
 
@@ -168,7 +165,7 @@ end
 
 handleMethod( LevelRepoMethod$requestNewAssets ) 
     
-    if( llGetOwnerKey(SENDER_KEY) != llGetOwnerKey(HOST) )
+    if( llGetOwnerKey(SENDER_KEY) != llGetOwnerKey(ComGet$host()) )
         return;
         
     purge(FALSE);

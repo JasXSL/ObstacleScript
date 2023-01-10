@@ -56,7 +56,7 @@ list pCams; // (key)player, (int)camera - Players currently watching cameras
 integer GHOST_AGE;
 string GHOST_NAME;
 list P_CAMS;  // Camera prims
-list CAMS;      // uuids. Todo: LSD
+list CAMS;      // uuids.
 int BFL;
 #define BFL_STARTED 0x1 // Round started
 

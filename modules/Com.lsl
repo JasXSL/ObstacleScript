@@ -29,6 +29,9 @@ resetPlayersAndHuds(){
 
     onStateEntry()
         
+		// Reset host
+		idbSetByIndex(idbTable$COM, idbTable$COM$HOST, HOST);
+		
 		resetPlayersAndHuds();
 		
         setupListenTunnel();
@@ -93,8 +96,10 @@ resetPlayersAndHuds(){
 					idbSetByIndex(idbTable$PLAYERS, 0, llGetOwner());
 					idbSetByIndex(idbTable$PLAYERS, 1, llGetOwnerKey(HOST));
 					idbSetIndex(idbTable$PLAYERS, 2);
-		
-					raiseEvent(ComEvt$hostChanged, HOST);
+					
+					idbSetByIndex(idbTable$COM, idbTable$COM$HOST, HOST);
+					
+					raiseEvent(ComEvt$hostChanged, []);
 						
 					if( inv )
 						llDialog(

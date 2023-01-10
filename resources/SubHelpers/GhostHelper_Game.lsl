@@ -9,15 +9,10 @@
 // Handled by #AUX
 #define setGameRestrictions(player)
 
-
 /*
 	Overrides GameHelper
 */
-// The game data is stored in a list. Index 0 is ALWAYS the uuid of the player.
-// We can define the other data we need to store about each player here, starting from 1
-#define PD_DEAD 1           // (int)is_dead
-#define PD_AROUSAL 2        // We'll put an llGetTime timestamp here for invul. 0 -> 100
-#define PD_CLOTHES 3        // 20 points total, <= 10 for underwear, 0 for naked
+
 
 // Put default values for above here
 #define PD_DEFAULTS [0, 0, 20]
@@ -42,123 +37,48 @@
 
 
 // STATS
+int GHOST_TYPE;
 int LEVEL_START;    // Unix timestamps
 int GHOST_EVENTS;   // Nr ghost events
 int OBJ_INTERACTS;  // Object interactions
 int PL_INTERACTS;   // Player interactions
-int HUNTS;
 int AFFIXES;        // 4 bit array, rightmost are for easy affixes, left for hard
-int PIGR;           // Num players in ghost room
-key GHOST;
-integer GHOST_TYPE;
+
+
 integer SEL = -1;   // Ghost selected by the player
 integer EVIDENCE_TYPES;
-float ACTIVITY = 1.0;  // Generic multiplier for ghost interacts.
-integer DIFFICULTY = 2; //
-float LAST_EVENT;
+
 integer BFL;
-#define BFL_HUNTING 0x1
 #define BFL_FRONT_DOOR 0x2
 #define BFL_INCORRECT 0x4			// Players have guessed incorrectly at least once
 #define BFL_INCORRECT_HOLD 0x8		// Players can't guess again until after the next hunt
-float LAST_HUNT;
-key CAUGHT_PLAYER;  // We're waiting for a bondage seat for this player
 
 
-// Make some helper macros
-#define isPlayerDead( uuid ) \
-    getPlayerDataInt(uuid, PD_DEAD)
-#define setPlayerDead( uuid, dead ) \
-    setPlayerData(uuid, PD_DEAD, dead)
 
-#define getPlayerArousal( uuid ) \
-    getPlayerDataFloat(uuid, PD_AROUSAL)
-#define setPlayerArousal( uuid, arousal ) \
-    setPlayerData(uuid, PD_AROUSAL, arousal)
-
-#define getPlayerClothes( uuid ) \
-    getPlayerDataInt(uuid, PD_CLOTHES)
-#define setPlayerClothes( uuid, amount ) \
-    setPlayerData(uuid, PD_CLOTHES, amount)
-
-// Checks if we can start a hunt
-// Forwards CTH to tools which checks hornybat
-// Tools then forwards CTH to nodes that makes sure players are in the building
-checkStartHunt(){
-
-	// Can't start if we're already hunting or an event is active
-	if( BFL&BFL_HUNTING || llGetTime() < LAST_EVENT )
-		return;
-    LAST_HUNT = llGetTime();
-    raiseEvent(0, "CTH");
-
-}
-// Note: use checkStartHunt on start instead since it checks horny bat
-toggleHunt( integer on ){
-
-    float dur = 30+DIFFICULTY*10*(llFrand(0.5)+.5);
-    if( on && ~BFL&BFL_HUNTING ){
-        
-        BFL = BFL|BFL_HUNTING;
-        
-        
-        setTimeout("HUNT_END", dur);
-        ++HUNTS;
-        
-    }
-    else if( !on && BFL&BFL_HUNTING ){
-        
-        BFL = BFL&~BFL_HUNTING;
-        unsetTimer("HUNT_END");
-        
-    }
-    else
-        return;
-    
-    int hunting = (BFL&BFL_HUNTING)>0;
-    Door$lock( "DO:EXT", hunting );
-    if( BFL & BFL_HUNTING ){
-        Door$setRotPerc( "DO:EXT", 0 );
-        GhostRadio$garble( "*", TRUE );
-    }
-    else{
-		BFL = BFL&~BFL_INCORRECT_HOLD;	// Allow players to exit
-		raiseEvent(0, "GUESS_WRONG" + 0);
-        GhostRadio$garble( "*", FALSE );
-    }
-    LAST_HUNT = llGetTime();
-    Ghost$toggleHunt( hunting );
-    GhostTool$toggleHunt( hunting, GHOST );
-    Lamp$flicker( "*", hunting, dur );
-    raiseEvent(0, "HUNT" + hunting);
-    
-}
 
 // Events
 // Loading game
 onGameStart(){
     
     LEVEL_START = llGetUnixTime();  // Set both here and when opening the door
-    DIFFICULTY = l2i(GCONF, 0);
-    idbSetByIndex(idbTable$GHOST_SETTINGS, idbTable$GHOST_SETTINGS$DIFFICULTY, DIFFICULTY);
+    int difficulty = GhostGet$difficulty();
 	
     // Generate ghost
     SEL = -1;   // Reset generated ghost
-    ACTIVITY = llFrand(.4)+.6;   // This is a shuffle multiplied against the ghost type's activity
-	
-    GHOST_TYPE = 
-    #ifdef FORCE_GHOST
-        FORCE_GHOST
-    #else
-        llFloor(llFrand(15))
-    #endif
+
+	GHOST_TYPE = 
+	#ifdef FORCE_GHOST
+		FORCE_GHOST
+	#else
+		llFloor(llFrand(15))
+	#endif
 	;
-    idbSetByIndex(idbTable$GHOST_SETTINGS, idbTable$GHOST_SETTINGS$TYPE, GHOST_TYPE); // Update DB ghost type
-	
+	idbSetByIndex(idbTable$GHOST_SETTINGS, idbTable$GHOST_SETTINGS$TYPE, GHOST_TYPE); // Update DB ghost type
+
     AFFIXES = 0;
-    if( DIFFICULTY > 0 )    // 4 rightmost bits = basic affixes
+    if( difficulty > 0 )    // 4 rightmost bits = basic affixes
         AFFIXES = AFFIXES | llCeil(llFrand(8));
-    if( DIFFICULTY > 1 )
+    if( difficulty > 1 )
         AFFIXES = AFFIXES | (llCeil(llFrand(8))<<4);
     // Affixes are not constant during a level. DB is written to in sendAffixes
 		
@@ -167,7 +87,7 @@ onGameStart(){
 	idbSetByIndex(idbTable$GHOST_SETTINGS, idbTable$GHOST_SETTINGS$EVIDENCE, EVIDENCE_TYPES);
 	
 	// Nightmare mode
-	if( DIFFICULTY > 2 ){
+	if( difficulty > 2 ){
 		
 		int forced = getForcedEvidenceTypes(full);
 		list all; int numSet;
@@ -194,7 +114,6 @@ onGameStart(){
 	
 	
     raiseEvent(0, "GAMESTART");
-    //raiseEvent(0, "DIFFICULTY" + DIFFICULTY );
     sendAffixes();
     
     BFL = 0;
@@ -205,8 +124,9 @@ sendAffixes(){
 	idbSetByIndex(idbTable$GHOST_SETTINGS, idbTable$GHOST_SETTINGS$AFFIXES, AFFIXES); // Update DB affixes
     //raiseEvent(0, "AFFIXES" + AFFIXES);
     GhostBoard$setAffixes( AFFIXES );
-    GhostTool$setGhost(GHOST, AFFIXES, EVIDENCE_TYPES, DIFFICULTY);
-    Ghost$setType( GHOST_TYPE, EVIDENCE_TYPES, DIFFICULTY, AFFIXES );
+	int difficulty = GhostGet$difficulty();	// Handled by dialog
+    GhostTool$setGhost(GhostGet$ghost(), AFFIXES, EVIDENCE_TYPES, difficulty);
+    Ghost$setType( GHOST_TYPE, EVIDENCE_TYPES, difficulty, AFFIXES );
 }
 
 list onGameEnd(){
@@ -222,34 +142,36 @@ list onGameEnd(){
         (GHOST_TYPE == SEL) +
         GHOST_TYPE +
         LEVEL_START +
-        GHOST_EVENTS +
-        OBJ_INTERACTS +
-        PL_INTERACTS +
-        HUNTS
+		// Stats
+        llJson2List(
+			idbGetByIndex(idbTable$GHOST_BEHAVIOR, idbTable$GHOST_BEHAVIOR$STATS)
+		)
     ;
     
 }
 
 
-
-
 // Adds arousal and updates the status board. A "" player can be supplied to only update the board.
 addArousal( key player, float arousal ){
     
-	if( player != "" ){
-		float cur = getPlayerArousal(player)+arousal;
+	int idx = findPdata(player);
+	if( player != "" && ~idx ){
+	
+		float cur = getPlayerArousal(idx)+arousal;
 		if( cur > 100 )
 			cur = 100;
 		else if( cur < 0 )
 			cur = 0;
-		setPlayerArousal(player, cur);
+		setPlayerArousal(idx, cur);
+		
     }
 	
 	list arousals;
     forPlayer( t, i, pl )
     
-        float arousal = getPlayerArousal(pl);
-        if( isPlayerDead(pl) || hasStrongAffix(AFFIXES, ToolSetConst$affix$noArousalMonitor) )
+		idx = findPdata(pl);
+        float arousal = getPlayerArousal(idx);
+        if( isPlayerDead(idx) || hasStrongAffix(AFFIXES, ToolSetConst$affix$noArousalMonitor) )
             arousal = -1;
         arousals += (int)arousal;
         
@@ -257,41 +179,6 @@ addArousal( key player, float arousal ){
     GhostStatus$updatePlayers( "*", arousals );
             
 }
-
-// Gets distance to the nearest player, reqLos is line of sight:
-// 0 = no LOS req
-// 1 = LOS req
-// 2 = LOS and looking towards the ghost
-float gnptgd( int reqLos ){
-    
-    vector ghost = prPos(GHOST);
-    float dist = -1;
-    forPlayer( t, idx, pl )
-        
-        vector pp = prPos(pl);
-        float d = llVecDist(ghost, pp);
-        if( (dist < 0 || d < dist) && !isPlayerDead(pl) ){
-            
-            list ray;
-            if( reqLos )
-                ray = llCastRay(ghost+<0,0,1>, pp+<0,0,1>, RC_DEFAULT);
-            
-            prAngX(pl, ang);
-            if( reqLos == 2 && llFabs(ang) < PI_BY_TWO )
-                ray = [];    
-            
-            if( l2i(ray, -1) == 0 )
-                dist = d;
-
-        }
-    
-    end
-    return dist;
-    
-}
-#define getNearestGhostPlayerDistance( reqLos ) gnptgd( reqLos )
-
-
 
     
 onToolsSpawned(){
@@ -317,17 +204,13 @@ startRound(){
     
 }
 
-
-
-
-
 /*
 
 	Event handler
 
 */
 // Use GameHelper instead of GhostHelper
-#define ghostHelperStateEntry() gameHelperStateEntry() llListen(6, "", llGetOwner(), "");
+#define ghostHelperStateEntry() gameHelperStateEntry() llListen(6, "", llGetOwner(), ""); llOwnerSay((str)llGetUsedMemory());
 #define onCountdownFinished() // Unused in this mode
 
 

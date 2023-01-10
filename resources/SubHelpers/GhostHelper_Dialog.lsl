@@ -9,7 +9,7 @@ int GUESS_WRONG;
 // Globals 
 int DIFFICULTY;
 updateGconf(){
-	GCONF = (list)DIFFICULTY;
+	idbSetByIndex(idbTable$GHOST_SETTINGS, idbTable$GHOST_SETTINGS$DIFFICULTY, DIFFICULTY);
 }
 
 

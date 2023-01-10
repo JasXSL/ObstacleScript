@@ -73,6 +73,9 @@
 #define evt$HTTP_RESPONSE 17
 
 
+#define XMOD_MAX_PLAYERS 32	// max nr of players xmod can handle. used in table reservation for playerdata
+
+
 // Macros
 #include "./resources/macros.lsl"
 #include "./table_registry.lsl"
@@ -135,6 +138,7 @@ _me( str ta, str sc, int me, list da ){
 	runLocalMethod((int)ta, sc, me, da);
 
 }
+
 
 
 
@@ -228,6 +232,31 @@ _me( str ta, str sc, int me, list da ){
 
 
 #include "./resources/functions.lsl"
+
+
+
+// Relies on functions
+// Player data functions for any script in the level linkset
+#define getPdataTableChar(entry) llChar(idbTable$PDATA_START+entry)
+#define setPdata(entry, idx, val) idbSetByIndex(getPdataTableChar(entry), idx, val)
+#define getPdata(entry, idx) idbGetByIndex(getPdataTableChar(entry), idx)
+#define findPdata(player) _pdI(player)
+// Finds player data index of a uuid, or -1 if not found
+int _pdI( key id ){
+	int i;
+	for(; i < XMOD_MAX_PLAYERS; ++i ){
+		if( id == getPdata(i, 0) )
+			return i;
+	}
+	return -1;
+}
+
+
+
+
+
+
+
 
 #include "./local/timer.lsl"
 #include "./local/listen.lsl"

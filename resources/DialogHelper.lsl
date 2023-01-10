@@ -1,9 +1,14 @@
 #ifndef __DialogHelper
 #define __DialogHelper
 	
-
+	
 	#ifndef MAX_PLAYERS
-		#define MAX_PLAYERS 1000
+		#define MAX_PLAYERS XMOD_MAX_PLAYERS
+	#else
+		#if MAX_PLAYERS > XMOD_MAX_PLAYERS
+			#undef MAX_PLAYERS
+			#define MAX_PLAYERS XMOD_MAX_PLAYERS
+		#endif
 	#endif
 	
 	// To use, include DialogHelper in your script #include "ObstacleScript/resources/DialogHelper.lsl"
@@ -24,9 +29,7 @@
 	#define DialogHelper$GS_GAME_LOADED 0x4
 	
 	list GSCORE;
-	// Todo: Replace with LSD
-	list GCONF;		// Sent alongside the game start command. Store your game mode etc here
-
+	
 	int _dMENU;		// Tracks the menu
 	int _MP;		// Menu page
 	
@@ -41,9 +44,10 @@
 		
 	list onDialogOpen(){return [];}
 	
+	// Updates gsettings
 	#define gcSet( index, val ) \
-		GCONF = llListReplaceList(GCONF, (list)val, index, index)
-
+		idbSetByIndex(idbTable$GCONF, index, val)
+		
 	_dopen( integer menu ){
 
 		string text;
@@ -181,7 +185,7 @@
 			else if( msg == "START GAME" ){
 			 
 				GSETTINGS = GSETTINGS|DialogHelper$GS_GAME_STARTED;
-				raiseEvent(0, "START_GAME" + GCONF );
+				raiseEvent(0, "START_GAME" );
 				
 				if( ~GSETTINGS & DialogHelper$GS_GAME_LOADED )
 					Spawner$spawnGame();

@@ -1,6 +1,10 @@
 #ifndef __Com
 #define __Com
 
+// db
+
+#define ComGet$host() idbGetByIndex(idbTable$COM, idbTable$COM$HOST)
+
 
 #define ComMethod$invite 1				// void - Invites a player to your current game
 #define ComMethod$inviteSuccess 2		// void - Invites a player to your current game
@@ -10,12 +14,11 @@
 #define ComMethod$updatePortal 6		// void - Sends callbacks with players and huds. See Portal.lsh for the callbacks
 
 // Events
-#define ComEvt$hostChanged 1			// (key)host - Raised with the host prim whenever you join a game
+#define ComEvt$hostChanged 1			// void - Raised with whenever you join a game
 
 
-#define onComHostChanged( host ) \
-	if( SENDER_SCRIPT IS "Com" AND EVENT_TYPE IS ComEvt$hostChanged ){ \
-		key host = argKey(0);
+#define onComHostChanged() \
+	if( SENDER_SCRIPT IS "Com" AND EVENT_TYPE IS ComEvt$hostChanged ){
 
 
 

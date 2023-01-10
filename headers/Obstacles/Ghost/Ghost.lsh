@@ -11,7 +11,7 @@
 #define GhostGet$evidence() (int)idbGetByIndex(idbTable$GHOST_SETTINGS, idbTable$GHOST_SETTINGS$EVIDENCE)
 #define GhostGet$affixes() (int)idbGetByIndex(idbTable$GHOST_SETTINGS, idbTable$GHOST_SETTINGS$AFFIXES)
 #define GhostGet$difficulty() (int)idbGetByIndex(idbTable$GHOST_SETTINGS, idbTable$GHOST_SETTINGS$DIFFICULTY)
-#define GhostGet$ghost() (key)idbGetByIndex(idbTable$GHOST_SETTINGS, idbTable$GHOST_SETTINGS$GHOST) // GhostHelper only
+#define GhostGet$ghost() idbGetByIndex(idbTable$GHOST_SETTINGS, idbTable$GHOST_SETTINGS$GHOST) // GhostHelper only
 
 
 // These use the description (for ease of debugging)

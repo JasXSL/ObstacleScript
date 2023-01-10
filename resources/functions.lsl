@@ -90,7 +90,7 @@ list _ia( string t, integer f ){
 
 
 _dbd( string table ){
-	idbDropInline()
+	idbDropInline(table)
 }
 #define idbDrop(table) _dbd(table)
 

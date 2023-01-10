@@ -56,7 +56,7 @@
 	integer i; \
 	for(; i < count(players); ++i ){ \
 		 \
-		key p = l2k(players, i); \
+		str p = l2k(players, i); \
 		if( isPlayer(p) ){ \
 			 \
 			if( filterFunction(trap, p) ){ \
