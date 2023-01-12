@@ -1,3 +1,6 @@
+/*
+	This script installs attachments from the level
+*/
 #define USE_STATE_ENTRY
 #define USE_EVENTS
 #define USE_TIMER
@@ -15,9 +18,9 @@ list ATTACHMENTS;	// (str)name, (key)id
 
 #define rezAttachment(name) PortalHelper$rez( name, (llGetPos()-<0,0,3>), ZERO_VECTOR, ZERO_ROTATION, TRUE )
 
+// Selective removes only invalid named or permissioned items
 purge( integer selective ){
     
-    list anims;
     list remove;
     integer i;
     for(; i < llGetInventoryNumber(INVENTORY_ALL); ++i ){
@@ -39,9 +42,8 @@ purge( integer selective ){
                 
                 remove += n;
                 
-            }else if( llGetInventoryType(n) == INVENTORY_ANIMATION )
-                anims += n;
-            
+            }
+			
         }
                 
     }

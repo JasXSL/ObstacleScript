@@ -47,7 +47,7 @@ handleOwnerMethod( RepoMethod$fetch )
     for(; i < count(out); ++i ) 
         llGiveInventory(SENDER_KEY, l2s(out, i));
     
-    runMethod(SENDER_KEY, cscript, callback, []);
+    runMethod(SENDER_KEY, cscript, callback, count(out));
     
 
     for( i = 2; i < count(METHOD_ARGS); ++i ){

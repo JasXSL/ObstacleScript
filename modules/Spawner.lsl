@@ -15,10 +15,15 @@ fetchAssets(){
 
 	list assets;
 	integer i;
-	for(; i < llGetInventoryNumber(INVENTORY_OBJECT); ++i )
+	for(; i < llGetInventoryNumber(INVENTORY_OBJECT); ++i ){
 		assets += llGetInventoryName(INVENTORY_OBJECT, i);
-    Repo$enum( SpawnerMethod$callbackRepoEnum, assets );
-
+		if( llStringLength(mkarr(assets)) > 400 ){
+			Repo$enum( SpawnerMethod$callbackRepoEnum, assets );
+			assets = [];
+		}
+	}
+	if( count(assets) )
+		Repo$enum( SpawnerMethod$callbackRepoEnum, assets );
 }
 
 
@@ -166,7 +171,8 @@ end
 
 handleOwnerMethod( SpawnerMethod$callbackRepoFetch )
     
-    qd("All assets have been delivered");
+	int amount = argInt(0);
+    qd(((str)amount+" assets have been delivered"));
     
 end
 
