@@ -553,18 +553,22 @@ handleEvent( "#Nodes", 0 )
     if( argStr(0) == "CTH" ){
         
         vector pos = prPos(GhostGet$ghost());
+		
         // Check if ghost is near a horny bat
         forTool(i, id, tool)
 			
             integer type = (int)j(tool, TOOL_TYPE);
+			
             if( type == ToolsetConst$types$ghost$hornybat ){
                 
-                float dist = 3.0;
+                float dist = 3.5;
                 // GHOST BEHAVIOR :: Succubus - Longer horny bat
                 if( GhostGet$type() == GhostConst$type$succubus )
-                    dist = 5.0;
+                    dist = 7.0;
+				float d = llVecDist(prPos(id), pos);
+
                 // Consume horny bat charge
-                if( llVecDist(prPos(id), pos) < 3 ){
+                if( d < dist ){
                     
                     integer ch = (int)j(tool, TOOL_DATA)+1;
                     if( ch == 1 ){

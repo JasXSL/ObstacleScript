@@ -361,8 +361,10 @@ handleMethod( GhostInteractionsMethod$objectTouched )
 
 end
 
+// This can also be used to debug
 handleOwnerMethod( GhostInteractionsMethod$forcePower )
-	qd("Using power");
+	int affixes = GhostGet$affixes();
+	qd("Using power of ghost type" + GHOST_TYPE + " affixes " + affixes + "Strong" + getStrongAffix(affixes) + " weak " + getWeakAffix(affixes));
 	usePower();
 end
 

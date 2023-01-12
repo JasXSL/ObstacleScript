@@ -114,8 +114,9 @@ handleOwnerMethod( GhostEventsMethod$trigger )
 		;
 		
 	}
-	// Succubus can only possess
-	if( ghostType == GhostConst$type$succubus )
+	// GHOST BEHAVIOR :: SUCCUBUS :: Succubus can only possess
+	int suc = ghostType == GhostConst$type$succubus;
+	if( suc )
 		viable = (list)GhostEventsConst$IT_POSSESS;
 	
 		
@@ -125,7 +126,8 @@ handleOwnerMethod( GhostEventsMethod$trigger )
 	key closest; float dist;
 	forPlayer(t,i,k)
 		float d = llVecDist(llGetPos(), prPos(closest));
-		if( dist <= 0 || d < dist ){
+		// GHOST BEHAVIOR :: SUCCUBUS :: Can only target one player
+		if( (dist <= 0 || d < dist) && (!suc || k == GhostGet$sucTarg(llGetObjectDesc())) ){
 			
 			dist = d;
 			closest = k;

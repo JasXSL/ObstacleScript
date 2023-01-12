@@ -1,6 +1,10 @@
 x = should be fixed, ? = not sure if fixed, - todo, u = unable to reproduce
 Phasmo:
+- Test: No interacts until vib is broken
+- Test: Succubus did ghost event on multiple players
 
+Wipeout:
+- Make a wipeout helper
 	
 - Level manager
 

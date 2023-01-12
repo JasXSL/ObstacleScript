@@ -1,6 +1,5 @@
 // This is the main controller that handles all the ghost stuff as far as the level linkset goes
 
-key GHOST;
 integer GHOST_TYPE;		// Cached from GhostHelper_Game
 int EVIDENCE_TYPES;		// Cached from GhostHelper_Game
 int AFFIXES;			// Cached from GhostHelper_Game
@@ -23,7 +22,7 @@ int PL_INTERACTS;
 // 2 = LOS and looking towards the ghost
 float gnptgd( int reqLos ){
     
-    vector ghost = prPos(GHOST);
+    vector ghost = prPos(GhostGet$ghost());
     float dist = -1;
     forPlayer( t, idx, pl )
         
@@ -107,7 +106,7 @@ toggleHunt( integer on ){
     }
     LAST_HUNT = llGetTime();
     Ghost$toggleHunt( hunting );
-    GhostTool$toggleHunt( hunting, GHOST );
+    GhostTool$toggleHunt( hunting, GhostGet$ghost() );
     Lamp$flicker( "*", hunting, dur );
     raiseEvent(0, "HUNT" + hunting);
     
@@ -147,8 +146,8 @@ handleEvent( "#Game", 0 )
 		
 	}
 	else if( type == "DEBUG" ){
-		str desc = prDesc(GHOST);
-		qd("PIGR" + (int)idbGetByIndex(idbTable$NODES, idbTable$NODES$PIGR) + "ANGER" + GhostGet$aggression(desc) + "INTERACT" + GhostGet$activity(desc));
+		str desc = prDesc(GhostGet$ghost());
+		qd("PIGR" + (int)idbGetByIndex(idbTable$NODES, idbTable$NODES$PIGR) + "ANGER" + GhostGet$aggression(desc) + "INTERACT" + GhostGet$activity(desc) + "Nearest player" + getNearestGhostPlayerDistance(FALSE) + "Nearest LOS" + getNearestGhostPlayerDistance(TRUE));
 	}
 end
 
@@ -197,11 +196,11 @@ handleTimer( "TOUCH" )
 	
 	
     float evtChance = 0.05+0.05*avgArousalPerc;
-    
+    	
     if( 
         llGetTime()-LAST_EVENT > 60 && // Min 60 sec between
         plDistLos > 0 && plDistLos < 5 && // Needs to be a player within 5m
-        avgArousalPerc > 0.3 && // Average arousal needs to be above 30
+        avgArousalPerc > 0.05 && // Average arousal needs to be above 5
         llFrand(1.0) < evtChance // 5% chance per tick
     ){
         
