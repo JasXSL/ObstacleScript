@@ -1,4 +1,4 @@
-#include "ObstacleScript/resources/SubHelpers/GhostHelper.lsl"
+#include "ObstacleScript/helpers/Ghost/GhostHelper.lsb"
 #define USE_STATE_ENTRY
 #define USE_TIMER
 #include "ObstacleScript/index.lsl"

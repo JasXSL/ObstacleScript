@@ -3,7 +3,7 @@
 #define USE_NO_SENSOR
 #define USE_HUDS
 #define USE_TIMER
-#include "ObstacleScript/resources/SubHelpers/GhostHelper.lsl"
+#include "ObstacleScript/helpers/Ghost/GhostHelper.lsb"
 #include "ObstacleScript/index.lsl"
 
 

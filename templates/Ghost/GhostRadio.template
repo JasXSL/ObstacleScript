@@ -2,7 +2,7 @@
 #define USE_PLAYERS
 #define USE_LISTEN
 #define USE_ON_REZ
-#include "ObstacleScript/resources/SubHelpers/GhostHelper.lsl"
+#include "ObstacleScript/helpers/Ghost/GhostHelper.lsb"
 #include "ObstacleScript/index.lsl"
 
 str ID;

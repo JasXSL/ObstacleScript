@@ -4,7 +4,7 @@
 #define USE_RUN_TIME_PERMISSIONS
 #define USE_LISTEN
 #include "ObstacleScript/headers/Obstacles/Ghost/Ghost.lsh"
-#include "ObstacleScript/resources/SubHelpers/GhostHelper.lsl"
+#include "ObstacleScript/helpers/Ghost/GhostHelper.lsb"
 #include "ObstacleScript/index.lsl"
 
 int GHOST_TYPE = -1;

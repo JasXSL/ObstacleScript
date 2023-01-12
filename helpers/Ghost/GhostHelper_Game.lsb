@@ -27,8 +27,8 @@
 #define USE_LISTEN          // Undefine this when not debugging to save memory
 #define USE_HUDS
 #include "ObstacleScript/index.lsl"
-#include "../GameHelper.lsl"
-#include "./GhostHelper.lsl"
+#include "../GameHelper.lsb"
+#include "./GhostHelper.lsb"
 
 
 /*
@@ -210,7 +210,7 @@ startRound(){
 
 */
 // Use GameHelper instead of GhostHelper
-#define ghostHelperStateEntry() gameHelperStateEntry() llListen(6, "", llGetOwner(), ""); llOwnerSay((str)llGetUsedMemory());
+#define ghostHelperStateEntry() gameHelperStateEntry() llListen(6, "", llGetOwner(), "");
 #define onCountdownFinished() // Unused in this mode
 
 

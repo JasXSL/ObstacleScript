@@ -20,10 +20,5 @@
 #define LevelRepo$detach( targ, attachments ) \
 	runMethod(targ, "LevelRepo", LevelRepoMethod$detach, attachments)
 
-
-
-
-
-
 #endif
 

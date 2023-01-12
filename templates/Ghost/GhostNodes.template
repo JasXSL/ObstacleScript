@@ -21,7 +21,7 @@
 */
 #define USE_STATE_ENTRY
 #define USE_TIMER
-#include "ObstacleScript/resources/SubHelpers/GhostHelper.lsl"
+#include "ObstacleScript/helpers/Ghost/GhostHelper.lsb"
 #include "ObstacleScript/index.lsl"
 
 #ifndef debugUncommon

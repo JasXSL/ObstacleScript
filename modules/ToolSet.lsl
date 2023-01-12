@@ -4,7 +4,7 @@
 #define USE_TIMER
 #define USE_LISTEN
 #include "ObstacleScript/index.lsl"
-#include "ObstacleScript/resources/SubHelpers/GhostHelper.lsl"
+#include "ObstacleScript/helpers/Ghost/GhostHelper.lsb"
 
 
 integer BFL;

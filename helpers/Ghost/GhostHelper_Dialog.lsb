@@ -1,6 +1,6 @@
 #ifndef __GhostHelper_Dialog
 #define __GhostHelper_Dialog
-#include "./GhostHelper.lsl"
+#include "./GhostHelper.lsb"
 
 #define GhostHelper$dialog$MENU_DIFFICULTY 100
 

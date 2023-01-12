@@ -33,20 +33,9 @@ integer GSETTINGS;
 #define PD_KEY 0            // Element 1 is the player UUID
 float ROUND_START_TIME;
 
-// Player data: Tables start from idbTable$PDATA_START and go to but not including idbTable$PDATA_START+PDATA_START
-// The first value is always a uuid. The rest are set by the game.
-
-#define setPlayerData( plIndex, field, val ) setPdata(plIndex, field, val)
-#define getPlayerDataInt( plIndex, field ) (int)getPdata(plIndex, field)
-#define getPlayerDataStr( plIndex, field ) getPdata(plIndex, field)
-#define getPlayerDataVec( plIndex, field ) (vector)getPdata(plIndex, field)
-#define getPlayerDataRot( plIndex, field ) (rotation)getPdata(plIndex, field)
-#define getPlayerDataFloat( plIndex, field ) (float)getPdata(plIndex, field)
-#define getPlayerDataKey( plIndex, field ) (key)getPdata(plIndex, field)
 
 	// Add this to your state entry handler
-	#define gameHelperStateEntry() \
-		//resetPlayerData(llGetOwner())
+	#define gameHelperStateEntry() 
 		
 	#define gameHelperEventHandler() \
 		onLevelPlayersChanged() \
@@ -123,7 +112,7 @@ float ROUND_START_TIME;
 			else if( cur == "" && empty == -1 )
 				empty = i;
 		}
-		
+		#ifdef PD_DEFAULTS
 		if( idx == -1 )
 			idx = empty;
 		if( empty == -1 ){
@@ -131,10 +120,11 @@ float ROUND_START_TIME;
 			return;
 		}
 		
+		
 		list data = (list)id + PD_DEFAULTS;
 		for( i = 0; i < count(data); ++i )
 			setPdata(idx, i, l2s(data, i));
-		
+		#endif
 	}
 
 	resetAllPlayers(){

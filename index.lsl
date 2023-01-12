@@ -7,18 +7,27 @@
 	
 
 	Folder structure:
-	- headers : Contains headers and event definitions for modules
+	- headers [.lsh] : Contains headers and event definitions for modules
 				The script name in SL should be the same as the script name in the directory
 				The script name should have a capital first letter
-		- Obstacles : Standard calls to specific obstacle types. Obstacles are usually hardcoded for speed reasons.
-	- local : Contains headers for LSL events, such as timers etc. 
+		- Obstacles : Standard calls to specific obstacle types. Obstacles are usually hardcoded for speed reasons. Shared obstacles go in the root folder. Otherwise make a subfolder for each game type
+			Note: You can use headers from multiple subfolders just fine if you want to make a mixed game. The folder is mostly for sorting.
+			- <Gametype a>...
+			- <Gametype b>...
+	- components [.lsc] : Used for defining what built in and xmod components (such as bulit in events) that you want to use via #define USE_* etc
 				Event definitions for these are stored in this file since they all use "" as sender
 				Local doesn't use capital letters at the start of the script name
-	- modules : Contains fully built modules
-		- templates : Modules that aren't auto loaded, and come with config variables specific to your game
-	- resources : Tools, asset libraries, and macros
-		- SubHelpers : Helpers for a particular game
+	- modules [.lsl] : Contains complete modules with little to no user editing. Should be used for scripts that are stored in the HUD, either remote-loaded or running.
+	- templates [.template] : Similar to modules. Contains mostly full scripts, but usually have required user edits and a large degree of freedom for modding. 
+	- shared [.lsh] : Tools, asset libraries, macros, and code shared across multiple game types.
+	- helpers [.lsb] : Game mode helpers. Boilerplate code that helps you setup the basics for each game type.
+		- <Gametype a>...
+		- <Gametype b>...
 		
+	Root folder scripts:
+	- begin.lsl 		: #include this to start the ObstacleScript event loop. Put all ObstacleScript event handler below this include, and all globals above.
+	- end.lsl			: #include this at the end of your script
+	- index.lsl			: This file. Includes the framework core functionality, and includes all shared files. This needs to be included towards the top of each script.
 
 	Naming:
 	- USE : Enables new functionality in the code. Syntax: USE_<SCRIPTNAME>
@@ -77,8 +86,8 @@
 
 
 // Macros
-#include "./resources/macros.lsl"
-#include "./table_registry.lsl"
+#include "./shared/macros.lsh"
+#include "./shared/table_registry.lsh"
 
 
 
@@ -222,7 +231,7 @@ _me( str ta, str sc, int me, list da ){
 #define argVec(nr) l2vs(METHOD_ARGS, nr)
 
 
-#include "./local/events.lsl"
+#include "./components/events.lsc"
 	
 
 #define end }
@@ -231,16 +240,39 @@ _me( str ta, str sc, int me, list da ){
 
 
 
-#include "./resources/functions.lsl"
+#include "./shared/functions.lsh"
 
-
+/* PLAYER / PLAYER DATA MANAGEMENT */
 
 // Relies on functions
+// Player data: Tables start from idbTable$PDATA_START and go to but not including idbTable$PDATA_START+PDATA_START
+// The first value is always a uuid. The rest are set by the game.
 // Player data functions for any script in the level linkset
 #define getPdataTableChar(entry) llChar(idbTable$PDATA_START+entry)
 #define setPdata(entry, idx, val) idbSetByIndex(getPdataTableChar(entry), idx, val)
 #define getPdata(entry, idx) idbGetByIndex(getPdataTableChar(entry), idx)
 #define findPdata(player) _pdI(player)
+
+
+// plIndex is the absolute table index, not the index of the player (which is based on players found, not total rows)
+#define setPlayerData( plIndex, field, val ) setPdata(plIndex, field, val)
+#define getPlayerDataInt( plIndex, field ) (int)getPdata(plIndex, field)
+#define getPlayerDataStr( plIndex, field ) getPdata(plIndex, field)
+#define getPlayerDataVec( plIndex, field ) (vector)getPdata(plIndex, field)
+#define getPlayerDataRot( plIndex, field ) (rotation)getPdata(plIndex, field)
+#define getPlayerDataFloat( plIndex, field ) (float)getPdata(plIndex, field)
+#define getPlayerDataKey( plIndex, field ) (key)getPdata(plIndex, field)
+
+// Note: Use this with forPlayerDataEnd
+// i is the table used in getPlayerData..., idx is the player number, since there might be empty playerdata rows
+#define forPlayerData( i, idx, uuid ) int i; int idx = -1; for(; i < XMOD_MAX_PLAYERS; ++i ){ \
+	key uuid = getPlayerDataStr(i, 0); \
+	if( uuid ){ \
+		++idx; \
+
+#define forPlayerDataEnd }}
+
+
 // Finds player data index of a uuid, or -1 if not found
 int _pdI( key id ){
 	int i;
@@ -252,21 +284,47 @@ int _pdI( key id ){
 }
 
 
+#define numPlayers() idbGetIndex(idbTable$PLAYERS)
+#define numHuds() idbGetIndex(idbTable$HUDS)
+
+
+#define forPlayer( tot, index, player ) \
+	int index; int tot = numPlayers(); \
+	for(; index < tot; ++index ){ \
+		key player = idbGetByIndex(idbTable$PLAYERS, index); 
+
+
+#define forHuds( tot, index, hud ) \
+	int index; int tot = numHuds(); \
+	for(; index < tot; ++index ){ \
+		key hud = idbGetByIndex(idbTable$HUDS, index); 
+
+#define getPlayers() idbValues(idbTable$PLAYERS, true)
+#define getHuds() idbValues(idbTable$HUDS, true)
+
+// note: ID 
+#define isPlayer( stringID ) \
+	( stringID == llGetOwner() || ~llListFindList(getPlayers(), (list)stringID) )
+	
 
 
 
 
 
-
-#include "./local/timer.lsl"
-#include "./local/listen.lsl"
-#include "./local/players.lsl"
-
-#include "./resources/LevelCustomEvents.lsl"
-#include "./resources/PortalCustomEvents.lsl"
+// gconf
+#define getGconf(idx) idbGetByIndex(idbTable$GCONF, idx)
 
 
-#include "./headers/SharedDescriptions.lsh"
+
+
+
+#include "./components/timer.lsc"
+#include "./components/listen.lsc"
+
+#include "./shared/LevelCustomEvents.lsh"
+#include "./shared/PortalCustomEvents.lsh"
+#include "./shared/Descriptions.lsh"
+
 #include "./headers/Controls.lsh"
 
 #include "./headers/Gui.lsh"
@@ -297,16 +355,16 @@ int _pdI( key id ){
 #include "./headers/PrimSwimAux.lsh"
 #include "./headers/PrimSwim.lsh"
 
-#include "./headers/Obstacles/Trigger.lsh"
-#include "./headers/Obstacles/Lamp.lsh"
-#include "./headers/Obstacles/CrusherWall.lsh"
-#include "./headers/Obstacles/Button.lsh"
-#include "./headers/Obstacles/ShimmyWall.lsh"
-#include "./headers/Obstacles/SlideBeam.lsh"
 #include "./headers/Obstacles/Trap.lsh"
-#include "./headers/Obstacles/Trapdoor.lsh"
-#include "./headers/Obstacles/Door.lsh"
-#include "./headers/Obstacles/RoomMarker.lsh"
+#include "./headers/Obstacles/Trigger.lsh"
+#include "./headers/Obstacles/Wipeout/CrusherWall.lsh"
+#include "./headers/Obstacles/Wipeout/Button.lsh"
+#include "./headers/Obstacles/Wipeout/ShimmyWall.lsh"
+#include "./headers/Obstacles/Wipeout/SlideBeam.lsh"
+#include "./headers/Obstacles/Wipeout/Trapdoor.lsh"
+#include "./headers/Obstacles/Ghost/Door.lsh"
+#include "./headers/Obstacles/Ghost/RoomMarker.lsh"
+#include "./headers/Obstacles/Ghost/Lamp.lsh"
 #include "./headers/Obstacles/Ghost/Ghost.lsh"
 #include "./headers/Obstacles/Ghost/GhostInteractions.lsh"
 #include "./headers/Obstacles/Ghost/GhostInteractive.lsh"
@@ -323,7 +381,7 @@ int _pdI( key id ){
 #include "./headers/Obstacles/Ghost/GhostEvents.lsh"
 
 
-
+#define USE_PLAYERS #error use_players definition detected. Use "forPlayer" instead
 
 
 

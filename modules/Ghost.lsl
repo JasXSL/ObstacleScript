@@ -1,7 +1,7 @@
 #define USE_TIMER
 #define USE_STATE_ENTRY
 #include "ObstacleScript/headers/Obstacles/Ghost/Ghost.lsh"
-#include "ObstacleScript/resources/SubHelpers/GhostHelper.lsl"
+#include "ObstacleScript/helpers/Ghost/GhostHelper.lsb"
 #include "ObstacleScript/index.lsl"
 
 // Sadly needs to be cached here instead of IDB because of speed

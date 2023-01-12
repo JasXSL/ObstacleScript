@@ -47,7 +47,7 @@
 	// Updates gsettings
 	#define gcSet( index, val ) \
 		idbSetByIndex(idbTable$GCONF, index, val)
-		
+
 	_dopen( integer menu ){
 
 		string text;
