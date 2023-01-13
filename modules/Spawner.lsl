@@ -9,7 +9,6 @@
 
 
 string SAVE_ROUND;      // When calling a save, this is the label
-integer SAVE_NR;        // When calling a save, this store nr of items saved
 
 fetchAssets(){
 
@@ -198,6 +197,7 @@ handleOwnerMethod( SpawnerMethod$delete )
 	
 	string cur = idbGetByIndex(idbTable$SPAWNS, delIndex);
 	llOwnerSay("Spawn deleted ["+(str)delIndex+"]: "+cur);
+	idbDeleteByIndex(idbTable$SPAWNS, delIndex);
     
 end
 
@@ -340,15 +340,8 @@ end
 
 handleOwnerMethod( SpawnerMethod$savePortals )
 
-    SAVE_NR = 0;
     SAVE_ROUND = argStr(0);
     Portal$save();
-    setTimeout("ADD", 6);
-
-end
-handleTimer( "ADD" )
-    
-    llOwnerSay("Saved "+(str)SAVE_NR+" assets!");
 
 end
 

@@ -1,0 +1,69 @@
+#ifndef __WipeoutSplitHelper
+#define __WipeoutSplitHelper
+
+// In the configuration global, first value contains team settings
+#define GCONF_TEAMS 0
+
+// The game data is stored in a list. Index 0 is ALWAYS the uuid of the player.
+// We can define the other data we need to store about each player here, starting from 1
+#define PD_CHECKPOINT 1     // Vector checkpoint position
+#define PD_INVUL_UNTIL 2    // We'll put an llGetTime timestamp here for invul
+#define PD_SCORE 3          // How long it took them to finish, in seconds
+#define PD_AROUSAL 4        // int Arousal value
+#define PD_OBSTACLE 5       // key UUID of the obstacle player is sitting on. Maintained by #Obstacles
+#define PD_TEAM 6
+#define PD_PENALTY 7        // Penalty seconds added when you reach the end
+#define PD_ARMOR 8          // 2= dressed, 1 = underwear, 0 = bits
+#define PD_CHECKPOINT_ROT 9 // Checkpoint rotation
+
+// Make some helper macros
+#define INVUL_DURATION 5000	// milliseconds
+#define isPlayerInvul( uuid ) \
+    (getPlayerDataInt(findPdata(uuid), PD_INVUL_UNTIL) > millis())
+#define setPlayerInvul( uuid, duration ) \
+    setPlayerData(findPdata(uuid), PD_INVUL_UNTIL, millis()+duration)
+
+#define getPlayerPenalty( uuid ) \
+    getPlayerDataFloat(findPdata(uuid), PD_PENALTY)
+#define addPlayerPenalty( uuid, seconds ) \
+    setPlayerData(findPdata(uuid), PD_PENALTY, getPlayerPenalty(uuid)+seconds)
+
+#define getPlayerArmor( uuid ) \
+    getPlayerDataInt(findPdata(uuid), PD_ARMOR)
+#define setPlayerArmor( uuid, amount ) \
+    setPlayerData(findPdata(uuid), PD_ARMOR, amount)
+
+#define setPlayerObstacle( uuid, obstacle ) \
+    setPlayerData(findPdata(uuid), PD_OBSTACLE, obstacle)
+#define getPlayerObstacle( uuid ) \
+    getPlayerDataKey(findPdata(uuid), PD_OBSTACLE)
+    
+#define setPlayerScore( uuid, score ) \
+    setPlayerData(findPdata(uuid), PD_SCORE, (float)score)
+#define getPlayerScore( uuid ) \
+    getPlayerDataFloat(findPdata(uuid), PD_SCORE)
+	
+	
+#define getPlayerArousal( uuid ) \
+    getPlayerDataInt(findPdata(uuid), PD_AROUSAL)
+
+    
+#define setPlayerCheckpoint( uuid, pos, rot ) \
+	int _ofs = findPdata(uuid);\
+    setPlayerData(_ofs, PD_CHECKPOINT, pos); \
+    setPlayerData(_ofs, PD_CHECKPOINT_ROT, rot)
+    
+    
+#define getPlayerCheckpoint( uuid ) \
+    getPlayerDataVec( findPdata(uuid), PD_CHECKPOINT )
+    
+#define getPlayerCheckpointRot( uuid ) \
+    getPlayerDataRot( findPdata(uuid), PD_CHECKPOINT_ROT )
+    
+#define setPlayerTeam( uuid, team ) \
+    setPlayerData(findPdata(uuid), PD_TEAM, team)
+#define getPlayerTeam( uuid ) \
+    getPlayerDataInt(findPdata(uuid), PD_TEAM)
+
+
+#endif

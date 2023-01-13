@@ -4,9 +4,9 @@ Phasmo:
 - Test: Succubus did ghost event on multiple players
 
 Wipeout:
-- Make a wipeout helper
-	
-- Level manager
+- Make a skylight for both maps
+- Add windlight to map A
+- Add soundspace to map A
 
 
 

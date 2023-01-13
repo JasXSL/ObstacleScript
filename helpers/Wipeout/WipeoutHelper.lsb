@@ -1,0 +1,60 @@
+#ifndef __WipeoutHelper
+#define __WipeoutHelper
+
+// Playerdata
+#define PD_CHECKPOINT 1
+#define PD_SCORE 2
+#define PD_AROUSAL 3
+#define PD_FLAGS 4
+    #define GPFLAG_ON_BEAM 0x1    // On slide beam
+    #define GPFLAG_INVUL 0x2    // Invulnerable
+#define PD_ARMOR 5
+#define PD_PENALTY 6
+
+#define MAX_AROUSAL 3
+
+#define getPlayerArmor( uuid ) \
+    getPlayerDataInt(findPdata(uuid), PD_ARMOR)
+#define setPlayerArmor( uuid, amount ) \
+    setPlayerData(findPdata(uuid), PD_ARMOR, amount)
+    
+#define getPlayerPenalty( uuid ) \
+    getPlayerDataFloat(findPdata(uuid), PD_PENALTY)
+#define setPlayerPenalty( uuid, amount ) \
+    setPlayerData(findPdata(uuid), PD_PENALTY, amount)
+#define addPlayerPenalty( uuid, amount ) \
+    setPlayerData(findPdata(uuid), PD_PENALTY, (getPlayerPenalty(uuid)+amount))
+
+
+#define getCheckpoint( id ) \
+    getPlayerDataVec(findPdata(id), PD_CHECKPOINT)
+#define setCheckpoint( id, pos ) \
+    setPlayerData(findPdata(id), PD_CHECKPOINT, pos)
+
+#define setScore( id, score ) \
+    setPlayerData(findPdata(id), PD_SCORE, score)
+#define getScore( id ) \
+    getPlayerDataFloat(findPdata(id), PD_SCORE)
+
+#define getArousal( id ) \
+    getPlayerDataInt(findPdata(id), PD_AROUSAL)
+#define playerAtMaxArousal( id ) \
+    (getArousal(id) >= MAX_AROUSAL)
+#define setArousal(id, arousal) \
+    setPlayerData(findPdata(id), PD_AROUSAL, arousal)
+
+#define getFlags( id ) \
+    getPlayerDataInt(findPdata(id), PD_FLAGS)
+#define setFlags(id, flags) \
+    setPlayerData(findPdata(id), PD_FLAGS, flags)
+
+#define isInvul( id ) \
+    (getFlags(id)&GPFLAG_INVUL)
+
+
+// Rulesets
+#define RULESET_DEFAULT 0       // One player runs at a time
+#define RULESET_PANDEMONEUM 1   // All players run
+
+
+#endif

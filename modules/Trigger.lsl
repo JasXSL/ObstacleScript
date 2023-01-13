@@ -30,7 +30,7 @@ onPortalLoadComplete( desc )
 		
 		llSetLinkPrimitiveParamsFast(LINK_THIS, (list)
 			PRIM_TEXTURE + ALL_SIDES + TEXTURE_TRANSPARENT + ZERO_VECTOR + ZERO_VECTOR + 0 +
-			PRIM_ALPHA_MODE + ALL_SIDES + PRIM_ALPHA_MODE_MASK
+			PRIM_ALPHA_MODE + ALL_SIDES + PRIM_ALPHA_MODE_MASK + 100
 		);		
 	}
     

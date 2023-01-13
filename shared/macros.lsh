@@ -31,6 +31,9 @@
 #define mkarr(input) llList2Json(JSON_ARRAY, (list)input)
 
 #define trim(input) llStringTrim((str)(input), STRING_TRIM)
+
+// Gets time in millisecond. max 999999 seconds before it loops over ~27 days
+#define millis() ((llGetUnixTime()%1000000)*1000+(integer)llGetSubString(llGetTimestamp(), 20, 22))
 	
 // Making it more readable for newbs
 #define AND &&
