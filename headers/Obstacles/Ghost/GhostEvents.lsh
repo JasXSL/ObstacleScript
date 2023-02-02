@@ -2,12 +2,34 @@
 #define __GhostEvents
 
 #define GhostEventsMethod$trigger 1		// void - Triggers a ghost event. Ghost events will generally require LOS to at least one player. And delays a hunt.
+#define GhostEventsMethod$subset 2		// void - Registers the sender as a ghost event helper. Such as the ghost hands.
+#define GhostEventsMethod$stop 3		// void - Note: ONLY used by subsets to signal that the event has stopped.
 
 #define GhostEvents$trigger( targ ) \
 	runMethod(targ, "GhostEvents", GhostEventsMethod$trigger, [])
+#define GhostEvent$subset() \
+	runOmniMethod("GhostEvents", GhostEventsMethod$subset, [])
+#define GhostEvents$stop( targ ) \
+	runMethod(targ, "GhostEvents", GhostEventsMethod$stop, [])
+
 
 #define GhostEventsEvt$begin 1			// (arr)players, type, subtype - 
 #define GhostEventsEvt$end 2			// (arr)players, type, subtype -
+
+
+// Custom portal events
+#define PortalCustomType$GhostEvents "oGhostEvents"
+	#define PortalCustomType$GhostEvents$hup 0			// void - Sent by a ghost on spawn to hookup helpers
+	#define PortalCustomType$GhostEvents$trigger 1		// (arr)players - Trigger an animation. Players are players in the ghost's current room.
+	
+#define onPortalGhostEventsHookup( ghost ) \
+	if( isEventPortalCustom() AND argStr(1) == PortalCustomType$GhostEvents AND argInt(2) == PortalCustomType$GhostEvents$hup ){ \
+		key ghost = argKey(0); \
+
+#define onPortalGhostEventsTrigger( ghost, players ) \
+	if( isEventPortalCustom() AND argStr(1) == PortalCustomType$GhostEvents AND argInt(2) == PortalCustomType$GhostEvents$trigger ){ \
+		key ghost = argKey(0); \
+		list players = llJson2List(argStr(3)); \
 
 
 // Interact types to be shuffled
@@ -17,6 +39,7 @@
 	#define GhostEventsConst$ITL_BREAKER 2			// turns off the breaker
 #define GhostEventsConst$IT_DOORS 1				// Slam all nearby doors
 #define GhostEventsConst$IT_POSSESS 2			// Interacts with one or more players directly
+	#define GhostEventsConst$ITP_SUBSET -1			// This ghost event is handled by a subset (spawned ghost event handler, such as ghost hands)
 	#define GhostEventsConst$ITP_RUB_UNI 0			// Unisex self rub
 	#define GhostEventsConst$ITP_RUB_F 1				// requires breasts
 	#define GhostEventsConst$ITP_RUB_DUO 2			// Rub 2 players
@@ -40,6 +63,7 @@
 // Level events
 #define LevelCustomType$GHOSTEVT "oGhostEvt"
 	#define LevelCustomEvt$GHOSTEVT$evt 1		// (arr)players, (int)baseType, (int)subType, (float)dur - A ghost event has triggered.
+												// duration can be 0 to stop it prematurely
 	
 #define onGhostEvent( ghost, players, baseType, subType, dur ) \
 	if( isEventLevelCustom() AND argStr(1) == LevelCustomType$GHOSTEVT AND argInt(2) == LevelCustomEvt$GHOSTEVT$evt ){ \

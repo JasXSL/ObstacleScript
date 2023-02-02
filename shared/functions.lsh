@@ -217,5 +217,53 @@ int _pla( key player, key targ, float angle ){
 
 #define agentLookingAtRadius( player, targ, radius ) \
 	_pla(player, targ, radius)
+	
+	
+	
+	
+// returns a viable wall for ghost events [(vector)pos, (vector)normal] if successful
+list findWall( key avatar, float offs ){
+    
+    vector pos = prPos(avatar);
+    int dir;
+    for(; dir < 4; ++dir ){
+        
+        list ray = llCastRay(
+            pos, 
+            pos+<3,0,0>*llEuler2Rot(<0,0,PI_BY_TWO*dir>), 
+            RC_DEFAULT + RC_DATA_FLAGS + RC_GET_NORMAL
+        );
+        vector norm = l2v(ray, 2);
+        if( llKey2Name(l2k(ray, 0)) == "WALL" && llFabs(norm.z) < 0.05 ){
+            
+            norm.z = 0;
+            norm = llVecNorm(norm);
+            vector offs = l2v(ray, 1)+norm*offs;
+            // Get floor
+            list r2 = llCastRay(offs, offs-<0,0,3>, RC_DEFAULT + RC_DATA_FLAGS + RC_GET_NORMAL );
+            vector fn = l2v(r2, 2);
+            if( l2i(r2, -1) == 1 && fn.z > 0.95 ){
+                
+				return (list)l2v(r2, 1) + norm;
+				
+            }
+            
+        }
+        
+    }
+    return [];
+    
+}
+
+// Returns a position of ceiling for ghost events
+vector ceilingPos(){
+    list ray = llCastRay(llGetPos()+<0,0,.5>, llGetPos()+<0,0,5>, RC_DEFAULT + RC_DATA_FLAGS + RC_GET_NORMAL);
+    if( l2i(ray, -1) != 1 )
+        return ZERO_VECTOR;
+    vector n = l2v(ray, 2);
+    if( n.z > -0.95 )
+        return ZERO_VECTOR;
+    return l2v(ray, 1);
+}
 
 #endif

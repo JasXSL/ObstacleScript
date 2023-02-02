@@ -240,8 +240,9 @@ list getOrbs(){
 updateOrbs(){
 	
 	list set = getOrbs();
-	if( set == [] || CAM_POS == ZERO_VECTOR || ORBS == ZERO_VECTOR || llGetTime() > ORB_D )
-		llSetLinkAlpha(P_ORBS, 0, ALL_SIDES);
+	if( set == [] || CAM_POS == ZERO_VECTOR || ORBS == ZERO_VECTOR || llGetTime() > ORB_D ){
+		llSetLinkPrimitiveParamsFast(P_ORBS, (list)PRIM_COLOR + 0 + ONE_VECTOR + 0 + PRIM_POSITION + ZERO_VECTOR);
+	}
 	else{
 		
 		vector pos = l2v(set, 0);
@@ -363,6 +364,7 @@ onStateEntry()
 	
     llSetLinkPrimitiveParamsFast(0, set);
 	setInterval("O", 1);
+	updateOrbs();
 	        
 end
 

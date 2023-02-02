@@ -1,0 +1,347 @@
+/*
+	This is stored inside of an animesh ghost event helper
+	Raises the following events:
+	"TRIGGER" + animation -- Triggered, but no avatar has been seated
+	"START" + animation
+	"END" + animation
+	"TICK" + animation -- Raised for ticking animations (such as the spank)
+	
+*/
+
+#define ANIM_PRE "ghosthands_"
+
+#define POSE_STRIDE 9
+
+#define POSE_TOOLS 0
+#define POSE_GENITALS 1
+#define POSE_SITTARG 2
+#define POSE_Z_ADJUST 3
+#define POSE_ANIM 4
+#define POSE_TICK 5
+#define POSE_DURATION 6
+#define POSE_SCALE_OFFS 7
+#define POSE_FLAGS 8
+	#define BFL_REQ_NAKED 0x1		// Target has to be naked
+
+
+list TARGS; // UUIDs of viable victims (players in the ghost room)
+
+#define getAnim(pose) l2s(POSES, pose*POSE_STRIDE+POSE_ANIM)
+#define getTools(pose) l2i(POSES, pose*POSE_STRIDE+POSE_TOOLS)
+#define getGenitals(pose) l2i(POSES, pose*POSE_STRIDE+POSE_GENITALS)
+#define getSitTarg(pose) l2v(POSES, pose*POSE_STRIDE+POSE_SITTARG)
+#define getZAdjust(pose) l2f(POSES, pose*POSE_STRIDE+POSE_Z_ADJUST)
+#define getTick(pose) l2f(POSES, pose*POSE_STRIDE+POSE_TICK)
+#define getDuration(pose) l2f(POSES, pose*POSE_STRIDE+POSE_DURATION)
+#define getScaleOffs(pose) l2f(POSES, pose*POSE_STRIDE+POSE_SCALE_OFFS)
+#define getFlags(pose) l2i(POSES, pose*POSE_STRIDE+POSE_FLAGS)
+
+#define getActiveAnim() getAnim(POSE)
+#define getActiveTools() getTools(POSE)
+
+// Runtime globals
+key VICTIM;
+integer POSE;
+integer ANIM_STAGES;
+vector REZPOS;
+integer TICK;   // Current tick animation
+
+
+key GHOST;
+
+
+
+// Checks conditions
+integer checkConds( integer type, list huds ){
+    
+	// Todo: Should figure out nr of players here later for multiplayer
+	// For now, we'll just use player 0
+	key hud = l2k(huds, 0);
+	
+    integer gen = getGenitals(type);
+	integer flags = getFlags(type);
+	
+    integer sex = Rlv$getDesc$sex(hud);
+	integer clothes = Rlv$getDesc$clothes(hud);
+	
+	if( flags&BFL_REQ_NAKED && clothes ){
+		lDebug("Fail req clothes");
+		return FALSE;
+	}
+	
+    if( (gen&sex) != gen ){
+		lDebug("Fail req sex");
+        return FALSE;
+	}
+    
+	#ifdef customConds
+	if( !customConds(getAnim(type), huds) ){
+		lDebug("Fail custom "+getAnim(type));
+		return FALSE;
+	}
+	#endif
+    
+    return TRUE;
+    
+}
+
+// Returns [] on fail, or [pos, rot] on success
+// Used in filtering
+list getPoseLoc( integer type, list players, integer debug ){
+    
+	// Default positioning uses the first player's position
+	key player = l2k(players, 0);
+    list avData = llGetObjectDetails(player, (list)OBJECT_POS + OBJECT_ROT);
+    vector pp = l2v(avData, 0);
+    rotation pr = l2r(avData, 1);
+    vector vr = llRot2Euler(pr);
+    pr = llEuler2Rot(<0,0,vr.z>);
+    list gnd = llCastRay(pp, pp-<0,0,3>, RC_DEFAULT);
+    if( l2i(gnd, -1) != 1 )
+        return [];
+		
+	#ifdef customLoc
+		list custom = customLoc(getAnim(type), players);
+		if( l2i(custom, 0) != -1 && (!debug || custom != []) )
+			return custom;
+	#endif
+    return [l2v(gnd, 1), pr];
+}
+
+start( key hud, integer type, vector pos, rotation rot ){
+    
+	float scaleOffs = getScaleOffs(type);
+	vector asize = llGetAgentSize(llGetOwnerKey(hud));
+	float hover = l2f(llGetObjectDetails(llGetOwnerKey(hud), (list)OBJECT_HOVER_HEIGHT), 0);
+	float defaultHeight = 1.66797; // Height of the snep, which the default offset is based on
+	
+	vector st = getSitTarg(type);
+	float deBreasts = defaultHeight/2*scaleOffs;
+	float taBreasts = asize.z/2*scaleOffs;
+	float posAdd = taBreasts-deBreasts;
+	float heightAdd = (asize.z-defaultHeight)*scaleOffs;
+		
+    llSetRegionPos(pos+<0,0,getZAdjust(type) + posAdd + heightAdd>);
+	
+    llSetLinkPrimitiveParamsFast(LINK_ROOT, (list)PRIM_ROTATION + rot);
+    VICTIM = hud;
+    POSE = type;
+    string anim = getActiveAnim();
+    
+    llSitTarget(st+<0,0,-posAdd>, ZERO_ROTATION);
+    
+    
+    // Cache sub anims like spank etc
+    ANIM_STAGES = 0;
+    integer len = llStringLength(ANIM_PRE+anim);
+    forInvType(INVENTORY_ANIMATION, i, name)
+        if( 
+            llGetSubString(name, 0, len) == ANIM_PRE+anim+"_" && 
+            llGetSubString(name, len+1, -1) != "loop" 
+        )++ANIM_STAGES;
+    end
+	
+    // Need to set end timer here
+    setTimeout("end", getDuration(type));
+    
+	raiseEvent(0, "TRIGGER" + anim);
+	
+	Rlv$sit( VICTIM, llGetKey(), TRUE );
+	// set EMF on victim
+	Level$raiseEvent( LevelCustomType$GHOSTINT, LevelCustomEvt$GHOSTINT$interacted, VICTIM + 1 );
+	
+}
+
+// Player sat
+onStart(){
+
+    toggle(getActiveTools());
+    str anim = getActiveAnim();
+    raiseEvent(0, "START" + anim);
+    // Check if intro exists
+    if( llGetInventoryType(ANIM_PRE+anim) == INVENTORY_ANIMATION ){
+        
+        llStartAnimation(ANIM_PRE+"av_"+anim);
+        llStartObjectAnimation(ANIM_PRE+anim);
+        llSleep(.5);
+        
+    }
+    
+    llStartAnimation(ANIM_PRE+"av_"+anim+"_loop");
+    llStartObjectAnimation(ANIM_PRE+anim+"_loop");
+    llSetLinkPrimitiveParamsFast(LINK_THIS, (list)PRIM_POINT_LIGHT + TRUE + <1,.25,.25> + 0.5 + 3 + 1);
+	
+    float tick = getTick(POSE);
+    if( tick > 0 ){
+		if( !ANIM_STAGES )
+			llOwnerSay("Error: Ticking animation has no stages: "+anim);
+		else
+			setTimeout("tick", tick);
+    }
+	
+	#ifdef customOnStart
+		customOnStart(getActiveAnim());
+	#endif
+    
+	
+	
+}
+
+onEnd(){
+    
+    key ast = llAvatarOnSitTarget();
+    if( ast ){
+        llUnSit(ast);
+		Rlv$unSit( ast, TRUE );
+	}
+    toggle(-1);
+    stopAllObjectAnimations()
+	unsetTimer("tick");
+	
+	#ifdef customOnEnd
+		customOnEnd(getActiveAnim());
+	#endif
+    llSetLinkPrimitiveParamsFast(LINK_THIS, (list)PRIM_POINT_LIGHT + FALSE + <1,.25,.25> + 0.5 + 3 + 1);
+	raiseEvent(0, "END" + getActiveAnim());
+	GhostEvents$stop( GHOST );
+	llSetKeyframedMotion([], [KFM_COMMAND, KFM_CMD_STOP]);
+	llSleep(.5);
+	llSetRegionPos(REZPOS);
+
+}
+
+#include "ObstacleScript/begin.lsl"
+
+
+#ifdef customEvts
+	customEvts
+#endif
+
+onRez( n )
+    llResetScript();
+end
+
+onStateEntry()
+	
+	stopAllObjectAnimations()
+    onLoad();
+    
+    REZPOS = llGetPos();
+    toggle(-1);
+    llSetLinkPrimitiveParamsFast(LINK_THIS, (list)PRIM_POINT_LIGHT + FALSE + ZERO_VECTOR + 0 + 0 + 0);
+
+    llListen(0, "", llGetOwner(), "");
+    
+	GhostEvent$subset();
+	
+end
+
+handleTimer( "end" )
+    onEnd();
+end
+
+handleTimer( "tick" )
+    ++TICK;
+    TICK = TICK%ANIM_STAGES;
+    
+	str anim = getActiveAnim();
+    llStopObjectAnimation(ANIM_PRE+anim+"_"+(str)TICK);
+    llStartAnimation(ANIM_PRE+"av_"+anim+"_"+(str)TICK);
+    llStartObjectAnimation(ANIM_PRE+anim+"_"+(str)TICK);
+	float tick = getTick(POSE);
+	setTimeout("tick", tick+llFrand(tick*0.25));
+	raiseEvent(0, "TICK" + anim);
+
+end
+
+onListen( ch, data )
+    
+    if( llGetSubString(data, 0, 4) == "POSE " ){
+        
+		list spl = split(data, " ");
+		integer pose = l2i(spl, 1);
+		integer skip = l2i(spl, 2);	// Skips conditions
+
+        if( !skip && !checkConds(pose, (list)TEST_VICTIM) ){
+            qd("Conditions failed" + pose);
+            return;
+        }
+                
+        list lr = getPoseLoc(pose, (list)llGetOwnerKey(TEST_VICTIM), skip);
+        if( lr == [] ){
+            qd("Unable to position " + pose);
+            return;
+        }
+        
+        start(TEST_VICTIM, pose, l2v(lr, 0), l2r(lr, 1));
+        
+    }
+    
+end
+
+onPortalGhostEventsHookup( ghost )
+
+	GhostEvent$subset();
+	
+end
+
+onPortalGhostEventsTrigger( ghost, players )
+	
+	GHOST = ghost;
+	integer i;
+	list order;
+	for(; i < count(POSES)/POSE_STRIDE; ++i )
+		order += i;
+	order = llListRandomize(order, 1);
+	players = llListRandomize(players, 1);
+	for( i = 0; i < count(order); ++i ){
+		
+		integer pose = l2i(order, i);
+		if( checkConds(pose, players) ){
+			
+			list lr = getPoseLoc(pose, players, FALSE);
+			if( lr ){
+			
+				start(l2k(players, 0), pose, l2v(lr, 0), l2r(lr, 1));
+				return;
+				
+			}
+			lDebug("Invalid pos: "+l2s(POSES, pose*POSE_STRIDE+POSE_ANIM));
+		
+		}
+		else
+			lDebug("Invalid conds: "+l2s(POSES, pose*POSE_STRIDE+POSE_ANIM));
+	
+	}
+	
+	// Failed. We need to manually stop the event.
+	GhostEvents$stop( GHOST );
+	
+end
+
+onPortalLoadComplete( desc )
+	REZPOS = llGetPos();
+end
+
+onChanged( ch )
+    if( ch & CHANGED_LINK ){
+        key ast = llAvatarOnSitTarget();
+        if( ast != llGetOwnerKey(VICTIM) ){
+            llUnSit(ast);
+        }
+        else if( ast ){
+            llRequestPermissions(ast, PERMISSION_TRIGGER_ANIMATION);
+        }
+    }
+end
+
+onRunTimePermissions( perm )
+    if( perm & PERMISSION_TRIGGER_ANIMATION )
+        onStart();
+end
+
+
+
+#include "ObstacleScript/end.lsl"
+
+

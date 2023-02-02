@@ -30,10 +30,10 @@ default{
 		// Ignore
 		if( nr < 0 )
 			return;
-
+		#ifndef IGNORE_RESET
 		if( nr == globalAction$RESET_ALL && (str)id != llGetScriptName() )
 			llResetScript();
-			
+		#endif
 
 		int type = (nr>>8)&3;
 		str ids = (string)id;

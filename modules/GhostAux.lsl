@@ -385,11 +385,12 @@ end
 
 onGhostEventsBegin( players, type, subtype )
 
+	// Types that should not show the ghost, but enable heartbeat
 	if( 
-		(type == GhostEventsConst$IT_POSSESS && (subtype == GhostEventsConst$ITP_SPANK || subtype == GhostEventsConst$ITP_DRAG)) ||
+		(type == GhostEventsConst$IT_POSSESS && (subtype == GhostEventsConst$ITP_SPANK || subtype == GhostEventsConst$ITP_DRAG || subtype == GhostEventsConst$ITP_SUBSET)) ||
 		(type == GhostEventsConst$IT_LIGHTS && subtype == GhostEventsConst$ITL_POP)
 	){
-		setInterval("HEART", 0.5);	// Only heartbeat for spank
+		setInterval("HEART", 0.5);
 	}
 	else{
 		BFL = BFL&~BFL_VISIBLE;

@@ -298,6 +298,13 @@ int _pdI( key id ){
 	int index; int tot = numHuds(); \
 	for(; index < tot; ++index ){ \
 		key hud = idbGetByIndex(idbTable$HUDS, index); 
+		
+#define forInvType( type, index, name ) \
+	int index; \
+	for(; index < llGetInventoryNumber(type); ++index ){ \
+		str name = llGetInventoryName(type, index);
+		
+
 
 #define getPlayers() idbValues(idbTable$PLAYERS, true)
 #define getHuds() idbValues(idbTable$HUDS, true)

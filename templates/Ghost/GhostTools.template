@@ -733,7 +733,8 @@ onGhostEvent( ghost, players, baseType, subType, dur )
     
     if( 
         baseType == GhostEventsConst$IT_LIGHTS && 
-        subType == GhostEventsConst$ITL_ELECTRONICS 
+        subType == GhostEventsConst$ITL_ELECTRONICS &&
+		dur > 0
     ){
 	
 		forTool(i, uuid, data)

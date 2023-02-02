@@ -16,7 +16,7 @@
 	"SpiritBox" + \
 	"GhostAux" + \
 	"GhostEvents" + \
-	"ToolSet"
+	"ToolSet" \
 	
 
 // prim text contains some information about the portal
@@ -102,6 +102,9 @@
 	
 #define Portal$raiseEvent( targ, customType, evt, data ) \
 	runMethod(targ, "Portal", PortalMethod$raiseEvent, customType + evt + data )
+#define Portal$raiseEventOmni( customType, evt, data ) \
+	runOmniMethod("Portal", PortalMethod$raiseEvent, customType + evt + data )
+
 #define Portal$remoteLoad( targ, scriptTarg, script, pin, startParam ) \
 	runMethod(targ, "Portal", PortalMethod$remoteLoad, scriptTarg + script + pin + startParam )
 

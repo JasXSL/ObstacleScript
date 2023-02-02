@@ -75,13 +75,17 @@ onGameStart(){
 	;
 	idbSetByIndex(idbTable$GHOST_SETTINGS, idbTable$GHOST_SETTINGS$TYPE, GHOST_TYPE); // Update DB ghost type
 
-    AFFIXES = 0;
-    if( difficulty > 0 )    // 4 rightmost bits = basic affixes
-        AFFIXES = AFFIXES | llCeil(llFrand(8));
-    if( difficulty > 1 )
-        AFFIXES = AFFIXES | (llCeil(llFrand(8))<<4);
-    // Affixes are not constant during a level. DB is written to in sendAffixes
-		
+	#ifdef FORCE_AFFIXES
+		AFFIXES = FORCE_AFFIXES;
+	#else
+		AFFIXES = 0;
+		if( difficulty > 0 )    // 4 rightmost bits = basic affixes
+			AFFIXES = AFFIXES | llCeil(llFrand(8));
+		if( difficulty > 1 )
+			AFFIXES = AFFIXES | (llCeil(llFrand(8))<<4);
+		// Affixes are not constant during a level. DB is written to in sendAffixes
+	#endif
+	
 	int full = getFullEvidenceTypes(GHOST_TYPE);
     EVIDENCE_TYPES = getDefaultEvidenceTypes(full);
 	idbSetByIndex(idbTable$GHOST_SETTINGS, idbTable$GHOST_SETTINGS$EVIDENCE, EVIDENCE_TYPES);
