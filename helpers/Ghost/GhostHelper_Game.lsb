@@ -88,7 +88,7 @@ onGameStart(){
 	
 	int full = getFullEvidenceTypes(GHOST_TYPE);
     EVIDENCE_TYPES = getDefaultEvidenceTypes(full);
-	idbSetByIndex(idbTable$GHOST_SETTINGS, idbTable$GHOST_SETTINGS$EVIDENCE, EVIDENCE_TYPES);
+	
 	
 	// Nightmare mode
 	if( difficulty > 2 ){
@@ -116,7 +116,7 @@ onGameStart(){
 	
 	}
 	
-	
+	idbSetByIndex(idbTable$GHOST_SETTINGS, idbTable$GHOST_SETTINGS$EVIDENCE, EVIDENCE_TYPES);
     raiseEvent(0, "GAMESTART");
     sendAffixes();
     

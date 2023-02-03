@@ -314,7 +314,11 @@ dropTool( key obj, key worldID, vector tPos, rotation tRot ){
     }
 	
     if( j(tool, TOOL_HELDBY) != player ){
-		// Todo: Should probably force refresh target toolset
+	
+		// Force remove the tool and refresh their held
+		ToolSet$remTool( obj, worldID );
+		refreshPlayerTools(player);
+		
         qd("Invalid owner for drop of " + llKey2Name(obj) + obj);
         return;
     }
@@ -334,7 +338,23 @@ dropTool( key obj, key worldID, vector tPos, rotation tRot ){
 
 }
 
-
+// ok is the player to refresh
+refreshPlayerTools( key ok ){
+	
+	
+	forTool( i, uuid, tool )
+		
+		if( j(tool, TOOL_HELDBY ) == ok )
+            ToolSet$addTool( 
+                ok, 
+                j(tool, TOOL_TYPE ), 
+                j(tool, TOOL_DATA ), 
+                uuid
+            );
+	
+	end
+	
+}
 
 
 
@@ -466,17 +486,7 @@ end
 onLevelCustomToolsetGet( toolsetuuid )
 
     key ok = llGetOwnerKey(toolsetuuid);
-	forTool( i, uuid, tool )
-		
-		if( j(tool, TOOL_HELDBY ) == ok )
-            ToolSet$addTool( 
-                toolsetuuid, 
-                j(tool, TOOL_TYPE ), 
-                j(tool, TOOL_DATA ), 
-                uuid
-            );
-	
-	end
+	refreshPlayerTools(ok);
     
 end
 

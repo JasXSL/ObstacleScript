@@ -274,6 +274,19 @@ handleInternalMethod( LevelMethod$invite )
         
     }
     list all = llGetAgentList(l, []);
+	list dist;
+	integer i;
+	for(; i < count(all); ++i ){
+		float d = llVecDist(llGetPos(), prPos(l2k(all, i)));
+		if( d < DIST )
+			dist += (list)d + l2k(all, i);
+	}
+	
+	dist = llListSort(dist, 2, TRUE);
+	all = llDeleteSubList(dist, 0, 0);
+	all = llList2ListStrided(all, 0,-1, 2);
+	dist = [];
+	
     vector gp = llGetPos();
     
     if( player == "" )
@@ -286,8 +299,7 @@ handleInternalMethod( LevelMethod$invite )
 	}
     
     integer invites;
-    integer i;
-    for(; i < count(all) && invites < nrInvites; ++i ){
+    for( i = 0; i < count(all) && invites < nrInvites; ++i ){
         
         string pl = l2s(all, i);
         // Not already joined
@@ -307,8 +319,7 @@ handleInternalMethod( LevelMethod$invite )
             
 
             if( 
-                (player == "*" || name == player || dn == player) && 
-                llVecDist(prPos(pl), gp) < DIST 
+                (player == "*" || name == player || dn == player)
             ){
                 
                 llOwnerSay(":: INVITING "+llGetDisplayName(pl));

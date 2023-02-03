@@ -188,9 +188,6 @@ setCamOn( int cam, bool on ){
     
 }
 
-
-
-
 #include "ObstacleScript/begin.lsl"
 
 onChanged( change )
@@ -389,16 +386,17 @@ end
 
 onGhostEvent( ghost, players, baseType, subType, dur )
     
-	if( dur > 0 ){
+	if( dur < 0.1 )
+		dur = 0.1;
+
+	// Pop light
+	if( baseType == GhostEventsConst$IT_LIGHTS && subType == GhostEventsConst$ITL_POP )
+		Nodes$getRoomName( LINK_THIS, "POP", prPos(ghost), 255 );
+	// Red flash
+	else
+		Nodes$getRoomName( LINK_THIS, ("_FE_"+(str)dur), prPos(ghost), 255 );
 	
-		// Pop light
-		if( baseType == GhostEventsConst$IT_LIGHTS && subType == GhostEventsConst$ITL_POP )
-			Nodes$getRoomName( LINK_THIS, "POP", prPos(ghost), 255 );
-		// Red flash
-		else
-			Nodes$getRoomName( LINK_THIS, ("_FE_"+(str)dur), prPos(ghost), 255 );
-		
-	}
+
 	
 end
 
@@ -465,18 +463,19 @@ end
 
 // Callback for get room from aux
 handleMethod( 255 )
-
+	
+	str lamp = argStr(2);
 	// Pop light ghost event
     if( argStr(0) == "POP" ){
-        Lamp$pop( argStr(2) );
-        Nodes$popLight(argStr(2));
+        Lamp$pop( lamp );
+        Nodes$popLight(lamp);
     }
 	// Red lamp flicker ghost event
     else if( llGetSubString(argStr(0),0,3) == "_FE_" ){
         
         float dur = (float)llGetSubString(argStr(0), 4, -1);
-        Lamp$color(argStr(2), (<1,0,0>), dur);
-        Lamp$flicker( argStr(2), TRUE, dur );
+        Lamp$color(lamp, (<1,0,0>), dur);
+        Lamp$flicker( lamp, TRUE, dur );
         
     }
 

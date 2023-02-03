@@ -136,25 +136,15 @@ handleOwnerMethod( GhostEventsMethod$trigger )
 	}
 	// GHOST BEHAVIOR :: SUCCUBUS :: Succubus can only possess
 	int suc = ghostType == GhostConst$type$succubus;
+	int yaoikai = ghostType == GhostConst$type$yaoikai;
+	int yuri = ghostType == GhostConst$type$yuri;
 	if( suc )
 		viable = (list)GhostEventsConst$IT_POSSESS;
 	
 		
 	viable = llListRandomize(viable, 1);
 	
-
-	key closest; float dist;
-	forPlayer(t,i,k)
-		float d = llVecDist(llGetPos(), prPos(closest));
-		// GHOST BEHAVIOR :: SUCCUBUS :: Can only target one player
-		if( (dist <= 0 || d < dist) && (!suc || k == GhostGet$sucTarg(llGetObjectDesc())) ){
-			
-			dist = d;
-			closest = k;
-			
-		}
-	end
-	evtPlayers = (list)closest;
+	evtPlayers = [];
 	
 	integer v;
 	for(; v < count(viable); ++v ){
@@ -225,8 +215,17 @@ handleOwnerMethod( GhostEventsMethod$trigger )
 			forHuds( tot, idx, k )
 				
 				list ray = llCastRay(gp, prPos(k), RC_DEFAULT);
-				if( l2i(ray, -1) == 0 && ~llGetAgentInfo(k) & AGENT_SITTING )
-					targets += k;
+				int genitals = Rlv$getDesc$sex( k );
+				if( 
+					l2i(ray, -1) == 0 && 
+					~llGetAgentInfo(k) & AGENT_SITTING &&
+					// GHOST BEHAVIOR :: SUCCUBUS :: Can only target one particular player
+					(!suc || llGetOwnerKey(k) == GhostGet$sucTarg(llGetObjectDesc())) &&
+					// GHOST BEHAVIOR :: Yuri :: Can only target female
+					(!yuri || ~genitals&GENITALS_PENIS) &&
+					// GHOST BEHAVIOR :: Yaoikai :: Can only target male
+					(!yaoikai || genitals&GENITALS_PENIS)
+				)targets += k;
 			
 			end
 			
@@ -238,9 +237,7 @@ handleOwnerMethod( GhostEventsMethod$trigger )
 				integer tot = 1+count(subsets)/2;
 				int useSubset = llFloor(llFrand(tot));
 				int success; float timeout;
-// todo Deleteme				
-useSubset = 1;
-				
+
 				if( useSubset ){
 					
 					subType = GhostEventsConst$ITP_SUBSET;
