@@ -20,6 +20,9 @@ integer BFL = 0x4;
 #define BFL_HUNTING 0x2
 #define BFL_DROPPED 0x4
 
+int GHOST_TYPE;
+integer EVIDENCE;
+
 #define hideResponse() llSetLinkAlpha(P_SPIRITBOX, 0, FACE)
 
 #define isDropped() (BFL&BFL_DROPPED && !llGetAttached())
@@ -32,7 +35,7 @@ setSprite( integer sprite ){
     llSetLinkPrimitiveParamsFast(P_SPIRITBOX, (list)
         PRIM_TEXTURE + 
         FACE + 
-        "43c422ac-4a73-2de5-0b7b-fa41fc457559" +
+        "65fa18cb-1271-c251-e1aa-f29a36b13d10" +
         <SCALEX, SCALEY, 0> +
         <
             STARTX + x*1.0/8,
@@ -73,6 +76,10 @@ respond(){
 		0x7E + "f70f8448-2cd3-c5b7-8df6-3834dd31f7ec" 		// No you
     ;
     
+	// Ghost behavior :: INUGAMI - May go bork on the spirit box
+	if( GHOST_TYPE == GhostConst$type$inugami && llFrand(1) < .2 )
+		responses = (list)8 + "050b6c9e-9507-f4d2-32e0-8d0e88ae3d5e";
+	
 	integer res = llFloor(llFrand(count(responses)/2))*2;
     integer response = l2i(responses, res);
 	key voice = l2k(responses, res+1);
@@ -270,6 +277,12 @@ onToolSetActiveTool( tool, data )
 			llSleep(.1);	// Fixes audio race conditions with owometer
         onDataChanged((int)data);
 	}
+end
+
+onGhostToolGhost( ghost, affixes, evidence, difficulty, type )
+	
+	GHOST_TYPE = type;
+	
 end
 
 onGhostToolHunt( hunting, ghost )

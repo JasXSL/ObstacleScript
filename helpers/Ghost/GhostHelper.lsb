@@ -13,7 +13,7 @@
 #define ToolsetConst$types$ghost$candle 8			// NOT USED IN GAME
 #define ToolsetConst$types$ghost$parabolic 9		// (bool)on | ToolSet: pos
 #define ToolsetConst$types$ghost$motionDetector 10	// 0 - NOTE: Can only be placed on linksets where the root prim has the word LEVEL somewhere in the description
-#define ToolsetConst$types$ghost$glowstick 11		// (int)utime_turned_on
+#define ToolsetConst$types$ghost$glowstick 11		// (int)percent
 #define ToolsetConst$types$ghost$pills 12			// 0
 #define ToolsetConst$types$ghost$thermometer 13		// (bool)on
 #define ToolsetConst$types$ghost$weegieboard 14		// 0
@@ -22,7 +22,7 @@
 #define ToolsetConst$types$ghost$saltpile 17		// (bool)stepped
 #define ToolsetConst$types$ghost$videoCamera 18		// void
 
-
+// Weak affixes
 #define ToolSetConst$affix$weakFlashlights 1
 #define ToolSetConst$affix$fewerHidingSpots 2
 #define ToolSetConst$affix$noVapes 3
@@ -31,7 +31,7 @@
 #define ToolSetConst$affix$powerOutage 6
 #define ToolSetConst$affix$noPills 7
 #define ToolSetConst$affix$noEvidenceUntilSalted 8
-
+// Strong affixes
 #define ToolSetConst$affix$noArousalMonitor 1		// Arousal monitor shows ???
 #define ToolSetConst$affix$ghostInvisible 2			// Ghost is permanently invisible
 #define ToolSetConst$affix$ghostSpeed 3				// Ghost speed increased by 20%
@@ -75,17 +75,26 @@
 
 #define GhostHelper$SALT_MAX_CHARGES 3
 
-#define GhostHelper$flashlightSettings (list)PRIM_POINT_LIGHT + on + <1.000, 0.928, 0.710> + 1 + (4-((AFFIXES&0xF)==ToolSetConst$affix$weakFlashlights)*2) + 1
+#define GhostHelper$flashlightSettings 
 #define GhostHelper$ecchisketchTexture "9b2f4cf3-2796-4a6a-e5f4-0b93693c86aa"
 
+// Percent goes to 200
+#define GhostHelper$getFlashlightLightSettings( on, percent ) \
+	(list)PRIM_POINT_LIGHT + on + <1.000, 0.928, 0.710> + 1 + (4.0*(float)percent/100.0) + 1
+#define GhostHelper$getFlashlightFrontSettings( on, percent ) \
+	(list)PRIM_FULLBRIGHT + 2 + (percent*on > 0) + PRIM_GLOW + 2 + ((float)(percent*on)/100.0)
 
-#define GhostHelper$getGlowstickSettings( utimeLit ) _ghGGS(utimeLit)
-list _ghGGS( integer utimeLit ){
 	
-	float perc = ((300.0-(float)(llGetUnixTime()-utimeLit))/300.0);
+
+#define GhostHelper$getGlowstickSettings( on, perc ) _ghGGS(on, perc)
+list _ghGGS( integer on, integer percent ){
+	
+	if( !on )
+		return (list)PRIM_POINT_LIGHT + FALSE + ZERO_VECTOR + 0 + 0 +0 + PRIM_FULLBRIGHT + ALL_SIDES + FALSE + PRIM_GLOW + ALL_SIDES + 0;
+	float perc = percent/100.0;
 	if( perc < 0 )
 		perc = 0;
-		
+	
 	return (list)PRIM_POINT_LIGHT + TRUE + <0.665, 0.181, 1.000> + 1.0 + (2.5+2.5*perc) + 1.0 + PRIM_FULLBRIGHT + ALL_SIDES + TRUE + PRIM_GLOW + ALL_SIDES + (0.1+0.4*perc);
 
 }
@@ -103,6 +112,18 @@ list _ghGGS( integer utimeLit ){
 
 
 
+
+// Tool IDB iteration macros
+// Get linksetdata keys starting with idbTable$TOOLS followed by exactly 36 characters
+#define getToolTableKeys() llLinksetDataFindKeys(idbTable$TOOLS+".{36}", 0, -1)
+#define forTool(...) OVERLOAD(forTool, __VA_ARGS__)
+#define forTool2(index, tool) list _k = getToolTableKeys(); integer index; for(; index < count(_k); ++index ){ str tool = llLinksetDataRead(l2s(_k,index));
+#define forTool3(index, uuid, tool) forTool2(index, tool) key uuid = llGetSubString(l2s(_k, index), 1,-1);
+// Index of table above
+// use table idbTable$TOOLS. Not indexed, it instead uses idbTable$TOOLS+(str)assetUUID. Each row is a JSON array: int type, key heldBy, var data
+#define TOOL_TYPE 0
+#define TOOL_HELDBY 1
+#define TOOL_DATA 2
 
 
 

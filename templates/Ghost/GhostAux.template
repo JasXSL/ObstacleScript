@@ -14,7 +14,7 @@
 	Required globals
 	#define START_POS pos_offset_from_root - Player start position
 	#define GHOST_SPAWNS (list)spawns - Ghost spawn positions relative to root prim
-	
+	#define DOOR_START_ROT (rot)local - Local rotation of the van doors in closed rotation
 	
 	Optional overrides
 	#define GHOST_NAMES (list)names - Overrides the default ghost names
@@ -188,6 +188,71 @@ setCamOn( int cam, bool on ){
     
 }
 
+
+// Toggles truck doors
+int P_DR;  // Door right
+int P_DL;  // Door left
+float doorPerc;
+int doorOpen = TRUE;
+toggleDoors( integer open ){
+    
+    if( doorOpen != open ){
+        
+        if( !open )
+            llTriggerSound("160a1e67-a56b-748b-1b77-2f915de2a991", 1);
+        else
+            llTriggerSound("f72f7248-8717-6b21-560d-4746025705f4", 1);
+        
+        doorOpen = open;
+    }
+    
+    unsetTimer("DO");
+    forLink( nr, name )
+        if( name == "DOOR_R" )
+            P_DR = nr;
+        else if( name == "DOOR_L" )
+            P_DL = nr;
+        else if( name == "TRUCK" ){
+            
+            //"WL$2c089a35-016d-4365-7370-15ac50a04ec7$$SS$ni$0.5"
+            list desc = split(l2s(llGetLinkPrimitiveParams(nr, (list)PRIM_DESC), 0), "$$");
+            integer i;
+            for(; i < count(desc); ++i ){
+                
+                str sub = l2s(desc, i);
+                if( llGetSubString(sub, 0, 2) == "SS$" ){
+                    
+                    list spl = split(sub, "$");
+                    string ss = "ni";
+                    if( !open )
+                        ss = "206436bb-6afd-ce82-1ebf-34c55a1bfa16";
+                    spl = llListReplaceList(spl, (list)ss, 1, 1);
+                    desc = llListReplaceList(desc, (list)join(spl, "$"), i, i);
+                    llSetLinkPrimitiveParamsFast(nr, (list)PRIM_DESC + join(desc, "$$"));
+                    
+                }
+                
+            }
+            
+        }
+    end
+        
+    doorPerc = 0;
+    if( !open ){
+        
+        llSetLinkPrimitiveParamsFast(P_DR, (list)
+            PRIM_ROT_LOCAL + DOOR_START_ROT +
+            PRIM_LINK_TARGET + P_DL +
+            PRIM_ROT_LOCAL + DOOR_START_ROT
+        );
+        
+        return;
+    }
+    
+    setInterval("DO",0.05);
+    
+}
+
 #include "ObstacleScript/begin.lsl"
 
 onChanged( change )
@@ -204,7 +269,9 @@ onRez( tot )
 end
 
 onStateEntry() 
-        
+
+	toggleDoors(TRUE);
+    doorPerc = 1.0; // Makes it instant
     list cams;
     forLink( nr, name )
         
@@ -227,11 +294,29 @@ onStateEntry()
         setCamOn(nr, FALSE);
         
     }
-    
+	
     
         
 end
 
+handleTimer( "DO" )
+
+    doorPerc += 0.05;
+    if( doorPerc > 1 ){
+        
+        doorPerc = 1;
+        unsetTimer("DO");
+        
+    }
+    
+    list pp;
+    pp += (list)PRIM_ROT_LOCAL + (DOOR_START_ROT*llEuler2Rot(<0,0,-PI/2*1.2*doorPerc>));
+    pp += (list)PRIM_LINK_TARGET + P_DL +
+        PRIM_ROT_LOCAL + (DOOR_START_ROT*llEuler2Rot(<0,0,PI/2*1.2*doorPerc>));
+    
+    llSetLinkPrimitiveParamsFast(P_DR, pp);
+
+end
 
 handleEvent( "#Tools", 0 )
     
@@ -266,6 +351,7 @@ handleEvent( "#Game", 0 )
     str type = argStr(0);
     if( type == "START_GAME" ){
         
+        toggleDoors(FALSE);
         int i;
         for(; i < count(P_CAMS); ++i )
             setCamOn( i, FALSE );
@@ -288,6 +374,7 @@ handleEvent( "#Game", 0 )
         spawnGhost();
     else if( type == "ROUND_START" ){
         
+		toggleDoors(TRUE);
         Lamp$togglePower( "*", FALSE );
         
         forPlayer( t, idx, player )
@@ -304,7 +391,7 @@ handleEvent( "#Game", 0 )
     else if( type == "END_GAME" ){
         
         BFL = BFL&~BFL_STARTED;
-        
+        toggleDoors(FALSE);
         // Unsit first
         warpToStart(TRUE);
         llSleep(1);
@@ -338,6 +425,10 @@ handleTimer( "END" )
     
     warpToStart(TRUE);
 
+end
+
+handleTimer( "RESET_DOOR" )
+    toggleDoors(TRUE);
 end
 
 onLevelCustomBondagePlayerDied( chair, player, dead )

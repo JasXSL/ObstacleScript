@@ -16,6 +16,7 @@ int OBJ_INTERACTS;
 int PL_INTERACTS;
 
 
+
 // Gets distance to the nearest player, reqLos is line of sight:
 // 0 = no LOS req
 // 1 = LOS req
@@ -50,6 +51,26 @@ float gnptgd( int reqLos ){
 }
 #define getNearestGhostPlayerDistance( reqLos ) gnptgd( reqLos )
 
+
+int hasActiveToolNearby( int tool, float range ){
+	
+	list nodes = llJson2List(idbGetByIndex(idbTable$NODES, idbTable$NODES$GRMARKERS));
+	
+	forTool( idx, uuid, t )
+		if( (int)j(t, TOOL_TYPE) == tool && (int)j(t, TOOL_DATA) ){
+			
+			vector tpos = prPos(uuid);
+			vector gpos = prPos(GhostGet$ghost());
+			float dist = llVecDist(<tpos.x,tpos.y,0>, <gpos.x,gpos.y,0>);
+			if( dist < range && llFabs(tpos.z-gpos.z) < 2.5 )
+				return TRUE;
+			
+		}
+	end
+	
+	return FALSE;
+	
+}
 
 saveStats(){
 	idbSetByIndex(idbTable$GHOST_BEHAVIOR, idbTable$GHOST_BEHAVIOR$STATS, mkarr(GHOST_EVENTS + OBJ_INTERACTS + PL_INTERACTS + HUNTS));
@@ -115,6 +136,14 @@ toggleHunt( integer on ){
 
 #include "ObstacleScript/begin.lsl"
 
+#ifdef DEBUG
+onStateEntry()
+	GHOST_TYPE = GhostGet$type();
+	EVIDENCE_TYPES = GhostGet$evidence();
+	AFFIXES = GhostGet$affixes();
+	setInterval("TOUCH", 5);
+end
+#endif
 
 handleEvent( "#Game", 0 )
 	str type = argStr(0);
@@ -196,6 +225,11 @@ handleTimer( "TOUCH" )
 	
 	
     float evtChance = 0.05+0.05*avgArousalPerc;
+	if( GHOST_TYPE == GhostConst$type$hantuwu ){
+		evtChance *= 2; // GHOST BEHAVIOR - HANTUWU :: Ghost evt chance increased by 50%
+		if( !hasActiveToolNearby(ToolsetConst$types$ghost$hots, 2) ) // can only ghost event when near a HOTS
+			evtChance = 0;
+	}
     	
     if( 
         llGetTime()-LAST_EVENT > 60 && // Min 60 sec between
@@ -246,10 +280,6 @@ handleTimer( "TOUCH" )
 	if( activity < 0.1 )
 		activity = 0.1;
     
-    // GHOST BEHAVIOR :: Hantuwu - Interactivity
-    if( GHOST_TYPE == GhostConst$type$hantuwu )
-        activity *= (avgArousalPerc/2+0.75);
-    
     // GHOST BEHAVIOR :: INUGAMI - Activity based on players in room
     if( GHOST_TYPE == GhostConst$type$inugami ){
         
@@ -261,10 +291,6 @@ handleTimer( "TOUCH" )
     }
     
     if( llFrand(1.0) > activity )
-        return;
-        
-    // GHOST BEHAVIOR :: HANTUWU
-    if( GHOST_TYPE == GhostConst$type$hantuwu && llFrand(1) > avgArousalPerc )
         return;
     
     GhostInteractions$interact(FALSE);   

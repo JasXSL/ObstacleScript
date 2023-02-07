@@ -253,7 +253,7 @@ onLevelCustomGhostSpawned( ghost )
 	idbSetByIndex(idbTable$GHOST_SETTINGS, idbTable$GHOST_SETTINGS$GHOST, ghost);
 	int difficulty = GhostGet$difficulty();
     Ghost$setType( GHOST_TYPE, EVIDENCE_TYPES, difficulty, AFFIXES );
-    GhostTool$setGhost(ghost, AFFIXES, EVIDENCE_TYPES, difficulty);
+    GhostTool$setGhost(ghost, AFFIXES, EVIDENCE_TYPES, difficulty, GHOST_TYPE);
     
 end
 

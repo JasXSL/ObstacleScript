@@ -215,14 +215,17 @@ integer walkTowards( vector pos ){
 			
 		}
 		
-		if( speed > 2.5 )
-			speed = 2.5;
+		
 	
 	}
 	
 	if( hasStrongAffix(AFFIXES, ToolSetConst$affix$ghostSpeed) )
 		speed *= 1.2;
-
+	if( BFL&BFL_GUESS_WRONG )
+		speed *= 1.2;
+	if( speed > 2.5 )
+		speed = 2.5;
+		
 	// Find where to step
 	vector fwd = llVecNorm(<pp.x, pp.y, 0>-<gp.x, gp.y, 0>)*speed;
 	
@@ -375,6 +378,22 @@ randomRoam( int ignore ){
 	
 }
 
+// When we've seen a target during a hunt
+onHuntTargLOS( vector pos ){
+
+	if( ~BFL&BFL_HUNT_HAS_LOS ){
+		
+		timeLOS = llGetTime();
+		BFL = BFL|BFL_HUNT_HAS_LOS;
+		setState(STATE_CHASING);
+		
+	}
+	BFL = BFL|BFL_HUNT_HAS_POS;
+	huntLastSeenPos = pos;
+	
+	
+}
+
 
 
 // IT BEGINS //
@@ -432,35 +451,24 @@ handleTimer( "A" )
 		if( STATE != STATE_HUNT_PRE && !smudged ){
 					
 			// First see if we can still see our tracked target
-			if( llKey2Name(huntTarget) != "" && ~llGetAgentInfo(huntTarget) & AGENT_SITTING ){
+			if( llKey2Name(huntTarget) != "" ){
 			
 				vector tp = getPlayerVisibilityPos(huntTarget);
 				list ray = llCastRay(g, tp, RC_DEFAULT);
 				// we have LOS to the player
 				if( 
 					l2i(ray, -1) == 0 && 						// Have LoS
-					~pointInRoom(tp)	 						// Inside house
+					~pointInRoom(tp) &&	 						// Inside house
+					~llGetAgentInfo(huntTarget) & AGENT_SITTING	// Not sitting
 				){
-					
-					if( ~BFL&BFL_HUNT_HAS_LOS ){
-						
-						timeLOS = llGetTime();
-						BFL = BFL|BFL_HUNT_HAS_LOS;
-						BFL = BFL|BFL_HUNT_HAS_POS;
-						huntLastSeenPos = tp;
-						
-						//qd("Now have LOS and last seen pos" + huntLastSeenPos);
-						setState(STATE_CHASING);
-						bdbg("LOS to "+llKey2Name(huntTarget)+" ("+(str)huntLastSeenPos+")");
-					
-					}
-					
+					// We now have LOS
+					onHuntTargLOS(tp);				
 				}
 				// We no longer have LOS. BFL_HUNT_HAS_POS will still be set tho
 				else if( BFL & BFL_HUNT_HAS_LOS ){
 				
 					BFL = BFL &~BFL_HUNT_HAS_LOS;
-					bdbg("Lost LOS, tracking last seen position");
+					bdbg("Lost LOS, tracking last seen position: "+(str)huntLastSeenPos+" has pos: "+(str)(BFL&BFL_HUNT_HAS_POS));
 					//qd("No longer have LOS, but we have POS");
 					
 				}
@@ -479,10 +487,10 @@ handleTimer( "A" )
 					if( l2i(ray, -1) == 0 && ~llGetAgentInfo(player) & AGENT_SITTING ){
 						
 						huntTarget = player;
-						BFL = BFL|BFL_HUNT_HAS_LOS;
+						onHuntTargLOS( pp );
+						
 						bdbg("Starting hunt on "+llKey2Name(player));
-						//qd("Now hunting " + player);
-						index = 9001;
+						return;
 						
 					}
 				
@@ -497,7 +505,7 @@ handleTimer( "A" )
 				vector pos = l2v(playerFootsteps, loc);
 				if( pos ){
 					
-					huntLastFootstepReq = llGetTime()+10;	// Give him 10 sec
+					huntLastFootstepReq = llGetTime()+5;	// Give him 5 sec
 					
 					// We're already in the room, search it for a while
 					if( pointInRoom(pos) == curRoom ){
@@ -796,7 +804,7 @@ handleTimer( "A" )
 		
 			pp = huntLastSeenPos;
 			// Reached last seen pos
-			if( llVecDist(<g.x, g.y, 0>, <pp.x, pp.y, 0>) < 0.25 )
+			if( llVecDist(<g.x, g.y, 0>, <pp.x, pp.y, 0>) < 0.5 )
 				BFL = BFL&~BFL_HUNT_HAS_POS;
 				
 		}
@@ -1004,7 +1012,7 @@ handleOwnerMethod( GhostMethod$toggleHunt )
 		llSetKeyframedMotion([], [KFM_COMMAND, KFM_CMD_STOP]);
 		float time = 3;
 		if( BFL&BFL_GUESS_WRONG )
-			time = 1;
+			time = 0.1;
 		setTimeout("HUNT", time);	// Start walking
 		
 	}	

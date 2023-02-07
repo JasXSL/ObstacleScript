@@ -28,7 +28,8 @@
 
 #define idbTable$NODES "'"			// char(39) - Owned by GhostNodes
 	#define idbTable$NODES$PIGR 0		// int - Players in ghost room
-
+	#define idbTable$NODES$GRMARKERS 1	// (list)pos0, rot0, size0, pos1, rot1, size1... - Room markers that make up the current ghost room
+	
 #define idbTable$COM "("			// char(40) - Owned by Com
 	#define idbTable$COM$HOST 0			// key - UUID of level PRIM the HUD is bound to
 

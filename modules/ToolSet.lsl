@@ -74,14 +74,17 @@ onDataUpdate(){
     integer on = getActiveToolInt();
 	
     if( tool == ToolsetConst$types$ghost$flashlight ){
-
+		
+		list d = llJson2List(getActiveToolStr());
+		on = l2i(d, 0);
+		integer percent = l2i(d, 1);
         PP(
             P_FLASHLIGHTBEAM, 
-            GhostHelper$flashlightSettings
+            GhostHelper$getFlashlightLightSettings( on, percent )
         );
         PP(
             P_FLASHLIGHT,
-            (list)PRIM_FULLBRIGHT + 2 + on + PRIM_GLOW + 2 + on*0.5
+			GhostHelper$getFlashlightFrontSettings( on, percent )
         );
         
     }
@@ -99,8 +102,12 @@ onDataUpdate(){
         }
         
     }
-    else if( tool == ToolsetConst$types$ghost$glowstick )
-        onTick();
+    else if( tool == ToolsetConst$types$ghost$glowstick ){
+	
+		list d = llJson2List(getActiveToolStr());
+		PP(P_GSTICK, GhostHelper$getGlowstickSettings(l2i(d, 0), l2i(d, 1)));
+		
+	}
     else if( tool == ToolsetConst$types$ghost$parabolic ){
         
         PP( P_PARAMON, (list)
@@ -272,9 +279,7 @@ onTick(){
     
     integer type = activeType();
     integer toolInt = getActiveToolInt();
-    if( type == ToolsetConst$types$ghost$glowstick && toolInt )
-        PP(P_GSTICK, GhostHelper$getGlowstickSettings( toolInt ));
-    else if( type == ToolsetConst$types$ghost$parabolic ){
+    if( type == ToolsetConst$types$ghost$parabolic ){
         
         key texture = "87aea93e-75df-8a53-a016-7e0497530e19";
         float between;
@@ -506,6 +511,20 @@ onStateEntry()
 	
 end
 
+onGhostToolData( data, uuid )
+
+	integer pos = llListFindList(TOOLS, (list)uuid);
+	if( ~pos ){
+	
+		TOOLS = llListReplaceList(TOOLS, (list)data, pos-1, pos-1);
+		if( ACTIVE_TOOL*TOOLSTRIDE == pos-2 ){
+			onDataUpdate();
+		}
+		
+	}
+
+end
+
 // USE
 onPortalLclickStarted( hud )
 
@@ -515,21 +534,35 @@ onPortalLclickStarted( hud )
 		
     list toggled = (list)
         ToolsetConst$types$ghost$owometer +
-        ToolsetConst$types$ghost$flashlight +
         ToolsetConst$types$ghost$spiritbox +
         ToolsetConst$types$ghost$parabolic +
 		ToolsetConst$types$ghost$thermometer
     ;
     if( tool == ToolsetConst$types$ghost$glowstick ){
-        
-        if( getActiveToolInt() )
+	
+        // Already on
+        if( (int)j(getActiveToolStr(), 0) )
             return;
-            
-        setActiveToolVal(llGetUnixTime());
+        
+		string data = "[1,100]";
+        setActiveToolVal(data);
         onDataUpdate();
-        Level$raiseEvent( LevelCustomType$GTOOL, LevelCustomEvt$GTOOL$data, getActiveToolWorldId() + llGetUnixTime() );
+        Level$raiseEvent( LevelCustomType$GTOOL, LevelCustomEvt$GTOOL$data, getActiveToolWorldId() + data ); // Set it to 100%. Going down to 0%
 		drawActiveTool();
-
+		
+    }
+	
+	if( tool == ToolsetConst$types$ghost$flashlight ){
+		
+		list d = llJson2List(getActiveToolStr());
+		integer v = !l2i(d, 0);
+		str out = mkarr(llListReplaceList(d, (list)v, 0,0));
+        setActiveToolVal(out);
+        onDataUpdate();
+        llTriggerSound("691cc796-7ed6-3cab-d6a6-7534aa4f15a9", .5);
+        // Tell level
+        Level$raiseEvent( LevelCustomType$GTOOL, LevelCustomEvt$GTOOL$data, getActiveToolWorldId() + out );
+		
     }
     
     if( ~llListFindList(toggled, (list)tool) ){
@@ -782,7 +815,7 @@ handleMethod( ToolSetMethod$trigger )
 	// Negative ouija meant it was used
 	else if( tool == -ToolsetConst$types$ghost$weegieboard )
 		raiseEvent(ToolSetEvt$visual, tool + METHOD_ARGS);
-
+	
     
 end
 
@@ -823,19 +856,21 @@ handleTimer( "HUNT" )
 	if( tool == ToolsetConst$types$ghost$flashlight ){
 	
 		int on = floor(llFrand(2));
+		int bright = (int)llFrand(50)+50;
 		PP(
 			P_FLASHLIGHTBEAM, 
-			GhostHelper$flashlightSettings
+			GhostHelper$getFlashlightLightSettings( on, bright )
 		);
 		PP(
 			P_FLASHLIGHT,
-			(list)PRIM_FULLBRIGHT + 2 + on + PRIM_GLOW + 2 + on*0.5
+			GhostHelper$getFlashlightFrontSettings( on, bright )
 		);
+		
 	}
 	
 end
 
-onGhostToolGhost( ghost, affixes, evidence, difficulty )
+onGhostToolGhost( ghost, affixes, evidence, difficulty, type )
 	AFFIXES = affixes;
 	onDataUpdate();
 end

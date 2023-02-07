@@ -41,7 +41,7 @@
 #define GhostConst$type$yaoikai 4			// - Typing or talking near it may provoke a hunt, but can only hear footsteps near it. Will only touch investigator with penis.
 #define GhostConst$type$imp 5				// - Prefers touching players over interacting with items. No arousal penalty when successfully using a luigi board.
 #define GhostConst$type$hantuwu 6			// - Starts low interactive and gets more interactive as arousal increases.
-#define GhostConst$type$inugami 7			// - Gets less interactive when players are near it. More interactive if nobody's near it.
+#define GhostConst$type$inugami 7			// - Gets less interactive when players are near it. More interactive if nobody's near it. Can go "bork" on spirit box
 #define GhostConst$type$obukakke 8			// - Active ability leaves stains on everything nearby without causing EMF or movement. Adds arousal when it does.
 #define GhostConst$type$gooryo 9			// - Can teleport directly between rooms with plumbing. Doesn't roam normally, only teleports.
 #define GhostConst$type$ehee 10				// - Will only give EMF if nobody's got line of sight to it. Can't hunt if a player is within 8 meters and has LOS. Higher chance of a stronger EMF.
@@ -113,14 +113,14 @@
 // Corresponds to the ghost type indexes. The leftmost 16 bits are forced evidence types for nightmare
 // When changing these, you need to recompile #Game, Ghost, and the GHOST_BOARD
 #define GhostConst$evidenceTypes [\
-	GhostConst$evidence$stains|GhostConst$evidence$spiritbox|GhostConst$evidence$temps, /* Succubus */ \
+	GhostConst$evidence$stains|GhostConst$evidence$writing|GhostConst$evidence$temps, /* Succubus */ \
 	GhostConst$evidence$owometer|GhostConst$evidence$spiritbox|GhostConst$evidence$hots, /* Yuri */ \
 	GhostConst$evidence$owometer|GhostConst$evidence$writing|GhostConst$evidence$temps, /* asswang */ \
 	GhostConst$evidence$owometer|GhostConst$evidence$writing|GhostConst$evidence$hots, /* Powoltergeist */ \
 	GhostConst$evidence$owometer|GhostConst$evidence$writing|GhostConst$evidence$spiritbox, /* Yaoikai */ \
 	GhostConst$evidence$temps|GhostConst$evidence$spiritbox|GhostConst$evidence$owometer, /* Imp */ \
-	GhostConst$evidence$writing|GhostConst$evidence$spiritbox|GhostConst$evidence$temps, /* Hantuwu */ \
-	GhostConst$evidence$writing|GhostConst$evidence$temps|GhostConst$evidence$stains, /* Inugami */ \
+	GhostConst$evidence$writing|GhostConst$evidence$hots|GhostConst$evidence$temps, /* Hantuwu */ \
+	GhostConst$evidence$spiritbox|GhostConst$evidence$temps|GhostConst$evidence$stains|(GhostConst$evidence$spiritbox<<16), /* Inugami */ \
 	GhostConst$evidence$stains|GhostConst$evidence$temps|GhostConst$evidence$hots|(GhostConst$evidence$stains<<16), /* Obukakke */ \
 	GhostConst$evidence$hots|GhostConst$evidence$writing|GhostConst$evidence$stains, /* Gooryo */ \
 	GhostConst$evidence$owometer|GhostConst$evidence$hots|GhostConst$evidence$stains|(GhostConst$evidence$owometer<<16), /* Ehee */  \

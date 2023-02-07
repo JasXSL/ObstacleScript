@@ -1,14 +1,15 @@
 x = should be fixed, ? = not sure if fixed, - todo, u = unable to reproduce
 
-Hands event:
 
-x Tickle groin/butt
-- Tickle armpits
-x Breast rub
+Ghost behavior changes:
+- Succubus -> Change spirit box to writing
+- Inugami -> Change writing to spirit box
+- Inugami -> Add custom Bork spirit box response.
+Hantuwu ->
+    - If attempting to hunt near a glow stick, it will instead start a ghost event.
+    - Cannot pop lights.
+    - Will not turn lights OFF. 
 
-x Pin against the ceiling and rub groin
-
-- Pin against wall and finger
-- Pin against a wall and spank
-
-
+Hunt changes:
+TEST -  Ghost stops hearing footsteps etc after losing LOS 
+ - Ghost shouldn't instantly slow down after losing LOS

@@ -35,6 +35,10 @@ handleMethod( GhostToolMethod$hunting )
     
 end
 
+handleOwnerMethod( GhostToolMethod$setData )
+	raiseEvent(GhostToolEvt$data, METHOD_ARGS);
+end
+
 
 handleOwnerMethod( GhostToolMethod$emp )
 	

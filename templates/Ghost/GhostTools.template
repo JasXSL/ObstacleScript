@@ -8,8 +8,7 @@
 	- 
 	
 	
-	Required globals:
-	#define DOOR_START_ROT (rot)local - Local rotation of the van doors in closed rotation
+	
 	
 	
 */
@@ -18,16 +17,7 @@
 #define USE_TIMER
 #include "ObstacleScript/index.lsl"
 
-// use table idbTable$TOOLS. Not indexed, it instead uses idbTable$TOOLS+(str)assetUUID. Each row is a JSON array: int type, key heldBy, var data
-#define TOOL_TYPE 0
-#define TOOL_HELDBY 1
-#define TOOL_DATA 2
 
-// Get linksetdata keys starting with idbTable$TOOLS followed by exactly 36 characters
-#define getToolTableKeys() llLinksetDataFindKeys(idbTable$TOOLS+".{36}", 0, -1)
-#define forTool(...) OVERLOAD(forTool, __VA_ARGS__)
-#define forTool2(index, tool) list _k = getToolTableKeys(); integer index; for(; index < count(_k); ++index ){ str tool = llLinksetDataRead(l2s(_k,index));
-#define forTool3(index, uuid, tool) forTool2(index, tool) key uuid = llGetSubString(l2s(_k, index), 1,-1);
 
 // Gear is a 2-stride int list of (int)toolIndex, (int)amount
 // ToolIndex is defined in GhostHelper.lsl
@@ -238,69 +228,6 @@ list getActiveSensors(){
 
 
 
-// Toggles truck doors
-int P_DR;  // Door right
-int P_DL;  // Door left
-float doorPerc;
-int doorOpen = TRUE;
-toggleDoors( integer open ){
-    
-    if( doorOpen != open ){
-        
-        if( !open )
-            llTriggerSound("160a1e67-a56b-748b-1b77-2f915de2a991", 1);
-        else
-            llTriggerSound("f72f7248-8717-6b21-560d-4746025705f4", 1);
-        
-        doorOpen = open;
-    }
-    
-    unsetTimer("DO");
-    forLink( nr, name )
-        if( name == "DOOR_R" )
-            P_DR = nr;
-        else if( name == "DOOR_L" )
-            P_DL = nr;
-        else if( name == "TRUCK" ){
-            
-            //"WL$2c089a35-016d-4365-7370-15ac50a04ec7$$SS$ni$0.5"
-            list desc = split(l2s(llGetLinkPrimitiveParams(nr, (list)PRIM_DESC), 0), "$$");
-            integer i;
-            for(; i < count(desc); ++i ){
-                
-                str sub = l2s(desc, i);
-                if( llGetSubString(sub, 0, 2) == "SS$" ){
-                    
-                    list spl = split(sub, "$");
-                    string ss = "ni";
-                    if( !open )
-                        ss = "206436bb-6afd-ce82-1ebf-34c55a1bfa16";
-                    spl = llListReplaceList(spl, (list)ss, 1, 1);
-                    desc = llListReplaceList(desc, (list)join(spl, "$"), i, i);
-                    llSetLinkPrimitiveParamsFast(nr, (list)PRIM_DESC + join(desc, "$$"));
-                    
-                }
-                
-            }
-            
-        }
-    end
-        
-    doorPerc = 0;
-    if( !open ){
-        
-        llSetLinkPrimitiveParamsFast(P_DR, (list)
-            PRIM_ROT_LOCAL + DOOR_START_ROT +
-            PRIM_LINK_TARGET + P_DL +
-            PRIM_ROT_LOCAL + DOOR_START_ROT
-        );
-        
-        return;
-    }
-    
-    setInterval("DO",0.05);
-    
-}
 
 dropTool( key obj, key worldID, vector tPos, rotation tRot ){
       
@@ -363,25 +290,25 @@ refreshPlayerTools( key ok ){
 
 onLevelCustomGtoolSpawned( tool )
 
+	// name, type, default
     list toolNames = (list)
-        "Owometer" + ToolsetConst$types$ghost$owometer +
-        "Flashlight" + ToolsetConst$types$ghost$flashlight +
-        "HOTS" + ToolsetConst$types$ghost$hots +
-        "Ecchisketch" + ToolsetConst$types$ghost$ecchisketch +
-        "Spiritbox" + ToolsetConst$types$ghost$spiritbox +
-        "Camera" + ToolsetConst$types$ghost$camera +
-        "Salt" + ToolsetConst$types$ghost$salt +
-        "Candle" + ToolsetConst$types$ghost$candle +
-        "Parabolic" + ToolsetConst$types$ghost$parabolic +
-        "MotionDetector" + ToolsetConst$types$ghost$motionDetector +
-        "Glowstick" + ToolsetConst$types$ghost$glowstick +
-        "Pills" + ToolsetConst$types$ghost$pills +
-        "Thermometer" + ToolsetConst$types$ghost$thermometer +
-        "Weegieboard" + ToolsetConst$types$ghost$weegieboard +
-        "Vape" + ToolsetConst$types$ghost$vape +
-        "HornyBat" +ToolsetConst$types$ghost$hornybat +
-        "SaltPile" + ToolsetConst$types$ghost$saltpile +
-        "VidCam" + ToolsetConst$types$ghost$videoCamera
+        "Owometer" + ToolsetConst$types$ghost$owometer + 0 +
+        "Flashlight" + ToolsetConst$types$ghost$flashlight + "[0,100]" + // on / intensity
+        "HOTS" + ToolsetConst$types$ghost$hots + 0 +
+        "Ecchisketch" + ToolsetConst$types$ghost$ecchisketch + 0 +
+        "Spiritbox" + ToolsetConst$types$ghost$spiritbox + 0 +
+        "Salt" + ToolsetConst$types$ghost$salt + 0 +
+        "Candle" + ToolsetConst$types$ghost$candle + 0 +
+        "Parabolic" + ToolsetConst$types$ghost$parabolic + 0 +
+        "MotionDetector" + ToolsetConst$types$ghost$motionDetector + 0 +
+        "Glowstick" + ToolsetConst$types$ghost$glowstick + "[0,0]" + // on / intensity
+        "Pills" + ToolsetConst$types$ghost$pills + 0 +
+        "Thermometer" + ToolsetConst$types$ghost$thermometer + 0 +
+        "Weegieboard" + ToolsetConst$types$ghost$weegieboard + 0 +
+        "Vape" + ToolsetConst$types$ghost$vape + 0 +
+        "HornyBat" +ToolsetConst$types$ghost$hornybat + 0 +
+        "SaltPile" + ToolsetConst$types$ghost$saltpile + 0 +
+        "VidCam" + ToolsetConst$types$ghost$videoCamera + 0
     ;
     
     integer pos = llListFindList(toolNames, (list)llKey2Name(tool));
@@ -392,31 +319,12 @@ onLevelCustomGtoolSpawned( tool )
     
     integer tn = l2i(toolNames, pos+1);
 
-	string table = idbTable$TOOLS+(str)tool;
+	string table = idbTable$TOOLS + (str)tool;
 	// This tool is already spawned
 	if( llLinksetDataRead(table) != "" )
         return;
 
-	llLinksetDataWrite(table, mkarr(tn + "" + 0));
-
-end
-
-handleTimer( "DO" )
-
-    doorPerc += 0.05;
-    if( doorPerc > 1 ){
-        
-        doorPerc = 1;
-        unsetTimer("DO");
-        
-    }
-    
-    list pp;
-    pp += (list)PRIM_ROT_LOCAL + (DOOR_START_ROT*llEuler2Rot(<0,0,-PI/2*1.2*doorPerc>));
-    pp += (list)PRIM_LINK_TARGET + P_DL +
-        PRIM_ROT_LOCAL + (DOOR_START_ROT*llEuler2Rot(<0,0,PI/2*1.2*doorPerc>));
-    
-    llSetLinkPrimitiveParamsFast(P_DR, pp);
+	llLinksetDataWrite(table, mkarr(tn + "" + llList2List(toolNames, pos+2, pos+2)));
 
 end
 
@@ -473,13 +381,59 @@ end
 
 onStateEntry() 
     
-    toggleDoors(TRUE);
-    doorPerc = 1.0; // Makes it instant
     #ifdef DEBUG_SPAWN_GEAR
+	list keys = getToolTableKeys();
+	integer i;
+	for(; i < count(keys); ++i )
+		llLinksetDataDelete(l2s(keys, i));
     spawnGear(DEBUG_SPAWN_GEAR);
     #endif
-	//qd(llGetFreeMemory());
+	//qd(llGetUsedMemory());
+	setInterval("T", 3);
+
+end
+
+// Ticker every 3 sec
+handleTimer("T")
+
+	integer gType = GhostGet$type();
+	vector gPos = prPos(GhostGet$ghost());
+	integer wA = getWeakAffix(GhostGet$affixes());
+	
+	forTool( i, uuid, tool )
 		
+		string targ = j(tool, TOOL_HELDBY);
+		if( targ == "" )
+			targ = uuid;
+			
+		integer type = (int)j(tool, TOOL_TYPE);
+		if( 
+			type == ToolsetConst$types$ghost$glowstick || 
+			(type == ToolsetConst$types$ghost$flashlight && wA == ToolSetConst$affix$weakFlashlights) 
+		){
+
+			list d = llJson2List(j(tool, TOOL_DATA));
+			integer n = l2i(d, 1);
+			if( l2i(d, 0) && n ){
+				
+				--n;
+				// Ghost behavior :: Hantuwu - Drain glow sticks 3x faster while within 3 meters
+				if( gType == GhostConst$type$hantuwu && llVecDist(gPos, prPos(targ)) < 3 )
+					n -= 2;
+				if( n < 0 )
+					n = 0;
+				
+				d = llListReplaceList(d, (list)n, 1, 1);
+				// Write back and update tool
+				llLinksetDataWrite(idbTable$TOOLS+(str)uuid, llJsonSetValue(tool, (list)TOOL_DATA, mkarr(d)));
+				GhostTool$setData( targ, mkarr(d), uuid );
+
+			}
+			
+		}
+		
+	end
+	
 end
 
 // Player has requested their held tools
@@ -551,7 +505,7 @@ end
 
 onLevelCustomGtoolGetGhost( sender ) 
     
-    GhostTool$setGhostTarg( sender, (GhostGet$ghost()), GhostGet$affixes(), GhostGet$evidence(), GhostGet$difficulty() );
+    GhostTool$setGhostTarg( sender, (GhostGet$ghost()), GhostGet$affixes(), GhostGet$evidence(), GhostGet$difficulty(), GhostGet$type() );
 
 end
 
@@ -610,7 +564,6 @@ handleEvent( "#Game", 0 )
     
     if( argStr(0) == "START_GAME" ){
         
-        toggleDoors(FALSE);
 		list keys = getToolTableKeys();
 		integer i;
 		for(; i < count(keys); ++i )
@@ -682,7 +635,6 @@ handleEvent( "#Game", 0 )
     }
     else if( argStr(0) == "ROUND_START" ){
         
-        toggleDoors(TRUE);
 		// Spawn weegie board
         if( llFrand(1.0) < 0.4 || (GhostGet$difficulty() > 2 && GhostGet$type() == GhostConst$type$imp) )
 			Spawner$nFromGroup( LINK_THIS, 1, "OUIJA" );
@@ -701,7 +653,6 @@ handleEvent( "#Game", 0 )
         
     }
     else if( argStr(0) == "END_GAME" ){
-        toggleDoors(FALSE);
         setTimeout("RESET_DOOR", 5);
     }
     else if( argStr(0) == "DEBUG" ){
@@ -710,11 +661,6 @@ handleEvent( "#Game", 0 )
         
     }
     
-end
-
-
-handleTimer( "RESET_DOOR" )
-    toggleDoors(TRUE);
 end
 
 onLevelCustomMotiondetTrig( detector, perc, id )

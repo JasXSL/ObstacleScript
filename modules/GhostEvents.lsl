@@ -126,6 +126,7 @@ handleOwnerMethod( GhostEventsMethod$trigger )
 	list viable = (list)
 		GhostEventsConst$IT_LIGHTS
 	;
+	// GHOST BEHAVIOR :: JIM :: Jim can only do lights events
 	if( ghostType != GhostConst$type$jim ){
 		
 		viable += (list)
@@ -134,13 +135,17 @@ handleOwnerMethod( GhostEventsMethod$trigger )
 		;
 		
 	}
-	// GHOST BEHAVIOR :: SUCCUBUS :: Succubus can only possess
+	
 	int suc = ghostType == GhostConst$type$succubus;
 	int yaoikai = ghostType == GhostConst$type$yaoikai;
 	int yuri = ghostType == GhostConst$type$yuri;
+	int hantuwu = ghostType == GhostConst$type$hantuwu;
+	// GHOST BEHAVIOR :: SUCCUBUS :: Succubus can only possess
 	if( suc )
 		viable = (list)GhostEventsConst$IT_POSSESS;
-	
+	// GHOST BEHAVIOR :: HANTUWU :: Hantuwu can't do lights events
+	if( hantuwu )
+		viable = (list)GhostEventsConst$IT_POSSESS + GhostEventsConst$IT_DOORS;
 		
 	viable = llListRandomize(viable, 1);
 	

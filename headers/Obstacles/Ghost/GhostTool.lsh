@@ -12,13 +12,15 @@
 	#define GhostToolMethod$trigger 4		// ... - Has the level trigger this tool. Generally used for "placed" things such as HOTS, writing, etc
 	#define GhostToolMethod$ghost 5			// (key)ghost, (int)affixes, (int)evidence - Whenever the ghost is spawned, this is triggered
 	#define GhostToolMethod$emp 6			// void - EMP triggered
+	#define GhostToolMethod$setData 7		// (var)data, (key)toolUUID - Ghost tool data has been updated externally
 	
 	#define GhostToolEvt$hunting 1			// (bool)hunting, (key)ghost - Can be captured by the rest of the linkset to do something
 	#define GhostToolEvt$pickedUp 2			// void
 	#define GhostToolEvt$dropped 3			// (var)data
 	#define GhostToolEvt$trigger 4			// ...
-	#define GhostToolEvt$ghost 5			// (key)ghost, (int)affixes, (int)evidence, (int)difficulty
+	#define GhostToolEvt$ghost 5			// (key)ghost, (int)affixes, (int)evidence, (int)difficulty, (int)type
 	#define GhostToolEvt$emp 6				// void - EMP has been triggered
+	#define GhostToolEvt$data 7				// (var)data, (key)tool
 	
 	#define GhostTool$dropped( targ, pos, rot, data ) \
 		runMethod(targ, "GhostTool", GhostToolMethod$dropped, pos + rot + data)
@@ -28,14 +30,16 @@
 		runMethod(targ, "GhostTool", GhostToolMethod$pickedUp, [])
 	#define GhostTool$trigger( targ, args ) \
 		runMethod(targ, "GhostTool", GhostToolMethod$trigger, args)
-	#define GhostTool$setGhost( ghost, affixes, evidence, difficulty ) \
-		runOmniMethod("GhostTool", GhostToolMethod$ghost, ghost + affixes + evidence + difficulty)
-	#define GhostTool$setGhostTarg( targ, ghost, affixes, evidence, difficulty ) \
-		runMethod(targ, "GhostTool", GhostToolMethod$ghost, ghost + affixes + evidence + difficulty)
+	#define GhostTool$setGhost( ghost, affixes, evidence, difficulty, type ) \
+		runOmniMethod("GhostTool", GhostToolMethod$ghost, ghost + affixes + evidence + difficulty + type)
+	#define GhostTool$setGhostTarg( targ, ghost, affixes, evidence, difficulty, type ) \
+		runMethod(targ, "GhostTool", GhostToolMethod$ghost, ghost + affixes + evidence + difficulty + type)
 	#define GhostTool$toggleHunt( on, ghost ) \
 		runOmniMethod("GhostTool", GhostToolMethod$hunting, on + ghost)
 	#define GhostTool$emp() \
 		runOmniMethod("GhostTool", GhostToolMethod$emp, [])
+	#define GhostTool$setData( targ, data, toolUUID ) \
+		runMethod(targ, "GhostTool", GhostToolMethod$setData, data + toolUUID)
 	
 	
 	#define onGhostToolEMP() \
@@ -45,8 +49,11 @@
 		if( SENDER_SCRIPT IS "GhostTool" AND EVENT_TYPE IS GhostToolEvt$hunting ){ \
 			bool hunting = argInt(0); \
 			key ghost = argKey(1);
-			
-			
+	#define onGhostToolData( data, toolUUID ) \
+		if( SENDER_SCRIPT IS "GhostTool" AND EVENT_TYPE IS GhostToolEvt$data ){ \
+			str data = argStr(0); \
+			key toolUUID = argKey(1);
+		
 	#define onGhostToolPickedUp() \
 		if( SENDER_SCRIPT IS "GhostTool" AND EVENT_TYPE IS GhostToolEvt$pickedUp ){
 			
@@ -57,12 +64,13 @@
 	#define onGhostToolTrigger() \
 		if( SENDER_SCRIPT IS "GhostTool" AND EVENT_TYPE IS GhostToolEvt$trigger ){
 			
-	#define onGhostToolGhost( ghost, affixes, evidence, difficulty ) \
+	#define onGhostToolGhost( ghost, affixes, evidence, difficulty, type ) \
 	if( SENDER_SCRIPT IS "GhostTool" AND EVENT_TYPE IS GhostToolEvt$ghost ){ \
 		key ghost = argKey(0); \
 		int affixes = argInt(1); \
 		int evidence = argInt(2); \
-		int difficulty = argInt(3);
+		int difficulty = argInt(3); \
+		int type = argInt(4);
 		
 	
 	

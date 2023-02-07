@@ -129,7 +129,7 @@ sendAffixes(){
     //raiseEvent(0, "AFFIXES" + AFFIXES);
     GhostBoard$setAffixes( AFFIXES );
 	int difficulty = GhostGet$difficulty();	// Handled by dialog
-    GhostTool$setGhost(GhostGet$ghost(), AFFIXES, EVIDENCE_TYPES, difficulty);
+    GhostTool$setGhost(GhostGet$ghost(), AFFIXES, EVIDENCE_TYPES, difficulty, GHOST_TYPE);
     Ghost$setType( GHOST_TYPE, EVIDENCE_TYPES, difficulty, AFFIXES );
 }
 
