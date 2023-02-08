@@ -181,8 +181,7 @@ handleOwnerMethod( PortalMethod$cbPlayers )
 	integer i;
 	for(; i < count(METHOD_ARGS); ++i )
 		idbSetByIndex(idbTable$PLAYERS, i, argStr(i));
-	idbSetIndex(idbTable$PLAYERS, count(METHOD_ARGS));
-	
+	idbSetIndex(idbTable$PLAYERS, count(METHOD_ARGS));	
 	raiseEvent(PortalEvt$playersChanged, []);
 	
 end

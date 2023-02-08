@@ -410,7 +410,7 @@ handleEvent( "#Game", 0 )
             LevelRepo$detach( player, "HUD:PhasmTools");
         
         end
-        
+        setTimeout("RESET_DOOR", 5);
         setTimeout("END", 3);   // Unsit after getting back
         
     }

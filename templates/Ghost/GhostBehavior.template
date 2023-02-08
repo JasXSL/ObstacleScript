@@ -226,7 +226,7 @@ handleTimer( "TOUCH" )
 	
     float evtChance = 0.05+0.05*avgArousalPerc;
 	if( GHOST_TYPE == GhostConst$type$hantuwu ){
-		evtChance *= 2; // GHOST BEHAVIOR - HANTUWU :: Ghost evt chance increased by 50%
+		evtChance *= 3; // GHOST BEHAVIOR - HANTUWU :: Ghost evt chance x3
 		if( !hasActiveToolNearby(ToolsetConst$types$ghost$hots, 2) ) // can only ghost event when near a HOTS
 			evtChance = 0;
 	}

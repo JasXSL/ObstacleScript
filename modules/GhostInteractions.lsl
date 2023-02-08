@@ -434,7 +434,7 @@ handleOwnerMethod( GhostInteractionsMethod$interact )
 	// GHOST BEHAVIOR :: SUCCUBUS - Touch a bit more
 	else if( GHOST_TYPE == GhostConst$type$succubus )
 		playerChance = 0.4;		// Succubus is also the highest, but will only touch one player.
-	// GHOST BEHAVIOR :: YURI/YAIKAI - Slightly more touchy
+	// GHOST BEHAVIOR :: YURI/YAIKAI/STRINGOI - Slightly more touchy
 	else if( GHOST_TYPE == GhostConst$type$yuri || GHOST_TYPE == GhostConst$type$yaoikai || GHOST_TYPE == GhostConst$type$stringoi )
 		playerChance = 0.3;		// Yuri/yaoikai are lightly more touchy
 	

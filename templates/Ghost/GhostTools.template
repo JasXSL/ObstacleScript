@@ -417,12 +417,14 @@ handleTimer("T")
 			if( l2i(d, 0) && n ){
 				
 				--n;
-				// Ghost behavior :: Hantuwu - Drain glow sticks 3x faster while within 3 meters
-				if( gType == GhostConst$type$hantuwu && llVecDist(gPos, prPos(targ)) < 3 )
+				// Ghost behavior :: Hantuwu - Drain glow sticks 3x faster while within 4 meters
+				vector pp = prPos(targ);
+				float z = llFabs(pp.z+0.5-gPos.z);
+				pp.z = 0;
+				if( gType == GhostConst$type$hantuwu && type == ToolsetConst$types$ghost$glowstick && llVecDist(<gPos.x, gPos.y, 0>, pp) < 3.5 && z < 2 )
 					n -= 2;
 				if( n < 0 )
 					n = 0;
-				
 				d = llListReplaceList(d, (list)n, 1, 1);
 				// Write back and update tool
 				llLinksetDataWrite(idbTable$TOOLS+(str)uuid, llJsonSetValue(tool, (list)TOOL_DATA, mkarr(d)));
@@ -604,7 +606,7 @@ handleEvent( "#Game", 0 )
             ToolsetConst$types$ghost$salt, two,
             ToolsetConst$types$ghost$parabolic, 1,
             ToolsetConst$types$ghost$motionDetector, four,
-            ToolsetConst$types$ghost$glowstick, (1+(nrPlayers>2)),
+            ToolsetConst$types$ghost$glowstick, 2,
             ToolsetConst$types$ghost$videoCamera, two
         ];
         
@@ -651,9 +653,6 @@ handleEvent( "#Game", 0 )
         
         end
         
-    }
-    else if( argStr(0) == "END_GAME" ){
-        setTimeout("RESET_DOOR", 5);
     }
     else if( argStr(0) == "DEBUG" ){
         

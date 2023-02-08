@@ -231,7 +231,7 @@ handleOwnerMethod( GhostEventsMethod$trigger )
 					// GHOST BEHAVIOR :: Yaoikai :: Can only target male
 					(!yaoikai || genitals&GENITALS_PENIS)
 				)targets += k;
-			
+				
 			end
 			
 			if( targets ){
