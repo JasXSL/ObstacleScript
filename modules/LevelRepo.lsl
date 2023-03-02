@@ -14,7 +14,8 @@ int BFL;
 #define BFL_REQ_CD 0x1
 
 // Tracks attachments that should be kept on
-list ATTACHMENTS;	// (str)name, (key)id
+#define ATTACHMENTS_STRIDE 3
+list ATTACHMENTS;	// (str)name, (key)id, (int)flags
 
 #define rezAttachment(name) PortalHelper$rez( name, (llGetPos()-<0,0,3>), ZERO_VECTOR, ZERO_ROTATION, TRUE )
 
@@ -66,6 +67,23 @@ requestAssets(){
 
 onStateEntry()
     setInterval("reqs", 20);
+	setInterval("tick", 1);
+end
+
+handleTimer( "tick" )
+	
+	integer i; integer total = count(ATTACHMENTS);
+	integer sitting = llGetAgentInfo(llGetOwner()) & AGENT_SITTING;
+	for(; i < total; i += ATTACHMENTS_STRIDE ){
+	
+		if( l2i(ATTACHMENTS, i+2) & LevelRepo$attach$flags$detachOnUnsit && !sitting ){
+			
+			LevelRepo$detach( LINK_THIS, l2s(ATTACHMENTS, i) );
+			
+		}
+	
+	}
+	
 end
 
 onChanged( change )
@@ -150,7 +168,7 @@ end
 handleTimer( "attCheck" )
 
 	integer i;
-	for(; i < count(ATTACHMENTS); i += 2 ){
+	for(; i < count(ATTACHMENTS); i += ATTACHMENTS_STRIDE ){
 	
 		key id = l2k(ATTACHMENTS, i+1);
 		if( llKey2Name(id) == "" ){
@@ -191,16 +209,25 @@ handleMethod( LevelRepoMethod$attach )
 	for(; i < count(METHOD_ARGS); ++i ){
 		
 		string name = argStr(i);
+		integer flags;
+		if( llJsonValueType(name, []) == JSON_OBJECT ){
+			
+			flags = (int)j(name, LevelRepo$attach$flags);
+			name = j(name, LevelRepo$attach$name); // Must go last
+			
+		}
+		
 		if( llListFindList(ATTACHMENTS, (list)name) == -1 ){
 	
 			if( llGetInventoryType(name) != INVENTORY_OBJECT )
 				llOwnerSay("Error! Trying to attach missing object: "+name);
 			else{
 							
-				ATTACHMENTS += (list)name + NULL_KEY;
+				ATTACHMENTS += (list)name + NULL_KEY + flags;
 				rezAttachment(name);
 				
 			}
+			
 		}
 		
 	}
@@ -227,12 +254,12 @@ handleMethod( LevelRepoMethod$detach )
 		
 		str arg = l2s(METHOD_ARGS, i);
 		integer att; int br;
-		for( ; att < count(ATTACHMENTS) && !br; att += 2 ){
+		for( ; att < count(ATTACHMENTS) && !br; att += ATTACHMENTS_STRIDE ){
 			
 			if( arg == l2s(ATTACHMENTS, att) ){
 			
 				Attachment$detach( arg );
-				ATTACHMENTS = llDeleteSubList(ATTACHMENTS, i, i+1);
+				ATTACHMENTS = llDeleteSubList(ATTACHMENTS, i, i+ATTACHMENTS_STRIDE-1);
 				br = true;
 				
 			}

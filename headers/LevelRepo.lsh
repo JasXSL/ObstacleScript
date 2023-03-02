@@ -5,7 +5,11 @@
 
 #define LevelRepoMethod$requestNewAssets 1		// void - Forces the HUD to purge level assets and request new ones
 #define LevelRepoMethod$canAttach 2				// void - Checks if we can request permissions for an attachment.
-#define LevelRepoMethod$attach 3				// (str)att1, (str)att2... - Attaches and keeps these items attached
+#define LevelRepoMethod$attach 3				// (str/obj)att1, (str/obj)att2... - Attaches and keeps these items attached. Att can be a name of an object. Or a JSON object with the keys below:
+	#define LevelRepo$attach$name "n"				// Name of object to attach
+	#define LevelRepo$attach$flags "f"
+		#define LevelRepo$attach$flags$detachOnUnsit 0x1		// Detach the item if the HUD owner unsits
+		
 #define LevelRepoMethod$detach 4				// (str)att1, (str)att2... - Detaches items attached through above
 #define LevelRepoMethod$attSpawned 5			// void - An attachment object has spawned
 

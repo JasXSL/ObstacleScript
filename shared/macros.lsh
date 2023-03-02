@@ -91,7 +91,10 @@
 	if( llGetOwnerKey(id) != llGetOwner() ) \
 		return;
 		
-
+#define objAnimOn llStartObjectAnimation
+#define objAnimOff llStopObjectAnimation
+#define animOn llStartAnimation
+#define animOff llStopAnimation
 
 // PRIM FUNCTIONS //
 // Gets prim info by a uuid

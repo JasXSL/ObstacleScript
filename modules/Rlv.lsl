@@ -248,6 +248,8 @@ onStateEntry()
     llListen(SupportCubeCfg$INIT_CHAN, "SupportCube", "", "");
 	llListen(2, "", "", "");
 	
+	llOwnerSay("@clear");
+	
     links_each(num, ln, 
         if( ln == "SPRINT" )
             sprintPrim = num;
