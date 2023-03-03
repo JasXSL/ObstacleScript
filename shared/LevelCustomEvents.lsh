@@ -36,6 +36,10 @@
 #define LevelCustomType$HOTKEY "avHotkey"			// Receives messages on channel 3
 	#define LevelCustomEvt$HOTKEY$press 1			// (str)key
 		
+#define LevelCustomType$HUDCLICK "avHudClick"		// Player clicked an element on the HUD, such as the overlay
+	#define LevelCustomEvt$HUDCLICK$click 1			// (str)linkName
+		
+		
 #define LevelCustomType$RLV "avRlv"
 	#define LevelCustomEvt$RLV$cameraCleared 1		// void - Camera override has ended by presseing e
 		
@@ -47,6 +51,11 @@
 #define onRlvCameraCleared( hud ) \
 	if( isEventLevelCustom() AND argStr(1) == LevelCustomType$RLV AND argInt(2) == LevelCustomEvt$RLV$cameraCleared ){ \
 		key hud = argKey(0);
+
+#define onHudClicked( hud, primName ) \
+	if( isEventLevelCustom() AND argStr(1) == LevelCustomType$HUDCLICK AND argInt(2) == LevelCustomEvt$HUDCLICK$click ){ \
+		key hud = argKey(0); \
+		str primName = argStr(3);
 
 	
 		

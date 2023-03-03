@@ -541,6 +541,15 @@ onLevelInteractStarted( obstacle, pos )
     
 end
 
+onHudClicked( hud, primName )
+	
+	int pp = llListFindList(pCams, (list)hud);
+	if( ~pp && primName == "OVERLAY" )
+		Rlv$clearCamera(hud);
+	
+end
+
+
 
 onRlvCameraCleared( hud )
 

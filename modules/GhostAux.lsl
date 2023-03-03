@@ -284,10 +284,15 @@ handleTimer( "TC" )
 		updateDesc();
 		
 	key st = GhostGet$sucTarg(llGetObjectDesc());
-	// GHOST BEHAVIOR :: Succubus - Find a new target if old one is sitting
-	if( GHOST_TYPE == GhostConst$type$succubus && (llGetAgentInfo(st)&AGENT_SITTING || llKey2Name(st) == "") )
-		pickNewSucTarg();
 	
+	// GHOST BEHAVIOR :: Succubus - Find a new target if old one is sitting and not in a ghost event
+	if( 
+		!GhostEventGet$active() && 
+		(GHOST_TYPE == GhostConst$type$succubus && (llGetAgentInfo(st)&AGENT_SITTING || llKey2Name(st) == "")) 
+	){
+		pickNewSucTarg();
+		//qd((GhostEventGet$active())+" picking new succubus target"+llKey2Name(prRoot(st)));
+	}
 	float vel = llVecMag(llGetVel());
 	if( isSalted() && vel > 0.5 )
 		footstep();

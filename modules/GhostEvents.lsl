@@ -21,6 +21,8 @@ float evtDur;			// How long the event should last
 
 onGhostEventStart(){
 
+	idbSetByIndex(idbTable$GHOST_EVENTS, idbTable$GHOST_EVENTS$active, TRUE);
+	unsetTimer("RST");
 	Level$raiseEvent(LevelCustomType$GHOSTEVT, LevelCustomEvt$GHOSTEVT$evt, mkarr(evtPlayers) + evtType + subType + evtDur);
 	raiseEvent(GhostEventsEvt$begin, mkarr(evtPlayers) + evtType + subType + evtDur );
 	llLoopSound("5a67fa19-3dbb-74c6-3297-8cee2b66e897", .2);
@@ -34,6 +36,7 @@ onStateEntry()
     llSensorRepeat("", "", ACTIVE|PASSIVE, 8, PI, 1);
 	Portal$scriptOnline();
 	Portal$raiseEventOmni( PortalCustomType$GhostEvents, PortalCustomType$GhostEvents$hup, [] );
+	idbSetByIndex(idbTable$GHOST_EVENTS, idbTable$GHOST_EVENTS$active, FALSE);
 	
 end
 
@@ -74,7 +77,12 @@ handleTimer( "END" )
 		Rlv$unsetFlags( l2k(evtPlayers, i), RlvFlags$IMMOBILE, FALSE );
 	}
 	
+	setTimeout("RST", 2);
 
+end
+
+handleTimer( "RST" )
+	idbSetByIndex(idbTable$GHOST_EVENTS, idbTable$GHOST_EVENTS$active, FALSE); // Set here to prevent succubus from spazzing out
 end
 
 handleTimer( "EVT" )

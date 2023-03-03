@@ -119,8 +119,10 @@ onTouchStart( total )
     
     integer ln = llDetectedLinkNumber(0);
     string name = llGetLinkName(ln);
-    qd("Clicked" + name);
-
+	raiseEvent(ControlsEvt$click, name);
+	
+	Level$targRaiseEvent( ComGet$host(), LevelCustomType$HUDCLICK, LevelCustomEvt$HUDCLICK$click, name );
+	
 end
 
 onRlvFlags( flags )

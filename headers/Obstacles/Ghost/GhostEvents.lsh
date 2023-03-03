@@ -1,6 +1,8 @@
 #ifndef __GhostEvents
 #define __GhostEvents
 
+#define GhostEventGet$active() (int)idbGetByIndex(idbTable$GHOST_EVENTS, idbTable$GHOST_EVENTS$active) // Gets if an event is active
+
 #define GhostEventsMethod$trigger 1		// void - Triggers a ghost event. Ghost events will generally require LOS to at least one player. And delays a hunt.
 #define GhostEventsMethod$subset 2		// void - Registers the sender as a ghost event helper. Such as the ghost hands.
 #define GhostEventsMethod$stop 3		// void - Note: ONLY used by subsets to signal that the event has stopped.

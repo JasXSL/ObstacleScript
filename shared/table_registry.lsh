@@ -33,16 +33,17 @@
 #define idbTable$COM "("			// char(40) - Owned by Com
 	#define idbTable$COM$HOST 0			// key - UUID of level PRIM the HUD is bound to
 
-
 #define idbTable$GHOST_BEHAVIOR ")"	// char(41) - Owned by #GhostBehavior
 	#define idbTable$GHOST_BEHAVIOR$HUNTING 0	// bool - hunting status
 	#define idbTable$GHOST_BEHAVIOR$STATS 1		// [int ghost_events, int obj_interacts, int pl_interactions, int hunts] - Nr hunts this game
-	
+
+#define idbTable$GHOST_EVENTS "*"	// char(42) - Owned by GhostEvents
+	#define idbTable$GHOST_EVENTS$active 0		// bool - Ghost event is active
 
 #define idbTable$PDATA_START 223	// char(223) - Owned by GameHelper. Each table from 223 to 255 represents a player. The field index is different from game to game.
 // WARNING: PDATA_START reserves char 223-255
 
 
-// *+,-./0123456789:;<=>?
+// +,-./0123456789:;<=>?
 
 #endif
