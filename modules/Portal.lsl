@@ -62,10 +62,7 @@ loadComplete(){
 
 	if( ~BFL&(BFL_GOT_DESC|BFL_GOT_SCRIPTS) )
 		return;
-	
-	
-	
-	// Note: If the spawnID is 0 here, you may be overriding llSetText in your asset script
+
 	// Get players
 	Com$updatePortal();
 
@@ -75,13 +72,7 @@ loadComplete(){
 	if( !PortalHelper$isLive() && descOut != "" )
 		descOut = "$"+descOut;
 	
-	list text = PortalHelper$getConf();
-	if( count(text) < 2 )
-		text += SPAWN_GROUP;
-	else
-		text = llListReplaceList(text, (list)SPAWN_GROUP, 1, 1);
-		
-	llSetText(mkarr(text), ZERO_VECTOR, 0);	
+	idbSetByIndex(idbTable$PORTAL, idbTable$PORTAL$GROUP, SPAWN_GROUP);
 	
 	if( descOut != "" )
 		llSetObjectDesc(descOut);
@@ -107,10 +98,7 @@ end
 
 onRez( total )
     
-    llSetText(mkarr(
-        total
-    ), ZERO_VECTOR, 0);
-	
+	idbSetByIndex(idbTable$PORTAL, idbTable$PORTAL$STARTPARAM, total);	
     // Start by fetching self
     if( total )
         fetchSelf(false);
@@ -124,10 +112,23 @@ onStateEntry()
 
     if( llGetStartParameter() == ScrepoConst$SP_LOADED ){
         
-		 // Fetch desc
-		Rezzer$rezzed( mySpawner(), PortalHelper$getSpawnId() );
+		// Fetch desc
+		integer spid = PortalHelper$getSpawnId();
+		// Legacy portals set prim text on rez. This can't be changed without recompiling every single asset.
+		if( !spid ){
+			integer sp = (int)j(l2s(llGetPrimitiveParams((list)PRIM_TEXT), 0), 0);
+			spid = PortalHelper$getSpawnIdFromRezParam(sp);
+			idbSetByIndex(idbTable$PORTAL, idbTable$PORTAL$STARTPARAM, sp);
+		}
+		if( !spid ){
+			BFL = BFL|BFL_GOT_DESC;
+        }else{
+			Rezzer$rezzed( mySpawner(), spid );
+		}
         fetchScripts();
-        
+		
+		// No spawn id = no desc needed
+		
     }
 	else{
 		Com$updatePortal();
@@ -138,15 +139,9 @@ end
 handleOwnerMethod( PortalMethod$reset )
 
     llOwnerSay("Resetting");
-    list text = PortalHelper$getConf();
-    integer n = l2i(text, PortalConst$CF_REZ_PARAM)&~PortalConst$SP_LIVE;
-    text = llListReplaceList(
-        text, 
-        (list)n, 
-        PortalConst$CF_REZ_PARAM, 
-        PortalConst$CF_REZ_PARAM
-    );
-    llSetText(mkarr(text), ZERO_VECTOR, 0);
+    
+	integer n = PortalHelper$getRezParam()&~PortalConst$SP_LIVE;
+    idbSetByIndex(idbTable$PORTAL, idbTable$PORTAL$STARTPARAM, n);
     globalAction$resetAll();
     llResetScript();
 
@@ -202,15 +197,9 @@ end
 
 handleOwnerMethod( PortalMethod$setLive )
     
-    list text = PortalHelper$getConf();
-    integer n = l2i(text, PortalConst$CF_REZ_PARAM)|PortalConst$SP_LIVE;
-    text = llListReplaceList(
-        text, 
-        (list)n, 
-        PortalConst$CF_REZ_PARAM, 
-        PortalConst$CF_REZ_PARAM
-    );
-    llSetText(mkarr(text), ZERO_VECTOR, 0);
+	
+    integer n = PortalHelper$getRezParam()|PortalConst$SP_LIVE;
+    idbSetByIndex(idbTable$PORTAL, idbTable$PORTAL$STARTPARAM, n);
     
 end
 

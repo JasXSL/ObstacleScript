@@ -24,7 +24,7 @@ onPortalLoadComplete( desc )
 	spawnPos = llGetPos();
 	spawnRot = llGetRot();
 	Level$raiseEvent(LevelCustomType$GTOOL, LevelCustomEvt$GTOOL$getGhost, []);
-
+	
 end
 
 handleMethod( GhostToolMethod$hunting )
@@ -93,7 +93,7 @@ handleOwnerMethod( GhostToolMethod$dropped )
 end
 
 
-handleOwnerMethod( GhostToolMethod$ghost )
+handleMethod( GhostToolMethod$ghost )
 
 	raiseEvent(GhostToolEvt$ghost, METHOD_ARGS);
 

@@ -77,8 +77,10 @@ respond(){
     ;
     
 	// Ghost behavior :: INUGAMI - May go bork on the spirit box
-	if( GHOST_TYPE == GhostConst$type$inugami && llFrand(1) < .2 )
+	if( GHOST_TYPE == GhostConst$type$inugami && llFrand(1) < .2 ){
+		
 		responses = (list)8 + "050b6c9e-9507-f4d2-32e0-8d0e88ae3d5e";
+	}
 	
 	integer res = llFloor(llFrand(count(responses)/2))*2;
     integer response = l2i(responses, res);

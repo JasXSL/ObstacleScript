@@ -2,8 +2,15 @@
 #define __LISTEN
 
 
+
 // #define USE_TIMER to include
 #ifdef USE_LISTEN
+	// Player manager is always the host, and shouldn't check if the sender is host
+	#ifdef SCRIPT_IS_PLAYER_MANAGER
+		#define LISTEN_HOST_CHECK
+	#else
+		#define LISTEN_HOST_CHECK || o == llGetOwnerKey(HOST)
+	#endif
 	
 	#ifndef COM_ADDITIONAL	// Lets you add additional keys that should be allowed to call methods
 		#define COM_ADDITIONAL []
@@ -33,7 +40,7 @@
 			if( ch == PUB_CHAN ){ \
 				 \
 				str o = llGetOwnerKey(SENDER_KEY); \
-				if( isPlayer(o) ){ \
+				if( isPlayer(o) LISTEN_HOST_CHECK || ~llListFindList(COM_ADDITIONAL, (list)o) ){ \
 					\
 					list parse = llJson2List(msg); \
 					sendLinkMessage( LINK_SET, l2s(parse, 0), os$lmtype$method, l2i(parse, 1)&0xFF, llJson2List(l2s(parse, 2)), SENDER_KEY ); \

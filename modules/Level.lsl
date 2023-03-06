@@ -248,9 +248,9 @@ end
 handleMethod( LevelMethod$raiseEvent )
 	
 	string type = argStr(0);
-	if( llGetSubString(type, 0, 1) != "av" && !isMethodByOwnerInline() )
+	if( llGetSubString(type, 0, 1) != "av" && !isMethodByOwnerInline() ){
 		return;
-	
+	}
 	raiseEvent(LevelEvt$custom, SENDER_KEY + METHOD_ARGS);
 
 end

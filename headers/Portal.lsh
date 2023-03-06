@@ -19,22 +19,23 @@
 	"ToolSet" \
 	
 
-// prim text contains some information about the portal
-#define PortalConst$CF_REZ_PARAM 0					// (int)on_rez_param - Contains the supplied int from on_rez
-#define PortalConst$CF_GROUP 1						// (str)spawn_group - Contains the spawn group
-
 // Portal on_rez params are stored as follows (from the right)
 // 0000(0) - Screpo flags
 // 0(4)	- Live status
-// 00000000 00000000(5) - 2 Bytes with the spawn ID in the spawner script.
+// 00000000 00000000(5) - 2 Bytes with the spawn ID in the spawner script. If 0, it assumes the portal doesn't need a desc
 #define PortalConst$SP_LIVE 0x10
 
-#define PortalHelper$getConf() \
-	llJson2List(l2s(llGetPrimitiveParams((list)PRIM_TEXT), 0))
+#define PortalHelper$getRezParam() \
+	(int)idbGetByIndex(idbTable$PORTAL, idbTable$PORTAL$STARTPARAM)
+	
+#define PortalHelper$getSpawnIdFromRezParam(rezParam) \
+	((rezParam>>5)&0xFFFF)
+	
 #define PortalHelper$getSpawnId() \
-	((l2i(PortalHelper$getConf(), PortalConst$CF_REZ_PARAM)>>5)&0xFFFF)
+	PortalHelper$getSpawnIdFromRezParam(PortalHelper$getRezParam())
+	
 #define PortalHelper$isLive() \
-	(l2i(PortalHelper$getConf(), PortalConst$CF_REZ_PARAM)&PortalConst$SP_LIVE)
+	(PortalHelper$getRezParam()&PortalConst$SP_LIVE)
 	
 // This is a helper for rezzing things outside of screpo. It assumes the object doesn't need to fetch a desc
 #define PortalHelper$rez( obj, pos, vel, rot, live ) \

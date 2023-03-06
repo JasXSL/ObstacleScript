@@ -127,7 +127,7 @@
 	GhostConst$evidence$writing|GhostConst$evidence$stains|GhostConst$evidence$spiritbox,/* Bare */  \
 	GhostConst$evidence$spiritbox|GhostConst$evidence$temps|GhostConst$evidence$hots, /* Stringoi */ \
 	GhostConst$evidence$owometer|GhostConst$evidence$stains|GhostConst$evidence$spiritbox, /* Orghast */ \
-	GhostConst$evidence$writing|GhostConst$evidence$temps|GhostConst$evidence$hots /* Jim */ \
+	GhostConst$evidence$owometer|GhostConst$evidence$temps|GhostConst$evidence$hots /* Jim */ \
 ]
 // Gets the FULL bitwise array, including nightmare mode forced types
 #define getFullEvidenceTypes( ghostType ) \

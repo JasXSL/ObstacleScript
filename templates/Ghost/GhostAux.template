@@ -407,7 +407,7 @@ handleEvent( "#Game", 0 )
 			Rlv$redirectChat( player, GhostRadioConst$REDIR_CHAN, FALSE);
             Rlv$toggleFreeCam( player, TRUE );
             Rlv$toggleFlying( player, TRUE );
-            LevelRepo$detach( player, "HUD:PhasmTools");
+            LevelRepo$detach( player, "*");
         
         end
         setTimeout("RESET_DOOR", 5);

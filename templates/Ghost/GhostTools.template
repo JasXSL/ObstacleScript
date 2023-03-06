@@ -242,8 +242,8 @@ dropTool( key obj, key worldID, vector tPos, rotation tRot ){
 	
     if( j(tool, TOOL_HELDBY) != player ){
 	
-		// Force remove the tool and refresh their held
-		ToolSet$remTool( obj, worldID );
+		// SL Has desynced. Reset all tools.
+		ToolSet$reset(player);
 		refreshPlayerTools(player);
 		
         qd("Invalid owner for drop of " + llKey2Name(obj) + obj);

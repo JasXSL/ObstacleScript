@@ -40,10 +40,14 @@
 #define idbTable$GHOST_EVENTS "*"	// char(42) - Owned by GhostEvents
 	#define idbTable$GHOST_EVENTS$active 0		// bool - Ghost event is active
 
+#define idbTable$PORTAL "+"			// char(43) - Portal data
+	#define idbTable$PORTAL$STARTPARAM 0		// int - Rez param of portal
+	#define idbTable$PORTAL$GROUP 1				// str - Spawn group
+
 #define idbTable$PDATA_START 223	// char(223) - Owned by GameHelper. Each table from 223 to 255 represents a player. The field index is different from game to game.
 // WARNING: PDATA_START reserves char 223-255
 
 
-// +,-./0123456789:;<=>?
+// ,-./0123456789:;<=>?
 
 #endif
