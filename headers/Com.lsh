@@ -12,6 +12,7 @@
 #define ComMethod$huds 4				// hud1, hud2... - Updates huds
 #define ComMethod$uninvite 5			// void - When sent from the host, wipes all players
 #define ComMethod$updatePortal 6		// void - Sends callbacks with players and huds. See Portal.lsh for the callbacks
+#define ComMethod$debug 7				// void - Outputs debug info
 
 // Events
 #define ComEvt$hostChanged 1			// void - Raised with whenever you join a game

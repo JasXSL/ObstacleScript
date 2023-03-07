@@ -133,6 +133,11 @@ resetPlayersAndHuds(){
         }
         
     end
+	
+	handleOwnerMethod( ComMethod$debug )
+		qd("Players" + getPlayers());
+		qd("Huds "+getHuds());
+	end
     
     handleOwnerMethod( ComMethod$updatePortal )
 		

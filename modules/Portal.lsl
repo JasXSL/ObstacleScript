@@ -60,11 +60,13 @@ loadComplete(){
 	if( BFL&BFL_GOT_SCRIPTS )
 		unsetTimer("SC");	// Stop retrying scripts
 
+	//qd(BFL);
 	if( ~BFL&(BFL_GOT_DESC|BFL_GOT_SCRIPTS) )
 		return;
 
 	// Get players
 	Com$updatePortal();
+	//qd("Updating portal");
 
 	if( SPAWN_POS != ZERO_VECTOR )
 		llSetRegionPos(SPAWN_POS);
@@ -173,6 +175,7 @@ end
 
 handleOwnerMethod( PortalMethod$cbPlayers )
 
+	//qd("Got players "+ METHOD_ARGS);
 	integer i;
 	for(; i < count(METHOD_ARGS); ++i )
 		idbSetByIndex(idbTable$PLAYERS, i, argStr(i));
