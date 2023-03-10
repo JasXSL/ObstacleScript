@@ -92,6 +92,7 @@
 #define RlvMethod$setCamera 19			// (vec)pos, (rot)rotation, (bool)allowUnlock, (bool)filmGrain - Sets the camera and ejects from mouselook. If allowUnlock is true, it lets the user clear the camera by hitting e
 #define RlvMethod$redirectChat 20		// (int)channel, (bool)enable - Adds or removes a redirect of channel 0 chat to a different channel
 
+#define RlvMethod$toggleNametags 21		// (bool)enable - Turns name tags on/off
 
 
 
@@ -187,6 +188,8 @@
 #define Rlv$enforceMouselook( target ) \
 	runMethod( target, "Rlv", RlvMethod$exitMouselook, 1 + 1 )
 
+#define Rlv$toggleNametags( target, on ) \
+	runMethod( target, "Rlv", RlvMethod$toggleNametags, (on) )
 
 
 

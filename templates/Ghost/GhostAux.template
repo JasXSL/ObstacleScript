@@ -112,7 +112,8 @@ setGameRestrictions( key player, integer forceDead ){
     Rlv$disableChatLevels( player, RlvConst$dcl$normal|RlvConst$dcl$shout );
     Rlv$toggleFreeCam( player, FALSE );
     Rlv$toggleFlying( player, FALSE );
-    
+    Rlv$toggleNametags(player, FALSE);
+		
 }
 
 
@@ -408,7 +409,8 @@ handleEvent( "#Game", 0 )
             Rlv$toggleFreeCam( player, TRUE );
             Rlv$toggleFlying( player, TRUE );
             LevelRepo$detach( player, "*");
-        
+			Rlv$toggleNametags(player, TRUE);
+	
         end
         setTimeout("RESET_DOOR", 5);
         setTimeout("END", 3);   // Unsit after getting back

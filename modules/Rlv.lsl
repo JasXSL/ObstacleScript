@@ -397,6 +397,13 @@ onControlsKeyPress( pressed, released )
 	
 end
 
+handleMethod( RlvMethod$toggleNametags )
+	string on = "y";
+	if( !argInt(0) )
+		on = "n";
+	llOwnerSay("@shownametags="+(str)on);
+end
+
 
 handleMethod( RlvMethod$setCamera )
 	

@@ -13,3 +13,7 @@ Hantuwu ->
 Hunt changes:
 TEST -  Ghost stops hearing footsteps etc after losing LOS 
  - Ghost shouldn't instantly slow down after losing LOS
+
+- Weegie board not working on success?
+- Hide user names
+

@@ -142,7 +142,7 @@ list onGameEnd(){
     unsetTimer("BRK");
     
     Portal$killAll();
-    return (list)
+	return (list)
         (GHOST_TYPE == SEL) +
         GHOST_TYPE +
         LEVEL_START +

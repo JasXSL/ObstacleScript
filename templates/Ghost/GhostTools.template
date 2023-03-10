@@ -638,7 +638,9 @@ handleEvent( "#Game", 0 )
     else if( argStr(0) == "ROUND_START" ){
         
 		// Spawn weegie board
+		#ifndef ALWAYS_OUIJA
         if( llFrand(1.0) < 0.4 || (GhostGet$difficulty() > 2 && GhostGet$type() == GhostConst$type$imp) )
+		#endif	
 			Spawner$nFromGroup( LINK_THIS, 1, "OUIJA" );
 			            
     }
