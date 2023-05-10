@@ -345,7 +345,6 @@ int _pdI( key id ){
 
 
 #include "./headers/Com.lsh"
-#include "./headers/SoundspaceAux.lsh"
 #include "./headers/Soundspace.lsh"
 #include "./headers/Level.lsh"
 #include "./headers/Repo.lsh"

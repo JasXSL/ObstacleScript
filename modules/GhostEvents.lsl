@@ -25,6 +25,7 @@ onGhostEventStart(){
 	unsetTimer("RST");
 	Level$raiseEvent(LevelCustomType$GHOSTEVT, LevelCustomEvt$GHOSTEVT$evt, mkarr(evtPlayers) + evtType + subType + evtDur);
 	raiseEvent(GhostEventsEvt$begin, mkarr(evtPlayers) + evtType + subType + evtDur );
+	llSetSoundRadius(7);
 	llLoopSound("5a67fa19-3dbb-74c6-3297-8cee2b66e897", .2);
 
 }

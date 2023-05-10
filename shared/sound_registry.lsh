@@ -6,9 +6,9 @@
 #define hsr$soundspaceA 2
 #define hsr$soundspaceB 3
 
-
-
-
+#define hsr$interact 4
+#define hsr$rlv 5
+#define hsr$rlvLoop 6
 
 
 #endif

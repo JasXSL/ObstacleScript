@@ -224,7 +224,7 @@ onStateEntry()
     
 	llPreloadSound("f9abe756-b788-b2b4-fd3d-7c373f83a464");
 	llPreloadSound("30b60b7e-952b-f083-86d0-21280a6cc8ca");
-	
+	llSetSoundRadius(6);
 	llSetAlpha(0, FACE);
     llListen(0, "", "", "");
     toggleOn(FALSE);

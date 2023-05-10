@@ -342,7 +342,7 @@ end
 
 
 
-
+// Play sound that only a particular player can hear
 handleMethod( GhostInteractionsMethod$playSoundOnMe )
 	
 	vector pos = prPos(SENDER_KEY);

@@ -437,6 +437,7 @@ onGhostHunt( hunting )
 	AGG = 0;
 	if( hunting ){
 		BFL = BFL|BFL_HUNTING;
+		llSetSoundRadius(8);
 		llLoopSound("5a67fa19-3dbb-74c6-3297-8cee2b66e897", .6);
 	}
 	updateDesc();

@@ -109,7 +109,12 @@
 		(key)"9d99b483-85b5-2b83-f8c0-a8fe6b61f8de", \
 		(key)"9b311697-343d-e37a-ebe6-04e10952885f", \
 		(key)"12b95171-5463-0f5e-58e7-9e5e1e611182", \
-		(key)"e3f1b064-f9a1-9ec0-bd8f-79f25c03d8ba" \
+		(key)"e3f1b064-f9a1-9ec0-bd8f-79f25c03d8ba", \
+		"HOW", /* Hollow wood */ \
+		(key)"a6ca8b74-087f-ff1b-8ebf-4647693438b2", \
+		(key)"554e2b87-c32e-91ed-56b8-e2d3249af56b", \
+		(key)"1255eec7-d196-82fc-9edf-d16974c4235a", \
+		(key)"692eb3bc-4ca6-7857-4677-f3931d06004f" \
 	]
 
 #define COLS \

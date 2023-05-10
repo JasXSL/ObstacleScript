@@ -119,7 +119,7 @@ onStateEntry()
     end
     
     toggleOn(FALSE);
-    
+    llSetSoundRadius(10);
     if( llGetAttached() )
         llRequestPermissions(llGetOwner(), PERMISSION_TRACK_CAMERA);
     

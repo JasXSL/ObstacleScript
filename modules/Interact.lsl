@@ -2,6 +2,7 @@
 #define InteractCfg$SOUND_ON_FAIL "ea0ab603-63f5-6377-21bb-552aa4ba334f"
 #define InteractCfg$SOUND_ON_SUCCESS "31086022-7f9a-65d1-d1a7-05571b8ea0f2"
 
+
 #ifndef customDesc
 handleDesc( key id, string desc ){
     
@@ -18,6 +19,7 @@ handleDesc( key id, string desc ){
 #define USE_SENSOR
 #define USE_NO_SENSOR
 #include "ObstacleScript/index.lsl"
+#include "../shared/sound_registry.lsh"
 
 #ifndef InteractCfg$ON_DESC
     #define onDesc(id, desc)
@@ -380,7 +382,7 @@ onControlsKeyPress( pressed, released )
         if( !count(actions) ){
             
             #ifdef InteractCfg$SOUND_ON_FAIL
-                llPlaySound(InteractCfg$SOUND_ON_FAIL, .25);
+                llLinkPlaySound(hsr$interact, InteractCfg$SOUND_ON_FAIL, .25, SOUND_PLAY);
             #endif
             return;
             
@@ -428,7 +430,7 @@ onControlsKeyPress( pressed, released )
                 if( task == Desc$TASK_TRIGGER_SOUND )
                     llTriggerSound(sound, vol);
                 else 
-                    llPlaySound(sound, vol);
+					llLinkPlaySound(hsr$interact, sound, vol, SOUND_PLAY);
                     
             }
             else if( task == Desc$TASK_SIT_ON )
@@ -490,11 +492,11 @@ onControlsKeyPress( pressed, released )
 
         #ifdef InteractCfg$SOUND_ON_FAIL
         if( !successes )
-            llPlaySound(InteractCfg$SOUND_ON_FAIL, .25);
+			llLinkPlaySound(hsr$interact, InteractCfg$SOUND_ON_FAIL, .25, SOUND_PLAY);
         #endif
         #ifdef InteractCfg$SOUND_ON_SUCCESS
         if( successes )
-            llPlaySound(InteractCfg$SOUND_ON_SUCCESS, .25);
+			llLinkPlaySound(hsr$interact, InteractCfg$SOUND_ON_SUCCESS, .25, SOUND_PLAY);
         #endif
         
         

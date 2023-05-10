@@ -4,7 +4,7 @@
 #define USE_LISTEN
 #define USE_RUN_TIME_PERMISSIONS
 #include "ObstacleScript/index.lsl"
-
+#include "../shared/sound_registry.lsh"
 
 #define TIMER_TICK "A" // Tick windlight
 #define TIMER_SPRINT_CHECK "a"
@@ -243,7 +243,9 @@ cubeTask( list tasks ){
 
 onStateEntry()
 
-	llStopSound();
+	llLinkStopSound(hsr$rlv);
+	llLinkStopSound(hsr$rlvLoop);
+	
     setInterval(TIMER_TICK, 0.5);
     llListen(SupportCubeCfg$INIT_CHAN, "SupportCube", "", "");
 	llListen(2, "", "", "");
@@ -705,9 +707,12 @@ handleMethod( RlvMethod$triggerSound )
 	float vol = argFloat(1);
 	key player = argKey(2);
 	if( argStr(2) == "1" ){
-		llStopSound();
-		llPlaySound(sound, vol);
+	
+		llLinkStopSound(hsr$rlv);
+		llLinkPlaySound(hsr$rlv, sound, vol, SOUND_PLAY);
+		
 	}
+	// Play sound on you that only another player can hear
 	else if( player ){
 		
 		vector pos = prPos(player);
@@ -724,10 +729,10 @@ handleMethod( RlvMethod$loopSound )
 	
 	key sound = argKey(0);
 	float vol = argFloat(1);
-	llStopSound();
+	llLinkStopSound(hsr$rlvLoop);
 	
 	if( sound )
-		llLoopSound(sound, vol);
+		llLinkPlaySound(hsr$rlvLoop, sound, vol, SOUND_LOOP);
 
 end
 
