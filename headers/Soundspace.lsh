@@ -1,10 +1,5 @@
 /*
 	
-	Installing soundspaces
-	- Create 2 prims on your HUD create a new script in one of them and name it Soundspace
-	- Create a new script in the same prim as jas Soundspace, name it "SoundspaceAux" and setup following the SoundspaceAux.lsl instructions
-	- Go to the second prim and setup another SoundspaceAux
-	
 	Usage:
 	Soundspaces are gained by the closest item 10m underneath you.
 	See SharedDescriptions.lsl for description setup.

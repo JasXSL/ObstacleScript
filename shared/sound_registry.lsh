@@ -1,0 +1,14 @@
+#ifndef __sound_registry
+#define __sound_registry
+
+// HUD sound registry. Allocates links for linkPlaySound/loop sound
+
+#define hsr$soundspaceA 2
+#define hsr$soundspaceB 3
+
+
+
+
+
+
+#endif

@@ -2,7 +2,7 @@
 #define USE_STATE_ENTRY
 #define USE_TIMER
 #include "ObstacleScript/index.lsl"
-
+#include "../shared/sound_registry.lsh"
 
 
 integer BFL;
@@ -10,8 +10,9 @@ integer BFL;
 #define BFL_QUEUE 2            // Timer needs to update soundspace
  
 // Active sound
-string currentsound; 
-float currentsoundvol = .5;
+string currentSound; 
+float currentSoundVol = .5;
+float preSoundVol = 0;
 
 // Active ground soundspace
 string groundsound;
@@ -21,85 +22,105 @@ float groundsoundvol = .5;
 key overridesound;
 float overridesoundvol = .5;
 
-float last_update;                // Last update of soundspace
 
-integer aux = 1;   
+
+float last_update;				// Last update of soundspace
+
+// Time when last change was
+float tweenStarted;
+int aux;			// Which prim are we tweening up?
+
+#define getAuxLink( pr ) l2i((list)hsr$soundspaceA + hsr$soundspaceB, pr)
+
+
 updateSoundspace(){
     
-    if( last_update+2 > llGetTime() ){
-    
-        BFL = BFL|BFL_QUEUE;
-        return;
-        
-    }
-
-    string cs = currentsound;
-    float csv = currentsoundvol;
-    // Scripted sound override
-    if( overridesound ){
-    
-        cs = overridesound;
-        csv = overridesoundvol;
-        
-    }
-    // Underwater is second
+    string cSound;						// 
+	float cSoundVol;
+	
+	// Scripted sound override
+	if( overridesound ){
+	
+		cSound = overridesound;
+		cSoundVol = overridesoundvol;
+		
+	}
+	// Underwater is second
     else if( BFL&BFL_IN_WATER ){
         
-        cs = SP_UNDERWATER;
-        csv = .5;
-        
+		cSound = SP_UNDERWATER;
+        cSoundVol = .5;
+		
     }
-    // Ground sound last
+	// Ground sound last
     else{
         
-        csv = groundsoundvol;
-        cs = groundsound;
-        
+		cSoundVol = groundsoundvol;
+        cSound = groundsound;
+		
     }
-    
-    // Turn it off if NULL
-    if( cs == "" || cs == "NULL" ){
-    
+	
+	if( cSound == "NULL" )
+		cSound = "";
+	
+	if( cSound == currentSound && cSoundVol == currentSoundVol )
+		return;
+	
+	// Need to wait for the current tween
+	if( llGetTime()-last_update < 1.0 && ~BFL&BFL_QUEUE ){
+		setTimeout("Q", llGetTime()-last_update+0.1);
+		return;
+	}
+	
+	last_update = llGetTime();
+	currentSound = cSound;
+	
+	
+	
+	
+	// Turn it off if NULL
+    if( cSound == "" ){
+	
         clearSoundspace();
         return;
-        
+		
     }
-    
-    if( cs == currentsound && csv == currentsoundvol )
-        return;
-    
-    last_update = llGetTime();
-    
-    list SS = SP_DATA
-    #ifdef SoundspaceCfg$additionalSounds
-        +SOUNDSPACE_ADDITIONAL
-    #endif
-    ;
-    key sound = cs;
-    
-    // See if sound is a shorthand
-    integer i;
+
+	preSoundVol = currentSoundVol;
+	currentSoundVol = cSoundVol;
+	
+	list SS = SP_DATA;
+	key sound = cSound;
+	// See if sound is a shorthand
+	integer i;
     for( ; i<llGetListLength(SS); i+=2 ){
-    
-        if( llList2String(SS,i) == cs )
-            sound = llList2String(SS,i+1);
-            
-    }
-    
-    SoundspaceAux$set(aux, sound, csv);
-    ++aux;
-    if( aux > 2 )
-        aux = 1;
+	
+        if( llList2String(SS,i) == cSound )
+			sound = llList2String(SS,i+1);
+			
+	}
+	
+	aux = !aux;
+	
+	int link = getAuxLink(aux);
+	llLinkPlaySound(link, sound, 0.01, SOUND_LOOP);
+	tweenStarted = llGetTime();
+	
+	setInterval("V", 0.05);
     
 }
 clearSoundspace(){
 
-    currentsound = "";
+    currentSound = "";
     groundsound = "";
-    SoundspaceAux$set(0, "", 0);
+	preSoundVol = currentSoundVol;
+	currentSoundVol = 0;
+	tweenStarted = llGetTime();
+	aux = !aux;
+	llLinkStopSound(getAuxLink(aux));
+	setInterval("V", 0.05);
  
 }
-
 
 
 #include "ObstacleScript/begin.lsl"
@@ -116,44 +137,53 @@ end
 
 handleTimer("a")
 
-    // Raycast
-    list ray = llCastRay(
-        llGetRootPosition(), 
-        llGetRootPosition()-<0,0,10>, 
-        RC_DEFAULT
-    );
+	list ray = llCastRay(llGetRootPosition(), llGetRootPosition()-<0,0,10>, [RC_REJECT_TYPES, RC_REJECT_PHYSICAL|RC_REJECT_AGENTS]);
 
-    if( l2i(ray,-1) == 1 ){
-    
-        string desc = (string)llGetObjectDetails(llList2Key(ray,0), [OBJECT_DESC]);
-        list split = llParseString2List(desc, ["$$"], []);
-        
-        list dta = getDescTaskData(desc, Desc$TASK_SOUNDSPACE);
-        
-        string ssp = llList2String(dta,0);  
-        float v = llList2Float(dta,1);
-        if( dta != [] && isset(ssp) ){
-        
-            if( groundsound != ssp || v != groundsoundvol ){ 
-            
-                groundsoundvol = v;
-                groundsound = ssp;
-                if(currentsound == "")
-                    updateSoundspace();
-                    
-            }
-            
-        } 
-        
-    }
-    
-    if( BFL&BFL_QUEUE && llGetTime() > last_update+2 ){
-        
-        BFL = BFL&~BFL_QUEUE;
-        updateSoundspace();
-        
-    }
+	if( llList2Integer(ray,-1)==1 ){
+	
+		string desc = (string)llGetObjectDetails(llList2Key(ray,0), [OBJECT_DESC]);
+		list split = llParseString2List(desc, ["$$"], []);
+		
+		list dta = getDescTaskData(desc, Desc$TASK_SOUNDSPACE);
+		string ssp = llList2String(dta,0);  
+		float v = llList2Float(dta,1);
+		if( dta != [] && isset(ssp) ){
+		
+			if( groundsound != ssp || v != groundsoundvol ){ 
+			
+				groundsoundvol = v;
+				groundsound = ssp;
+				updateSoundspace();
+					
+			}
+			
+		} 
+		
+	}
 
+end
+
+handleTimer("V")
+
+	float perc = llGetTime()-tweenStarted;
+	if( perc > 1 ){
+		perc = 1;
+		unsetTimer("V");
+	}
+	
+	integer link = getAuxLink(aux);
+	llLinkAdjustSoundVolume(link, perc*currentSoundVol);
+	link = getAuxLink(!aux);
+	llLinkAdjustSoundVolume(link, (1.0-perc)*preSoundVol);
+	
+end
+
+
+handleTimer( "Q" )
+
+	BFL = BFL&~BFL_QUEUE;
+	updateSoundspace();
+	
 end
 
 
@@ -195,7 +225,7 @@ end
 
 handleInternalMethod( SoundspaceMethod$reset )
     
-    currentsound = "";
+    currentSound = "";
     groundsound = "";
     updateSoundspace();
 
