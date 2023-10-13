@@ -35,12 +35,12 @@
 
 
 // Interact types to be shuffled
-#define GhostEventsConst$IT_LIGHTS 0				// Do something with the electronics
-	#define GhostEventsConst$ITL_POP 0				// makes the lights red
-	#define GhostEventsConst$ITL_ELECTRONICS 1		// turns off nearby cameras and pops sensors off walls
-	#define GhostEventsConst$ITL_BREAKER 2			// turns off the breaker
-#define GhostEventsConst$IT_DOORS 1				// Slam all nearby doors
-#define GhostEventsConst$IT_POSSESS 2			// Interacts with one or more players directly
+#define GhostEventsConst$IT_ITEMS 0				// Do something with the electronics
+	#define GhostEventsConst$ITI_POP 0				// makes the lights red
+	#define GhostEventsConst$ITI_ELECTRONICS 1		// turns off nearby cameras and pops sensors off walls
+	#define GhostEventsConst$ITI_BREAKER 2			// turns off the breaker
+	#define GhostEventsConst$ITI_DOORS 3			// Slam all nearby doors
+#define GhostEventsConst$IT_POSSESS 1			// Interacts with one or more players directly
 	#define GhostEventsConst$ITP_SUBSET -1			// This ghost event is handled by a subset (spawned ghost event handler, such as ghost hands)
 	#define GhostEventsConst$ITP_RUB_UNI 0			// Unisex self rub
 	#define GhostEventsConst$ITP_RUB_F 1				// requires breasts

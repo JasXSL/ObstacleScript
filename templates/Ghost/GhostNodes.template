@@ -50,16 +50,20 @@
 
 list ROOM_MARKERS = [];	// Contains data from the spawner library
 
+int breakerCharge;	// Set to 5 min when breaker turns on. For each light that's on above maxLights it starts draining until the breaker turns off.
 int breaker;		// Breaker on
 list roomLights;	// Lights of a room. Each index corresponds to an index in ROOMS. Note that this relies on readable name, which means only the first entry of that readable is toggled.
 list roomTemps;		// Temperatures of a room, float between 0 and 1 with no evidence, or 0 and (TEMP_MAX-TEMP_INDOOR)/(TEMP_MAX_NO_EVIDENCE-TEMP_INDOOR). Each index corresponds to an index in ROOMS. Same as above, it uses the first entry of readable name.
 float lastSweat;
 vector rezPos;
 int ghostInLight = -1;	// Sets if the ghost is in a lit room or not
-int poppedLight = -1;	// Set to the room index of readable of a room that's got a popped light
+int poppedLight = -1;	// Set to the room index of readable of a room that's got a popped light. Only one light may pop per game for now.
 int GR;				// Index of current ghost room
 
 list portals;      // 8bArray roomIndexes, uuid
+
+// Any lights on above this will start counting down the 
+#define maxLights() (count(ROOMS)/ROOMS_STRIDE/3)
 
 int GAME_ACTIVE;
 
@@ -618,6 +622,7 @@ end
 		Hot temps (30+ temps)
 		Sanity decay
 */
+// Tick every 10 sec
 handleTimer( "TICK" )
 
 	if( !GAME_ACTIVE )
@@ -642,16 +647,14 @@ handleTimer( "TICK" )
 		for( ; i < count(roomTemps); ++i ){
 			
 			float val = l2f(roomTemps, i);
-			if( i == ghostRoomIdx ){
 			
-				float add = 0.2/(difficulty+1);
-				if( add < 0.07 )	// caps it as pro rate
-					add = 0.07;
-				val += add;	// About a minute for easy, plus 1 min per difficulty level
-
-			}
-			else 
-				val -= 0.2;
+			float add = 0.2/(difficulty+1);
+			if( add < 0.07 )	// caps it as pro rate
+				add = 0.07;
+			if( i != ghostRoomIdx ) // Fade
+				add = -add;
+				
+			val += add;
 			setGhostTemp(i, val);
 		}
 		
@@ -703,6 +706,19 @@ handleTimer( "TICK" )
 
 	}
 	
+	// Drain breaker power
+	int drainBreaker = (int)llListStatistics(LIST_STAT_SUM, roomLights)-maxLights();
+	if( drainBreaker > 0 ){
+		
+		breakerCharge -= drainBreaker*10;
+		if( breakerCharge < 1 && breaker ){
+			
+			Lamp$toggle( LampConst$breakerID, FALSE );
+			
+		}
+		
+	}
+	
 	raiseEvent(0, "DECAY" + decay);
 	
 end
@@ -721,13 +737,14 @@ onLevelCustomLightSwitch( lightSwitch, room, on )
 	
 	if( room == "_BREAKER_" ){
 		breaker = on;
+		breakerCharge = 300; // Reset the breaker timer
 		return;
 	}
 	
 	integer index = getRoomIndexByReadable(room);
 	if( index == -1 )
 		return;
-	roomLights = llListReplaceList(roomLights, (list)on, index, index);
+	roomLights = llListReplaceList(roomLights, (list)(on > 0), index, index);
 	Lamp$toggle( room, on );
 	
 end
@@ -736,6 +753,7 @@ handleMethod( NodesMethod$popLight )
 	
 	str readable = argStr(0);
 	poppedLight = getRoomIndexByReadable(readable);
+	roomLights = llListReplaceList(roomLights, (list)FALSE, poppedLight, poppedLight);
 	
 end
 

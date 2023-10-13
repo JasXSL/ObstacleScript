@@ -44,7 +44,7 @@
 #define GhostConst$type$inugami 7			// - Gets less interactive when players are near it. More interactive if nobody's near it. Can go "bork" on spirit box
 #define GhostConst$type$obukakke 8			// - Active ability leaves stains on everything nearby without causing EMF or movement. Adds arousal when it does.
 #define GhostConst$type$gooryo 9			// - Can teleport directly between rooms with plumbing. Doesn't roam normally, only teleports.
-#define GhostConst$type$ehee 10				// - Will only give EMF if nobody's got line of sight to it. Can't hunt if a player is within 8 meters and has LOS. Higher chance of a stronger EMF.
+#define GhostConst$type$sus 10				// - Has a small chance alter things players say on the radio. May cause fake motion detector triggers.
 #define GhostConst$type$bare 11				// - Will hunt earlier if in a dark room. Won't turn off lights. Interacts with players more in the dark. 3x chance of stripping a player in the dark. Rarely leaves the ghost room.
 #define GhostConst$type$stringoi 12			// - Has a greater chance of stripping players. Can interact with things at a greater distance. Occasionally leaves behind ghost orbs that can be seen on the camera.
 #define GhostConst$type$orghast 13			// - Roams more frequently. Has a greater chance of making noises on the microphone.
@@ -62,7 +62,7 @@
 	"Inugami" + \
 	"Obukakke" + \
 	"Gooryo" + \
-	"Ehee" + \
+	"Sus" + \
 	"Bare" + \
 	"Stringoi" + \
 	"Orghast" + \
@@ -123,7 +123,7 @@
 	GhostConst$evidence$spiritbox|GhostConst$evidence$temps|GhostConst$evidence$stains|(GhostConst$evidence$spiritbox<<16), /* Inugami */ \
 	GhostConst$evidence$stains|GhostConst$evidence$temps|GhostConst$evidence$hots|(GhostConst$evidence$stains<<16), /* Obukakke */ \
 	GhostConst$evidence$hots|GhostConst$evidence$writing|GhostConst$evidence$stains, /* Gooryo */ \
-	GhostConst$evidence$owometer|GhostConst$evidence$hots|GhostConst$evidence$stains|(GhostConst$evidence$owometer<<16), /* Ehee */  \
+	GhostConst$evidence$owometer|GhostConst$evidence$hots|GhostConst$evidence$stains|(GhostConst$evidence$owometer<<16), /* Sus */  \
 	GhostConst$evidence$writing|GhostConst$evidence$stains|GhostConst$evidence$spiritbox,/* Bare */  \
 	GhostConst$evidence$spiritbox|GhostConst$evidence$temps|GhostConst$evidence$hots, /* Stringoi */ \
 	GhostConst$evidence$owometer|GhostConst$evidence$stains|GhostConst$evidence$spiritbox, /* Orghast */ \

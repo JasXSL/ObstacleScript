@@ -1,5 +1,4 @@
 #define USE_STATE_ENTRY
-#define USE_PLAYERS
 #define USE_LISTEN
 #define USE_ON_REZ
 #include "ObstacleScript/helpers/Ghost/GhostHelper.lsb"
@@ -7,6 +6,8 @@
 
 str ID;
 int AFFIXES;
+int GTYPE;
+key GHOST;
 
 integer BFL;
 #define BFL_GARBLE 0x1
@@ -27,12 +28,14 @@ onStateEntry()
     llListen(GhostRadioConst$CHAN, "", "", "");
     llListen(GhostRadioConst$REDIR_CHAN, "", llGetOwner(), "");
     
-    Com$updatePortal();    
+    Com$updatePortal();
 	
 end
 
-onGhostToolGhost( ghost, affixes, evidence, difficulty )
+onGhostToolGhost( ghost, affixes, evidence, difficulty, gtype )
+	GHOST = ghost;
     AFFIXES = affixes;
+	GTYPE = gtype;
 end
 
 onListen( ch, msg )
@@ -92,6 +95,41 @@ onListen( ch, msg )
         if( targDead )
             garbleChance = 0.2;
         
+		// GHOST BEHAVIOR :: Sus - Chance to replace speech
+		if( !targDead && ~BFL&BFL_GARBLE && llFrand(1) < 0.5 && llVecDist(prPos(GHOST), prPos(oKey)) < 5 ){
+			
+			string lower = llToLower(message);
+			list find = [
+				"owometer 5","owometer","owometer five","emf 5","emf",
+				"spirit box","spiritbox",
+				"hots","dots",
+				"stains","fingies","fingerprints","handprints",
+				"hot temps", "temps", "hot temperature",
+				"writing", "sketching"
+			];
+			integer i;
+			for(; i < count(find); ++i ){
+			
+				string f = l2s(find, i);
+				integer pos = llSubStringIndex(lower, f);
+				string last = llGetSubString(lower, pos+llStringLength(f), pos+llStringLength(f));
+				if( 
+					~pos && 
+					(
+						pos+llStringLength(f) == llStringLength(lower) ||
+						!pos || ~llSubStringIndex(" !.", last)
+					)
+				){
+					
+					message = llReplaceSubString(message, f, randElem(find), 1);
+					find = [];
+					
+				}
+				
+			}
+			
+		}
+		
         // Add static on the line
         int i;
         int len = llStringLength(message);

@@ -62,12 +62,14 @@ list touchedPlayers;
 #define INTERACT_GROIN_SMALL 5
 #define INTERACT_BREASTS_SMALL 6
 #define INTERACT_BREASTS_MOTORBOAT 7
+#define INTERACT_BREASTS_SLAP 8
+
 interactPlayer( key hud, int power ){
     	
     integer sex = Rlv$getDesc$sex( hud );
     list allowed = [INTERACT_BUTT, INTERACT_GROIN];
     if( sex & GENITALS_BREASTS )
-        allowed += (list)INTERACT_BREASTS_PINCH + INTERACT_BREASTS_GRAB + INTERACT_BREASTS_MOTORBOAT;
+        allowed += (list)INTERACT_BREASTS_PINCH + INTERACT_BREASTS_GRAB + INTERACT_BREASTS_MOTORBOAT + INTERACT_BREASTS_SLAP;
 		
 	if( !power ){
 		
@@ -124,6 +126,13 @@ interactPlayer( key hud, int power ){
         
         anim = "breastsqueeze";
         dur = 1.7;
+        
+    }
+	else if( type == INTERACT_BREASTS_SLAP ){
+        
+        anim = "ghost_breastslap";
+        sound = "d5ebc09e-41ff-edeb-fd44-ec17d66d1b5b";
+        dur = 0.0;
         
     }
 	else if( type == INTERACT_BREASTS_MOTORBOAT ){
@@ -207,15 +216,9 @@ triggerParabolic( vector pos, integer sound ){
 	
 }
 
-int getGhostPower(){
+// 50/50 to do a powerful interact
+#define getGhostPower() (llFrand(1) > 0.5)
 	
-	float max = 2;
-	// GHOST BEHAVIOR :: EHEE - Higher chance of strong EMF
-	if( GHOST_TYPE == GhostConst$type$ehee )
-		max = 4;	// Higher chance of a strong EMF
-	return llFrand(max) > 1;
-	
-}
 
 // Set the global lastSound before calling this
 onGhostTouch( key targ, int power ){
@@ -249,6 +252,7 @@ int usePower(){
 
 		return TRUE;
 	}
+	
 	if( GHOST_TYPE == GhostConst$type$orghast ){
 		
 		triggerSound();

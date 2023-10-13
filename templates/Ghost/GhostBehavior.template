@@ -195,17 +195,7 @@ handleTimer( "TOUCH" )
     int difficulty = GhostGet$difficulty();
     float plDist = getNearestGhostPlayerDistance(0);
     float plDistLos = getNearestGhostPlayerDistance(1);
-    
-    int huntBlocked = 
-        ( // GHOST BEHAVIOR - EHEE No hunt while a player is close or observing
-            GHOST_TYPE == GhostConst$type$ehee && 
-            (
-                (plDist < 2 && plDist >= 0) || 
-                (plDistLos < 8 && plDistLos >= 0)
-            )
-        )
-    ;
-    
+
     // Get average arousal
 	float avg;
 	int tot;
@@ -252,7 +242,7 @@ handleTimer( "TOUCH" )
 	if( graceTime < 30 )
 		graceTime = 30;
 	
-    if( llGetTime()-LAST_HUNT > graceTime && !huntBlocked && llGetTime()-LAST_EVENT > 15 ){
+    if( llGetTime()-LAST_HUNT > graceTime && llGetTime()-LAST_EVENT > 15 ){
         // Start hunting at 40 arousal. But small chance.
         
         // Ghost has a min thresh to hunt
@@ -326,9 +316,7 @@ onGhostInteraction( ghost, asset, power )
         
         if( 
             !hasWeakAffix(AFFIXES, ToolSetConst$affix$noEvidenceUntilSalted) &&
-            EVIDENCE_TYPES & GhostConst$evidence$owometer && llFrand(1.0) < .5 &&
-            // GHOST BEHAVIOR - EHEE - No EMF5 if observed
-            (GHOST_TYPE != GhostConst$type$ehee || plDistLos < 0 || plDistLos > 8)
+            EVIDENCE_TYPES & GhostConst$evidence$owometer && llFrand(1.0) < .5
         ) // 4-5
             ++level;
         

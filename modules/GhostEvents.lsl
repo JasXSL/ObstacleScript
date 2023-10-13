@@ -14,8 +14,8 @@ int BFL;
 #define BFL_LIGHT_POPPED 0x1		// Can only pop one light
 
 int evtHit;				// Used to pick between multiple animations in a looping event (such as wall spanking)
-int evtType;			// Type of ghost event, such as GhostEventsConst$IT_LIGHTS
-int subType;			// Subtype, such as GhostEventsConst$ITL_BREAKER being a subtype of IT_LIGHTS
+int evtType;			// Type of ghost event, such as GhostEventsConst$IT_ITEMS
+int subType;			// Subtype, such as GhostEventsConst$ITI_BREAKER being a subtype of IT_LIGHTS
 list evtPlayers;		// Player involved in the event
 float evtDur;			// How long the event should last
 
@@ -44,11 +44,11 @@ end
 handleTimer( "END" )
 	
 	llStopSound();
-	if( evtType == GhostEventsConst$IT_LIGHTS ){
+	if( evtType == GhostEventsConst$IT_ITEMS ){
 	
-		if( subType == GhostEventsConst$ITL_BREAKER )
+		if( subType == GhostEventsConst$ITI_BREAKER )
 			Lamp$toggle( "BREAKER", false );
-		else if( subType == GhostEventsConst$ITL_ELECTRONICS ){
+		else if( subType == GhostEventsConst$ITI_ELECTRONICS ){
 			
 			GhostTool$emp();
 			llTriggerSound("338f43a4-4165-12a5-43d7-1f770a244457", 1);
@@ -133,28 +133,21 @@ handleOwnerMethod( GhostEventsMethod$trigger )
 	int ghostType = GhostGet$type();
 	
 	list viable = (list)
-		GhostEventsConst$IT_LIGHTS
+		GhostEventsConst$IT_ITEMS + 
+		GhostEventsConst$IT_POSSESS
 	;
-	// GHOST BEHAVIOR :: JIM :: Jim can only do lights events
-	if( ghostType != GhostConst$type$jim ){
-		
-		viable += (list)
-			GhostEventsConst$IT_DOORS +
-			GhostEventsConst$IT_POSSESS
-		;
-		
-	}
 	
 	int suc = ghostType == GhostConst$type$succubus;
 	int yaoikai = ghostType == GhostConst$type$yaoikai;
 	int yuri = ghostType == GhostConst$type$yuri;
 	int hantuwu = ghostType == GhostConst$type$hantuwu;
-	// GHOST BEHAVIOR :: SUCCUBUS :: Succubus can only possess
-	if( suc )
+	int jim = ghostType == GhostConst$type$jim;
+	// GHOST BEHAVIOR :: SUCCUBUS / HANTUWU :: Can only possess
+	if( suc || hantuwu )
 		viable = (list)GhostEventsConst$IT_POSSESS;
-	// GHOST BEHAVIOR :: HANTUWU :: Hantuwu can't do lights events
-	if( hantuwu )
-		viable = (list)GhostEventsConst$IT_POSSESS + GhostEventsConst$IT_DOORS;
+	// GHOST BEHAVIOR :: JIM :: Jim cannot possess
+	if( jim )
+		viable = (list)GhostEventsConst$IT_ITEMS;
 		
 	viable = llListRandomize(viable, 1);
 	
@@ -166,15 +159,16 @@ handleOwnerMethod( GhostEventsMethod$trigger )
 		int type = l2i(viable, v);
 		evtType = type;
 		
-		// Do something with the lights
-		if( type == GhostEventsConst$IT_LIGHTS ){
+		// Do something with items
+		if( type == GhostEventsConst$IT_ITEMS ){
 			
 			list viable = (list)
-				GhostEventsConst$ITL_BREAKER +
-				GhostEventsConst$ITL_ELECTRONICS
+				GhostEventsConst$ITI_BREAKER +
+				GhostEventsConst$ITI_ELECTRONICS +
+				GhostEventsConst$ITI_DOORS
 			;
 			if( ~BFL & BFL_LIGHT_POPPED )
-				viable += GhostEventsConst$ITL_POP;
+				viable += GhostEventsConst$ITI_POP;
 			
 			type = l2i(viable, llFloor(llFrand(count(viable))));
 			subType = type;
@@ -182,7 +176,8 @@ handleOwnerMethod( GhostEventsMethod$trigger )
 			
 
 			
-			if( type == GhostEventsConst$ITL_POP ){
+			// Pop the light
+			if( type == GhostEventsConst$ITI_POP ){
 				
 				evtDur = 2.5;
 				// #AUX handles the rest through the ghost event
@@ -191,17 +186,11 @@ handleOwnerMethod( GhostEventsMethod$trigger )
 											// but as it stands now, it would use too much memory
 				
 			}
-			/*
-			Handled at the end
-			else if( type == GhostEventsConst$ITL_ELECTRONICS ){
-				
-			}
-			*/
-			/* Handled at end
-			else if( type == GhostEventsConst$ITL_BREAKER ){
-				
-			}
-			*/
+			// Slam the doors
+			else if( type == GhostEventsConst$ITI_DOORS )
+				Door$slam( "*", evtDur );
+			// Others are handled on end
+
 			Level$raiseEvent( LevelCustomType$GHOSTINT, LevelCustomEvt$GHOSTINT$interacted, llGetKey() + 1 );
 			setTimeout("END", evtDur);
 			onGhostEventStart();
@@ -209,17 +198,7 @@ handleOwnerMethod( GhostEventsMethod$trigger )
 				
 		}
 		
-		// Slam doors event
-		if( type == GhostEventsConst$IT_DOORS ){
-			
-			subType = 0;
-			evtDur = 3+llFrand(3);
-			Door$slam( "*", evtDur );
-			setTimeout("END", evtDur);
-			onGhostEventStart();
-			return;
-		
-		}
+
 		
 		// Iteract with players events. These are the fun ones.
 		if( type == GhostEventsConst$IT_POSSESS ){

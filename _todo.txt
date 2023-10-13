@@ -1,19 +1,17 @@
 x = should be fixed, ? = not sure if fixed, - todo, u = unable to reproduce
 
-
-Ghost behavior changes:
-- Succubus -> Change spirit box to writing
-- Inugami -> Change writing to spirit box
-- Inugami -> Add custom Bork spirit box response.
-Hantuwu ->
-    - If attempting to hunt near a glow stick, it will instead start a ghost event.
-    - Cannot pop lights.
-    - Will not turn lights OFF. 
-
-Hunt changes:
-TEST -  Ghost stops hearing footsteps etc after losing LOS 
- - Ghost shouldn't instantly slow down after losing LOS
-
-- Weegie board not working on success?
-- Hide user names
+x Replace Ehee with Sus
+	x Remove Ehee
+	x Update whiteboard
+	x May replace words in radio chat while not hunting
+	x May trigger motion detectors that are far away.
+- Make it so you can recharge glow sticks by shaking them while they're below 25% brightness.
+	- Script
+	- Animation
+x Make breaker pop if you have too many lights on: Set to allow max 1/3rd of lights on at a time (rounded down). Lights above this limit will start draining the breaker 1 point every second for each light above the limit. The breaker has 300 points and these are reset when you turn the breaker on again.
+x Merge ghost events into 2 categories
+x Fix bondage machine targeting wrong genitals.
+x Make the ghost roam a bit less
+x The bindings are going to both machines for some reason
+x Increased motion detector range from 3m to 5m
 

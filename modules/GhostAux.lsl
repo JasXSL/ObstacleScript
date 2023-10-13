@@ -393,7 +393,7 @@ onGhostEventsBegin( players, type, subtype )
 	// Types that should not show the ghost, but enable heartbeat
 	if( 
 		(type == GhostEventsConst$IT_POSSESS && (subtype == GhostEventsConst$ITP_SPANK || subtype == GhostEventsConst$ITP_DRAG || subtype == GhostEventsConst$ITP_SUBSET)) ||
-		(type == GhostEventsConst$IT_LIGHTS && subtype == GhostEventsConst$ITL_POP)
+		(type == GhostEventsConst$IT_ITEMS && subtype == GhostEventsConst$ITI_POP)
 	){
 		setInterval("HEART", 0.5);
 	}
@@ -403,7 +403,7 @@ onGhostEventsBegin( players, type, subtype )
 		toggleHeartbeat(true);
 	}
 	
-	if( type == GhostEventsConst$IT_LIGHTS )
+	if( type == GhostEventsConst$IT_ITEMS )
 		setInterval("FL", 0.1);
 		
 end
@@ -437,8 +437,8 @@ onGhostHunt( hunting )
 	AGG = 0;
 	if( hunting ){
 		BFL = BFL|BFL_HUNTING;
-		llSetSoundRadius(8);
-		llLoopSound("5a67fa19-3dbb-74c6-3297-8cee2b66e897", .6);
+		llSetSoundRadius(15);
+		llLoopSound("5a67fa19-3dbb-74c6-3297-8cee2b66e897", .4);
 	}
 	updateDesc();
 	

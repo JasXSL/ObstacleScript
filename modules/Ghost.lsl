@@ -613,15 +613,12 @@ handleTimer( "A" )
 				}
 				
 				lastReturn = llGetTime();	// Stay in the ghost room for longer than when it roams
-				lastReturn += 30+llFrand(30);			// Fixed extra time to stay in the ghost room. This is added to roamcd. At least 60-90 sec stay in the ghost room
-				lastReturn += 60-20*DIF;	// Increase stay time by up to another min on lower difficulties.
-				// GHOST BEHAVIOR :: Orghast - Roam 30% more often
+				lastReturn += 120+llFrand(30);			// Fixed extra time to stay in the ghost room. This is added to roamcd.
+				lastReturn += 120-40*DIF;	// Increase stay time by up to another 2 min on lower difficulties.
+				// GHOST BEHAVIOR :: Orghast - Roam twice as often% more often
 				if( GHOST_TYPE == GhostConst$type$orghast )
-					lastReturn = llFloor(lastReturn*0.7);
+					lastReturn = floor(lastReturn*0.5);
 				
-				// GHOST BEHAVIOR :: EHEE - Don't leave the room as much
-				if( GHOST_TYPE == GhostConst$type$ehee )
-					lastReturn = llFloor(lastReturn*1.5);
 					
 			}
 			// Find a random room
