@@ -32,16 +32,17 @@
 
 
 #define ToolSetEvt$activeTool 1					// (int)active_tool, (var)data - Active tool has changed
-#define ToolSetEvt$visual 2						// (int)active_tool - Used by the visual helper
+#define ToolSetEvt$visual 2						// (int)active_tool, (var)data - Used by the visual helper
 
 
 #define onToolSetActiveTool( tool, data ) \
 	if( SENDER_SCRIPT IS "ToolSet" AND EVENT_TYPE IS ToolSetEvt$activeTool ){ \
 		int tool = argInt(0); \
 		str data = argStr(1);
-#define onToolSetVisual( tool ) \
+#define onToolSetVisual( tool, data ) \
 	if( SENDER_SCRIPT IS "ToolSet" AND EVENT_TYPE IS ToolSetEvt$visual ){ \
-		int tool = argInt(0);
+		int tool = argInt(0); \
+		str data = argStr(1);
 
 
 

@@ -416,13 +416,13 @@ handleTimer("T")
 			integer n = l2i(d, 1);
 			if( l2i(d, 0) && n ){
 				
-				--n;
-				// Ghost behavior :: Hantuwu - Drain glow sticks 3x faster while within 4 meters
+				n -= 2;
+				// Ghost behavior :: Hantuwu - Drain glow sticks faster while within 4 meters
 				vector pp = prPos(targ);
 				float z = llFabs(pp.z+0.5-gPos.z);
 				pp.z = 0;
 				if( gType == GhostConst$type$hantuwu && type == ToolsetConst$types$ghost$glowstick && llVecDist(<gPos.x, gPos.y, 0>, pp) < 3.5 && z < 2 )
-					n -= 2;
+					n -= 5;
 				if( n < 0 )
 					n = 0;
 				d = llListReplaceList(d, (list)n, 1, 1);

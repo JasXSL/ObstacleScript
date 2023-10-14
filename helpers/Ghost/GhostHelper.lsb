@@ -94,8 +94,9 @@ list _ghGGS( integer on, integer percent ){
 	float perc = percent/100.0;
 	if( perc < 0 )
 		perc = 0;
-	
-	return (list)PRIM_POINT_LIGHT + TRUE + <0.665, 0.181, 1.000> + 1.0 + (2.5+2.5*perc) + 1.0 + PRIM_FULLBRIGHT + ALL_SIDES + TRUE + PRIM_GLOW + ALL_SIDES + (0.1+0.4*perc);
+	// Convert to quartic out
+	perc = 1.0-llPow(1-perc, 4);
+	return (list)PRIM_POINT_LIGHT + TRUE + <0.665, 0.181, 1.000> + 1.0 + (1+4*perc) + 1.0 + PRIM_FULLBRIGHT + ALL_SIDES + TRUE + PRIM_GLOW + ALL_SIDES + (0.1+0.4*perc);
 
 }
 

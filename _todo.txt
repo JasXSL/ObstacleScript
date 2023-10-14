@@ -8,6 +8,7 @@ x Replace Ehee with Sus
 - Make it so you can recharge glow sticks by shaking them while they're below 25% brightness.
 	- Script
 	- Animation
+- Idle anims to show off certain tools?
 x Make breaker pop if you have too many lights on: Set to allow max 1/3rd of lights on at a time (rounded down). Lights above this limit will start draining the breaker 1 point every second for each light above the limit. The breaker has 300 points and these are reset when you turn the breaker on again.
 x Merge ghost events into 2 categories
 x Fix bondage machine targeting wrong genitals.

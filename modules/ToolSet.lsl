@@ -532,6 +532,8 @@ onPortalLclickStarted( hud )
 	if( !tool || BFL&BFL_USING )
 		return;
 		
+	str outData;
+		
     list toggled = (list)
         ToolsetConst$types$ghost$owometer +
         ToolsetConst$types$ghost$spiritbox +
@@ -539,12 +541,25 @@ onPortalLclickStarted( hud )
 		ToolsetConst$types$ghost$thermometer
     ;
     if( tool == ToolsetConst$types$ghost$glowstick ){
+		
+		str data = getActiveToolStr();
+		int on = (int)j(data, 0);
+		int brightness = (int)j(data, 1);
 	
-        // Already on
-        if( (int)j(getActiveToolStr(), 0) )
-            return;
+        // Can't interact yet
+        if( (int)on && brightness > 25 )
+			return;
         
-		string data = "[1,100]";
+		if( on )
+			outData = "re";
+			
+		BFL = BFL|BFL_USING;
+		float to = 1.5;
+		if( on )
+			to = 3;
+        setTimeout("USE", to);
+		// Set to on and 100%
+		data = "[1,100]";
         setActiveToolVal(data);
         onDataUpdate();
         Level$raiseEvent( LevelCustomType$GTOOL, LevelCustomEvt$GTOOL$data, getActiveToolWorldId() + data ); // Set it to 100%. Going down to 0%
@@ -675,7 +690,7 @@ onPortalLclickStarted( hud )
 	
 	}
 	
-	raiseEvent(ToolSetEvt$visual, tool);
+	raiseEvent(ToolSetEvt$visual, tool + outData);
 
 end
 
