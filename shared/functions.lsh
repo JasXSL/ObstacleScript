@@ -218,6 +218,36 @@ int _pla( key player, key targ, float angle ){
 #define agentLookingAtRadius( player, targ, radius ) \
 	_pla(player, targ, radius)
 	
+
+pbrAlpha( integer link, float alpha, integer side, integer alphaMode ){
+		
+	int i = 1;
+	for( ; i <= llGetNumberOfPrims(); ++i ){
+		
+		
+		if( 
+			(link == LINK_SET) ||
+			(link == LINK_ALL_OTHERS && i != llGetLinkNumber()) ||
+			(link == LINK_THIS && i == llGetLinkNumber()) ||
+			(i == link)
+		){
+			
+			list out = [];
+			integer s;
+			for(; s < llGetLinkNumberOfSides(i); ++s ){
+				
+				if( s == side || side == ALL_SIDES )
+					out += (list)PRIM_GLTF_BASE_COLOR + s + llListReplaceList(llGetLinkPrimitiveParams(link, (list)PRIM_GLTF_BASE_COLOR + s), (list)alpha + alphaMode, 5,6);
+				
+			}
+			
+			llSetLinkPrimitiveParamsFast(i, out);
+			
+		}
+
+	}
+	
+}
 	
 	
 	

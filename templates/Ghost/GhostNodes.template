@@ -285,6 +285,7 @@ resetTempData(){
 	roomLights = [];
 	roomTemps = [];
 	breaker = false;
+	GhostLevelHelper$togglePoweredSounds(breaker);
 	integer i;
 	for(; i < count(ROOMS); i += ROOMS_STRIDE ){
 		roomTemps += 0.0;
@@ -713,7 +714,7 @@ handleTimer( "TICK" )
 		breakerCharge -= drainBreaker*10;
 		if( breakerCharge < 1 && breaker ){
 			
-			Lamp$toggle( LampConst$breakerID, FALSE );
+			Lamp$toggle( LampConst$breakerID, FALSE ); // This tells the breaker to turn itself off. The breaker will then send a method to us that says it's off.
 			
 		}
 		
@@ -735,10 +736,14 @@ end
 
 onLevelCustomLightSwitch( lightSwitch, room, on )
 	
+	// Note: The breaker object handles toggling of the lights. This script just stores the state.
 	if( room == "_BREAKER_" ){
+	
 		breaker = on;
-		breakerCharge = 300; // Reset the breaker timer
+		breakerCharge = 300; // Reset the breaker timer regardless of if it's on or off
+		GhostLevelHelper$togglePoweredSounds(on);
 		return;
+		
 	}
 	
 	integer index = getRoomIndexByReadable(room);

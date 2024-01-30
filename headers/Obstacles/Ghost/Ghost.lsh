@@ -123,7 +123,7 @@
 	GhostConst$evidence$spiritbox|GhostConst$evidence$temps|GhostConst$evidence$stains|(GhostConst$evidence$spiritbox<<16), /* Inugami */ \
 	GhostConst$evidence$stains|GhostConst$evidence$temps|GhostConst$evidence$hots|(GhostConst$evidence$stains<<16), /* Obukakke */ \
 	GhostConst$evidence$hots|GhostConst$evidence$writing|GhostConst$evidence$stains, /* Gooryo */ \
-	GhostConst$evidence$owometer|GhostConst$evidence$hots|GhostConst$evidence$stains|(GhostConst$evidence$owometer<<16), /* Sus */  \
+	GhostConst$evidence$owometer|GhostConst$evidence$hots|GhostConst$evidence$stains, /* Sus */  \
 	GhostConst$evidence$writing|GhostConst$evidence$stains|GhostConst$evidence$spiritbox,/* Bare */  \
 	GhostConst$evidence$spiritbox|GhostConst$evidence$temps|GhostConst$evidence$hots, /* Stringoi */ \
 	GhostConst$evidence$owometer|GhostConst$evidence$stains|GhostConst$evidence$spiritbox, /* Orghast */ \

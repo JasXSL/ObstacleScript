@@ -10,7 +10,6 @@ integer BFL;
 #define BFL_ON 0x1
 #define BFL_HUNTING 0x2
 #define BFL_DROPPED 0x4
-#define BFL_VISIBLE 0x8
 float DUR = 8;	// Set when receiving an EMF
 
 list EMF_POINTS;    // key id, int strength(1-5), (float)time
@@ -19,7 +18,7 @@ list EMF_POINTS;    // key id, int strength(1-5), (float)time
 integer C_EMF = -1;
 // EMF changed
 setEMF( integer emf ){
-
+		
     if( BFL&BFL_ON && emf < 1 )
         emf = 1;
     if( emf > 5 )
@@ -31,27 +30,15 @@ setEMF( integer emf ){
 	if( llGetInventoryType("ToolSet") == INVENTORY_NONE && ~BFL&BFL_DROPPED )
 		emf = 0;
         
-		
     if( C_EMF == emf )
         return;
         
     C_EMF = emf;
-	
-	list COLORS = [
-		<0.188, 1.000, 0.188>,
-		<0.784, 1.000, 0.188>,
-		<1.000, 0.911, 0.188>,
-		<1.000, 0.626, 0.188>,
-		<1.000, 0.188, 0.188>
-	];
 
     float vol = 0.001;
     if( emf > 1 )
         vol = llPow((1.0/4*(emf-1))*.6+.2, 2);
     
-	float alpha;
-	if( BFL&BFL_VISIBLE || !llGetAttached() )
-		alpha = 1.0;
 	
 	vol *= .25;
     list set;
@@ -60,13 +47,9 @@ setEMF( integer emf ){
         
         integer face = i+1;
         integer on = emf > i;
-		vector color = l2v(COLORS, i);
-		if( !on )
-			color *= 0.5;
         set += (list)
-            PRIM_FULLBRIGHT + face + on +
-            PRIM_GLOW + face + on*.1 +
-			PRIM_COLOR + face + color + alpha
+            PRIM_GLOW + face + on*.3 +
+			gsmFullbright(P_EMF, face, (ONE_VECTOR*on))
         ;
         
     }
@@ -94,6 +77,7 @@ toggleOn( integer on ){
         
     }
     
+	C_EMF = -1; // on switch, force a redraw
     setEMF(0);
            
 }
@@ -144,17 +128,15 @@ handleMethod( OwometerMethod$addPoint )
 end
 
 onToolSetActiveTool( tool, data )
-
-    if( tool != ToolsetConst$types$ghost$owometer ){
-		BFL = BFL&~BFL_VISIBLE;
-        toggleOn(FALSE);
-	}
-    else{
-		BFL = BFL|BFL_VISIBLE;
+	
+	int on = tool == ToolsetConst$types$ghost$owometer;
+	toggleOn(on);
+    if( on ){
 		if( (int)data )
 			llSleep(.1);	// Fixes audio race conditions with spirit box
         onDataChanged((int)data);
 	}
+	
 end
 
 onGhostToolHunt( hunting, ghost )
@@ -167,13 +149,14 @@ onGhostToolHunt( hunting, ghost )
 end
 
 // Raised only if rezzed and not picked up. This is raised when placing the asset under the level. Can be used to hide it etc.
+// Not used on attachment
 onGhostToolPickedUp()
 
     if( llGetInventoryType("ToolSet") != INVENTORY_NONE )
         return;
     
 	BFL = BFL&~BFL_DROPPED;
-    toggleOn(FALSE);
+	toggleOn(FALSE);
 	
     
 end

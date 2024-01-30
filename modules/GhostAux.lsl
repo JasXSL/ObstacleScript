@@ -85,12 +85,24 @@ toggleMesh( float alpha ){
 	BFL = BFL&~BFL_VISIBLE;
 	if( alpha > 0 )
 		BFL = BFL|BFL_VISIBLE;
-		
-
-	int i;
-	for(; i < count(P_MESH); ++i )
-		llSetLinkAlpha(l2i(P_MESH, i), alpha, ALL_SIDES);
 	
+	integer alphaMode;	
+	if( alpha <= 0 )
+		alphaMode = PRIM_GLTF_ALPHA_MODE_BLEND;
+
+	list set;
+	int i;
+	for(; i < count(P_MESH); ++i ){
+		
+		int prim = l2i(P_MESH, i);
+		vector color = ONE_VECTOR;
+		set += (list)PRIM_LINK_TARGET + prim;
+		integer x;
+		for(; x < llGetLinkNumberOfSides(prim); ++x )
+			set += gsmColor(prim, x, color, alpha, alphaMode);
+		
+	}
+	llSetLinkPrimitiveParamsFast(0, set);
 
 }
 

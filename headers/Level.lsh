@@ -23,7 +23,8 @@
 	#define LevelEvt$playersChanged 5		// void - Player table has changed
 	#define LevelEvt$hudsChanged 6			// void - HUD table has changed
 	
-
+	// scripts that are REQUIRED in every level
+	// You can also request other scripts by placing them in the level as long as they don't start with #
 	#define LevelConst$REMOTE_SCRIPTS (list)\
 		"Rezzer" + \
 		"Spawner"

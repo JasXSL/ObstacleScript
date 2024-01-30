@@ -69,6 +69,15 @@ updateCode(){
 
 	
 	WAITING_SCRIPTS = LevelConst$REMOTE_SCRIPTS;
+	int i;
+	for( ; i < llGetInventoryNumber(INVENTORY_SCRIPT); ++i ){
+		
+		str name = llGetInventoryName(INVENTORY_SCRIPT, i);
+		if( llGetSubString(name, 0, 0) != "#" && llListFindList(WAITING_SCRIPTS, (list)name) == -1 )
+			WAITING_SCRIPTS += name;
+	
+	}
+	
 	integer pin = (int)llFrand(0xFFFFFFF);
 	llSetRemoteScriptAccessPin(pin);
 	Screpo$get( pin, 1, WAITING_SCRIPTS, true );

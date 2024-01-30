@@ -50,15 +50,15 @@ setSprite( integer sprite ){
 
 updateSound(){
 	
-	llStopSound();
+	llLinkStopSound(2);
 	if( ~BFL&BFL_ON )
 		return;
 		
 	if( SWEEP ){
-		llLoopSound("30b60b7e-952b-f083-86d0-21280a6cc8ca", .25);
+		llLinkPlaySound(2, "30b60b7e-952b-f083-86d0-21280a6cc8ca", .25, SOUND_LOOP);
 	}
 	else
-		llLoopSound("f9abe756-b788-b2b4-fd3d-7c373f83a464", 0.1);
+		llLinkPlaySound(2, "f9abe756-b788-b2b4-fd3d-7c373f83a464", 0.1, SOUND_LOOP);
 }
 
 respond(){
@@ -188,7 +188,9 @@ toggleOn( integer on ){
     }
 	
 	updateSound();
-	llSetLinkPrimitiveParamsFast(P_SPIRITBOX, (list)PRIM_FULLBRIGHT + SCREEN_FACE + on + PRIM_GLOW + SCREEN_FACE + (0.1*on));
+	llSetLinkPrimitiveParamsFast(P_SPIRITBOX, 
+		gsmFullbright(P_SPIRITBOX, SCREEN_FACE, (ONE_VECTOR*on*0.75))
+	);
            
 }
 
@@ -271,10 +273,9 @@ end
 
 onToolSetActiveTool( tool, data )
 
-    if( tool != ToolsetConst$types$ghost$spiritbox ){
-        toggleOn(FALSE);
-	}
-    else{
+	int on = tool == ToolsetConst$types$ghost$spiritbox;
+	toggleOn(FALSE);
+    if( on ){
 		if( (int)data )
 			llSleep(.1);	// Fixes audio race conditions with owometer
         onDataChanged((int)data);

@@ -36,35 +36,44 @@ rez(){
 	}
 	// Rez something
 	else{
+		
 	
 		++IDX;
 		
 		// Normal queue
 		list data = llJson2List(s);
-		setTimeout("FAIL:"+(str)IDX, 60);
+		str name = l2s(data, 0);
+		if( llGetInventoryType(name) != INVENTORY_OBJECT ){
+			qd("Unable to rez" + name + "Object missing from inventory");
+		}
+		else{
 		
-		integer startParam;
-		if( l2i(data, 5) )
-			startParam = PortalConst$SP_LIVE;
+			setTimeout("FAIL:"+(str)IDX, 60);
 			
-		startParam = startParam | ((IDX&0xFFFF)<<5);
+			integer startParam;
+			if( l2i(data, 5) )
+				startParam = PortalConst$SP_LIVE;
+				
+			startParam = startParam | ((IDX&0xFFFF)<<5);
+			
+			descQueue += (list)
+				IDX + 
+				llGetTime() +
+				l2s(data, 1) +
+				l2s(data, 3) +
+				l2s(data, 4) +
+				name
+			;
+			
+			llRezAtRoot(
+				name, 
+				llGetPos()-<0,0,5>, 
+				ZERO_VECTOR,
+				(rotation)l2s(data, 2), 
+				startParam
+			);
 		
-		descQueue += (list)
-			IDX + 
-			llGetTime() +
-			l2s(data, 1) +
-			l2s(data, 3) +
-			l2s(data, 4) +
-			l2s(data, 0)
-		;
-		
-		llRezAtRoot(
-			l2s(data, 0), 
-			llGetPos()-<0,0,5>, 
-			ZERO_VECTOR,
-			(rotation)l2s(data, 2), 
-			startParam
-		);
+		}
 
 	}
 	

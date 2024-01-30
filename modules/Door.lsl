@@ -116,8 +116,10 @@ float playerOffset;
 
 stopInteract(){
 
-	if( interactor )
+	if( interactor ){
 		raiseEvent(DoorEvt$interactStop, []);
+		AnimHandler$stop(interactor, "door");
+	}
 	interactor = "";
     unsetInterval("A");
 	
@@ -133,10 +135,14 @@ onPortalInteractStarted( hud, pos, linkKey )
 
 	if( locked ){
 	
+		AnimHandler$start(interactor, "use_world");
 		raiseEvent(DoorEvt$interactLocked, interactor);
 		return;
 		
 	}
+	
+	if( interactor )
+		AnimHandler$stop(interactor, "door");
 	
 
     rotation r = prRot(hud);
@@ -150,6 +156,7 @@ onPortalInteractStarted( hud, pos, linkKey )
     else if( playerOffset < 1 )
         playerOffset = 1;
 		
+	AnimHandler$start(interactor, "door");
 	raiseEvent(DoorEvt$interactStart, interactor);
     
 end

@@ -7,11 +7,12 @@
 #include "ObstacleScript/helpers/Ghost/GhostHelper.lsb"
 
 
-integer BFL;
+int BFL;
 #define BFL_USING 0x1   // Using an item
 
 // Equipped tools
-integer ACTIVE_TOOL;    // index of stride in TOOLS. Use activeType for type
+int C_TOOL;			// cache of active tool
+int ACTIVE_TOOL;    // index of stride in TOOLS. Use activeType for type
 // (int)tool, (var)setting, (key)id
 list TOOLS;
 #define TOOLSTRIDE 3
@@ -65,7 +66,44 @@ string curAnim;
 
 int AFFIXES;
 
-
+list toggleAsset( integer link, integer on ){
+	
+	list textures = llCSV2List(getLinkDesc(link));
+	list out = (list)PRIM_LINK_TARGET + link;
+	
+	if( textures == [] )
+		return textures;
+	if( !on )
+		return out + PRIM_RENDER_MATERIAL + ALL_SIDES+ TEXTURE_HIDDEN;
+	
+	key base = l2k(textures, 0);
+	
+	// If there's only one texture set, we expect ALL_SIDES to have this
+	if( count(textures) == 1 )
+		return out + PRIM_RENDER_MATERIAL + ALL_SIDES + base;
+		
+	// Start by clearing render material to unhide any invisible non-PBR textures
+	out += (list)PRIM_RENDER_MATERIAL + ALL_SIDES + "";
+		
+	integer i;
+	for(; i < count(textures); ++i ){
+		
+		str texture = l2s(textures, i);
+		if( (key)texture )
+			out += (list)
+				PRIM_RENDER_MATERIAL + i + texture
+			;
+		// Set to "a" to use the base texture
+		else if( llToLower(texture) == "a" )
+			out += (list)
+				PRIM_RENDER_MATERIAL + i + base
+			;
+		
+	}
+	return out;
+	
+	
+}
 
 // Attachment data received for the active asset
 onDataUpdate(){
@@ -78,18 +116,21 @@ onDataUpdate(){
 		list d = llJson2List(getActiveToolStr());
 		on = l2i(d, 0);
 		integer percent = l2i(d, 1);
+		if( !on )
+			percent = 0;
         PP(
             P_FLASHLIGHTBEAM, 
             GhostHelper$getFlashlightLightSettings( on, percent )
         );
         PP(
             P_FLASHLIGHT,
-			GhostHelper$getFlashlightFrontSettings( on, percent )
+			GhostHelper$getFlashlightFrontSettings( P_FLASHLIGHT, percent )
         );
         
     }
     else if( tool == ToolsetConst$types$ghost$ecchisketch ){
         
+		// The art layer doesn't use materials
         AL(P_ECCHISKETCH, on, 4);
         if( on ){
             
@@ -105,7 +146,8 @@ onDataUpdate(){
     else if( tool == ToolsetConst$types$ghost$glowstick ){
 	
 		list d = llJson2List(getActiveToolStr());
-		PP(P_GSTICK, GhostHelper$getGlowstickSettings(l2i(d, 0), l2i(d, 1)));
+		int perc = l2i(d, 1);
+		PP(P_GSTICK, GhostHelper$getGlowstickSettings(P_GSTICK, l2i(d, 0), perc));
 		
 	}
     else if( tool == ToolsetConst$types$ghost$parabolic ){
@@ -115,7 +157,7 @@ onDataUpdate(){
             PRIM_COLOR + 5 + ZERO_VECTOR + on +
             PRIM_COLOR + 6 + ZERO_VECTOR + on +
             PRIM_COLOR + 7 + ZERO_VECTOR + on +
-            PRIM_FULLBRIGHT + 3 + on
+			gsmFullbright(P_PARAMON, 3, (<.25,.25,.25>*on))
         );
         onTick();
         
@@ -138,7 +180,7 @@ onDataUpdate(){
 	
 		integer f = getActiveToolInt();
 		llSetLinkPrimitiveParamsFast(P_THERMO, (list)
-			PRIM_TEXTURE + 6 + "2aaf7eb6-4ebb-52da-b32a-7e2d4d45c73d" + <1.0/16, 1, 0> + <-0.46875+.0625*(14-f*2), 0, 0> + 0
+			PRIM_TEXTURE + 6 + "2aaf7eb6-4ebb-52da-b32a-7e2d4d45c73d" + <1.0/16, 1, 0> + <-0.46875+.0625*(14-f*2), 0, 0> + 0 // F/C
 		);
 		TEMP_TIME = 0;
 		onTick();
@@ -154,45 +196,71 @@ onDataUpdate(){
 drawActiveTool(){
     
     integer tool = activeType();
-    list remFullbright = (list)PRIM_GLOW + ALL_SIDES + 0 + PRIM_FULLBRIGHT + ALL_SIDES + 0;
+	if( tool == C_TOOL )
+		return; // Prevent redundant draws
+	C_TOOL = tool;
+	
+	
     list remLight = (list)PRIM_POINT_LIGHT + FALSE + <1.000, 0.928, 0.710> + 1 + 4 + 1;
 
     // Owometer
-    AL(P_OWOMETER, tool == ToolsetConst$types$ghost$owometer, ALL_SIDES);
-    if( tool != ToolsetConst$types$ghost$owometer )
-        PP(P_OWOMETER, remFullbright);
-    
-    // Flashlight
-    AL(P_FLASHLIGHT, tool == ToolsetConst$types$ghost$flashlight, ALL_SIDES);
-    PP(P_FLASHLIGHT, remFullbright);
-    PP(P_FLASHLIGHTBEAM, remLight);
+	list set;
+	set += toggleAsset(P_OWOMETER, tool == ToolsetConst$types$ghost$owometer);
 
-    // HOTS
-    AL(P_HOTS, tool == ToolsetConst$types$ghost$hots, ALL_SIDES);
-    AL(P_HOTSBALL, tool == ToolsetConst$types$ghost$hots , ALL_SIDES);
-    AL(P_ECCHISKETCH, tool == ToolsetConst$types$ghost$ecchisketch, ALL_SIDES);
-    AL(P_SPIRITBOX, tool == ToolsetConst$types$ghost$spiritbox, ALL_SIDES);
-    AL(P_SPIRITBOX, 0, 4);
-    AL(P_SALT, tool == ToolsetConst$types$ghost$salt, ALL_SIDES);
-    AL(P_VAPE, tool == ToolsetConst$types$ghost$vape, ALL_SIDES);
-    AL(P_OUIJA, tool == ToolsetConst$types$ghost$weegieboard, ALL_SIDES);
-	AL(P_PLANCHETTE, 0, ALL_SIDES);
-    AL(P_PILLS, tool == ToolsetConst$types$ghost$pills, ALL_SIDES);
-    AL(P_PIR, tool == ToolsetConst$types$ghost$motionDetector, ALL_SIDES);
-    AL(P_PIR_CAN, tool == ToolsetConst$types$ghost$motionDetector, ALL_SIDES);
-    AL(P_BAT, tool == ToolsetConst$types$ghost$hornybat, ALL_SIDES);
-    AL(P_GSTICK, tool == ToolsetConst$types$ghost$glowstick, ALL_SIDES);
-    PP(P_GSTICK, remFullbright + remLight);
-    
-    AL(P_PARAMON, tool == ToolsetConst$types$ghost$parabolic, ALL_SIDES);
-    AL(P_PARA, tool == ToolsetConst$types$ghost$parabolic, ALL_SIDES);
-    AL(P_PARA, (tool == ToolsetConst$types$ghost$parabolic)*.5, 1);
-    //AL(P_CAM, tool == ToolsetConst$types$ghost$camera, ALL_SIDES);
-    AL(P_THERMO, tool == ToolsetConst$types$ghost$thermometer, ALL_SIDES);
-	AL(P_THERMO_POSTIT, tool == ToolsetConst$types$ghost$thermometer, ALL_SIDES);
-	AL(P_VCAM, tool == ToolsetConst$types$ghost$videoCamera, ALL_SIDES);
-		
+    // Flashlight
+	set += toggleAsset(P_FLASHLIGHT, tool == ToolsetConst$types$ghost$flashlight); // Note: this sets the link target
+    set += gsmFullbright(P_FLASHLIGHT, 2, ZERO_VECTOR);
+	set += (list)PRIM_LINK_TARGET + P_FLASHLIGHTBEAM + remLight;
+
+	PP(0, set);
+	set = [];
+
 	
+	
+    // HOTS
+    set += toggleAsset(P_HOTS, tool == ToolsetConst$types$ghost$hots);
+	set += toggleAsset(P_HOTSBALL, tool == ToolsetConst$types$ghost$hots);
+	
+	// Ecchisketch
+	set += toggleAsset(P_ECCHISKETCH, tool == ToolsetConst$types$ghost$ecchisketch);
+	
+	// Spiritbox
+	set += toggleAsset(P_SPIRITBOX, tool == ToolsetConst$types$ghost$spiritbox);
+    AL(P_SPIRITBOX, 0, 4); // The display doesn't use materials
+	
+	set += toggleAsset(P_SALT, tool == ToolsetConst$types$ghost$salt);
+	set += toggleAsset(P_VAPE, tool == ToolsetConst$types$ghost$vape);
+	
+	set += toggleAsset(P_OUIJA, tool == ToolsetConst$types$ghost$weegieboard);
+	set += toggleAsset(P_PLANCHETTE, 0);
+	
+	set += toggleAsset(P_PILLS, tool == ToolsetConst$types$ghost$pills);
+	
+    set += toggleAsset(P_PIR, tool == ToolsetConst$types$ghost$motionDetector);
+    set += toggleAsset(P_PIR_CAN, tool == ToolsetConst$types$ghost$motionDetector);
+	
+	PP(0, set);
+	set = [];
+	
+	
+	set += toggleAsset(P_BAT, tool == ToolsetConst$types$ghost$hornybat);
+	
+	set += toggleAsset(P_GSTICK, tool == ToolsetConst$types$ghost$glowstick);
+	set += gsmFullbright(P_GSTICK, 0, ZERO_VECTOR);
+	set += (list)PRIM_LINK_TARGET + P_GSTICK + remLight;
+	
+	set += toggleAsset(P_PARAMON, tool == ToolsetConst$types$ghost$parabolic);
+    set += toggleAsset(P_PARA, tool == ToolsetConst$types$ghost$parabolic);
+	
+	set += toggleAsset(P_THERMO, tool == ToolsetConst$types$ghost$thermometer);
+	set += gsmFullbright(P_THERMO, 2, (<.3,.3,.2>*(tool == ToolsetConst$types$ghost$thermometer)));
+	set += toggleAsset(P_THERMO_POSTIT, tool == ToolsetConst$types$ghost$thermometer);
+	
+	set += toggleAsset(P_VCAM, tool == ToolsetConst$types$ghost$videoCamera);
+
+	
+	PP(0, set);
+	set = [];
 
     onDataUpdate();
     
@@ -205,10 +273,6 @@ drawActiveTool(){
 			integer on = getActiveToolInt();
             if( tool == ToolsetConst$types$ghost$parabolic )
                 anim = "paramic_hold";
-			/*
-            else if( tool == ToolsetConst$types$ghost$camera )
-                anim = "camera_hold";
-            */
 			else if( tool == ToolsetConst$types$ghost$thermometer )
                 anim = "thermometer_hold";
 			else if( tool == ToolsetConst$types$ghost$hornybat )
@@ -245,7 +309,7 @@ drawActiveTool(){
         } 
 
     }
-        
+    
     
 }
 
@@ -479,6 +543,8 @@ onStateEntry()
     if( llGetAttached() )
         llRequestPermissions(llGetOwner(), PERMISSION_TRIGGER_ANIMATION|PERMISSION_TRACK_CAMERA);
     
+	C_TOOL = -1;
+	drawActiveTool();
     // Facelight
     PP(P_FLASHLIGHT, (list)PRIM_POINT_LIGHT + 1 + <1.000, 0.928, 0.710> + .1 + 1.5 + 2);
     
@@ -861,6 +927,7 @@ handleMethod( ToolSetMethod$temp )
 		;
 		
 	}
+	// The display doesn't use PBR
 	llSetLinkPrimitiveParamsFast(P_THERMO, set);
 	
 end
@@ -878,7 +945,7 @@ handleTimer( "HUNT" )
 		);
 		PP(
 			P_FLASHLIGHT,
-			GhostHelper$getFlashlightFrontSettings( on, bright )
+			GhostHelper$getFlashlightFrontSettings( P_FLASHLIGHT, bright )
 		);
 		
 	}

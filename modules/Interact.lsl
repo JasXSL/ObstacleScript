@@ -452,7 +452,10 @@ onControlsKeyPress( pressed, released )
 					l2i(spl, 10) // Key filter
                 );
                 
-            } 
+            }
+			else if( task == Desc$TASK_PLAY_ANIM ){
+				AnimHandler$start(LINK_ALL_OTHERS, l2s(spl, 0));
+			}
 			else if( task == Desc$TASK_INTERACT ){
 				
 				bool direct = l2i(spl, 0);	// If true, send to object, otherwise raise a level event

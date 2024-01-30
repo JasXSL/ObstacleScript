@@ -18,36 +18,22 @@
 #define Desc$TASK_FOOTSTEPS "tFS"		// (str)preset/(uuid)sound, Passive.
 #define Desc$TASK_TRIGGER_SOUND "TS"	// (key)sound, (float)vol=1. Keydown
 #define Desc$TASK_PLAY_SOUND "PS"		// (key)sound, (float)vol=1. Keydown.
-#define Desc$TASK_SIT_ON "S"			// Keydown.
+#define Desc$TASK_SIT_ON "SI"			// Keydown.
 #define Desc$TASK_RC_ONLY "RC"			// Meta task that tells the interact script to only allow targeting this with raycasts
 #define Desc$TASK_DOOR_STAT "DO"		// Stores door state. 0 = closed, 1 = partially open, 2 = fully open
 #define Desc$TASK_GHOST_INTERACTIVE "GI"	// (int)flags, (vec)push_dir - Used in ghost games to indicate that ghosts can interact with something
 	#define DescConst$GI$auto_push 0x1				// Allow GhostInteractive to handle push
 	#define DescConst$GI$auto_stains 0x2			// Sets alpha on any links with the name "STAINS"
 #define Desc$TASK_LIGHT_SWITCH "LS"		// Stores light swtich state. 0 = off, 1 = on
-	
+#define Desc$TASK_PLAY_ANIM "A"			// (str)anim - Plays an animation
+#define Desc$TASK_SOUND_LOOP "S"		// (key)uuid, (float)vol, (float)radius = infinite
 
-/*
-
-Nice presets I've found:
-- [EUPHORIA} air pollution - very dark
-- Wastes Midnight - Brighter dark
-- Silent hill - Foggy but bright 
-- Places Urbania - Misty green, fairly bright
-- Nacon's nighty fog - Good for underwater
-- Nacon's Fog - Bright but very blue fog
-- Doomed Spaceship - Red medium fog
-- Ambient dark - Incredibly dark
-- [TOR] SPECIAL - Rightvision - Very green
-- [TOR] SPECIAL - Dreamwalker - Very bright white fog
-- Orac - fog - Grey fog
-- Orac - Black fog 1 - Brighter fog
-- [TOR] Night - Nocturne - Default
-
-*/
+// Game mode specific tasks
+#define Desc$GHOST_POWERED "ghSND"		// When set, this sound will be toggled on/off when the breaker is turned on/off. This is cached on script load inside GhostLevelHelper, so reset or refresh scripts in the level when adding new meshes that involve this
 
 // Legacy, consider using getDescTask instead since this will return [] if the type exists but has no data
 // Fetches data for the first task of this type
+/*
 list _dtd( str _d, str _t ){
 
 	list spl = split(_d, "$$");
@@ -64,7 +50,7 @@ list _dtd( str _d, str _t ){
 }
 #define getDescTaskData( desc, type ) \
 	_dtd(desc, type)
-	
+*/
 	
 list _dt( str _d, str _t ){
 
@@ -80,6 +66,7 @@ list _dt( str _d, str _t ){
 	return [];
 	
 }
+// Fetches a task from desc, Returns [] if not set. Includes the type itself on index 0, ex: D$Hello! -> ["D", "Hello!"]
 #define getDescTask( desc, type ) \
 	_dt(desc, type)
 
@@ -95,6 +82,20 @@ string _fdsc( key id ){
 #define fetchDesc( id ) \
 	_fdsc(id)
 
+
+// Automatically updates Desc$TASK_SOUND_LOOP for the link. Warning: Link MUST ONLY REFER TO ONE LINK. You cannot use LINK_SET, LINK_ALL_OTHERS
+int _ulsl( int l ){
+	
+	list t = getDescTask(l2s(llGetLinkPrimitiveParams(l, (list)PRIM_DESC), 0), Desc$TASK_SOUND_LOOP);
+	if( count(t) < 3 ) // Needs at least [Desc$TASK_SOUND_LOOP, (key)uuid, (float)volume]
+		return FALSE;
+	llLinkStopSound(l);
+	llLinkSetSoundRadius(l, l2f(t, 3));
+	llLinkPlaySound(l, l2k(t, 1), l2f(t, 2), SOUND_LOOP);
+	return TRUE;
+	
+}
+#define updateLinkSoundLoop(link) _ulsl(link)
 
 // Should probably use an actual thing here
 //#define getDescTaskData(desc, var, task) list var;{list split=llParseString2List(desc, ["$$"], []); list_shift_each(split, val, {list s = llParseString2List(val, ["$"], []);if(llList2String(s, 0) == task){var=llDeleteSubList(s,0,0); }}})

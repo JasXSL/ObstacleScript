@@ -231,6 +231,8 @@ onStateEntry()
     llSetLinkPrimitiveParamsFast(LINK_THIS, (list)PRIM_POINT_LIGHT + FALSE + ZERO_VECTOR + 0 + 0 + 0);
 
     llListen(0, "", llGetOwner(), "");
+	
+	onLoaded();
     
 	GhostEvent$subset();
 	

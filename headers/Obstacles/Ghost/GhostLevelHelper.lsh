@@ -1,0 +1,9 @@
+#ifndef __GhostLevelHelper
+#define __GhostLevelHelper
+
+	#define GhostLevelHelperMethod$togglePoweredSounds 0			// bool on - Toggles all sounds using Desc$GHOST_POWERED combined with Desc$TASK_SOUND_LOOP on or off.	
+
+	#define GhostLevelHelper$togglePoweredSounds( on ) \
+		runMethod(LINK_THIS, "GhostLevelHelper", GhostLevelHelperMethod$togglePoweredSounds, (on))
+	
+#endif

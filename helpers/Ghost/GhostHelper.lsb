@@ -80,23 +80,30 @@
 
 // Percent goes to 200
 #define GhostHelper$getFlashlightLightSettings( on, percent ) \
-	(list)PRIM_POINT_LIGHT + on + <1.000, 0.928, 0.710> + 1 + (4.0*(float)percent/100.0) + 1
-#define GhostHelper$getFlashlightFrontSettings( on, percent ) \
-	(list)PRIM_FULLBRIGHT + 2 + (percent*on > 0) + PRIM_GLOW + 2 + ((float)(percent*on)/100.0)
-
+	(list)PRIM_POINT_LIGHT + on + <1.000, 0.928, 0.5> + 1 + (4.0*(float)percent/100.0) + 1
+#define GhostHelper$getFlashlightFrontSettings( link, percent ) \
+	gsmFullbright(link, 2, ONE_VECTOR*(percent*0.01*0.5+(0.5*(percent>0)))) + \
+	PRIM_GLOW + 2 + (percent*0.01*0.5+(0.2*(percent>0)))
 	
-
-#define GhostHelper$getGlowstickSettings( on, perc ) _ghGGS(on, perc)
-list _ghGGS( integer on, integer percent ){
+// perc is an int
+#define GhostHelper$getGlowstickSettings( link, on, perc ) _ghGGS(link, on, perc)
+list _ghGGS( int link, int on, int percent ){
 	
-	if( !on )
-		return (list)PRIM_POINT_LIGHT + FALSE + ZERO_VECTOR + 0 + 0 +0 + PRIM_FULLBRIGHT + ALL_SIDES + FALSE + PRIM_GLOW + ALL_SIDES + 0;
-	float perc = percent/100.0;
-	if( perc < 0 )
+	float perc = percent*0.01;
+	float glow = (0.1+0.4*perc);
+	
+	if( perc < 0 ){
 		perc = 0;
+		glow = 0;
+	}
+	
 	// Convert to quartic out
 	perc = 1.0-llPow(1-perc, 4);
-	return (list)PRIM_POINT_LIGHT + TRUE + <0.665, 0.181, 1.000> + 1.0 + (1+4*perc) + 1.0 + PRIM_FULLBRIGHT + ALL_SIDES + TRUE + PRIM_GLOW + ALL_SIDES + (0.1+0.4*perc);
+	return (list)
+		PRIM_POINT_LIGHT + on + <0.665, 0.181, 1.000> + 1.0 + (1+4*perc) + 1.0 + 
+		gsmFullbright(link, 0, (ONE_VECTOR*glow)) + 
+		PRIM_GLOW + 0 + glow
+	;
 
 }
 

@@ -261,7 +261,8 @@ dropTool( key obj, key worldID, vector tPos, rotation tRot ){
     
     if( type == ToolsetConst$types$ghost$videoCamera )
         raiseEvent(0, "CAM" + worldID + TRUE);
-    
+		
+    AnimHandler$start(player, "default_use");
 
 }
 

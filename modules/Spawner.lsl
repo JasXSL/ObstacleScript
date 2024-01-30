@@ -117,29 +117,32 @@ handleOwnerMethod( SpawnerMethod$listSpawns )
 	integer max = idbGetIndex(idbTable$SPAWNS);
 	integer found;
 	for( i = start; i < max && (found < nr || nr == -1); ++i ){
+	
 		str row = idbGetByIndex(idbTable$SPAWNS, i);
-		integer valid = TRUE;
-		
-		// Quick filter
-		if( filterField == -1 ){
+		if( row ){
+			integer valid = TRUE;
 			
-			string fd0 = llToLower(join(split(j(row, SpawnerConst$E_NAME), " "), "_"));
-			string fd1 = llToLower(join(split(j(row, SpawnerConst$E_GROUP), " "), "_"));
-			valid = ~llSubStringIndex(fd0, filter) || ~llSubStringIndex(fd1, filter);
-		}
-		else if( filter ){
-						
 			// Quick filter
-			// Escape space with underscore
-			string fd = llGetSubString(j(row, filterField), 0, filterLen);
-			fd = join(split(fd, " "), "_");
-			valid = (filter == llToLower(fd));
+			if( filterField == -1 ){
+				
+				string fd0 = llToLower(join(split(j(row, SpawnerConst$E_NAME), " "), "_"));
+				string fd1 = llToLower(join(split(j(row, SpawnerConst$E_GROUP), " "), "_"));
+				valid = ~llSubStringIndex(fd0, filter) || ~llSubStringIndex(fd1, filter);
+			}
+			else if( filter ){
+							
+				// Quick filter
+				// Escape space with underscore
+				string fd = llGetSubString(j(row, filterField), 0, filterLen);
+				fd = join(split(fd, " "), "_");
+				valid = (filter == llToLower(fd));
+				
+			}
 			
-		}
-		
-		if( valid ){
-			llOwnerSay("["+(str)i+"] "+row);
-			++found;
+			if( valid ){
+				llOwnerSay("["+(str)i+"] "+row);
+				++found;
+			}
 		}
 	}
 
@@ -186,18 +189,58 @@ end
 
 handleOwnerMethod( SpawnerMethod$delete )
     
-    integer delIndex = argInt(0);
-    integer max = idbGetIndex(idbTable$SPAWNS);
-	if( delIndex >= max || delIndex < 0 ){
-		
-		llOwnerSay("Unable to delete: Index out of bounds.");
-		return;
+	integer max = idbGetIndex(idbTable$SPAWNS);
+	integer i;
+	for(; i < count(METHOD_ARGS); ++i ){
+			
+		string s = argStr(i);		
+		int dash = llSubStringIndex(s, "-");
+		list del = (list)s;
+		// You can use a-b for a range
+		if( ~dash ){
+			
+			del = [];
+			str as = llGetSubString(s, 0, dash-1);
+			str bs = llGetSubString(s, dash+1, -1);
+			if( llJsonValueType(as, []) != JSON_NUMBER || llJsonValueType(bs, []) != JSON_NUMBER ){
+				llOwnerSay("Unable to remove range, non-number detected in '"+s+"'");
+			}
+			else{
+				int a = (int)as;
+				int b = (int)bs;
+				int sub;
+				for(; sub < b-a+1; ++sub )
+					del += (a+sub);
+			}		
+		}
+		int sub;
+		for(; sub < count(del); ++sub ){
+			
+			str val = l2s(del, sub);
+			int delIndex = (int)val;
+			
+			if( llJsonValueType(val, []) != JSON_NUMBER ){
+				llOwnerSay("Unable to delete '"+val+"', invalid number");
+			}
+			else if( delIndex >= max || delIndex < 0 ){
+				llOwnerSay("Unable to delete '"+val+"', index out of bounds.");
+			}
+			else{
+				
+				
+				string cur = idbGetByIndex(idbTable$SPAWNS, delIndex);
+				if( cur ){
+					llOwnerSay("Spawn deleted ["+(str)delIndex+"]: "+cur);
+					idbDeleteByIndex(idbTable$SPAWNS, delIndex);
+				}
+				
+			}
+			
+		}
 		
 	}
+
 	
-	string cur = idbGetByIndex(idbTable$SPAWNS, delIndex);
-	llOwnerSay("Spawn deleted ["+(str)delIndex+"]: "+cur);
-	idbDeleteByIndex(idbTable$SPAWNS, delIndex);
     
 end
 

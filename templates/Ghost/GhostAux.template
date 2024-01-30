@@ -518,7 +518,7 @@ onLevelInteractStarted( obstacle, pos )
         if( playersNotInTruck )
             return;
         
-        
+        AnimHandler$start(SENDER_KEY, "use_world");
         raiseEvent(0, "ENDGAME");
         
     }

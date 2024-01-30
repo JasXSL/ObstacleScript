@@ -40,12 +40,24 @@
 #define OR ||
 #define IS ==
 
+#define TEXTURE_HIDDEN "f8050e86-9adb-032d-56b4-68780d0c36b8"
+
+#define getLinkDesc(link) l2s(llGetLinkPrimitiveParams(link, (list)PRIM_DESC), 0)
+#define setLinkMat(link, sides, mat) llSetLinkPrimitiveParamsFast(link, (list)PRIM_RENDER_MATERIAL + mat + (sides))
+
 #define stopAllObjectAnimations() {list l = llGetObjectAnimationNames(); integer i; for(;i<count(l);++i)llStopObjectAnimation(l2s(l,i));}
 
 // Debugging
 // Note, using the + operator within os$log will add that as another message, use parentheses if you want to add things within this
 #define os$log( message ) \
 	llOwnerSay( "["+llGetSubString(l2s(split(llGetTimestamp(), (list)"T"), 1), 6, -5)+" "+__SHORTFILE__+" @ "+(str)__LINE__+"] "+join((list)message, " :: ") )
+
+// get set material helpers
+#define gsmColor(link, face, color, alpha, alphaMode) (list)PRIM_GLTF_BASE_COLOR + face + llListReplaceList(llGetLinkPrimitiveParams(link, (list)PRIM_GLTF_BASE_COLOR + face), (list)(color) + (alpha) + (alphaMode), 4,6)
+#define gsmColorOnly(link, face, color) (list)PRIM_GLTF_BASE_COLOR + face + llListReplaceList(llGetLinkPrimitiveParams(link, (list)PRIM_GLTF_BASE_COLOR + face), (list)(color), 4,4)
+#define gsmFullbright(link, face, color) (list)PRIM_GLTF_EMISSIVE + (face) + llListReplaceList(llGetLinkPrimitiveParams(link, (list)PRIM_GLTF_EMISSIVE + (face)), (list)(color), 4,4)
+
+
 
 // Can use XOBJ syntax
 #define qd(message) \
