@@ -15,6 +15,7 @@
 #define PD_PENALTY 7        // Penalty seconds added when you reach the end
 #define PD_ARMOR 8          // 2= dressed, 1 = underwear, 0 = bits
 #define PD_CHECKPOINT_ROT 9 // Checkpoint rotation
+#define PD_CHECKPOINT_IDX 10
 
 // Make some helper macros
 #define INVUL_DURATION 5000	// milliseconds
@@ -65,5 +66,9 @@
 #define getPlayerTeam( uuid ) \
     getPlayerDataInt(findPdata(uuid), PD_TEAM)
 
-
+#define getCheckpointIdx( id ) \
+    getPlayerDataInt(findPdata(id), PD_CHECKPOINT_IDX)
+#define setCheckpointIdx( id, idx ) \
+    setPlayerData(findPdata(id), PD_CHECKPOINT_IDX, idx)
+	
 #endif

@@ -28,6 +28,7 @@
 #define LevelCustomType$QTE "avQTE"		
 	#define LevelCustomEvt$QTE$start 1 				// (int)type, (str)callback
 	#define LevelCustomEvt$QTE$end 2				// (bool)success, (str)callback
+	#define LevelCustomEvt$QTE$offBalance 3			// (bool)offBalance
 
 #define LevelCustomType$INTERACT "avInt"
 	#define LevelCustomEvt$INTERACT$start 1			// (key)obj, (vec)pos - Key pressed
@@ -76,6 +77,11 @@
 		key hud = argKey(0); \
 		int success = argInt(3); \
 		str callback = argStr(4);
+	
+#define onPlayerQteOffBalance( hud, offBalance ) \
+	if( isEventLevelCustom() AND argStr(1) == LevelCustomType$QTE AND argInt(2) == LevelCustomEvt$QTE$offBalance ){ \
+		key hud = argKey(0); \
+		int offBalance = argInt(3);
 		
 
 #define onLevelInteractStarted( obstacle, pos ) \

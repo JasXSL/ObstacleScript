@@ -71,7 +71,7 @@ resetPlayersAndHuds(){
                         "Do you want to join "+sender+" 's game?", 
                         ["Yep!","Nope"], 
                         123321
-                    );    
+                    );
                     
                 }
                 else if( 

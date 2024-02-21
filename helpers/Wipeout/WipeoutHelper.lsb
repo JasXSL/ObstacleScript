@@ -10,6 +10,7 @@
     #define GPFLAG_INVUL 0x2    // Invulnerable
 #define PD_ARMOR 5
 #define PD_PENALTY 6
+#define PD_CHECKPOINT_IDX 7
 
 #define MAX_AROUSAL 3
 
@@ -47,6 +48,11 @@
     getPlayerDataInt(findPdata(id), PD_FLAGS)
 #define setFlags(id, flags) \
     setPlayerData(findPdata(id), PD_FLAGS, flags)
+
+#define getCheckpointIdx( id ) \
+    getPlayerDataInt(findPdata(id), PD_CHECKPOINT_IDX)
+#define setCheckpointIdx( id, idx ) \
+    setPlayerData(findPdata(id), PD_CHECKPOINT_IDX, idx)
 
 #define isInvul( id ) \
     (getFlags(id)&GPFLAG_INVUL)

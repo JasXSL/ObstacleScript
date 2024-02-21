@@ -437,7 +437,26 @@ onControlsKeyPress( pressed, released )
                 Rlv$sit(LINK_THIS, targ, FALSE); 
             
             else if( task == Desc$TASK_CLIMB ){
-                 
+                
+				// Pick from root prim
+				// Note: Doesn't reverse rotation, just rotate the prim
+				if( l2s(spl, 0) == "RP" ){ 
+					spl = split(prDesc(prRoot(targ)),"$$");
+					int n = count(spl);
+					while( n-- ){
+					
+						list sub = split(l2s(spl, n), "$");
+						if( l2s(sub, 0) == Desc$TASK_CLIMB ){
+						
+							spl = llDeleteSubList(sub,0,0);
+							n = 0;
+							
+						}
+						
+					}
+					
+				}
+								
                 Climb$start(targ, 
                     l2s(spl,0), // Rot offset 
                     l2s(spl,1), // Anim passive
@@ -449,7 +468,9 @@ onControlsKeyPress( pressed, released )
                     l2s(spl,7), // Climbspeed
                     l2s(spl,8), // onStart
                     l2s(spl,9), // onEnd
-					l2i(spl, 10) // Key filter
+					l2i(spl, 10), // Key filter
+					l2s(spl, 11), // CamPos
+					l2s(spl, 12) // CamRot
                 );
                 
             }

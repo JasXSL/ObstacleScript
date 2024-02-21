@@ -34,7 +34,7 @@
 // Tasks that support callbacks callback with : METHOD = SupportCubeMethod$execute, cb_data : [task, arg1, arg2...], and supplied callback string
 #define SupportCube$tSetPos 1			// [(vec)pos]
 #define SupportCube$tSetRot 2			// [(rot)rotation]
-#define SupportCube$tForceSit 3			// [(bool)prevent_unsit, (bool)wait_for_sit]
+#define SupportCube$tForceSit 3			// [(bool)prevent_unsit, (bool)wait_for_sit, (vec)cameraEyeOffset, (vec)cameraAtOffset]
 #define SupportCube$tForceUnsit 4		// []
 #define SupportCube$tDelay 5			// [(float)delay]
 #define SupportCube$tRunMethod 6		// [(key)targ, (str)script, (int)method, (arr)data]
@@ -47,7 +47,7 @@
 	#define SupportCube$PTCFlag$STOP_ON_UNSIT 0x1		// Stops the walk if the player unsits
 	#define SupportCube$PTCFlag$UNSIT_AT_END 0x2		// Unsits the player when the end has been reached
 	#define SupportCube$PTCFlag$WARP_ON_FAIL 0x4		// Warps if it failed and the player is still seated. This will cause it to always callback true
-
+	
 #define SupportCubeOverride$tKFMEnd 5			// Tunneled through override - (arr)data, (arr)conf
 #define SupportCubeOverride$tKFM 5				// Tunneled through override - (vec)localOffset, (rot)localOffset, (float)time
 #define SupportCubeOverride$tSetPosAndRot 6		// Tunneled through override - (vec)pos, (rot)rotation

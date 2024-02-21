@@ -58,7 +58,14 @@ onLevelInit()
 end
 
 
+handleOwnerMethod( SpawnerMethod$devMeta )
+	
+	int task = argInt(0);
+	if( task == SpawnerMethod$devMeta$plPos )
+		llOwnerSay((string)(prPos(SENDER_KEY)-llGetRootPosition()));
+	
 
+end
 
 handleOwnerMethod( SpawnerMethod$callbackRepoEnum )
 
@@ -300,7 +307,7 @@ handleMethod( SpawnerMethod$nFromGroup )
 	idbForeach(idbTable$SPAWNS, idx, data)
 		
 		list spawn = llJson2List(data);
-		if( l2s(spawn, 4) == group )
+		if( l2s(spawn, 4) == group && data != "" )
 			batch += getBatchData(spawn, TRUE);
 	
 	end
@@ -329,7 +336,7 @@ handleOwnerMethod( SpawnerMethod$load )
 	idbForeach(idbTable$SPAWNS, idx, data)
 	
 		list spawn = llJson2List(data);
-		if( ~llListFindList(METHOD_ARGS, (list)l2s(spawn, 4)) ){
+		if( ~llListFindList(METHOD_ARGS, (list)l2s(spawn, 4)) && llStringLength(data) ){
 		
 			batch += getBatchData(spawn, live);
 			

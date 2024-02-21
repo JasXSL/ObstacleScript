@@ -16,6 +16,7 @@ integer BFL;
 // Prevents messages to SC more than every 0.4 sec
 #define BFL_LAST_UPDATE 0x40
 #define BFL_GRACE_PERIOD 0x80        // Grace period for dismount
+#define BFL_PAUSE 0x100
 
 integer KEY_FILTER;
 
@@ -54,6 +55,8 @@ integer onNode;
 rotation rot;
 float perc;
 
+vector camPos;
+vector camTarg;
 
 
 #define setCubePos(pos) \
@@ -89,7 +92,8 @@ dismount(integer atoffset){
 
     if( BFL&BFL_DISMOUNTING )
 		return;
-		
+	
+	BFL = BFL&~BFL_PAUSE;
     BFL = BFL|BFL_DISMOUNTING;
     unsetTimer(TIMER_MOVE);
     BFL = BFL&~BF_CLIMB_INI;
@@ -136,6 +140,7 @@ dismount(integer atoffset){
 
 mount(){
     
+	BFL = BFL&~BFL_PAUSE;
     BFL_CACHE = 0;
     findNearestNode();
     // Position cube at node and start
@@ -145,18 +150,16 @@ mount(){
     if( llKey2Name(CUBE) == "" ){
         
         Rlv$cubeTask(LINK_THIS,
-            SupportCubeBuildTask(SupportCube$tSetPos, p) +
+			SupportCubeBuildTask(SupportCube$tSetPos, p) +
             SupportCubeBuildTask(SupportCube$tSetRot, (rot*ladder_root_rot))
         );
         
     }
     
     setCubePos(p);
-    
-    
     Rlv$cubeTask(
         LINK_THIS,
-        SupportCubeBuildTask(SupportCube$tForceSit, [])
+        SupportCubeBuildTask(SupportCube$tForceSit, false + false + camPos + camTarg)
     );
 
     // Wait a little while to start ticking
@@ -267,7 +270,7 @@ handleTimer( TIMER_MOVE )
     }
 	
 	integer bfl = BFL;
-	if( RLVFLAGS & RlvFlags$IMMOBILE )
+	if( RLVFLAGS & RlvFlags$IMMOBILE || BFL&BFL_PAUSE )
 		bfl = BFL&~BFL_MOVING;
     
     
@@ -398,6 +401,15 @@ handleMethod( ClimbMethod$stop )
     
 end
 
+handleMethod( ClimbMethod$pause )
+	
+	bool pause = argInt(0);
+	BFL = BFL&~BFL_PAUSE;
+	if( pause )
+		BFL = BFL|BFL_PAUSE;
+		
+end
+
 handleInternalMethod( ClimbMethod$start )
 
     if( BFL&BFL_CLIMBING ){
@@ -422,6 +434,8 @@ handleInternalMethod( ClimbMethod$start )
     onStart = argStr(9);
     onEnd = argStr(10); 
     KEY_FILTER = argInt(11);
+	camPos = argVec(12);
+	camTarg = argVec(13);
 	
 	// Need to release and re-press the movement key for filter to work
 	BFL = BFL&~BFL_MOVING;

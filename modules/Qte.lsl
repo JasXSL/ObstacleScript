@@ -19,6 +19,7 @@ integer ACTIVE_QTE; // Active type of QTE
 #define QTE_GAUGE QteConst$QTE_GAUGE
 
 str CALLBACK;
+str HALFWAY_CB; // Used in gage events QTEs. If set, triggers when the bar gets more or less than half way to one side.
 
 // QTE Specific:
 float GAGE_POS; // When it hits 1 or 0 you fail
@@ -131,6 +132,7 @@ handleTimer( TIMER_TICK )
         if( GAGE_POS < 0.5 )
             dir = -1;
             
+		integer preOffBalance = llFabs(GAGE_POS-0.5) > 0.25;
         GAGE_POS += (llFrand(.025)+0.025)*dir;
         
         integer left = (KEYS_PRESSED & (CONTROL_LEFT|CONTROL_ROT_LEFT)) > 0;
@@ -161,6 +163,11 @@ handleTimer( TIMER_TICK )
         if( GAGE_POS > 0.5 )
             perc = -(GAGE_POS*2.0-1.0);
         
+		float offBalance = llFabs(GAGE_POS-0.5) > 0.25;
+		if( offBalance != preOffBalance ){
+			Level$raiseEvent( LevelCustomType$QTE, LevelCustomEvt$QTE$offBalance, offBalance);
+		}
+		
         float ANG = 60;
         llSetLinkPrimitiveParamsFast(P_GAUGE_MAIN, (list)
             PRIM_ROT_LOCAL + (llEuler2Rot(<0,0,perc*ANG*DEG_TO_RAD>)*GAUGE_ROT)

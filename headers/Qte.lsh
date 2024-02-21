@@ -21,7 +21,6 @@
 		int success = argInt(0);
 
 
-
 #define Qte$start( targ, type, callback ) \
 	runMethod(targ, "Qte", QteMethod$start, type + callback )
 

@@ -22,7 +22,8 @@
 #define SpawnerMethod$fetchFromHud 18		// void - Fetches new assets from HUD
 #define SpawnerMethod$getGroups 19			// (str)callback, group1, group2... - Raises the getGroups event with [(jsonArray)spawn1, spawn2...] Each spawn has the index appended to the end
 #define SpawnerMethod$nFromGroup 20			// (int)nr, (str)group - Spawns a random asset from group
-
+#define SpawnerMethod$devMeta 21			// (int)task - Helper function that gets metadata for the dev tools
+	#define SpawnerMethod$devMeta$plPos 0		// Outputs the sending player's position relative to level root
 
 #define SpawnerConst$CB_GAME_START "_G_"
 
@@ -54,6 +55,10 @@
 	
 #define Spawner$nFromGroup( targ, amount, group ) \
 	runMethod(targ, "Spawner", SpawnerMethod$nFromGroup, (amount) + (group))
+
+#define Spawner$devMeta( task ) \
+	runOmniMethod("Spawner", SpawnerMethod$devMeta, (task))
+
 
 
 #define onSpawnerLoadStart( cb, live, groups ) \

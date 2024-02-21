@@ -88,7 +88,7 @@ toggleMesh( float alpha ){
 	
 	integer alphaMode;	
 	if( alpha <= 0 )
-		alphaMode = PRIM_GLTF_ALPHA_MODE_BLEND;
+		alphaMode = PRIM_GLTF_ALPHA_MODE_MASK;
 
 	list set;
 	int i;
