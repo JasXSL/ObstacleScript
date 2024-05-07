@@ -546,7 +546,7 @@ onStateEntry()
 	C_TOOL = -1;
 	drawActiveTool();
     // Facelight
-    PP(P_FLASHLIGHT, (list)PRIM_POINT_LIGHT + 1 + <1.000, 0.928, 0.710> + .1 + 1.5 + 2);
+    PP(P_FLASHLIGHT, (list)PRIM_POINT_LIGHT + 1 + <1.000, 0.928, 0.710> + .1 + 1.5 + 0.5);
     
     llSetAlpha(0, ALL_SIDES);
     //addTool(ToolsetConst$types$ghost$flashlight, (list)0, "");

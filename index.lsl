@@ -87,6 +87,7 @@
 
 // Macros
 #include "./shared/macros.lsh"
+#include "./shared/chmap.lsh"
 #include "./shared/table_registry.lsh"
 
 

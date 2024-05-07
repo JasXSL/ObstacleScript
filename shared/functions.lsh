@@ -46,6 +46,7 @@ _tsr( key sound, float vol, float radius ){
 // To save memory, there are no guardrails preventing you from fucking that up.
 #define idbSet(table, field, val) llLinksetDataWrite(table+(str)(field), (str)(val))
 #define idbGet(table, field) llLinksetDataRead(table+(str)(field))
+#define idbUnset(table, field) llLinksetDataDelete(table+(str)(field))
 
 #define idbGetByIndex(table, index) llLinksetDataRead(table+llChar(index+32))
 #define idbSetByIndex(table, index, val) llLinksetDataWrite(table+llChar(index+32), (str)(val))

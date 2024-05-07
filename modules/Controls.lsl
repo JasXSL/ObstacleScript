@@ -1,5 +1,5 @@
 
-
+#define USE_TIMER
 #define USE_STATE_ENTRY
 #define USE_CONTROL
 #define USE_TOUCH_START
@@ -56,7 +56,12 @@ onStateEntry()
 
     if( llGetAttached() )
         llRequestPermissions(llGetOwner(), PERMISSION_TAKE_CONTROLS);
+	setInterval("CTL", 10);
 
+end
+
+handleTimer( "CTL" )
+	updateControls(); // Workaround for people with shitty attachments
 end
 
 onRunTimePermissions( perms )
