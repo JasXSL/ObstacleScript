@@ -175,8 +175,11 @@
 				openDialog(MENU_MAINTENANCE);
 			}
 			else if( msg == "Clean Up" ){
-				Portal$killAll();
+			
+				Portal$killAllStatic();
+				Spawner$resetStatic();
 				GSETTINGS = GSETTINGS & ~DialogHelper$GS_GAME_LOADED;
+				
 			}
 			else if( msg == "End Game" ){
 				GSETTINGS = GSETTINGS & ~DialogHelper$GS_GAME_STARTED;

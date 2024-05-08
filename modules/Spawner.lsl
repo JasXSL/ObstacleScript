@@ -6,8 +6,7 @@
 #define FACE_SIZE 1016
 #define TABLE_SIZE (FACE_SIZE*2-1)
 
-
-
+int STATIC_SPAWNED; 	// True when PortalConst$spawnGroup$static has been spawned.
 string SAVE_ROUND;      // When calling a save, this is the label
 
 fetchAssets(){
@@ -327,9 +326,17 @@ handleOwnerMethod( SpawnerMethod$load )
 	string cb = argStr(0);
 	
     METHOD_ARGS = llDeleteSubList(METHOD_ARGS, 0, 1);
-    if( !count(METHOD_ARGS) )
-        METHOD_ARGS = (list)"";
-    
+    if( !count(METHOD_ARGS) ){
+        
+		METHOD_ARGS = (list)"";
+		if( !STATIC_SPAWNED )
+			METHOD_ARGS += PortalConst$spawnGroup$static;
+
+    }
+	
+	if( ~llListFindList(METHOD_ARGS, (list)PortalConst$spawnGroup$static) )
+		STATIC_SPAWNED = TRUE;
+	
 	raiseEvent(SpawnerEvt$loadStart, cb + live + METHOD_ARGS);
 	
 	list batch;
@@ -375,7 +382,7 @@ handleOwnerMethod( SpawnerMethod$spawnByIndex )
 	
 		list spawn = llJson2List(idbGetByIndex(idbTable$SPAWNS, l2i(METHOD_ARGS, i)));
 		batch += getBatchData(spawn, live);
-			
+		
 	}
 	
 	if( count(batch) )
@@ -393,6 +400,10 @@ handleOwnerMethod( SpawnerMethod$savePortals )
     SAVE_ROUND = argStr(0);
     Portal$save();
 
+end
+
+handleInternalMethod( SpawnerMethod$resetStatic )
+	STATIC_SPAWNED = FALSE;
 end
 
 

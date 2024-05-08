@@ -18,6 +18,7 @@
 	"GhostEvents" + \
 	"ToolSet" \
 	
+#define PortalConst$spawnGroup$static "_STATIC_"
 
 // Portal on_rez params are stored as follows (from the right)
 // 0000(0) - Screpo flags
@@ -52,9 +53,10 @@
 #define PortalMethod$reset 0		// Resets all scripts
 #define PortalMethod$fetch 1		// Fetches all scripts from DB
 #define PortalMethod$kill 2			// (int)type, (var)filter1, filter2... - Deletes portal assets, refer to below
-	#define PortalConst$KILL_ALL 0		// Kills all portals
+	#define PortalConst$KILL_ALL 0		// Kills all portals excluding PortalConst$spawnGroup$static
 	#define PortalConst$KILL_NAME 1		// Kills all portals with the object name set in filter
 	#define PortalConst$KILL_ID 2		// Kills portals where the spawn ID is in filter
+	#define PortalConst$KILL_ALL_STATIC 3	// Kills everything including the PortalConst$spawnGroup$static group
 #define PortalMethod$setLive 3			// Sets the portal to l ive. Use PortalMethod$reset to clear live
 
 #define PortalMethod$scriptOnline 4		// (str)script - Sent from a script when it's initialized. Required in every remoteloaded script
@@ -83,7 +85,8 @@
 	if( SENDER_SCRIPT IS "Portal" AND EVENT_TYPE IS PortalEvt$hudsChanged ){
 
 
-
+#define Portal$killAllStatic() \
+	runOmniMethod( "Portal", PortalMethod$kill, PortalConst$KILL_ALL_STATIC)
 #define Portal$killAll() \
 	runOmniMethod( "Portal", PortalMethod$kill, PortalConst$KILL_ALL )
 #define Portal$kill(uuid) \

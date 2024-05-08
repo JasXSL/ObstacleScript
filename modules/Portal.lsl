@@ -209,8 +209,10 @@ end
 handleOwnerMethod( PortalMethod$kill )
     
     integer type = argInt(0);
-    if( type == PortalConst$KILL_ALL )
-        llDie();
+    if( 
+		(type == PortalConst$KILL_ALL && SPAWN_GROUP != PortalConst$spawnGroup$static) || 
+		type == PortalConst$KILL_ALL_STATIC 
+	)llDie();
         
     METHOD_ARGS = llDeleteSubList(METHOD_ARGS, 0, 0);
     if( 
@@ -258,7 +260,7 @@ end
 
 handleOwnerMethod( PortalMethod$save )
 
-	if( !llGetAttached() )
+	if( !llGetAttached() && SPAWN_GROUP != PortalConst$spawnGroup$static )
 		Spawner$add(SENDER_KEY);
 
 end
