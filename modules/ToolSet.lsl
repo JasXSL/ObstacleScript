@@ -74,7 +74,7 @@ list toggleAsset( integer link, integer on ){
 	if( textures == [] )
 		return textures;
 	if( !on )
-		return out + PRIM_RENDER_MATERIAL + ALL_SIDES+ TEXTURE_HIDDEN;
+		return out + PRIM_RENDER_MATERIAL + ALL_SIDES + TEXTURE_HIDDEN + PRIM_GLOW + ALL_SIDES + 0;
 	
 	key base = l2k(textures, 0);
 	

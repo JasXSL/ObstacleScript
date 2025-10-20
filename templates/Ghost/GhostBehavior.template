@@ -279,7 +279,7 @@ handleTimer( "TOUCH" )
             activity *= 1.5;    // +50% activity if players are not in the room
         
     }
-    
+	
     if( llFrand(1.0) > activity )
         return;
     
@@ -359,7 +359,7 @@ onGhostInteraction( ghost, asset, power )
 end
 
 
-
+// Ghost has caught a player.
 onLevelCustomGhostCaught( ghost, player )
     
     toggleHunt(FALSE);

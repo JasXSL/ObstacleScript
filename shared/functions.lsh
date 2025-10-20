@@ -79,17 +79,12 @@ list _ia( string t, integer f ){
 	return out;
 }
 
-// Drop an indexed table. Relatively memory intensive.
+// Drop an indexed table.
 #define idbDropInline(table) \
 	/* Delete the index table */ \
-	llLinksetDataDelete(table); \
-	list found; integer i; \
-	/* Delete any data that matches table+1char */  \
-	while( (found = llLinksetDataFindKeys("^"+table+".{1}$", 0, 100)) != [] ){ \
-		for( i = 0; i < count(found); ++i ) \
-			llLinksetDataDelete(l2s(found, i)); \
-	}
-
+	llLinksetDataDeleteFound("^"+table+".{1}$", "");\
+	llLinksetDataDelete(table)
+	
 
 _dbd( string table ){
 	idbDropInline(table)
@@ -285,6 +280,44 @@ list findWall( key avatar, float offs ){
     return [];
     
 }
+
+// Absolute sets the position relative to root, otherwise it's relative to prim
+_ulst( integer linknr, vector pos, rotation rot, int absolute ){
+	
+	key player = llAvatarOnLinkSitTarget(linknr);
+	if( player == NULL_KEY )
+		return;
+	
+	int i = llGetNumberOfPrims()+1;
+	while( i-- > 1 ){
+		
+		if( llGetLinkKey(i) == player ){
+			
+			vector lPos;
+			rotation lRot;
+			
+			if( !absolute && linknr > 1 ){
+				list ld = llGetLinkPrimitiveParams(linknr, (list)PRIM_POS_LOCAL + PRIM_ROT_LOCAL);
+				lPos = l2v(ld, 0);
+				lRot = l2r(ld, 1);
+			}
+			
+			vector size = llGetAgentSize(player);
+			float fAdjust = ((((0.008906 * size.z) + -0.049831) * size.z) + 0.088967) * size.z;
+			vector pos = (pos + <0.0, 0.0, 0.4> - (llRot2Up(rot) * fAdjust))*lRot + lPos;
+			rotation rot = rot*lRot;
+			llSetLinkPrimitiveParamsFast(i, (list)PRIM_POS_LOCAL + pos + PRIM_ROT_LOCAL + rot);
+			return;
+			
+		}
+	
+		
+	}
+	
+}
+
+#define updateLinkSitTarget( linknr, pos, rot ) _ulst(linknr, pos, rot, FALSE)
+#define updateLinkSitTargetAbsolute( linknr, pos, rot ) _ulst(linknr, pos, rot, TRUE)
 
 // Returns a position of ceiling for ghost events
 vector ceilingPos(){

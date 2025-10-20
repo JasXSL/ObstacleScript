@@ -9,7 +9,7 @@
 
 #define LampConst$breakerID "BREAKER"			// Use LampTask$toggle with this ID to toggle the breaker
 
-#define LampConst$CHAN (OBSTACLE_CHAN+0x14)	// Listener (3144)
+#define LampConst$CHAN (OBSTACLE_CHAN+0x14)	// Listener (3144). Ex: /3144 ["*",1,1]
 
 #define LampTask$toggle 1						// (bool)on
 #define LampTask$flicker 2						// (bool)flicker, (float)dur

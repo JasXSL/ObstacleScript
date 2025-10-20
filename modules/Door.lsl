@@ -21,10 +21,13 @@ float maxRot =
 ;   // ~90+45 deg
 float snap = 0.2;			// Radius where it snaps shut
 float maxRange = 5;
-/*
-float minRot = -2.35;
-float maxRot = 0;
-*/
+vector slideDir = <0,0,-1>;
+integer descFlags;
+vector rezPos;
+vector localFwd = <1,0,0>;
+vector dragStartPos; // Raycast position where player started dragging
+vector dragStartOffs; // Offset from our position where player started dragging
+
 string ID;
 rotation startRot;
 
@@ -76,15 +79,22 @@ setDoorState( integer ds, int silent ){
 
 }
 
+// note that setRotPerc and setRot does the same thing for sliding doors
 setRotPerc( float perc, int silent ){
 	
 	if( llFabs(maxRot) < llFabs(minRot) )
 			perc = 1.0-perc;
 	
-	float r = perc*(maxRot-minRot) + minRot;
-	setRot(r, silent);
-	stopInteract();
-
+	if( descFlags & DoorDesc$flag$SLIDE ){
+		setRot(perc, silent);
+	}
+	else{
+	
+		float r = perc*(maxRot-minRot) + minRot;
+		setRot(r, silent);
+		stopInteract();
+	
+	}
 }
 
 setRot( float z, int silent ){
@@ -92,6 +102,13 @@ setRot( float z, int silent ){
 	float tz = llFabs(z);
 	float mar = llFabs(maxRot);
 	float mir = llFabs(minRot);
+	if( descFlags & DoorDesc$flag$SLIDE ){
+		
+		mir = 0;
+		mar = llVecMag(slideDir);
+		
+	}
+	
 	if( mar < mir ){
 		
 		float t = mar;
@@ -100,14 +117,17 @@ setRot( float z, int silent ){
 		
 	}
 	
-	if( tz >= mar )
+	if( tz >= mar || (descFlags & DoorDesc$flag$SLIDE && tz >= 1) )
 		setDoorState(DoorConst$STATE$opened, silent);
 	else if( tz <= mir )
 		setDoorState(DoorConst$STATE$closed, silent);
 	else
 		setDoorState(DoorConst$STATE$mid, silent);
-		
-	llRotLookAt(llEuler2Rot(<0,0,z>)*startRot, 1, 1);
+	
+	if( descFlags & DoorDesc$flag$SLIDE )
+		llSetRegionPos(rezPos + slideDir*tz*llGetRot());
+	else
+		llRotLookAt(llEuler2Rot(<0,0,z>)*startRot, 1, 1);
 
 }
 
@@ -150,14 +170,25 @@ onPortalInteractStarted( hud, pos, linkKey )
     setInterval("A", 0.05);
     
 	playerOffset = llVecDist(pos, prPos(hud));
-    
+	dragStartPos = pos;
+	dragStartOffs = dragStartPos-llGetPos();
+	
+
     if( playerOffset > 2 )
         playerOffset = 2;
     else if( playerOffset < 1 )
         playerOffset = 1;
+	
+	if( descFlags & DoorDesc$flag$NO_DRAG ){
+		// Swap immediately
+		setRotPerc(doorState != 2, FALSE);
 		
+	}
+	
 	AnimHandler$start(interactor, "door");
 	raiseEvent(DoorEvt$interactStart, interactor);
+
+	
     
 end
 
@@ -185,19 +216,75 @@ handleTimer( "A" )
     vector iTarg = <playerOffset,0,0>*r + pos;
     vector gp = llGetPos();
     
-    // We want to rotate so X is pointing towards iTarg
-    iTarg.z = gp.z = 0;
-    
-    vector vr = llRot2Euler(llRotBetween(<1,0,0>, llVecNorm(iTarg-gp)/startRot));
-	float z = vr.z;
+	// Sliding door math, raycast against infinite plane
+	if( descFlags & DoorDesc$flag$SLIDE ){
 	
-    if( z > maxRot )
-        z = maxRot;
+		/*
+		This doesn't work well. Gotta figure it out later.
 		
-    if( z < minRot || llFabs(z-minRot) < snap )
-        z = minRot;
+		vector aScale = llGetAgentSize(interactor);
+		rotation oRot = r;
+        vector oPos = pos;//+<0,0,aScale.z/2>;
 
-	setRot(z, false);
+        rotation mRot = llGetRot();
+		mRot *= llRotBetween(<1,0,0>,localFwd);
+		
+        vector planeP = rezPos;
+		
+        vector n = llVecNorm(slideDir);
+        rotation normRot = (llAxes2Rot(
+            llVecNorm(n % <1,0,0>) % n, 
+            llVecNorm(n % <1,0,0>), n)
+        );
+        vector planeN = <1,0,0>*(normRot*mRot); //llVecNorm(dir);
+        vector rayP = oPos;
+        vector rayD = llRot2Fwd(oRot);
+        
+        float d = planeP*(-planeN);
+        float t = -(d + (rayP*planeN)) / (rayD*planeN);
+        vector out = rayP + t*rayD;
+		out += dragStartOffs*normRot*mRot;
+        rotation toFwd = llRotBetween(<1,0,0>, n); // Helps convert to "always slide on X"
+        out /= toFwd;
+        vector sPos = planeP;
+        sPos /= toFwd;
+        out -= sPos;
+
+        float max = llVecMag(slideDir);
+        float mul = 1;
+        if( t < 0 ){
+            if( out.y > 0 )
+                mul = 0;
+        }
+        else{
+            mul = out.x/max;
+        }
+        if( mul < 0 )
+            mul = 0;
+        if( mul > 1 )
+            mul = 1;
+		
+		setRotPerc(mul, FALSE);
+		*/
+		
+	}
+	else{
+	
+		// We want to rotate so X is pointing towards iTarg
+		iTarg.z = gp.z = 0;
+		
+		vector vr = llRot2Euler(llRotBetween(<1,0,0>, llVecNorm(iTarg-gp)/startRot));
+		float z = vr.z;
+		
+		if( z > maxRot )
+			z = maxRot;
+			
+		if( z < minRot || llFabs(z-minRot) < snap )
+			z = minRot;
+
+		setRot(z, false);
+	
+	}
 
 end
 
@@ -220,11 +307,28 @@ onPortalLoadComplete( desc )
 		snap = l2f(data, DoorDesc$snapShut);
 	if( len > DoorDesc$maxRange )
 		maxRange = l2f(data, DoorDesc$maxRange);
+	if( len > DoorDesc$flags ){
+	
+		descFlags = l2i(data, DoorDesc$flags);
+		if( descFlags & DoorDesc$flag$SLIDE ){
+			slideDir = (vector)l2s(data, DoorDesc$maxRot); // MaxRot should be a direction vector in this mode and minRot the local forward
+			vector fwd = (vector)l2s(data, DoorDesc$minRot);
+			if( fwd )
+				localFwd = fwd;
+		}
+		
+	}
+	
+	
+	rezPos = llGetPos();
 	
     startRot = llGetRot();
+	string label = "Drag";
+	if( descFlags & DoorDesc$flag$NO_DRAG )
+		label = "Door";
 	
 	list tasks = (list)
-		join((list)Desc$TASK_DESC + "Drag", "$") +
+		join((list)Desc$TASK_DESC + label, "$") +
 		join((list)Desc$TASK_INTERACT + 1, "$") +
 		join((list)Desc$TASK_DOOR_STAT + 0 + ID, "$")
 	;

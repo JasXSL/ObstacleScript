@@ -7,6 +7,9 @@
 #define DoorDesc$maxRot 2		// (float)maxRot
 #define DoorDesc$snapShut 3		// (float)radius 	- Distance to snap to the "shut" state
 #define DoorDesc$maxRange 4		// (float)meters	- Drop interact after the player moves this far away
+#define DoorDesc$flags 5		// (int)flags
+	#define DoorDesc$flag$SLIDE 0x1		// Make it a sliding door. In this mode, maxRot becomes a vector of where to slide in (relative to the object). Note: NO_DRAG is required until I can figure out the math to do proper sliding doors.
+	#define DoorDesc$flag$NO_DRAG 0x2	// 
 
 #define DoorEvt$open 1			// Raised when it moves out of closed snap
 #define DoorEvt$close 2			// Raised when it snaps into closed state
@@ -30,6 +33,7 @@
 #define DoorTask$setStains 4					// (bool)on - Toggles stains visibility
 #define DoorTask$setRandomPerc 5				// void - Sets the door opening state to a random percentage unless the ID is "DO:EXT"
 #define DoorTask$slam 6							// (float)dur - Opens and closes the doors rapidly for dur duration
+
 
 // Sets Z rotation of the door
 #define Door$setRot( label, z ) \

@@ -340,6 +340,16 @@ onControlsKeyPress( pressed, released )
         #endif
         );
 		
+	// Descs Desc$TASK_SEATED_DISABLE_INTERACTS on seated objects disable interactions automatically
+	if( llGetAgentInfo(llGetOwner()) & AGENT_SITTING ){
+		
+		key seat = prRoot(llGetOwner());
+		list dt = descTasks(prDesc(seat));
+		if( ~llListFindList(dt, (list)Desc$TASK_SEATED_DISABLE_INTERACTS) )
+			return;
+			
+	}
+		
 	if( released & controls && INTERACT_TARG != "" ){
 	
 		if( INTERACT_LOCAL )
@@ -456,7 +466,7 @@ onControlsKeyPress( pressed, released )
 					}
 					
 				}
-								
+
                 Climb$start(targ, 
                     l2s(spl,0), // Rot offset 
                     l2s(spl,1), // Anim passive

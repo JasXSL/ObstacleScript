@@ -231,13 +231,21 @@ integer walkTowards( vector pos ){
 	
 	// Can step up on heights hip level or 1m below
 	ray = ignoreDoor(llCastRay(gp, gp+fwd-<0,0,2+hover>, RC_DEFAULT + RC_DATA_FLAGS + RC_GET_NORMAL + RC_MAX_HITS + 3 ), TRUE);
+	
 	vector v = l2v(ray, 2);
 	list fwdRay = ignoreDoor(llCastRay(gp, gp+fwd*.5, RC_DEFAULT + RC_MAX_HITS + 3 ), true);
-
+	
 	if( l2i(ray, -1) < 1 || l2i(fwdRay, -1) || v.z < .2 )
 		return FALSE;
 		
 	vector goto = l2v(ray, 1) + <0,0, hover>;
+	
+	// Prevent if ceiling is too low
+	list upRay = ignoreDoor(llCastRay(l2v(ray, 1)+<0,0,.1>, l2v(ray, 1)+<0,0,hover+hover/2>, RC_DEFAULT + RC_MAX_HITS + 3 ), true);
+	if( l2i(upRay, -1) ){
+		return FALSE;
+	}
+	
 	rotation lookAt = llRotBetween(<1,0,0>, llVecNorm(<goto.x, goto.y, 0>-<gp.x, gp.y, 0>));
 	
 	float dist = llVecDist(gp, goto);
@@ -934,9 +942,10 @@ handleTimer( "IDL" )
 	toggleMesh(false);
 end
 
+// Caught player was sat on the ghost. Warp to bondage seat
 onGhostAuxCaughtSat()
 	
-	setTimeout("CH1", 2);
+	setTimeout("CH1", 2); // Seat the player on device after 2 sec
 	
 	rotation rot = prRot(caughtSeat);
 	vector pos = prPos(caughtSeat)+llRot2Fwd(rot);
@@ -951,6 +960,7 @@ onGhostAuxCaughtSat()
 	
 end
 
+// Seat the player on the device
 handleTimer( "CH1" )
 	
 	llUnSit(llAvatarOnSitTarget());
@@ -974,6 +984,10 @@ onStateEntry()
 	spawnPos = llGetPos();
     setInterval("A", 0.25);
 	Portal$scriptOnline();
+	
+	hover = GhostGet$hoverHeight();
+	if( hover <= 0 )
+		hover = 1.33;
 	
 end
 

@@ -107,7 +107,7 @@ handleEvent( "#GhostBehavior", 0 )
 
 end
 
-onLevelCustomBondagePlayerDied( chair, player, dead )
+onLevelCustomBondagePlayerDied( chair, player, dead, flags )
     
 	int idx = findPdata(player);
     setPlayerDead(idx, dead);

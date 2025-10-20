@@ -21,12 +21,13 @@
 #define Desc$TASK_SIT_ON "SI"			// Keydown.
 #define Desc$TASK_RC_ONLY "RC"			// Meta task that tells the interact script to only allow targeting this with raycasts
 #define Desc$TASK_DOOR_STAT "DO"		// Stores door state. 0 = closed, 1 = partially open, 2 = fully open
-#define Desc$TASK_GHOST_INTERACTIVE "GI"	// (int)flags, (vec)push_dir - Used in ghost games to indicate that ghosts can interact with something
+#define Desc$TASK_GHOST_INTERACTIVE "GI"	// (int)flags, (vec)push_dir, (str)sound, (float)volume=0.5, (float)soundRadius=10 - Used in ghost games to indicate that ghosts can interact with something
 	#define DescConst$GI$auto_push 0x1				// Allow GhostInteractive to handle push
 	#define DescConst$GI$auto_stains 0x2			// Sets alpha on any links with the name "STAINS"
 #define Desc$TASK_LIGHT_SWITCH "LS"		// Stores light swtich state. 0 = off, 1 = on
 #define Desc$TASK_PLAY_ANIM "A"			// (str)anim - Plays an animation
 #define Desc$TASK_SOUND_LOOP "S"		// (key)uuid, (float)vol, (float)radius = infinite
+#define Desc$TASK_SEATED_DISABLE_INTERACTS "SDI"	// Disables interacts while sat on
 
 // Game mode specific tasks
 #define Desc$GHOST_POWERED "ghSND"		// When set, this sound will be toggled on/off when the breaker is turned on/off. This is cached on script load inside GhostLevelHelper, so reset or refresh scripts in the level when adding new meshes that involve this

@@ -66,6 +66,27 @@ handleOwnerMethod( SpawnerMethod$devMeta )
 
 end
 
+handleOwnerMethod( SpawnerMethod$offsetAll )
+
+	vector offs = argVec(0);
+	integer max = idbGetIndex(idbTable$SPAWNS);
+	integer i;
+	for( ; i < max; ++i ){
+	
+		str row = idbGetByIndex(idbTable$SPAWNS, i);
+		if( row ){
+			integer valid = TRUE;
+			list data = llJson2List(row);
+			vector pos = (vector)l2s(data, 1);
+			vector new = pos+offs;
+			qd(i + pos + "->" + new);
+			data = llListReplaceList(data, (list)new, 1, 1);
+			idbSetByIndex(idbTable$SPAWNS, i, mkarr(data));
+		}
+	}
+	
+end
+
 handleOwnerMethod( SpawnerMethod$callbackRepoEnum )
 
     integer i;
@@ -329,10 +350,12 @@ handleOwnerMethod( SpawnerMethod$load )
     if( !count(METHOD_ARGS) ){
         
 		METHOD_ARGS = (list)"";
-		if( !STATIC_SPAWNED )
-			METHOD_ARGS += PortalConst$spawnGroup$static;
 
     }
+	
+	if( ~llListFindList(METHOD_ARGS, (list)"") && !STATIC_SPAWNED ){
+		METHOD_ARGS += PortalConst$spawnGroup$static;
+	}
 	
 	if( ~llListFindList(METHOD_ARGS, (list)PortalConst$spawnGroup$static) )
 		STATIC_SPAWNED = TRUE;
@@ -402,7 +425,7 @@ handleOwnerMethod( SpawnerMethod$savePortals )
 
 end
 
-handleInternalMethod( SpawnerMethod$resetStatic )
+handleOwnerMethod( SpawnerMethod$resetStatic )
 	STATIC_SPAWNED = FALSE;
 end
 

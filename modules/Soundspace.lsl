@@ -144,9 +144,9 @@ handleTimer("a")
 		string desc = (string)llGetObjectDetails(llList2Key(ray,0), [OBJECT_DESC]);
 		list split = llParseString2List(desc, ["$$"], []);
 		
-		list dta = getDescTaskData(desc, Desc$TASK_SOUNDSPACE);
-		string ssp = llList2String(dta,0);  
-		float v = llList2Float(dta,1);
+		list dta = getDescTask(desc, Desc$TASK_SOUNDSPACE);
+		string ssp = llList2String(dta,1);  
+		float v = llList2Float(dta,2);
 		if( dta != [] && isset(ssp) ){
 		
 			if( groundsound != ssp || v != groundsoundvol ){ 

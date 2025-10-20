@@ -16,7 +16,8 @@
 	"SpiritBox" + \
 	"GhostAux" + \
 	"GhostEvents" + \
-	"ToolSet" \
+	"ToolSet" + \
+	"BondageShared"
 	
 #define PortalConst$spawnGroup$static "_STATIC_"
 

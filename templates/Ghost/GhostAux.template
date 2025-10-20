@@ -20,8 +20,31 @@
 	#define GHOST_NAMES (list)names - Overrides the default ghost names
 	
 	
+	
 */
 
+// Sounds that play when the truck door opens/closes
+#ifndef DOOR_OPEN_SOUND
+	#define DOOR_OPEN_SOUND "dbc0792a-a286-86b1-bed4-07ad8727db68"
+#endif
+#ifndef DOOR_CLOSE_SOUND
+	#define DOOR_CLOSE_SOUND "160a1e67-a56b-748b-1b77-2f915de2a991"
+#endif
+#ifndef DOOR_OPEN_SOUND_B
+	#define DOOR_OPEN_SOUND_B "f72f7248-8717-6b21-560d-4746025705f4"
+#endif
+#ifndef TRUCK_SOUNDSPACE 
+	#define TRUCK_SOUNDSPACE "ni"
+#endif
+#ifndef TRUCK_SOUNDSPACE_TRAVEL
+	#define TRUCK_SOUNDSPACE_TRAVEL "206436bb-6afd-ce82-1ebf-34c55a1bfa16"
+#endif
+#ifndef TRUCK_START_SOUND
+	#define TRUCK_START_SOUND "de1bb563-3df0-bdff-f73c-bb813c77b4d8"
+#endif
+#ifndef GHOST_OBJ
+	#define GHOST_OBJ "Gimp"
+#endif
 
 #ifndef GHOST_NAMES
 	#define GHOST_NAMES (list) \
@@ -76,7 +99,7 @@ spawnGhost(){
     
 	list spawns = GHOST_SPAWNS;
     vector pos = (vector)randElem(spawns)+llGetRootPosition();
-    Rezzer$rez( LINK_THIS, "Gimp", pos, 0, "", "GHOST", TRUE );
+    Rezzer$rez( LINK_THIS, GHOST_OBJ, pos, 0, "", "GHOST", TRUE );
     
 }
 
@@ -200,10 +223,10 @@ toggleDoors( integer open ){
     if( doorOpen != open ){
         
         if( !open )
-            llTriggerSound("160a1e67-a56b-748b-1b77-2f915de2a991", 1);
+            llTriggerSound(DOOR_CLOSE_SOUND, 1);
         else
-            llTriggerSound("f72f7248-8717-6b21-560d-4746025705f4", 1);
-        
+            llTriggerSound(DOOR_OPEN_SOUND_B, 1);
+
         doorOpen = open;
     }
     
@@ -223,10 +246,10 @@ toggleDoors( integer open ){
                 str sub = l2s(desc, i);
                 if( llGetSubString(sub, 0, 2) == "SS$" ){
                     
-                    list spl = split(sub, "$");
-                    string ss = "ni";
+					list spl = split(sub, "$");
+                    string ss = TRUCK_SOUNDSPACE;
                     if( !open )
-                        ss = "206436bb-6afd-ce82-1ebf-34c55a1bfa16";
+                        ss = TRUCK_SOUNDSPACE_TRAVEL;
                     spl = llListReplaceList(spl, (list)ss, 1, 1);
                     desc = llListReplaceList(desc, (list)join(spl, "$"), i, i);
                     llSetLinkPrimitiveParamsFast(nr, (list)PRIM_DESC + join(desc, "$$"));
@@ -238,6 +261,7 @@ toggleDoors( integer open ){
         }
     end
         
+	#ifdef DOOR_START_ROT
     doorPerc = 0;
     if( !open ){
         
@@ -251,7 +275,8 @@ toggleDoors( integer open ){
     }
     
     setInterval("DO",0.05);
-    
+    #endif
+	
 }
 
 #include "ObstacleScript/begin.lsl"
@@ -300,6 +325,7 @@ onStateEntry()
         
 end
 
+#ifdef DOOR_START_ROT
 handleTimer( "DO" )
 
     doorPerc += 0.05;
@@ -318,6 +344,7 @@ handleTimer( "DO" )
     llSetLinkPrimitiveParamsFast(P_DR, pp);
 
 end
+#endif
 
 handleEvent( "#Tools", 0 )
     
@@ -379,7 +406,7 @@ handleEvent( "#Game", 0 )
         Lamp$togglePower( "*", FALSE );
         
         forPlayer( t, idx, player )
-            Rlv$playSound(player, "dbc0792a-a286-86b1-bed4-07ad8727db68", .75);
+            Rlv$playSound(player, DOOR_OPEN_SOUND, .75);
         end
         
         BFL = BFL|BFL_STARTED;
@@ -401,7 +428,7 @@ handleEvent( "#Game", 0 )
         forPlayer( t, idx, player )
             // Rlv$exitMouselook(player); -- Currently busted in firestorm
             Rlv$stopLoopSound(player);
-            Rlv$playSound(player, "de1bb563-3df0-bdff-f73c-bb813c77b4d8", .5);
+            Rlv$playSound(player, TRUCK_START_SOUND, .5);
             Rlv$setCamMaxDist( player, -1 );
             Rlv$setMaxSprint( player, -1 );
             Rlv$disableChatLevels( player, 0);
@@ -433,12 +460,20 @@ handleTimer( "RESET_DOOR" )
     toggleDoors(TRUE);
 end
 
-onLevelCustomBondagePlayerDied( chair, player, dead )
+// Unlock camera but prevent talking
+// Also strip
+onLevelCustomBondagePlayerDied( chair, player, dead, flags )
     
-     // Unlock camera but prevent talking
+    
     if( dead ){
-        integer armor = 1;
-        Rlv$setClothes( player, armor, armor, armor, armor, armor );
+	
+		if( ~flags & LevelCustomEvt$BONDAGE$playerDied$flags$no_strip ){
+			
+			integer armor = 1;
+			Rlv$setClothes( player, armor, armor, armor, armor, armor );
+			
+		}
+		
     }
     else 
         dead = -1;

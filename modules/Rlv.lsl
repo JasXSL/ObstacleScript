@@ -71,10 +71,10 @@ updateWindlight(){
         
         cPrim = l2k(ray, 0);    
         string desc = fetchDesc(cPrim);
-        list data = getDescTaskData( desc, Desc$TASK_WL_PRESET );
-        desc = l2s(data, 0);
+        list data = getDescTask( desc, Desc$TASK_WL_PRESET );
+        desc = l2s(data, 1);
         if( desc )
-            cFL = l2s(data, 0);
+            cFL = desc;
         
     }
     

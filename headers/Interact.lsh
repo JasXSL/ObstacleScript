@@ -18,6 +18,9 @@
 // * Implemented by default. Though you might need to install a module for it.
 #define InteractMethod$allowWhenSitting 1	// (bool)allow - Toggles whether interacts are allowed while sitting
 
+#define Interact$allowWhenSitting( targ, on ) \
+	runMethod(targ, "Interact", InteractMethod$allowWhenSitting, on)
+
 
 
 #endif

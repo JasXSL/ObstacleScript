@@ -5,7 +5,11 @@ default{
 	
 	#ifdef USE_STATE_ENTRY
 	state_entry(){
+		#ifdef SE_OVERRIDE // Use SE_OVERRIDE if you need to initialize something big like an IDB table on state entry
+		SE_OVERRIDE
+		#else
 		onEvent(evt$STATE_ENTRY, "", "", []);
+		#endif
 	} 
 	#endif
 	

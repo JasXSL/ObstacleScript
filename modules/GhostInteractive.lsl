@@ -38,6 +38,7 @@ onStateEntry()
 	Portal$scriptOnline();
 	
 	toggleStains(FALSE);
+	llCollisionSound("",0);
     
 end
 
@@ -73,6 +74,19 @@ handleOwnerMethod( GhostInteractiveMethod$interact )
 	
 	int intFlags = argInt(0);	// Flags for the method call
 	float pushStrength = argFloat(1);
+	key sound = argKey(2);
+	if( sound ){
+	
+		float volume = argFloat(3);
+		float radius = argFloat(4);
+		if( radius <= 0 )
+			radius = 10;
+		if( volume <= 0 )
+			volume = 0.5;
+		llSetSoundRadius(radius);
+		llPlaySound(sound, volume);
+	
+	}
 	
     // Auto
     if( flags & DescConst$GI$auto_push && pushStrength > 0 ){

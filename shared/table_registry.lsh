@@ -26,10 +26,10 @@
 
 #define idbTable$GCONF "&"			// char(38) - Owned by DialogHelper
 
-#define idbTable$NODES "'"			// char(39) - Owned by GhostNodes
-	#define idbTable$NODES$PIGR 0		// int - Players in ghost room
-	#define idbTable$NODES$GRMARKERS 1	// (list)pos0, rot0, size0, pos1, rot1, size1... - Room markers that make up the current ghost room
-	
+#define idbTable$NODES "'"			// char(39) - Owned by GhostNodes.template
+	#define idbTable$NODES$PIGR 0			// int - Players in ghost room
+	#define idbTable$NODES$GRMARKERS 1		// (list)pos0, rot0, size0, pos1, rot1, size1... - Room markers that make up the current ghost room
+
 #define idbTable$COM "("			// char(40) - Owned by Com
 	#define idbTable$COM$HOST 0			// key - UUID of level PRIM the HUD is bound to
 
@@ -43,6 +43,10 @@
 #define idbTable$PORTAL "+"			// char(43) - Portal data
 	#define idbTable$PORTAL$STARTPARAM 0		// int - Rez param of portal
 	#define idbTable$PORTAL$GROUP 1				// str - Spawn group
+
+#define idbTable$NODES_ROOM_LABELS ","	// char(44) - Owned by GhostNodes.template numeric indexed table of all rooms labels (unique)
+#define idbTable$NODES_ROOM_NAMES "-"	// char(45) - Owned by GhostNodes.template numeric indexed table of all rooms names (not unique)
+
 
 #define idbTable$PDATA_START 223	// char(223) - Owned by GameHelper. Each table from 223 to 255 represents a player. The field index is different from game to game.
 // WARNING: PDATA_START reserves char 223-255

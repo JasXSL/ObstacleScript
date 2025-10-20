@@ -12,6 +12,7 @@
 #define NodesMethod$getRoomName 4		// (str)cbString, (vec)pos, (str)senderScript, (int)callbackMethod - Callbacks callbackMethod with [cbString, roomLabel, roomName] of pos or no args if not found
 #define NodesMethod$getPlumbedRoom 5	// (str)cbString, (str)senderScript, (int)callbackMethod - Callbacks callbackMethod with [cbString, roomPos] of a room with plumbing
 #define NodesMethod$popLight 6			// (str)readable - Sets so a light can't be turned on
+
 /*
 #define NodesEvt$ghostData 1		// (int)flags, (int)nr_players_in_ghost_room - Raised every 4 sec with some metadata about the ghost. nr_players_in_ghost_room = number players in the current room of the ghost
 	#define NodesEvt$ghostData$roomLightOn 0x1

@@ -25,6 +25,7 @@
 #define SpawnerMethod$devMeta 21			// (int)task - Helper function that gets metadata for the dev tools
 	#define SpawnerMethod$devMeta$plPos 0		// Outputs the sending player's position relative to level root
 #define SpawnerMethod$resetStatic 22		// void - Tells the spawner that it can rez the PortalConst$spawnGroup$static spawn group again
+#define SpawnerMethod$offsetAll 23			// (vec)offs - Adds this offset to every spawn position.
 
 #define SpawnerConst$CB_GAME_START "_G_"
 
@@ -60,8 +61,13 @@
 #define Spawner$devMeta( task ) \
 	runOmniMethod("Spawner", SpawnerMethod$devMeta, (task))
 
+#define Spawner$offsetAll( pos ) \
+	runOmniMethod("Spawner", SpawnerMethod$offsetAll, (pos))
+
 #define Spawner$resetStatic() \
 	runMethod(LINK_THIS, "Spawner", SpawnerMethod$resetStatic, [])
+#define Spawner$resetStaticOmni() \
+	runOmniMethod("Spawner", SpawnerMethod$resetStatic, [])
 
 
 #define onSpawnerLoadStart( cb, live, groups ) \

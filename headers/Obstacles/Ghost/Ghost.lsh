@@ -4,8 +4,12 @@
 #define GhostTable$caughtSeat "caS"		// Key of the seat we need to place the player on
 #define GhostTable$caughtHud "caH"		// Key of the hud of the player we need to place on the bondage seat
 
+#define GhostTable$hoverHeight "ghHH"	// Can be set in LSD to alter the ghost's hover height. Defaults to hover = 1.33;
+
+
 #define GhostGet$caughtSeat() llLinksetDataRead(GhostTable$caughtSeat)
 #define GhostGet$caughtHud() llLinksetDataRead(GhostTable$caughtHud)
+#define GhostGet$hoverHeight() (float)llLinksetDataRead(GhostTable$hoverHeight)
 
 #define GhostGet$type() (int)idbGetByIndex(idbTable$GHOST_SETTINGS, idbTable$GHOST_SETTINGS$TYPE)
 #define GhostGet$evidence() (int)idbGetByIndex(idbTable$GHOST_SETTINGS, idbTable$GHOST_SETTINGS$EVIDENCE)

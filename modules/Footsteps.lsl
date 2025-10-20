@@ -156,12 +156,12 @@ handleTimer( TIMER_RECHECK)
         
         
         string desc = prDesc(llList2Key(ray,0));
-        list data = getDescTaskData( desc, Desc$TASK_FOOTSTEPS  );
+        list data = getDescTask( desc, Desc$TASK_FOOTSTEPS  );
 		
-        if( count(data) ){
-            setWalkable(llList2String(data,0));
-            if( llGetListLength(data) >= 2 )
-                CURRENT_VOL = llList2Float(data,1);
+        if( count(data) > 1 ){
+            setWalkable(llList2String(data,1));
+            if( llGetListLength(data) > 2 )
+                CURRENT_VOL = llList2Float(data,2);
             else
                 CURRENT_VOL = -1;
             return;   

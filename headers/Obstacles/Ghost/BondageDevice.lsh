@@ -1,3 +1,6 @@
+/*
+	Note: Bondage device is hard coded in order to be moddable.
+*/
 #ifndef __BondageDevice
 #define __BondageDevice
 
@@ -17,18 +20,19 @@
 
 #define LevelCustomType$BONDAGE "oBondage"				// Generic type for traps like the lasher
 	#define LevelCustomEvt$BONDAGE$free 1				// void - Reply when receiving BondageTask$getFree	
-	#define LevelCustomEvt$BONDAGE$playerDied 2			// bool dead - Sent when a player is attached to the seat (or detached on easy)	
-	
+	#define LevelCustomEvt$BONDAGE$playerDied 2			// key player, bool dead, int flags - Sent when a player is attached to the seat (or detached on easy)	
+		#define LevelCustomEvt$BONDAGE$playerDied$flags$no_strip 0x1
 
 #define onLevelCustomBondageFree( chair ) \
 	if( isEventLevelCustom() AND argStr(1) == LevelCustomType$BONDAGE AND argInt(2) == LevelCustomEvt$BONDAGE$free ){ \
 		key chair = argKey(0);
 	
-#define onLevelCustomBondagePlayerDied( chair, player, died ) \
+#define onLevelCustomBondagePlayerDied( chair, player, died, flags ) \
 	if( isEventLevelCustom() AND argStr(1) == LevelCustomType$BONDAGE AND argInt(2) == LevelCustomEvt$BONDAGE$playerDied ){ \
 		key chair = argKey(0); \
 		key player = argKey(3); \
-		bool dead = argInt(4);
+		bool dead = argInt(4); \
+		int flags = argInt(5);
 	
 
 
