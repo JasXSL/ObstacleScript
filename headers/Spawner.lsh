@@ -16,7 +16,7 @@
 #define SpawnerMethod$purge 12				// Purges all spawns
 #define SpawnerMethod$delete 13				// (int)index
 #define SpawnerMethod$add 14				// void - Adds said object, use $ notation to save description
-#define SpawnerMethod$savePortals 15		// (str)batch - Adds all spawned portals to the DB
+#define SpawnerMethod$savePortals 15		// (str)batch, (int)del_after_insert - Adds all spawned portals to the DB. del_after_insert will delete the world object after adding it to DB. Useful if you're adding more than 64 items at a time (event queue gets full)
 #define SpawnerMethod$setSpawnValue 16		// (int)spawnIndex, (int)paramIndex, (var)value - Updates a spawn value
 #define SpawnerMethod$spawnByIndex 17		// (int)live, (int)index1, index2... - Spawns one or many items by index
 #define SpawnerMethod$fetchFromHud 18		// void - Fetches new assets from HUD

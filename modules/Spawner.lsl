@@ -8,6 +8,7 @@
 
 int STATIC_SPAWNED; 	// True when PortalConst$spawnGroup$static has been spawned.
 string SAVE_ROUND;      // When calling a save, this is the label
+int DEL_ON_INSERT;		// If true, we tell the asset to derez after adding it
 
 fetchAssets(){
 
@@ -311,7 +312,12 @@ handleOwnerMethod( SpawnerMethod$add )
 	if( out == -1 )
 		out = idbInsert(idbTable$SPAWNS, saveData);
 	
-	llOwnerSay("Insert ["+(str)out+"]: "+saveData);
+	string kill;
+	if( DEL_ON_INSERT ){
+		Portal$kill(SENDER_KEY);
+		kill = "(Killed)";
+	}
+	llOwnerSay("Insert ["+(str)out+"]: "+saveData + kill);
 
 end
 
@@ -421,6 +427,9 @@ end
 handleOwnerMethod( SpawnerMethod$savePortals )
 
     SAVE_ROUND = argStr(0);
+	if( argStr(0) == "\"\"" )
+		SAVE_ROUND = "";
+	DEL_ON_INSERT = argInt(1);
     Portal$save();
 
 end
