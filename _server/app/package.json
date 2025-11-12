@@ -1,0 +1,28 @@
+{
+  "name": "xmod-server",
+  "version": "1.0.0",
+  "description": "Backend for an xMod server",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JasXSL/ObstacleScript.git"
+  },
+  "keywords": [
+    "xmod"
+  ],
+  "author": "JasX",
+  "license": "GPL-3.0-or-later",
+  "bugs": {
+    "url": "https://github.com/JasXSL/ObstacleScript/issues"
+  },
+  "homepage": "https://github.com/JasXSL/ObstacleScript#readme",
+  "dependencies": {
+    "express": "^5.1.0"
+  },
+  "type": "module"
+
+}

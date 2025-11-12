@@ -1,0 +1,54 @@
+services:
+
+  node:
+    build:
+      context: .
+      dockerfile_inline: |
+        FROM node:25
+        WORKDIR /node
+        CMD test -d "node_modules" && npm run start || npm install && npm run start
+    environment:
+      NODE_ENV: production
+    ports:
+      - "8150:3000"
+    networks:
+      - internal
+ #   depends_on:
+ #     mariadb:
+ #       condition: service_healthy
+    volumes:
+      - ./app:/node
+    restart: unless-stopped
+
+#  mariadb:
+#    image: mariadb:11.6
+#    environment:
+#      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+#      MYSQL_USER: "jasx"
+#      MYSQL_PASSWORD: ${MYSQL_JASX_PASSWORD}
+#      MYSQL_DATABASE: "jasx"
+#    ports:
+#      - "3306:3306"
+#    networks:
+#      - internal
+#    healthcheck:
+#      test: ["CMD", "mariadb", "-uroot", "-p${MYSQL_ROOT_PASSWORD}", "-e", "use jasx"]
+#      interval: 10s
+#      timeout: 5s
+#      retries: 5
+#      start_period: 5s
+#    volumes:
+#      - dbstore:/var/lib/mysql
+#      - ./backup/:/backup/
+#    restart: unless-stopped
+networks:
+  internal:
+    driver: bridge
+
+#volumes:
+#  dbstore:
+
+
+
+
+
