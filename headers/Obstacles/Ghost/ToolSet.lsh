@@ -63,6 +63,7 @@
 		#define LevelCustomEvt$TOOLSET$pills 7				// void - Pills used
 		#define LevelCustomEvt$TOOLSET$ouija 8				// str type(pos, age, sex, name) - Ouija board question asked
 		#define LevelCustomEvt$TOOLSET$vape 9				// void - Vape used
+		#define LevelCustomEvt$TOOLSET$ch 10				// (key)toolUUID, (int)tool_type - Main hand tool has changed
 		
 	#define onLevelCustomToolsetDrop( toolsetuuid, worldID, pos, rot ) \
 		if( isEventLevelCustom() AND argStr(1) == LevelCustomType$TOOLSET AND argInt(2) == LevelCustomEvt$TOOLSET$drop ){ \
@@ -97,6 +98,11 @@
 			
 	#define onLevelCustomToolsetVape( type ) \
 		if( isEventLevelCustom() AND argStr(1) == LevelCustomType$TOOLSET AND argInt(2) == LevelCustomEvt$TOOLSET$vape ){
-			
+	
+	#define onLevelCustomToolsetChange( sender, toolUuid, type ) \
+		if( isEventLevelCustom() AND argStr(1) == LevelCustomType$TOOLSET AND argInt(2) == LevelCustomEvt$TOOLSET$ch ){ \
+			key sender = argKey(0); \
+			key toolUuid = argKey(3); \
+			int type = argInt(4);
 
 #endif

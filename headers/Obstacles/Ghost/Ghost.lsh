@@ -19,7 +19,8 @@
 
 
 // These use the description (for ease of debugging)
-#define GhostGet$inLitRoom( desc ) ((int)j(desc, GhostDesc$inLitRoom))
+#define GhostGet$inLitRoom( desc ) ((int)j(desc, GhostDesc$flags) & GhostDesc$flags$inLitRoom)
+#define GhostGet$inGhostRoom( desc ) ((int)j(desc, GhostDesc$room) ==  (int)j(desc, GhostDesc$ghostRoom))
 #define GhostGet$aggression( desc ) ((int)j(desc, GhostDesc$aggression))
 #define GhostGet$activity( desc ) ((int)j(desc, GhostDesc$activity))
 #define GhostGet$sucTarg( desc ) ((key)j(desc, GhostDesc$ghostCustom))
@@ -34,6 +35,9 @@
 #define GhostMethod$sendToChair 7		// key chair, key hud, int temp - Tells the ghost to go to a chair and trap the player. If no chair is available, drop the player.
 #define GhostMethod$succubusPower 8		// void - Triggers the succubus power
 #define GhostMethod$incorrect 9			// void - Players tried ending the game with the wrong ghost.
+#define GhostMethod$triggerRoam 10		// void - Attempts to trigger a roam (used in debugging)
+#define GhostMethod$warp 11				// (vec)pos - Warps the ghost to a position
+
 
 #define GhostMethod$cbNodes 100			// Callback for Nodes.lsh getNodes method
 #define GhostMethod$cbPlumbing 101		// Callback for getting a position to teleport with plumbing
@@ -75,10 +79,13 @@
 
 
 // Indexes for parsing the ghost desc. Note that desc is handled by GhostAux
-#define GhostDesc$inLitRoom 0				// int - Ghost is currently in a lit room
+#define GhostDesc$flags 0					// int - Flags
+	#define GhostDesc$flags$inLitRoom 0x1		// Ghost is in a lit room
 #define GhostDesc$aggression 1				// int - Modifier for triggering a hunt
 #define GhostDesc$activity 2				// int - Modifier for doing an interaction
 #define GhostDesc$ghostCustom 3				// var - Currently only used for succubus, stores its current target
+#define GhostDesc$room 4					// int - Index of current room
+#define GhostDesc$ghostRoom 5				// int - Index of ghost room
 
 #define GhostEvt$type 1						// int type, int evidence, int affixes, int difficulty - Ghost type received
 #define GhostEvt$hunt 2						// bool hunting - Ghost is hunting
@@ -86,7 +93,7 @@
 #define GhostEvt$caught 4					// void - Caught a player. Carry them to the chair. Use GhostGet$caughtHud() and GhostGet$caughtSeat() to get player and seat
 #define GhostEvt$huntStep 5					// void - Raised when the ghost makes a footstep while hunting
 #define GhostEvt$visible 6					// bool visible - Raised when the ghost goes visible or hidden
-
+#define GhostEvt$roomChange 7				// (int)roomIndex, (int)lastRoomIndex, (int)ghostRoom
 
 #define onGhostType() \
 	if( SENDER_SCRIPT IS "Ghost" AND EVENT_TYPE IS GhostEvt$type ){
@@ -102,7 +109,11 @@
 #define onGhostHunt( hunting ) \
 	if( SENDER_SCRIPT IS "Ghost" AND EVENT_TYPE IS GhostEvt$hunt ){ \
 		bool hunting = argInt(0);
-
+#define onGhostRoomChange( cur, last, home ) \
+	if( SENDER_SCRIPT IS "Ghost" AND EVENT_TYPE IS GhostEvt$roomChange ){ \
+		int cur = argInt(0); \
+		int last = argInt(1); \
+		int home = argInt(2);
 
 
 #define GhostConst$evidence$owometer 0x1
@@ -151,6 +162,7 @@
 	#define LevelCustomEvt$GHOST$caught 2			// key player - The ghost has caught a player
 	#define LevelCustomEvt$GHOST$arouse 3			// arr players, float points - Adds arousal to players
 	#define LevelCustomEvt$GHOST$vaped 4			// void - The ghost was successfully vaped
+	#define LevelCustomEvt$GHOST$revive 5			// void - Breaks all defeated players free (if any)
 
 #define onLevelCustomGhostSpawned( ghost ) \
 	if( isEventLevelCustom() AND argStr(1) == LevelCustomType$GHOST AND argInt(2) == LevelCustomEvt$GHOST$spawned ){ \
@@ -166,6 +178,9 @@
 		float points = argFloat(4);
 #define onLevelCustomGhostVaped() \
 	if( isEventLevelCustom() AND argStr(1) == LevelCustomType$GHOST AND argInt(2) == LevelCustomEvt$GHOST$vaped ){
+
+#define onLevelCustomGhostRevive() \
+	if( isEventLevelCustom() AND argStr(1) == LevelCustomType$GHOST AND argInt(2) == LevelCustomEvt$GHOST$revive ){
 
 
 #define Ghost$followNodes( nodes ) \
@@ -188,7 +203,8 @@
 	runOmniMethod("Ghost", GhostMethod$sendToChair, chair + hud + temp)
 #define Ghost$succubusPower() \
 	runMethod(LINK_THIS, "Ghost", GhostMethod$succubusPower, [])
-
+#define Ghost$warp( pos ) \
+	runOmniMethod("Ghost", GhostMethod$warp, (pos))
 
 	
 

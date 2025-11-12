@@ -1,20 +1,173 @@
 // This is the main controller that handles all the ghost stuff as far as the level linkset goes
 
+#define VT_STRIDE 4
+#ifndef VIABLE_TRAPS // (str)trap, (int)directions, (vector)pos_offs, (rotation)rot_offs
+	#define VIABLE_TRAPS (list)\
+		"Slimetrap" + (TRAPDIR_NORTH|TRAPDIR_EAST|TRAPDIR_SOUTH|TRAPDIR_WEST) + <0,0,.87> + 0 + \
+		"Ghosthand" + (TRAPDIR_DOWN) + <0,0,1.07> + 0 + \
+		"SummoningCircle" + (TRAPDIR_DOWN) + <0,0,.66> + 0 + \
+		"Echo" + (TRAPDIR_DOWN) + <0,0,.75> + 0 + \
+		"Moths" + (TRAPDIR_DOWN) + <0,0,.75> + 0 + \
+		"Oilslick" + (TRAPDIR_DOWN) + <0,0,.66> + 0 + \
+		"Ghostslap" + (TRAPDIR_DOWN) + <0,0,1.04> + 0 + \
+		"D20" + (TRAPDIR_DOWN) + <0,0,.04> + 0 + \
+		"Wandtrap" + (TRAPDIR_DOWN) + <0,0,.59> + 0 + \
+		"Voidzone" + (TRAPDIR_DOWN) + <0,0,.655> + 0 + \
+		"Shocktrap" + (TRAPDIR_DOWN) + <0,0,.75> + 0 + \
+		"CeilingBlob" + (TRAPDIR_UP) + <0,0,1.07> + 0
+		
+#endif
+#ifndef MAX_TRAPS
+	#define MAX_TRAPS 5
+#endif
+#ifndef TRAP_FREQ
+	#define TRAP_FREQ 180
+#endif
+
 integer GHOST_TYPE;		// Cached from GhostHelper_Game
 int EVIDENCE_TYPES;		// Cached from GhostHelper_Game
 int AFFIXES;			// Cached from GhostHelper_Game
 float ACTIVITY = 1.0;  // Generic multiplier for ghost interacts.
 float LAST_EVENT;
+float VAPE_ENDS;
 integer BFL;
 #define BFL_HUNTING 0x1
 float LAST_HUNT;
 key CAUGHT_PLAYER;  // We're waiting for a bondage seat for this player
+float LAST_TRAP;
+
 
 int HUNTS;
 int GHOST_EVENTS;
 int OBJ_INTERACTS;
 int PL_INTERACTS;
+list TRAPS;				// stores position vectors for trap placement. Traps cannot be placed within 5m of each other.
 
+// Test if a position is visible to a player
+integer isPosVisible( vector pos ){
+    
+    list players = getPlayers();
+    integer i;
+    for(; i < count(players); ++i ){
+        
+        list ray = llCastRay(pos, prPos(l2k(players, i)), RC_DEFAULT);
+        if( l2i(ray, -1) < 1 )
+            return TRUE;
+        
+    }
+    return FALSE;
+    
+}
+
+// Checks if a trap is too close to another
+integer trapSpotFree( vector pos ){
+	
+	integer i;
+	for(; i < count(TRAPS); ++i ){
+		if( llVecDist(l2v(TRAPS, i), pos) < 5 )
+			return FALSE;
+	}
+	return TRUE;
+	
+}
+
+// Places a trap
+/*
+	asset : asset to place
+	pOffs : asset relative position offset
+	rOffs : asset relative rotation offset
+	id : ghost UUID
+	directions : directions we can place this trap in (use [<1,0,0>,<0,1,0>,<-1,0,0>,<0,-1,0>] for walls, <0,0,1> for ceiling, <0,0,-1> for floor)
+	z : z height relative to the floor to cast the ray from. Generally you can use 1 here.
+*/
+vector placeTrap( string asset, vector pOffs, rotation rOffs, key id, list directions, float z ){
+    
+    vector pos = prPos(id);
+    if( pos == ZERO_VECTOR )
+        return pos;
+        
+    list ray = llCastRay(pos, pos-<0,0,10>, RC_DEFAULT);
+
+    if( l2i(ray, -1) < 1 )
+        return ZERO_VECTOR;
+		
+    vector basePos = l2v(ray, 1)+<0,0,z>;
+    // RC_DATA_FLAGS + RC_GET_NORMAL
+    vector axis = <0,0,1>;
+    
+    directions = llListRandomize(directions, 1);
+
+	integer i;
+    for(; i < count(directions); ++i ){
+        
+        vector dir = l2v(directions, i);
+        ray = llCastRay(basePos, basePos + (dir*10), RC_DEFAULT + RC_DATA_FLAGS + RC_GET_NORMAL);
+        
+        vector normal = l2v(ray, 2);
+        pos = l2v(ray, 1);
+           
+        if( l2i(ray, -1) == 1 && (normal.z < 0.1 || llFabs(dir.z) > 0) ){
+            
+            rotation r = llRotBetween(axis, normal);
+            pos += pOffs*rOffs*r;
+
+            if( !isPosVisible(pos) && trapSpotFree(pos) ){
+                
+                rotation rot = rOffs*r;
+                Rezzer$rez( LINK_THIS, asset, pos, rot, "", "TRAP", TRUE );
+                
+                return pos;
+                
+            }
+            
+        }
+        
+    }
+	
+	return ZERO_VECTOR;
+    
+    
+}
+
+
+placeRandomTrap( int force ){
+
+	
+	
+	list traps = llListRandomize(VIABLE_TRAPS, VT_STRIDE);
+	integer i;
+	for(; i < count(traps); i += VT_STRIDE ){
+
+		list dirs;
+		string trap = l2s(traps, i);
+		integer d = l2i(traps, i+1);
+		if( llGetInventoryType(trap) == INVENTORY_OBJECT ){
+	
+			if( d & TRAPDIR_UP ) dirs += <0,0,1>;
+			if( d & TRAPDIR_DOWN ) dirs += <0,0,-1>;
+			if( d & TRAPDIR_NORTH ) dirs += <1,0,0>;
+			if( d & TRAPDIR_EAST ) dirs += <0,1,0>;
+			if( d & TRAPDIR_SOUTH ) dirs += <-1,0,0>;
+			if( d & TRAPDIR_WEST ) dirs += <0,-1,0>;
+			
+			vector placed = placeTrap(trap, l2v(traps, i+2), l2r(traps, i+3), GhostGet$ghost(), dirs, 1.0);
+			if( placed != ZERO_VECTOR ){
+				
+				if( force )
+					llOwnerSay("Placed trap" + trap);
+				LAST_TRAP = llGetTime();
+				TRAPS += placed;
+				return;
+				
+			}		
+		
+		}
+		else if( force )
+			llOwnerSay("Trap not in inv: "+trap);
+	
+	}
+	
+}
 
 
 // Gets distance to the nearest player, reqLos is line of sight:
@@ -138,18 +291,32 @@ toggleHunt( integer on ){
 
 #ifdef DEBUG
 onStateEntry()
+
 	GHOST_TYPE = GhostGet$type();
 	EVIDENCE_TYPES = GhostGet$evidence();
 	AFFIXES = GhostGet$affixes();
 	setInterval("TOUCH", 5);
+	list t = VIABLE_TRAPS;
+	integer i;
+	for(; i < count(t); i += VT_STRIDE ){
+		
+		if( llGetInventoryType(l2s(t, i)) != INVENTORY_OBJECT ){
+			llOwnerSay("Trap missing from inventory: "+l2s(t, i));
+		}
+		
+	}
+	
 end
 #endif
 
 handleEvent( "#Game", 0 )
 	str type = argStr(0);
 	
-	if( type == "FRONT_DOOR" )
+	if( type == "FRONT_DOOR" ){
 		setInterval("TOUCH", 5);
+		setInterval("TRAP", 10);
+		LAST_TRAP = llGetTime();
+	}
 	
 	if( type == "GAMESTART" ){
 		
@@ -158,7 +325,8 @@ handleEvent( "#Game", 0 )
 		AFFIXES = GhostGet$affixes();
 		ACTIVITY = llFrand(.4)+.6;   // This is a shuffle multiplied against the ghost type's activity
 		GHOST_EVENTS = OBJ_INTERACTS = PL_INTERACTS = HUNTS = 0;	// Reset stats
-		
+		VAPE_ENDS = 0;
+		TRAPS = [];
 		BFL = 0;
 		idbSetByIndex(idbTable$GHOST_BEHAVIOR, idbTable$GHOST_BEHAVIOR$HUNTING, 0);
 		saveStats();
@@ -174,12 +342,34 @@ handleEvent( "#Game", 0 )
         toggleHunt(argInt(1));
 		
 	}
+	else if( type == "PLACE_TRAP" ){
+		placeRandomTrap(TRUE);
+	}
 	else if( type == "DEBUG" ){
 		str desc = prDesc(GhostGet$ghost());
 		qd("PIGR" + (int)idbGetByIndex(idbTable$NODES, idbTable$NODES$PIGR) + "ANGER" + GhostGet$aggression(desc) + "INTERACT" + GhostGet$activity(desc) + "Nearest player" + getNearestGhostPlayerDistance(FALSE) + "Nearest LOS" + getNearestGhostPlayerDistance(TRUE));
 	}
+	
+	
 end
 
+handleTimer( "TRAP" )
+	
+	float time = llGetTime();
+	if( time-LAST_TRAP < TRAP_FREQ || count(TRAPS) >= MAX_TRAPS )
+		return;
+	
+	// Significantly lower chance of placing in a ghost room
+	if( GhostGet$inGhostRoom( prDesc(GhostGet$ghost()) ) && llFrand(1.0) < 0.02 ){
+		return;
+	}
+	
+	if( llFrand(1) < 0.5 ) // Roll a dice to place a trap
+		return;
+	
+	placeRandomTrap(FALSE);
+
+end
 
 
 // Ghost interactions, hunt timer etc
@@ -214,8 +404,15 @@ handleTimer( "TOUCH" )
 		avgArousalPerc = avg/tot/100;
 	
 	
-    float evtChance = 0.05+0.05*avgArousalPerc;
+    float evtChance = 0.075+0.075*avgArousalPerc;
+	if( llGetTime() < VAPE_ENDS )
+		evtChance *= 3;
+		
+	if( GHOST_TYPE == GhostConst$type$succubus )
+		evtChance *= 2; // Succubus has increased ghost event chance
+		
 	if( GHOST_TYPE == GhostConst$type$hantuwu ){
+	
 		evtChance *= 3; // GHOST BEHAVIOR - HANTUWU :: Ghost evt chance x3
 		if( !hasActiveToolNearby(ToolsetConst$types$ghost$hots, 2) ) // can only ghost event when near a HOTS
 			evtChance = 0;
@@ -283,6 +480,7 @@ handleTimer( "TOUCH" )
     if( llFrand(1.0) > activity )
         return;
     
+	
     GhostInteractions$interact(FALSE);   
     //qd("Sending interact"); 
     
@@ -315,7 +513,6 @@ onGhostInteraction( ghost, asset, power )
         float plDistLos = getNearestGhostPlayerDistance(true);
         
         if( 
-            !hasWeakAffix(AFFIXES, ToolSetConst$affix$noEvidenceUntilSalted) &&
             EVIDENCE_TYPES & GhostConst$evidence$owometer && llFrand(1.0) < .5
         ) // 4-5
             ++level;
@@ -375,7 +572,7 @@ onLevelCustomGhostCaught( ghost, player )
 end
 
 onLevelCustomBondageFree( chair )
-    
+   
     if( CAUGHT_PLAYER == "" )
         return;
         
@@ -385,7 +582,7 @@ end
 
 // Ghost successfully vaped
 onLevelCustomGhostVaped()
-	LAST_HUNT = llGetTime()+90;
+	VAPE_ENDS = LAST_HUNT = llGetTime()+90+20*(3-GhostGet$difficulty());
 end
 
 
@@ -396,6 +593,7 @@ handleEvent( "#Tools", 0 )
     if( type == "START_HUNT" ){
         toggleHunt(TRUE);
     }
+	
 end
 
 

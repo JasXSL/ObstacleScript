@@ -52,6 +52,8 @@ fetchSelf( bool noDeferred ){
     integer PIN = llFloor(llFrand(0xFFFFFFF));
     llSetRemoteScriptAccessPin(PIN);
     Screpo$get( PIN, ScrepoConst$SP_LOADED, llGetScriptName(), noDeferred );
+	
+	setInterval("REPORTAL", 5); // Try again every 5 sec
     
 }
 // Raised when desc is gotten and scripts have loaded
@@ -75,6 +77,7 @@ loadComplete(){
 		descOut = "$"+descOut;
 	
 	idbSetByIndex(idbTable$PORTAL, idbTable$PORTAL$GROUP, SPAWN_GROUP);
+	idbSetByIndex(idbTable$PORTAL, idbTable$PORTAL$DESC, DESC);
 	
 	if( descOut != "" )
 		llSetObjectDesc(descOut);
@@ -137,6 +140,10 @@ onStateEntry()
     }
 end
 
+// Keep hammering until we get a portal
+handleTimer( "REPORTAL" )
+	fetchSelf(FALSE);
+end
 
 handleOwnerMethod( PortalMethod$reset )
 

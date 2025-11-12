@@ -7,7 +7,8 @@
 	- Motion sensors and communciation with the sensor board
 	- 
 	
-	
+	Optional flags:
+	#define NO_SPAWN_GEAR -- Prevents auto spawning of gear
 	
 	
 	
@@ -263,6 +264,7 @@ dropTool( key obj, key worldID, vector tPos, rotation tRot ){
         raiseEvent(0, "CAM" + worldID + TRUE);
 		
     AnimHandler$start(player, "default_use");
+	raiseEvent(0, "DROP" + worldID + type);
 
 }
 
@@ -351,10 +353,7 @@ onLevelCustomGtoolData( sender, tooluuid, data )
         }
 		
 		GhostAux$salt();
-        
-        if( hasWeakAffix(GhostGet$affixes(), ToolSetConst$affix$noEvidenceUntilSalted) )
-            raiseEvent(0, "SALTED");
-        
+
     }
     
 	tool = llJsonSetValue(tool, (list)TOOL_DATA, data);
@@ -563,18 +562,13 @@ handleEvent( "#Nodes", 0 )
     
 end
 
-handleEvent( "#Game", 0 )
-    
-    if( argStr(0) == "START_GAME" ){
-        
-		list keys = getToolTableKeys();
-		integer i;
-		for(; i < count(keys); ++i )
-			llLinksetDataDelete(l2s(keys, i));
-                
-    }
-    else if( argStr(0) == "SPAWN_GEAR" ){
-        
+handleEvent( "#Dialog", 0 )
+	
+	if( argStr(0) == "SPAWN_GEAR" ){
+		int affixes = GhostGet$affixes();
+        integer weakAffix = getWeakAffix(affixes);
+		
+        #ifndef NO_SPAWN_GEAR
         int nrPlayers = numPlayers();
         if( nrPlayers < 1 )
             nrPlayers = 1;
@@ -586,8 +580,7 @@ handleEvent( "#Game", 0 )
         int three = 3;
         int four = 4;
         
-        int affixes = GhostGet$affixes();
-        integer weakAffix = getWeakAffix(affixes);
+        
         integer strongAffix = getStrongAffix(affixes);
         int noDuplicates = strongAffix == ToolSetConst$affix$noDuplicates;
         if( noDuplicates )
@@ -623,9 +616,9 @@ handleEvent( "#Game", 0 )
             spawns += (list)ToolsetConst$types$ghost$thermometer + (1+(nrPlayers>2));
         
         
-        
         spawnGear(spawns);
-                        
+        #endif
+		
         Rezzer$cb( LINK_THIS, "TOOLS" );
         
         if( weakAffix == ToolSetConst$affix$fewerHidingSpots )
@@ -636,6 +629,20 @@ handleEvent( "#Game", 0 )
         end
         
     }
+	
+end
+
+handleEvent( "#Game", 0 )
+    
+    if( argStr(0) == "START_GAME" ){
+        
+		list keys = getToolTableKeys();
+		integer i;
+		for(; i < count(keys); ++i )
+			llLinksetDataDelete(l2s(keys, i));
+                
+    }
+    
     else if( argStr(0) == "ROUND_START" ){
         
 		// Spawn weegie board

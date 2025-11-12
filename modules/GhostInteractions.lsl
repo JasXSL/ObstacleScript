@@ -161,7 +161,7 @@ interactPlayer( key hud, int power ){
 	
     if( dur ){
     
-        Rlv$setFlags( hud, RlvFlags$IMMOBILE, false );
+        Rlv$setFlags( hud, RlvFlags$IMMOBILE, TRUE );
 		setTimeout("GI", dur);
 		touchedPlayers += hud;
         
@@ -200,11 +200,11 @@ stripPlayer( key targ, integer slot ){
         0
     );
 	++slot;	// 0 is ignore, so we gotta add 1
-    Rlv$setFlags( targ, RlvFlags$IMMOBILE, FALSE );
+    Rlv$setFlags( targ, RlvFlags$IMMOBILE, TRUE );
     Rlv$triggerSound( targ, "620fe5e8-9223-10fc-3a5c-0f5e0edc3a35", .5 );
     Rlv$setClothes( targ, slot, slot, slot, slot, slot );
     llSleep(2.2);
-    Rlv$unsetFlags( targ, RlvFlags$IMMOBILE, FALSE );
+    Rlv$unsetFlags( targ, RlvFlags$IMMOBILE, TRUE );
     
 }
 
@@ -230,7 +230,7 @@ onGhostTouch( key targ, int power ){
 		LAST_SOUND_TIME = llGetTime();
 	}
 	// Lazily sent to any target
-	if( GhostGet$evidence() & GhostConst$evidence$stains && !hasWeakAffix(GhostGet$affixes(), ToolSetConst$affix$noEvidenceUntilSalted) ){
+	if( GhostGet$evidence() & GhostConst$evidence$stains  ){
 		//qd("Setting stains on " + llKey2Name(targ));
 		Door$setStainsTarg( targ, "*", TRUE );
 	}
@@ -277,7 +277,7 @@ int usePower(){
 
 onStateEntry()
 
-    llSensorRepeat("", "", ACTIVE|PASSIVE, 6, PI, 1);
+    llSensorRepeat("", "", ACTIVE|PASSIVE, 8, PI, 1);
 	
 	Portal$scriptOnline();
 	//qd(llGetUsedMemory());
@@ -289,10 +289,12 @@ handleTimer( "GI" )
 	
 	integer i;
 	for(; i < count(touchedPlayers); ++i )
-		Rlv$unsetFlags( l2k(touchedPlayers, i), RlvFlags$IMMOBILE, FALSE );
+		Rlv$unsetFlags( l2k(touchedPlayers, i), RlvFlags$IMMOBILE, TRUE );
 	touchedPlayers = [];
 	
 end
+
+
 
 // Force a hunt to start if possible
 handleTimer( "HUNT" )
@@ -320,6 +322,7 @@ onSensor( total )
 			
 		}
     }
+	
 	idbSetIndex(table, idx);
 	
     
@@ -612,8 +615,7 @@ handleOwnerMethod( GhostInteractionsMethod$interact )
 				integer flags; float speed = 1.0;
 				
 				if( 
-					GhostGet$evidence() & GhostConst$evidence$stains && 
-					!hasWeakAffix(affixes, ToolSetConst$affix$noEvidenceUntilSalted)
+					GhostGet$evidence() & GhostConst$evidence$stains
 				)flags = flags|GhostInteractiveConst$INTERACT_ALLOW_STAINS;
 					
 				// GHOST BEHAVIOR :: POWOLTERGEIST - 20% chance to yeet an item

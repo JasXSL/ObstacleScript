@@ -38,8 +38,8 @@
 // Sets Z rotation of the door
 #define Door$setRot( label, z ) \
 	llRegionSay(DoorConst$CHAN, mkarr(label + DoorTask$setRot + z))
-#define Door$lock( label, z ) \
-	llRegionSay(DoorConst$CHAN, mkarr(label + DoorTask$lock + z))
+#define Door$lock( label, locked ) \
+	llRegionSay(DoorConst$CHAN, mkarr(label + DoorTask$lock + locked))
 #define Door$setRotPerc( label, perc ) \
 	llRegionSay(DoorConst$CHAN, mkarr(label + DoorTask$setRotPerc + perc))
 #define Door$setRotPercTarg( targ, label, perc ) \

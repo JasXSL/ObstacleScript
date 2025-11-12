@@ -7,11 +7,13 @@
 
 
 #define NodesMethod$getRooms 1			// (str)senderScript, (int)callbackMethod - Causes the callback method to run with each slice of a room marker, prepended with the index in the array. Ex: [index, roomIndex, pos, rot, scale]. pos is converted to global coordinates when running this
-#define NodesMethod$getPath 2			// (str)senderScript, (int)callbackMethod, (vec)startPos, (str/vec)endRoom - Select an end room by LABEL or POS
+#define NodesMethod$getPath 2			// (str)senderScript, (int)callbackMethod, (vec)startPos, (str/vec)endRoom - Select an end room by LABEL or POS. After converting positions to rooms, this is forwarded to GhostPathing
 #define NodesMethod$getTemp 3			// (vec)pos, (key)targ, (str)script, (int)method - Sends method to script on targ with the arg being temperature in celsius
 #define NodesMethod$getRoomName 4		// (str)cbString, (vec)pos, (str)senderScript, (int)callbackMethod - Callbacks callbackMethod with [cbString, roomLabel, roomName] of pos or no args if not found
 #define NodesMethod$getPlumbedRoom 5	// (str)cbString, (str)senderScript, (int)callbackMethod - Callbacks callbackMethod with [cbString, roomPos] of a room with plumbing
 #define NodesMethod$popLight 6			// (str)readable - Sets so a light can't be turned on
+
+#define ROOM_PLUMBED 0x1
 
 /*
 #define NodesEvt$ghostData 1		// (int)flags, (int)nr_players_in_ghost_room - Raised every 4 sec with some metadata about the ghost. nr_players_in_ghost_room = number players in the current room of the ghost

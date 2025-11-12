@@ -66,19 +66,35 @@ handleOwnerMethod( GhostInteractiveMethod$breaker )
 	raiseEvent(GhostInteractiveEvent$breaker, argInt(0));
 end
 
+handleOwnerMethod( GhostInteractiveMethod$ping )
+	string filter = argStr(0);
+	if( filter != "*" && filter != llGetObjectName() )
+		return;
+	Level$raiseEvent( 
+        LevelCustomType$GINTERACTIVE, 
+        LevelCustomEvt$GINTERACTIVE$ping,  
+        []
+    );
+end
+
 handleOwnerMethod( GhostInteractiveMethod$interact )
 
     list dt = getDescType(llGetKey(), Desc$TASK_GHOST_INTERACTIVE);
     int flags = l2i(dt, 1);		// Tells the script what it can handle automatically
 	vector dir = l2vs(dt, 2);	// Direction of push if push is enabled
+	key sound = l2k(dt, 3);
 	
 	int intFlags = argInt(0);	// Flags for the method call
 	float pushStrength = argFloat(1);
-	key sound = argKey(2);
+	string nameFilter = argStr(2);
+	
+	if( nameFilter != "" && nameFilter != llGetObjectName() )
+		return;
+	
 	if( sound ){
 	
-		float volume = argFloat(3);
-		float radius = argFloat(4);
+		float volume = l2f(dt, 4);
+		float radius = l2f(dt, 5);
 		if( radius <= 0 )
 			radius = 10;
 		if( volume <= 0 )
@@ -121,6 +137,7 @@ handleOwnerMethod( GhostInteractiveMethod$interact )
     
 
 end
+
 
 
 handleTimer("STAINS")

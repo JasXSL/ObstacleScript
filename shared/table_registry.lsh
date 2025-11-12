@@ -8,7 +8,7 @@
 	I suggest only using this system for data that's out of your control as a dev. Such as tracking spawns.
 
 */
-#define idbTable$SPAWNS " "			// char(32) - Owned by Spawner
+#define idbTable$SPAWNS " "			// char(32) - Indexed. Owned by Spawner
 #define idbTable$PLAYERS "!"		// char(33) - Owned by Com / Level / Portal
 #define idbTable$HUDS "\""			// char(34) - Owned by Com / Level / Portal
 #define idbTable$TOOLS "#"			// char(35) - Owned by GhostTools.template. Note: This table isn't indexed, it uses idbTable$TOOLS+itemUUID
@@ -43,13 +43,23 @@
 #define idbTable$PORTAL "+"			// char(43) - Portal data
 	#define idbTable$PORTAL$STARTPARAM 0		// int - Rez param of portal
 	#define idbTable$PORTAL$GROUP 1				// str - Spawn group
+	#define idbTable$PORTAL$DESC 2				// str - Start desc
 
 #define idbTable$NODES_ROOM_LABELS ","	// char(44) - Owned by GhostNodes.template numeric indexed table of all rooms labels (unique)
 #define idbTable$NODES_ROOM_NAMES "-"	// char(45) - Owned by GhostNodes.template numeric indexed table of all rooms names (not unique)
 
+#define idbTable$REZZER "."				// char(46) - Owned by Rezzer.lsh
+	#define idbTable$REZZER$QLEN 0				// int - Items in queue currently being spawned
+
+#define idbTable$SPAWNER "/"			// char(47) - Owned by Spawner.lsh
+	#define idbTable$SPAWNER$QUEUE 0			// array - Holds a copy of SPAWNQUEUE
+
+
 
 #define idbTable$PDATA_START 223	// char(223) - Owned by GameHelper. Each table from 223 to 255 represents a player. The field index is different from game to game.
 // WARNING: PDATA_START reserves char 223-255
+
+
 
 
 // ,-./0123456789:;<=>?

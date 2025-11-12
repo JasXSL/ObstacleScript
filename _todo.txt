@@ -1,3 +1,4 @@
 x = should be fixed, ? = not sure if fixed, - todo, u = unable to reproduce
 
-- Idle anims to show off certain tools?
+
+

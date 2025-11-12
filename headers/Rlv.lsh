@@ -10,11 +10,13 @@
 
 
 // Flags
-#define RlvFlags$IMMOBILE 0x1			// Unable to move. Todo: Currently this only affects climbing
+#define RlvFlags$IMMOBILE 0x1			// Unable to move.
 
 
 #define RlvConst$DESC$sex 0				// Sex flags from the JasX HUD
 #define RlvConst$DESC$clothes 1			// 2-bit array, little endian. 0 = naked, 1 = underwear, 2 = dressed. Corresponds to RlvConst$SLOTS	
+
+#define RlvConst$FULL_CLOTHES 682 		// 0b1010101010
 
 #define Rlv$getDesc$sex( hud ) \
 	l2i(split(prDesc(hud), "$"), RlvConst$DESC$sex)
@@ -77,6 +79,10 @@
 #define RlvMethod$triggerSound 13		// (key)sound, (float)vol, (key)playerThatCanHear - Triggers a sound. If playerThatCanHear is 1, it uses llPlaySound and stops loopSound
 #define RlvMethod$loopSound 14			// (key)sound, (float)vol
 #define RlvMethod$setCamMaxDist 15		// (float)dist - Sets camera max distance, a value below 0 resets
+/*
+	debug Rlv, 15, -1
+	debug Rlv, 17, 1
+*/
 #define RlvMethod$disableChatLevels 16	// (int)chats_to_disable - Disables various chat volumes. See below.
 	#define RlvConst$dcl$whisper 0x1
 	#define RlvConst$dcl$normal 0x2
@@ -90,10 +96,14 @@
 #define RlvMethod$toggleFlying 18		// (bool)allow - Enables or disables flying
 
 #define RlvMethod$setCamera 19			// (vec)pos, (rot)rotation, (bool)allowUnlock, (bool)filmGrain - Sets the camera and ejects from mouselook. If allowUnlock is true, it lets the user clear the camera by hitting e
-#define RlvMethod$redirectChat 20		// (int)channel, (bool)enable - Adds or removes a redirect of channel 0 chat to a different channel
+#define RlvMethod$redirectChat 20		// (int)channel, (bool)enable, (float)duration - Adds or removes a redirect of channel 0 chat to a different channel
 
 #define RlvMethod$toggleNametags 21		// (bool)enable - Turns name tags on/off
 
+#define RlvMethod$setOverlay 22			// (key)texture, (float)alpha (float)duration, (float)fade - Sets an overlay texture. Differs from the Gui version of this method in that this uses RLV which allows you to click through the texture.
+
+
+#define RlvMethod$setImmobile 23		// (float)dur, (bool)additive - Similar to RlvFlags$IMMOBILE, but with a timer. If an existing immobile exists, we override it by default, otherwise if additive, we add.
 
 
 #define RlvEvt$supportCubeSpawn 1		// (key)cube_id
@@ -115,11 +125,21 @@
 #define Rlv$clearCamera(target) \
 	runMethod(target, "Rlv", RlvMethod$setCamera, [])
 
+#define Rlv$setOverlay( target, texture, alpha, duration, fade ) \
+	runMethod(target, "Rlv", RlvMethod$setOverlay, (texture) + (alpha) + (duration) + (fade))
+	
+
 #define Rlv$setClothSlot( target, slot, state ) \
 	runMethod( target, "Rlv", RlvMethod$setClothes, (state<<(slot*2)))
 
+#define Rlv$redirectChatDur( target, chan, enable, dur ) \
+	runMethod( target, "Rlv", RlvMethod$redirectChat, (chan) + (enable) + (dur))
 #define Rlv$redirectChat( target, chan, enable ) \
-	runMethod( target, "Rlv", RlvMethod$redirectChat, (chan) + (enable))
+	Rlv$redirectChatDur( target, chan, enable, 0 )
+
+#define Rlv$setImmobile( target, dur, add ) \
+	runMethod( target, "Rlv", RlvMethod$setImmobile, (dur) + (add) )
+
 
 #define Rlv$disableChatLevels( target, levels ) \
 	runMethod( target, "Rlv", RlvMethod$disableChatLevels, (levels) )

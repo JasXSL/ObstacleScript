@@ -387,6 +387,8 @@ int _pdI( key id ){
 #include "./headers/Obstacles/Ghost/GhostAux.lsh"
 #include "./headers/Obstacles/Ghost/GhostEvents.lsh"
 #include "./headers/Obstacles/Ghost/GhostLevelHelper.lsh"
+#include "./headers/Obstacles/Ghost/GhostPathing.lsh"
+
 
 
 #define USE_PLAYERS #error use_players definition detected. Use "forPlayer" instead

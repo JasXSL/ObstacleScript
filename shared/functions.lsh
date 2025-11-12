@@ -87,14 +87,16 @@ list _ia( string t, integer f ){
 	
 
 _dbd( string table ){
-	idbDropInline(table)
+	idbDropInline(table);
 }
 #define idbDrop(table) _dbd(table)
 
-#define idbForeach(table, idx, row) \
-	integer idx; \
+#define idbForeachFrom(table, idx, row, start) \
+	integer idx = start; \
 	for(; idx < idbGetIndex(table); ++idx ){ \
 		string row = idbGetByIndex(table, idx);
+
+#define idbForeach(table, idx, row) idbForeachFrom(table, idx, row, 0)
 
 
 

@@ -1,11 +1,19 @@
 #ifndef __Spawner
 #define __Spawner
 
+
+#define SpawnerGet$queue() llJson2List(idbGet(idbTable$SPAWNER, idbTable$SPAWNER$QUEUE))
+#define SpawnerConst$queueStride 5
+#define SpawnerConst$queueIndex$groups 0
+#define SpawnerConst$queueIndex$current 1		// Current table row
+#define SpawnerConst$queueIndex$live 2
+#define SpawnerConst$queueIndex$cb 3
+#define SpawnerConst$queueIndex$spawned 4		// Nr assets spawned
+
 #define SpawnerMethod$reset 0				// Resets the script
 #define SpawnerMethod$callbackRepoEnum 1	// asset1, asset2... - Handles callback from Repo which lists what objects it can hand out
 #define SpawnerMethod$callbackRepoFetch 2	// void - All requested items have been delivered
 #define SpawnerMethod$callbackPortalSave 3	// void - Saves the selected portal item
-
 
 #define SpawnerMethod$load 10				// (str)callback, (bool)live, (str)group1, group2... - Loads one or more groups of objects. Callback is raised as an event in the linkset. Use JSON_INVALID if you don't want an event
 #define SpawnerMethod$listSpawns 11			// (int)start=0/(str)search, (int)amount - 
@@ -31,6 +39,7 @@
 
 
 #define SpawnerEvt$loadStart 1				// (str)callback, (bool)live, (str)group1, (str)group2... - A group of spawns has started. Use RezzerEvt$cb for detecting when the group is done.
+#define SpawnerEvt$queueChanged 2			// void - Value in idbTable$SPAWNER$QUEUE has changed
 
 // Spawn table columns
 #define SpawnerConst$E_NAME 0
@@ -49,6 +58,7 @@
 #define Spawner$load( targ, groups, live, callback ) \
 	runMethod(targ, "Spawner", SpawnerMethod$load, callback +live + groups)
 
+// macro for loading the game itself. Not used in ghost, since it needs to load special stuff first
 #define Spawner$spawnGame() \
 	Spawner$load( LINK_THIS, "", TRUE, SpawnerConst$CB_GAME_START )
 
@@ -84,5 +94,7 @@
 		string callback = l2s(METHOD_ARGS, 0); \
 		list spawns = llDeleteSubList(METHOD_ARGS, 0, 0);
 		
+#define onSpawnerQueueChanged() \
+	if( SENDER_SCRIPT IS "Spawner" AND EVENT_TYPE IS SpawnerEvt$queueChanged ){
 
 #endif

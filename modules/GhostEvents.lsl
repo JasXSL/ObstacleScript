@@ -3,8 +3,9 @@
 #define USE_NO_SENSOR
 #define USE_HUDS
 #define USE_TIMER
-#include "ObstacleScript/helpers/Ghost/GhostHelper.lsb"
+
 #include "ObstacleScript/index.lsl"
+#include "ObstacleScript/helpers/Ghost/GhostHelper.lsb"
 
 #define SUBSET_STRIDE 2
 list subsets;			// (str)name, (key)id - Tracks linksets that are used in ghost events. Such as the ghost hands.
@@ -16,7 +17,7 @@ int BFL;
 int evtHit;				// Used to pick between multiple animations in a looping event (such as wall spanking)
 int evtType;			// Type of ghost event, such as GhostEventsConst$IT_ITEMS
 int subType;			// Subtype, such as GhostEventsConst$ITI_BREAKER being a subtype of IT_LIGHTS
-list evtPlayers;		// Player involved in the event
+list evtPlayers;		// HUDs involved in the event
 float evtDur;			// How long the event should last
 
 onGhostEventStart(){
@@ -30,6 +31,7 @@ onGhostEventStart(){
 
 }
 
+
 #include "ObstacleScript/begin.lsl"
 
 onStateEntry()
@@ -39,6 +41,22 @@ onStateEntry()
 	Portal$raiseEventOmni( PortalCustomType$GhostEvents, PortalCustomType$GhostEvents$hup, [] );
 	idbSetByIndex(idbTable$GHOST_EVENTS, idbTable$GHOST_EVENTS$active, FALSE);
 	
+end
+
+handleTimer( "STRIP" )
+	
+	integer i;
+	for(; i < count(evtPlayers); ++i ){
+		stripHudOneLayer( l2k(evtPlayers, i), FALSE );
+	}
+
+end
+
+onTimer( label )
+	if( llGetSubString(label, 0, 3) == "SND:" ){
+		Rlv$triggerSound( l2k(evtPlayers, 0), llGetSubString(label, 4,-1), 1 );
+
+	}
 end
 
 handleTimer( "END" )
@@ -203,7 +221,7 @@ handleOwnerMethod( GhostEventsMethod$trigger )
 		// Iteract with players events. These are the fun ones.
 		if( type == GhostEventsConst$IT_POSSESS ){
 		
-			list targets;
+			list targets; // HUD strings
 			vector gp = llGetPos();
 			forHuds( tot, idx, k )
 				
@@ -226,8 +244,8 @@ handleOwnerMethod( GhostEventsMethod$trigger )
 				
 				targets = llListRandomize(targets, 1);
 				
-				// Check if a subset should be used
-				integer tot = 1+count(subsets)/2;
+				// Check if a subset (external prim) should be used
+				integer tot = 1+count(subsets);
 				int useSubset = llFloor(llFrand(tot));
 				int success; float timeout;
 
@@ -248,7 +266,8 @@ handleOwnerMethod( GhostEventsMethod$trigger )
 						GhostEventsConst$ITP_RUB_F +
 						GhostEventsConst$ITP_RUB_DUO +
 						GhostEventsConst$ITP_SPANK +
-						GhostEventsConst$ITP_DRAG
+						GhostEventsConst$ITP_DRAG +
+						GhostEventsConst$ITP_STRIP
 					, 1);
 						
 					int i; 
@@ -257,28 +276,42 @@ handleOwnerMethod( GhostEventsMethod$trigger )
 						type = l2i(vi, i);
 						subType = type;
 						// Rub self or self F
-						if( type == GhostEventsConst$ITP_RUB_UNI || type == GhostEventsConst$ITP_RUB_F ){
+						if( 
+							type == GhostEventsConst$ITP_RUB_UNI || 
+							type == GhostEventsConst$ITP_RUB_F ||
+							type == GhostEventsConst$ITP_STRIP
+						){
 							
 							list subset;
 							int sub;
 							for(; sub < count(targets); ++sub ){
 							
 								key t = l2k(targets, sub);
-								if( type == GhostEventsConst$ITP_RUB_UNI || Rlv$getDesc$sex(t) & GENITALS_BREASTS )
-									subset += t; 
+								if( 
+									(type == GhostEventsConst$ITP_RUB_F && Rlv$getDesc$sex(t) & GENITALS_BREASTS ) ||
+									(type == GhostEventsConst$ITP_STRIP && Rlv$getDesc$clothes(t)) ||
+									type == GhostEventsConst$ITP_RUB_UNI
+								)subset += t; 
 									
 							}
 							
 							if( subset ){
 								
+								timeout = 4+llFrand(4);
+
 								str anim = "rubself";
 								if( type == GhostEventsConst$ITP_RUB_F )
 									anim = "rubself_f";
+								else if( type == GhostEventsConst$ITP_STRIP ){
+									anim = "phasm_liftstrip";
+									timeout = 8;
+									setTimeout("STRIP", 5.6);
+									setTimeout("SND:b5a2bea5-ad36-a6fb-6a83-a245c1717107", 3.3);
+								}
 								
 								key target = randElem(subset);
 								evtPlayers = (list)target;
-								
-								timeout = 4+llFrand(4);
+
 								AnimHandler$anim(
 									target, 
 									anim, 

@@ -43,6 +43,8 @@ updateControls(){
             CONTROL_ROT_LEFT|CONTROL_ROT_RIGHT|
             CONTROL_FWD|CONTROL_BACK
         ;
+		
+	
         
     llTakeControls(c, TRUE, FALSE);
     

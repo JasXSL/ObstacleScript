@@ -105,11 +105,32 @@ onStateEntry()
     setupDebug(0); 
 	Com$inviteSuccess(llGetOwner());
 	
+	// this was remote loaded
 	if( llGetStartParameter() == 1 ){
 		
 		llSetRemoteScriptAccessPin(0);
 		raiseEvent(LevelEvt$init, []);
 		llOwnerSay("Level initialized.");
+		
+		// Prune any players who have changed HUD or aren't present
+		list players = getPlayers();
+		list huds = getHuds();
+
+		idbResetIndex(idbTable$PLAYERS);
+		idbResetIndex(idbTable$HUDS);
+		
+		int i;
+		for(; i < count(players); ++i ){
+		
+			key p = l2k(players, i); key h = l2k(huds, i);
+			if( llGetAgentSize(p) != ZERO_VECTOR && llKey2Name(h) != "" ){
+				idbInsert(idbTable$PLAYERS, p);
+				idbInsert(idbTable$HUDS, h);
+			}
+		
+		}
+		updatePlayers();
+		
 		
 	}
 	
@@ -247,7 +268,7 @@ handleInternalMethod( LevelMethod$resetPlayers )
 	forPlayer( t, index, player )
 		Com$uninvite( player );
 	end
-	
+
 	idbResetIndex(idbTable$PLAYERS);
 	idbResetIndex(idbTable$HUDS);
     updatePlayers();

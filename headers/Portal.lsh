@@ -20,6 +20,8 @@
 	"BondageShared"
 	
 #define PortalConst$spawnGroup$static "_STATIC_"
+#define PortalConst$spawnGroup$staticOpt "_STATIC_OPT_" // When passed to Spawner, it will be rewritten to _STATIC_ and only triggered if not already spawned
+
 
 // Portal on_rez params are stored as follows (from the right)
 // 0000(0) - Screpo flags
@@ -29,6 +31,14 @@
 
 #define PortalHelper$getRezParam() \
 	(int)idbGetByIndex(idbTable$PORTAL, idbTable$PORTAL$STARTPARAM)
+	
+#define PortalHelper$getSpawnGroup() \
+	idbGetByIndex(idbTable$PORTAL, idbTable$PORTAL$GROUP)
+
+#define PortalHelper$getSpawnDesc() \
+	idbGetByIndex(idbTable$PORTAL, idbTable$PORTAL$DESC)
+
+	
 	
 #define PortalHelper$getSpawnIdFromRezParam(rezParam) \
 	((rezParam>>5)&0xFFFF)

@@ -11,6 +11,12 @@
 		#endif
 	#endif
 	
+	
+	// Can be overwritten
+	loadGame(){
+		Spawner$spawnGame();
+	}
+	
 	// To use, include DialogHelper in your script #include "ObstacleScript/resources/DialogHelper.lsl"
 	// call dialogHelperSetup() in onStateEntry
 	// call dialogHelperHandler() anywhere in the event handler
@@ -66,11 +72,17 @@
 				if( text == "" )
 					text = "Main Menu";
 				text += "\nJoined players: ";
+				
 				list names;
 				forPlayer(t, i, pl)
 					names += "secondlife:///app/agent/"+(str)pl+"/about";
 				end
-				text += llList2CSV(names);
+				
+				if( count(names) < 5 ){
+					text += llList2CSV(names);
+				}
+				else
+					text += (str)count(names)+".";
 				
 				if( MAX_PLAYERS && MAX_PLAYERS < 100 ){
 					text += "\nMax players: "+(str)MAX_PLAYERS;
@@ -188,10 +200,14 @@
 			else if( msg == "START GAME" ){
 			 
 				GSETTINGS = GSETTINGS|DialogHelper$GS_GAME_STARTED;
+				
 				raiseEvent(0, "START_GAME" );
 				
-				if( ~GSETTINGS & DialogHelper$GS_GAME_LOADED )
-					Spawner$spawnGame();
+				if( ~GSETTINGS & DialogHelper$GS_GAME_LOADED ){
+
+					loadGame();
+					
+				}
 				else
 					raiseEvent(0, "START_ROUND");
 					

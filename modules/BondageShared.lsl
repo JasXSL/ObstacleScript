@@ -17,6 +17,8 @@ integer gLevel;
 
 onStateEntry()
     
+	Portal$scriptOnline();
+	
 end
 
 onChanged( change )

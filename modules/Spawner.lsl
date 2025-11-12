@@ -38,6 +38,76 @@ string getBatchData( list spawnData, integer live ){
 }
 
 
+// Helps rez asynchronously by only sending 10 items to the rezzer at a time, and only when it's handling fewer than 5 items
+list SPAWNQUEUE;		// (str)table, (int)continue_from_index, (int)live
+#define SQSTRIDE SpawnerConst$queueStride
+spawnBatch(){
+
+	if( SPAWNQUEUE == [] ){
+		return;
+	}
+	
+	setTimeout("SP", 0.5);
+	
+	int rezzerQueue = RezzerGet$queueLength();
+	if( rezzerQueue >= 10 )
+		return;
+	
+	list groups = llJson2List(l2s(SPAWNQUEUE, SpawnerConst$queueIndex$groups));
+	int startFrom = l2i(SPAWNQUEUE, SpawnerConst$queueIndex$current);			// Tracks the row in the table
+	int live = l2i(SPAWNQUEUE, SpawnerConst$queueIndex$live);
+	str cb = l2s(SPAWNQUEUE, SpawnerConst$queueIndex$cb);
+	integer spawned = l2i(SPAWNQUEUE, SpawnerConst$queueIndex$spawned);			// Tracks the nr of items we've spawned
+
+	list batch;
+	idbForeachFrom(idbTable$SPAWNS, idx, data, startFrom)
+	
+		list spawn = llJson2List(data);
+		if( ~llListFindList(groups, (list)l2s(spawn, 4)) && llStringLength(data) ){
+		
+			batch += getBatchData(spawn, live);
+			
+			if( count(batch) == 10 ){
+			
+				Rezzer$rezMulti( 
+					LINK_THIS, 
+					batch
+				);
+				
+				startFrom = idx+1;
+				SPAWNQUEUE = llListReplaceList(SPAWNQUEUE, (list)startFrom, SpawnerConst$queueIndex$current, SpawnerConst$queueIndex$current);
+				SPAWNQUEUE = llListReplaceList(SPAWNQUEUE, (list)(spawned+10), SpawnerConst$queueIndex$spawned, SpawnerConst$queueIndex$spawned);
+				
+				spawnQueueChanged();
+				return; // REACHED CAP
+			
+			}
+			
+		}
+		
+	end
+
+	// If we reached this point, we're done with this spawn cycle
+	if( count(batch) )
+		Rezzer$rezMulti(LINK_THIS, batch);
+		
+	//qd("Batch: " + count(batch) + " idx " + idx +" max " + idbGetIndex(idbTable$SPAWNS));
+	// This time we can trigger the callback
+	if( cb != JSON_INVALID && (count(batch) || idx == idbGetIndex(idbTable$SPAWNS)) )
+		Rezzer$cb(LINK_THIS, cb);
+
+	SPAWNQUEUE = llDeleteSubList(SPAWNQUEUE, 0, SQSTRIDE-1);
+	spawnQueueChanged();
+
+}
+
+
+spawnQueueChanged(){
+
+	idbSet(idbTable$SPAWNER, idbTable$SPAWNER$QUEUE, mkarr(SPAWNQUEUE));
+	raiseEvent(SpawnerEvt$queueChanged, []);
+	
+}
 
 // XMOD BEGIN //
 #include "ObstacleScript/begin.lsl"
@@ -49,6 +119,10 @@ onStateEntry()
     
 end
 
+// Continue spawning unless rezzer is busy
+handleTimer( "SP" )
+	spawnBatch();
+end
 
 
 onLevelInit()
@@ -286,6 +360,7 @@ handleOwnerMethod( SpawnerMethod$add )
     list rot = [0];
     if( l2r(pData, 1) != ZERO_ROTATION )
         rot = (list)allRound(l2r(pData, 1), 2);
+		
     string saveData = mkarr(
         llKey2Name(SENDER_KEY) +
         allRound(l2v(pData, 0)-llGetRootPosition(), 2) +
@@ -359,6 +434,15 @@ handleOwnerMethod( SpawnerMethod$load )
 
     }
 	
+	integer pos = llListFindList(METHOD_ARGS, (list)PortalConst$spawnGroup$staticOpt);
+	if( ~pos ){
+		if( STATIC_SPAWNED )
+			METHOD_ARGS = llDeleteSubList(METHOD_ARGS, pos, pos);
+		else
+			METHOD_ARGS = llListReplaceList(METHOD_ARGS, (list)PortalConst$spawnGroup$static, pos, pos);
+	}
+	
+	
 	if( ~llListFindList(METHOD_ARGS, (list)"") && !STATIC_SPAWNED ){
 		METHOD_ARGS += PortalConst$spawnGroup$static;
 	}
@@ -368,36 +452,10 @@ handleOwnerMethod( SpawnerMethod$load )
 	
 	raiseEvent(SpawnerEvt$loadStart, cb + live + METHOD_ARGS);
 	
-	list batch;
-	idbForeach(idbTable$SPAWNS, idx, data)
 	
-		list spawn = llJson2List(data);
-		if( ~llListFindList(METHOD_ARGS, (list)l2s(spawn, 4)) && llStringLength(data) ){
-		
-			batch += getBatchData(spawn, live);
-			
-			if( count(batch) > 10 ){
-			
-				Rezzer$rezMulti( 
-					LINK_THIS, 
-					batch
-				);
-				batch = [];
-			
-			}
-			
-		}
-		
-	end
-
+	SPAWNQUEUE += (list)mkarr(METHOD_ARGS) + 0 + live + cb + 0;
+	spawnBatch();
 	
-	if( count(batch) )
-		Rezzer$rezMulti(LINK_THIS, batch);
-	
-	if( cb != JSON_INVALID )
-		Rezzer$cb(LINK_THIS, cb);
-    
-
 end
 
 // Spawn specific

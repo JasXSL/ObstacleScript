@@ -47,6 +47,7 @@
 	#define GhostEventsConst$ITP_RUB_DUO 2			// Rub 2 players
 	#define GhostEventsConst$ITP_SPANK 3				// Spank, requires wall
 	#define GhostEventsConst$ITP_DRAG 4				// Drag, requires 3m or so stright behind the player
+	#define GhostEventsConst$ITP_STRIP 5			// Lift a player into the air and strip them. Clothed players only.
 
 
 #define onGhostEventsBegin( players, type, subtype ) \

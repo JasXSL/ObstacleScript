@@ -104,13 +104,26 @@ list toggleAsset( integer link, integer on ){
 	
 	
 }
+key Active;
+setActiveTool( integer idx ){
+	ACTIVE_TOOL = idx % ToolSetConst$MAX_ACTIVE;
+	key id = getActiveToolWorldId();
+	if( id != Active ){
+		Active = id;
+		Level$raiseEvent( 
+			LevelCustomType$TOOLSET, 
+			LevelCustomEvt$TOOLSET$ch, 
+			getActiveToolWorldId() + activeType()
+		);
+	}
+}
 
 // Attachment data received for the active asset
 onDataUpdate(){
     
     integer tool = activeType();
     integer on = getActiveToolInt();
-	
+
     if( tool == ToolsetConst$types$ghost$flashlight ){
 		
 		list d = llJson2List(getActiveToolStr());
@@ -387,6 +400,37 @@ onTick(){
         
 }
 
+onFastTick(){
+
+	if( ~llGetPermissions() & PERMISSION_TRIGGER_ANIMATION )
+		return;
+
+	integer type = activeType();
+	if( type == ToolsetConst$types$ghost$flashlight ){
+	
+		rotation r = llGetCameraRot();
+		vector norm = <1,0,0>*r;
+		string anim;
+		if( norm.z > 0.3 )
+			anim = "_high";
+		else if( norm.z > -0.2 )
+			anim = "_med";
+		else if( norm.z < -0.7 )
+			anim = "_low";
+		anim = "flashlight_hold"+anim;
+		
+		if( curAnim != anim ){
+			
+			llStopAnimation(curAnim);
+			curAnim = anim;
+			llStartAnimation(anim);
+			
+		}
+	
+	}
+	
+}
+
 
 integer addTool( integer tool, list data, key id ){
     
@@ -404,8 +448,10 @@ integer addTool( integer tool, list data, key id ){
             // Attach it here
             TOOLS = llListReplaceList(TOOLS, (list)tool + llList2List(data, 0, 0) + id, n, n+TOOLSTRIDE-1);
             
-            if( n == ACTIVE_TOOL*TOOLSTRIDE )
+            if( n == ACTIVE_TOOL*TOOLSTRIDE ){
                 drawActiveTool();
+				setActiveTool(ACTIVE_TOOL);
+			}
 				
 			if( tool == ToolsetConst$types$ghost$motionDetector ){
 				Level$raiseEvent( LevelCustomType$GTOOL, LevelCustomEvt$GTOOL$data, id + 0 );
@@ -427,6 +473,7 @@ removeToolById( key id ){
 		
 	TOOLS = llListReplaceList(TOOLS, TTEMPLATE, pos-(TOOLSTRIDE-1), pos);
 	drawActiveTool();
+	setActiveTool(ACTIVE_TOOL);
     
 }
 
@@ -467,7 +514,7 @@ list getRcPlacement( integer wall ){
 
 resetTools(){
 
-	ACTIVE_TOOL = 0;
+	setActiveTool(0);
 	TOOLS = [];
 	integer i;
     for(; i < ToolSetConst$MAX_ACTIVE; ++i )
@@ -484,6 +531,10 @@ end
 
 handleTimer( "T" )
 	onTick();
+end
+
+handleTimer( "FT" )
+	onFastTick();
 end
 
 onStateEntry()
@@ -539,6 +590,7 @@ onStateEntry()
     end
     
     setInterval("T", 1);
+	setInterval("FT", .1);
     
     if( llGetAttached() )
         llRequestPermissions(llGetOwner(), PERMISSION_TRIGGER_ANIMATION|PERMISSION_TRACK_CAMERA);
@@ -562,6 +614,7 @@ onStateEntry()
 		#endif
 		, 
 	"");
+	onDataUpdate();
 	#endif
 	
     
@@ -790,7 +843,7 @@ onListen( ch, msg )
 	// Cycle asset
 	if( msg == "sheathe" && ~BFL&BFL_USING ){
 		
-		ACTIVE_TOOL = (ACTIVE_TOOL+1) % ToolSetConst$MAX_ACTIVE;
+		setActiveTool((ACTIVE_TOOL+1) % ToolSetConst$MAX_ACTIVE);
 		
 		drawActiveTool();
 		

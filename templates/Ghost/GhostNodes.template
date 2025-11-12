@@ -26,16 +26,21 @@
 #include "ObstacleScript/index.lsl"
 
 
-#define getRoomLabel( idx ) idbGetByIndex(idbTable$NODES_ROOM_LABELS, idx)
-#define getRoomName( idx ) idbGetByIndex(idbTable$NODES_ROOM_NAMES, idx)
+#define getRoomLabel( idx ) idbGetByIndex(idbTable$NODES_ROOM_LABELS, (idx))
+
+//string getRoomLabel( integer idx ){
+//	return idbGetByIndex(idbTable$NODES_ROOM_LABELS, idx);
+//}
+
+
+#define getRoomName( idx ) idbGetByIndex(idbTable$NODES_ROOM_NAMES, (idx))
 
 #ifndef debugUncommon
 	#define debugUncommon(text)
 #endif
 
+// Tracks room flags. Everything else is offloaded to a different script.
 list C_ROOMS; // [(int)flags] - The array index is linked to idbTable$NODES_ROOM_LABELS/NAMES
-
-
 
 #define HAS_TEMPS (GhostGet$evidence() & GhostConst$evidence$temps)
 
@@ -59,15 +64,16 @@ list ROOM_MARKERS = [];	// Contains data from the spawner library
 
 int breakerCharge;	// Set to 5 min when breaker turns on. For each light that's on above maxLights it starts draining until the breaker turns off.
 int breaker;		// Breaker on
+
+// Todo: Stuff that could probably be moved to a different script
+// We can probably move everything that doesn't require portals
 list roomLights;	// Lights of a room. Each index corresponds to an index in ROOMS. Note that this relies on readable name, which means only the first entry of that readable is toggled.
 list roomTemps;		// Temperatures of a room, float between 0 and 1 with no evidence, or 0 and (TEMP_MAX-TEMP_INDOOR)/(TEMP_MAX_NO_EVIDENCE-TEMP_INDOOR). Each index corresponds to an index in ROOMS. Same as above, it uses the first entry of readable name.
 float lastSweat;
-vector rezPos;
 int ghostInLight = -1;	// Sets if the ghost is in a lit room or not
 int poppedLight = -1;	// Set to the room index of readable of a room that's got a popped light. Only one light may pop per game for now.
 int GR;				// Index of current ghost room
-
-list portals;      // 8bArray roomIndexes, (int)linkNum
+vector rezPos;
 
 // Any lights on above this will start counting down the 
 #define maxLights() (count(C_ROOMS)/3)
@@ -83,10 +89,10 @@ integer getRoomIndexByTable( str name, str table ){
 	}
 	return -1;
 }
-#define getRoomIndexByLabel(label) getRoomIndexByTable(label, idbTable$NODES_ROOM_LABELS)
-#define getRoomIndexByReadable(name) getRoomIndexByTable(name, idbTable$NODES_ROOM_NAMES)
+#define getRoomIndexByLabel(label) getRoomIndexByTable((label), idbTable$NODES_ROOM_LABELS)
+#define getRoomIndexByReadable(name) getRoomIndexByTable((name), idbTable$NODES_ROOM_NAMES)
 
-#define portal2names( bitArray8 ) ((list)getRoomLabel(bitArray8&0xFF) + getRoomLabel((bitArray8>>8)&0xFF))
+
 
 // Returns the absolute positions in the ROOM_MARKERS array where roomIndex is at
 // The reason it can return multiple ones is that one room can have multiple markers. Such as the front bedroom which would clip into the bathroom otherwise.
@@ -102,92 +108,6 @@ list getRoomMarkersByRoomIndex( integer roomIndex ){
         
     }
     
-    return out;
-    
-}
-
-// Could probably improve this with a proper pathfinding algorithm
-// But I don't expect there to be a huge nr of rooms
-// Returns an empty array if it's a dead end
-list findShortestPath( string from, string to, list visited ){
-
-    visited += from;
-    
-    list path;
-    integer i;
-    for(; i < count(portals); i += 2 ){
-        
-        list names = portal2names(l2i(portals, i));
-        integer pos = llListFindList(names, (list)from);
-        // This portal connects to from
-        if( ~pos ){
-
-            // Get the room this portal connects us to
-            string other = l2s(names, !pos);
-            
-            // Found the end goal
-            if( other == to )
-                return (list)from + other;
-            
-            
-            // Ignore if visited to prevent recursion
-            if( llListFindList(visited, (list)other) == -1 ){
-                
-                list test = findShortestPath(other, to, visited);
-                if( count(test) && (!count(path) || count(test) < count(path)) )
-                    path = test;
-
-            }
-            
-        }
-        
-    }
-    
-    // Dead end
-    if( !count(path) )
-        return path;
-    
-    // Returns the shortest path from this node
-    return (list)from + path;
-    
-}
-
-// Gets the UUID of a portal that contains a and b
-key getPortalWithNodes( string a, string b ){
-    
-    integer i;
-    for(; i < count(portals); i += 2 ){
-        
-        list spl = portal2names(l2i(portals, i));
-        if(
-            ~llListFindList(spl, (list)a) &&
-            ~llListFindList(spl, (list)b)
-        )return llGetLinkKey(l2i(portals, i+1));
-        
-    }
-    
-    return "";
-    
-}
-
-// Turn a list of nodes into a list of UUIDs of viable portals
-list pathToNodes( list nodes ){
-    
-    list out = [];
-    while( count(nodes) > 1 ){
-        
-        key find = getPortalWithNodes(l2s(nodes, 0), l2s(nodes, 1));
-        if( find ){
-            
-            nodes = llDeleteSubList(nodes, 0, 0);
-            out += find;
-            
-        }
-        // Fail
-        else
-            nodes = [];
-        
-    }
     return out;
     
 }
@@ -242,30 +162,6 @@ string _gpr( vector point, int ret ){
 #define getPosReadable(point) _gpr(point, GPR_READABLE)
 #define getPosIndex(point) ((int)_gpr(point, GPR_INDEX))
 
-// Returns absolute indexes from the portals list of portals in the room marker
-list findPortalsInRoom( integer roomIndex ){
-    
-    // Get absolute position of room bounding box in 
-    list rmPos = getRoomMarkersByRoomIndex(roomIndex);
-    list out;
-    
-    integer p;
-    integer i;
-    for(; i < count(rmPos); ++i ){
-        
-        integer markerAbsoluteIndex = l2i(rmPos, i);
-        for(; p < count(portals); p += 2 ){
-            
-            vector pos = prPos(llGetLinkKey(l2i(portals, p+1)));
-            if( isPosInRoomMarker(pos, markerAbsoluteIndex) )
-                out += p;
-            
-        }
-    }
-    return out;
-    
-}
-
 // Tries to find the closest room label based on proximity from pos
 // Used to warp a ghost if they're out of bounds
 string getClosestRoom( vector pos ){
@@ -311,7 +207,7 @@ setGhostTemp( int roomIndex, float val ){
 	
 	float maxTemp = 1.0;
 	
-	if( HAS_TEMPS && !hasWeakAffix(GhostGet$affixes(), ToolSetConst$affix$noEvidenceUntilSalted) )
+	if( HAS_TEMPS )
 		maxTemp = (float)(TEMP_MAX-TEMP_INDOOR)/(TEMP_MAX_NO_EVIDENCE-TEMP_INDOOR);
 		
 	//qd("Setting " + val + "on" + roomIndex + "max" + maxTemp);
@@ -336,16 +232,16 @@ handleStateEntry(){
 	int i;
 	for( ; i < count(tmp); i += 3 ){
 		
-		C_ROOMS += (list)i + l2i(tmp, i+2);
-		idbInsert(idbTable$NODES_ROOM_LABELS, l2s(tmp, i));
-		idbInsert(idbTable$NODES_ROOM_NAMES, l2s(tmp, i+1));
-		rindex += (list)l2s(tmp, i);
+		C_ROOMS += l2i(tmp, i+2);								// Flags
+		idbInsert(idbTable$NODES_ROOM_LABELS, l2s(tmp, i));		// Unique Label
+		idbInsert(idbTable$NODES_ROOM_NAMES, l2s(tmp, i+1));	// Readable
+		rindex += (list)l2s(tmp, i);							// Unique label
 		
 	}	
 	tmp = [];
 	
 	rezPos = llGetPos();
-	
+
 	// Iterate the spawn table and cache room markers pos, rot, size
 	idbForeach(idbTable$SPAWNS, idx, data)
 		
@@ -354,9 +250,10 @@ handleStateEntry(){
 		
             string label = j(l2s(spawn, SpawnerConst$E_DESC), 1); // Room label is stored as second param of desc
             
-            integer pos = llListFindList(rindex, (list)label);
+            integer pos = llListFindList(rindex, (list)label); // Map to the position in the C_ROOMS array
             if( pos == -1 )
                 llOwnerSay(label + "room index not found");
+				
             ROOM_MARKERS += (list)
                 pos +	// index of stride slice
                 (vector)l2s(spawn, SpawnerConst$E_POS) +
@@ -368,60 +265,6 @@ handleStateEntry(){
 		
 	end
 	
-	portals = [];
-	list found;
-	
-	// Sanity check our portals
-	links_each( nr, name,
-		
-		if( name == "PORTAL" ){
-			
-			list spl = split(prDesc(llGetLinkKey(nr)), ":");
-			integer i;
-			for(; i < count(spl); ++i ){
-				
-				string n = l2s(spl, i);
-				if( ~llListFindList(found, (list)n ) ){}
-				else if( llListFindList(rindex, (list)n) == -1 ){
-					llOwnerSay("GhostNodes: Add '" + n + "' to ROOMS");
-					return;
-				}
-				else{
-					
-					integer pos = llListFindList(rindex, (list)n);
-					if( ~pos ){
-						rindex = llDeleteSubList(rindex, pos, pos);
-						found += n;
-					}
-					
-				}
-			}
-			
-		}
-		
-	)
-	
-	if( count(rindex) )
-		llOwnerSay("No room markers:" + llList2CSV(rindex));
-	
-	// Next make a 2-stride list of each portal with the first value containing the two room indexes, and the second being the UUID of the portal
-	links_each( nr, name,
-		
-		if( name == "PORTAL" ){
-			list spl = llParseString2List(
-			
-				l2s(llGetLinkPrimitiveParams(nr, (list)PRIM_DESC), 0), 
-				(list)":", 
-				[]
-			);
-			portals +=  (list)(
-				getRoomIndexByLabel(l2s(spl, 0)) | 
-				(getRoomIndexByLabel(l2s(spl, 1)) << 8)
-			) + nr;
-			
-		}
-		
-	)
 	
 	//llOwnerSay("Cached" + count(ROOM_MARKERS)/4 + "Markers");
 
@@ -430,6 +273,7 @@ handleStateEntry(){
 	setInterval("TICK", 10);
 	setInterval("POS", 1);
 
+	GhostPathing$begin();
 
 }
 
@@ -439,43 +283,68 @@ handleStateEntry(){
 
 #include "ObstacleScript/begin.lsl"
 
+onGhostPathingStateEntry()
+	GhostPathing$begin();
+end
+
+// Converts vectors to rooms and forwards it to pathing
+handleMethod( NodesMethod$getPath )
+
+	string ss = argStr(0);
+	int cb = argInt(1);
+	vector startPos = argVec(2);
+	string room = argStr(3);
+	if( (vector)room != ZERO_VECTOR )
+		room = getPosRoom((vector)room);
+	string currentRoom = getPosRoom(startPos);
+	
+    // Already there!
+    if( currentRoom == room )
+        return;
+    if( currentRoom == "" )
+        currentRoom = getClosestRoom(startPos);
+	
+    integer ri = getRoomIndexByLabel(currentRoom);
+	// Start by trying to find a node in the current room
+    if( ~ri ){
+		
+		GhostPathing$getPath( SENDER_KEY, ss, cb, currentRoom, room );
+        
+    }
+	
+end
+
 onLevelCustomSpiritBoxTrigger( spiritBox ) 
 	
 	integer success = TRUE;
 	
 	str room = getPosReadable(prPos(spiritBox));
-	if( room == "" || hasWeakAffix(GhostGet$affixes(), ToolSetConst$affix$noEvidenceUntilSalted) )
+	if( room == "" )
 		success = FALSE;
 	else{
 	
 		int index = getRoomIndexByReadable(room);
-		// Lights must be off
-		if( l2i(roomLights, index) && breaker && index != poppedLight ){
-			success = false;
-			//qd("SB Fail: Lights on");
-		}
-		// Player must be solo
-		else{
+		float chance = 1.0;
 		
-			int nrPlayers;
-			forPlayer(tot, i, t)
+		// Lights on cuts chance in half
+		if( l2i(roomLights, index) && breaker && index != poppedLight )
+			chance *= 0.5;
 			
-				str pl = getPosReadable(prPos(t));
-				if( pl == room && ~llGetAgentInfo(t) & AGENT_SITTING )
-					++nrPlayers;
+		// Player must be solo
+		int nrPlayers;
+		forPlayer(tot, i, t)
+		
+			str pl = getPosReadable(prPos(t));
+			if( pl == room && ~llGetAgentInfo(t) & AGENT_SITTING )
+				++nrPlayers;
+		
+		end
+		
+		if( nrPlayers < 1 )
+			nrPlayers = 1;
 			
-			end
-			
-			if( nrPlayers < 1 )
-				nrPlayers = 1;
-			
-			success = llFrand(1) < 1.0/nrPlayers;
-			/*
-			if( !success )
-				qd("SB Fail: Too many players" + nrPlayers);
-			*/
-			
-		}
+		chance = chance * (0.5+llPow(0.5, nrPlayers)); // nr players beyond 1 further reduces chance
+		success = llFrand(1) < chance;
 		
 	}
 	
@@ -681,7 +550,7 @@ handleTimer( "TICK" )
 			if( add < 0.07 )	// caps it as pro rate
 				add = 0.07;
 			if( i != ghostRoomIdx ) // Fade
-				add = -add;
+				add = -add/2;
 				
 			val += add;
 			setGhostTemp(i, val);
@@ -790,6 +659,8 @@ handleMethod( NodesMethod$popLight )
 	
 end
 
+
+
 handleMethod( NodesMethod$getRooms )
 	
 	integer i;
@@ -802,40 +673,7 @@ handleMethod( NodesMethod$getRooms )
 	}
 	
 end
-handleMethod( NodesMethod$getPath )
 
-	string ss = argStr(0);
-	int cb = argInt(1);
-	vector startPos = argVec(2);
-	string room = argStr(3);
-	if( (vector)room != ZERO_VECTOR )
-		room = getPosRoom((vector)room);
-		
-	// Get the index of the room the ghost is in
-    string currentRoom = getPosRoom(startPos);
-    // Already there!
-    if( currentRoom == room )
-        return;
-    
-    // Out of bounds, we'll have to improvise
-    if( currentRoom == "" )
-        currentRoom = getClosestRoom(startPos);
-
-    integer ri = getRoomIndexByLabel(currentRoom);
-    // Start by trying to find a node in the current room
-    if( ~ri ){
-
-        list path = findShortestPath(currentRoom, room, []);
-        debugUncommon("Trying to path from "+currentRoom+"to"+room);
-        list nodes = pathToNodes(path);
-        debugUncommon(path);
-        debugUncommon(nodes);
-        runMethod(SENDER_KEY, ss, cb, nodes);
-        
-    }
-    
-
-end
 
 handleOwnerMethod( NodesMethod$getPlumbedRoom )
 	

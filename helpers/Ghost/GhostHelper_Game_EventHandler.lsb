@@ -7,6 +7,7 @@
 gameHelperEventHandler() // Parent
 
 
+// Host Debug commands
 // These can be run on channel 6
 onListen( ch, msg )
 	
@@ -20,6 +21,10 @@ onListen( ch, msg )
         dbg("Trying to start a hunt");
         raiseEvent(0, "START_HUNT");
     }
+	else if( msg == "TRAP" ){
+		dbg("Forcing a trap placement");
+		raiseEvent(0, "PLACE_TRAP");
+	}
         
     else if( msg == "HUNT ON" ){
         dbg("Force starting a hunt");
@@ -42,6 +47,7 @@ onListen( ch, msg )
     }
 end
 
+// Note: ghost may not be entirely accurate here
 onLevelCustomGhostArouse( ghost, players, points )
 
     int i;
@@ -51,6 +57,7 @@ onLevelCustomGhostArouse( ghost, players, points )
     }
 	
 end
+
 
 onLevelCustomGsboardSpawned( board )
     addArousal("",0); // update status board
@@ -114,12 +121,26 @@ onLevelCustomBondagePlayerDied( chair, player, dead, flags )
     addArousal("",0); // update status board
 
     // Player died not on easy mode
-    if( GhostGet$difficulty() ){
+    if( GhostGet$difficulty() && dead ){
         raiseEvent(0, "RESET_TOOLS" + player); // Tell tools to drop all this players items
-        setTimeout("CW", 6);    // Check team wipe
+        setTimeout("CW", 10);    // Check team wipe
     }
     
 end
+
+onLevelCustomGhostRevive()
+
+	forPlayer( tot, index, player )
+		if( isPlayerDead(findPdata(player)) ){
+			Level$raiseEventTarg(LINK_THIS, LevelCustomType$BONDAGE, LevelCustomEvt$BONDAGE$playerDied, player + FALSE);
+			Rlv$unSit(player, TRUE);
+		}
+	end
+
+    
+	
+end
+
 
 // Checks if all players are dead
 handleTimer( "CW" )
@@ -175,8 +196,13 @@ handleTimer( "startGhost" )
 end
 
 onRezzerCb( cb )
+
+	// GhostTools.template spawns tools with this as a callback
     if( cb == "TOOLS" )
         onToolsSpawned();
+	else if( cb == "INIT" ){
+		onReqAssetsSpawned();
+	}
 end
 
 handleTimer( "BRK" )
@@ -208,11 +234,9 @@ end
 handleEvent( "#Tools", 0 )
     
     str type = argStr(0);
-    if( type == "SALTED" || type == "REM_MOTION_AFFIX" ){
+    if( type == "REM_MOTION_AFFIX" ){
         
-        integer rem = 0xF;
-        if( type == "REM_MOTION_AFFIX" )
-            rem = rem = 0xF0;
+        integer rem = 0xF0;
         AFFIXES = AFFIXES&~rem;
         sendAffixes();
         

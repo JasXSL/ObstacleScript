@@ -2,6 +2,9 @@
 #define __Rezzer
 
 
+#define RezzerGet$queueLength() ((int)idbGet(idbTable$REZZER, idbTable$REZZER$QLEN))
+
+
 #define RezzerMethod$rez 1			// (str)prim, (vec)pos, (rot)rotation, (str)desc, (str)group
 #define RezzerMethod$rezzed 2		// (int)id - A portal object has been rezzed and is awaiting instructions
 #define RezzerMethod$cb 3			// (str)callback. Adds this to the current position in the queue. When encountered, it raises RezzerEvt$cb
@@ -24,7 +27,6 @@
 	runMethod(targ, "Rezzer", RezzerMethod$rezzed, spawnIndex)
 #define Rezzer$initialized( targ ) \
 	runMethod(targ, "Rezzer", RezzerMethod$initialized, [])
-
 
 
 #define onRezzerCb( cb ) \

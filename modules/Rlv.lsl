@@ -23,11 +23,16 @@ integer BFL;
 #define BFL_IN_CAMERA 0x20
 #define BFL_GRAIN 0x40
 
+float OlFade = 1.0;
+
 int SEX;	// Flags received from JasX HUD
 
 // Public flags. See header file. There are two ints being combined:
 int FLAGS;					// Used by obstacles
 int FLAGS_IMPORTANT;		// Used by the game
+
+float Immobile;			// If greater than script time, we auto add FLAG_IMMOBILE
+int Rc;					// Redirecting chat to this
 
 #define SPRINT_SIZE <0.22981, 0.06894, 0.02039>
 #define SPRINT_POS <0, 0, .23>
@@ -96,7 +101,10 @@ setDesc(){
 // FLAGS
 onFlagsChanged(){
 	
-	raiseEvent(RlvEvt$flags, (FLAGS|FLAGS_IMPORTANT));
+	int out = (FLAGS|FLAGS_IMPORTANT);
+	if( llGetTime() < Immobile )
+		out = out | RlvFlags$IMMOBILE;
+	raiseEvent(RlvEvt$flags, out);
 
 }
 
@@ -499,6 +507,34 @@ handleMethod( RlvMethod$setClothes )
 
 end
 
+handleMethod( RlvMethod$setOverlay )
+	
+	str texture = argStr(0);
+	float alpha = argFloat(1);
+	float dur = argFloat(2);
+	OlFade = argFloat(3);
+	if( alpha <= 0 )
+		alpha = 1;
+	unsetTimer("OL");
+	if( texture == "" ){
+		llOwnerSay("@setoverlay=y");
+		return;
+	}
+	llOwnerSay("@setoverlay=n,setoverlay_texture:"+(str)texture+"=force,setoverlay_alpha:"+(str)alpha+"=force");
+	if( dur > 0 )
+		setTimeout("OL", dur);
+
+end
+handleTimer( "OL" )
+	
+	if( OlFade > 0 ){
+		llOwnerSay("@setoverlay_tween:0;;"+(str)OlFade+"=force");
+		return;
+	}
+	llOwnerSay("@setoverlay=y");
+	
+end
+
 handleMethod( RlvMethod$toggleFreeCam )
 	
 	bool allow = argInt(0);
@@ -528,6 +564,30 @@ handleMethod( RlvMethod$setCamMaxDist )
 	
 end
 
+handleMethod( RlvMethod$setImmobile )
+
+	unsetTimer("IM");
+
+	float dur = argFloat(0);
+	bool add = argInt(1);
+	if( llGetTime() > Immobile )
+		add = false;
+	if( add )
+		Immobile += dur;
+	else if( dur > 0 )
+		Immobile = dur + llGetTime();
+	else
+		Immobile = 0;
+	onFlagsChanged();
+	if( llGetTime() < Immobile )
+		setTimeout("IM", Immobile-llGetTime());
+	
+end
+
+handleTimer( "IM" )
+	onFlagsChanged();
+end
+
 handleMethod( RlvMethod$disableChatLevels )
 	
 	#define bw2int(cn) !(levels&cn), !(levels&cn)
@@ -551,13 +611,26 @@ handleMethod( RlvMethod$redirectChat )
 	
 	int chan = argInt(0);
 	bool enable = argInt(1);
-	str cmd = "@redirchat:"+(str)chan+"=";
+	float dur = argFloat(2);
+	
+	
+	unsetTimer("RC");
+	
+	str cmd = "@redirchat:"+(string)Rc+"=rem,redirchat:"+(str)chan+"=";
 	if( enable )
 		cmd += "add";
 	else
 		cmd += "rem";
 	llOwnerSay(cmd);
+	
+	Rc = chan;
+	if( dur > 0 )
+		setTimeout("RC", dur);
 
+end
+
+handleTimer( "RC" )
+	llOwnerSay("@redirchat:"+(str)Rc+"=rem");
 end
 
 handleMethod( RlvMethod$cubeTask )

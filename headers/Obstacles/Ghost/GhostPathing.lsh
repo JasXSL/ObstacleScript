@@ -1,0 +1,22 @@
+#ifndef __GhostPathing
+#define __GhostPathing
+
+
+#define GhostPathingMethod$begin 0			// void - Should be called from GhostNodes.template after initializing idbTable$NODES_ROOM_LABELS and idbTable$NODES_ROOM_NAMES
+#define GhostPathingMethod$getPath 1		// (str)senderUUID, (str)senderScript, (int)callbackMethod, (str)startRoomLabel, (str)endRoomLabel - Note: Use the GhostNodesPathing version of this unless you know the room labels. Select an end room by LABEL or POS
+
+
+#define GhostPathingEvt$stateEntry 0		// void - Raised on state entry. GhostNodes.template should send a begin method if it's fully loaded.
+
+#define GhostPathing$begin() runMethod(LINK_THIS, "GhostPathing", GhostPathingMethod$begin, [])
+
+#define GhostPathing$getPath( senderUUID, senderScript, cbMethod, startPos, endRoom ) \
+	runMethod( LINK_THIS, "GhostPathing", GhostPathingMethod$getPath, (senderUUID) + (senderScript) + (cbMethod) + (startPos) + (endRoom) )
+
+
+#define onGhostPathingStateEntry() \
+	if( SENDER_SCRIPT IS "GhostPathing" AND EVENT_TYPE IS GhostPathingEvt$stateEntry ){ \
+
+
+
+#endif

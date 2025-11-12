@@ -30,7 +30,8 @@
 #define ToolSetConst$affix$noRadios 5
 #define ToolSetConst$affix$powerOutage 6
 #define ToolSetConst$affix$noPills 7
-#define ToolSetConst$affix$noEvidenceUntilSalted 8
+//#define ToolSetConst$affix$noEvidenceUntilSalted 8
+
 // Strong affixes
 #define ToolSetConst$affix$noArousalMonitor 1		// Arousal monitor shows ???
 #define ToolSetConst$affix$ghostInvisible 2			// Ghost is permanently invisible
@@ -41,6 +42,13 @@
 #define ToolSetConst$affix$noDuplicates 7			// Bring only one of each item
 #define ToolSetConst$affix$vibrator 8
 
+
+#define TRAPDIR_UP 0x1
+#define TRAPDIR_DOWN 0x2
+#define TRAPDIR_NORTH 0x4
+#define TRAPDIR_EAST 0x8
+#define TRAPDIR_SOUTH 0x20
+#define TRAPDIR_WEST 0x40
 
 // Game data for the level linkset
 // The game data is stored in a list. Index 0 is ALWAYS the uuid of the player.
@@ -80,7 +88,7 @@
 
 // Percent goes to 200
 #define GhostHelper$getFlashlightLightSettings( on, percent ) \
-	(list)PRIM_POINT_LIGHT + on + <1.000, 0.928, 0.5> + 1 + (4.0*(float)percent/100.0) + 1
+	(list)PRIM_POINT_LIGHT + on + <1.000, 0.928, 0.5> + 1 + (7.0*(float)percent/100.0) + 0.1
 #define GhostHelper$getFlashlightFrontSettings( link, percent ) \
 	gsmFullbright(link, 2, ONE_VECTOR*(percent*0.01*0.5+(0.5*(percent>0)))) + \
 	PRIM_GLOW + 2 + (percent*0.01*0.5+(0.2*(percent>0)))
@@ -105,6 +113,27 @@ list _ghGGS( int link, int on, int percent ){
 		PRIM_GLOW + 0 + glow
 	;
 
+}
+
+integer stripHudOneLayer( key hud, integer add ){
+	
+	integer clothes = Rlv$getDesc$clothes( hud )&1023;    // 1023 = 10 bit
+	integer slot = clothes >= RlvConst$FULL_CLOTHES;
+
+	if( add )
+		slot = 1 + (clothes > 0);
+	++slot;
+
+
+	if( (!clothes && !add) || (clothes == RlvConst$FULL_CLOTHES && add) )
+		return FALSE;
+	
+	if( !add )
+		Rlv$triggerSound( hud, "620fe5e8-9223-10fc-3a5c-0f5e0edc3a35", .5 );
+		
+	Rlv$setClothes( hud, slot, slot, slot, slot, slot );
+	return TRUE;
+	
 }
 
 

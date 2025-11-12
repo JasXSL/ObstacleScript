@@ -14,20 +14,24 @@ list objQueue;  // contains JSON strings passed to RezzerMethod$rez
 #define removeDqSlice( absoluteIndex ) \
 	descQueue = llDeleteSubList(descQueue, absoluteIndex, absoluteIndex+DQSTRIDE-1)
 
+#define updateQueueLength() idbSet(idbTable$REZZER, idbTable$REZZER$QLEN, count(objQueue))
+
 #define dqFull() \
 	(count(descQueue)/DQSTRIDE >= PARALLEL)
 
 rez(){
     
+	updateQueueLength();
+	
     if( dqFull() || objQueue == [] )
         return;
         
-
 	// Callback encountered
 	string s = l2s(objQueue, 0);
 	objQueue = llDeleteSubList(objQueue, 0, 0);
 	
 	//qd("Rezzing" + s);
+	
 	
 	if( llGetSubString(s, 0, 0) == "$" ){
 		
@@ -77,6 +81,7 @@ rez(){
 
 	}
 	
+	updateQueueLength();
 	setTimeout("C", .1);	// Unblock for a moment
     
 }
@@ -89,8 +94,12 @@ rez(){
 onStateEntry()
     if( llGetStartParameter() == 1 )
 		Level$scriptInit();
+		
+	updateQueueLength();
+		
 end
 
+// Rez multiple assets
 handleOwnerMethod( RezzerMethod$rezMulti )
 	
 	objQueue += METHOD_ARGS;
@@ -101,7 +110,7 @@ end
 handleOwnerMethod( RezzerMethod$rez )
 	
     objQueue += mkarr(METHOD_ARGS);
-    rez();        
+    rez();
 
 end
 

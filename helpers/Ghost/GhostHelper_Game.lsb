@@ -37,13 +37,12 @@
 
 
 // STATS
-int GHOST_TYPE;
+int GHOST_TYPE = -1;
 int LEVEL_START;    // Unix timestamps
 int GHOST_EVENTS;   // Nr ghost events
 int OBJ_INTERACTS;  // Object interactions
 int PL_INTERACTS;   // Player interactions
 int AFFIXES;        // 4 bit array, rightmost are for easy affixes, left for hard
-
 
 integer SEL = -1;   // Ghost selected by the player
 integer EVIDENCE_TYPES;
@@ -80,7 +79,7 @@ onGameStart(){
 	#else
 		AFFIXES = 0;
 		if( difficulty > 0 )    // 4 rightmost bits = basic affixes
-			AFFIXES = AFFIXES | llCeil(llFrand(8));
+			AFFIXES = AFFIXES | llCeil(llFrand(7));
 		if( difficulty > 1 )
 			AFFIXES = AFFIXES | (llCeil(llFrand(8))<<4);
 		// Affixes are not constant during a level. DB is written to in sendAffixes
@@ -184,10 +183,30 @@ addArousal( key player, float arousal ){
             
 }
 
-    
+// GhostTools.template has finished spawning the tools (this goes first)   
 onToolsSpawned(){
 
-    raiseEvent(0, "ROUND_START");
+	// Spawn bondage devices based on nr players
+	int nrBdsm = numPlayers();
+	if( nrBdsm < 1 )
+		nrBdsm = 1;
+	Spawner$nFromGroup( LINK_THIS, nrBdsm, "BD" );
+
+	// Spawn sys assets and PortalConst$spawnGroup$static
+	list spawnOrder = [
+		PortalConst$spawnGroup$staticOpt,
+		"sys",
+		"lights"
+	];
+	Spawner$load( LINK_THIS, spawnOrder, TRUE, "INIT" );
+	
+    
+}
+
+// Required assets have been spawned. We can spawn the rest while playing.
+onReqAssetsSpawned(){
+
+	raiseEvent(0, "ROUND_START");
     ROUND_START_TIME = llGetTime();
     forPlayer( t, index, player )
         Rlv$unSit( player, TRUE );
@@ -197,14 +216,17 @@ onToolsSpawned(){
     if( hasStrongAffix(AFFIXES, ToolSetConst$affix$vibrator) ){ 
         Spawner$nFromGroup( LINK_THIS, 1, "VIB" ); 
     }
-    
+	
+	// Spawn the "" group
+	Spawner$spawnGame();
+	
 }
 
 
 // Overrides default behavior
 startRound(){
 
-    raiseEvent(0, "SPAWN_GEAR");
+    
     
 }
 

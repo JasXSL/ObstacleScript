@@ -38,7 +38,7 @@
 
 // Preprocessor shortcuts
 #define AnimHandler$anim(targ, anim, start, duration, flags) \
-	runMethod(targ, "AnimHandler", AnimHandlerMethod$anim, anim + start + duration + flags)
+	runMethod(targ, "AnimHandler", AnimHandlerMethod$anim, (anim) + (start) + (duration) + (flags))
 
 // Quick and easy methods to just start and stop
 #define AnimHandler$start(targ, anim) \

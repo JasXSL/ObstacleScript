@@ -18,6 +18,8 @@ int ACT;	// more prone to being active. ADDITIVE
 float LAST_ANGER_ADD;
 float LAST_ACT_ADD;
 float LAST_SALTED;		// llGetTime of when we were last salted
+int CUR_ROOM;
+int GHOST_ROOM;
 #define SALT_DUR 10
 #define isSalted() (llGetTime()-LAST_SALTED < SALT_DUR && LAST_SALTED > 0)
 
@@ -70,7 +72,7 @@ updateDesc(){
 		agg = 100;
 
 	list out = (list)
-		LIT + agg + act + SUCTARG
+		LIT + agg + act + SUCTARG + CUR_ROOM + GHOST_ROOM
 	;
 	llSetObjectDesc(mkarr(out));
 	
@@ -255,6 +257,13 @@ onStateEntry()
 	
 end	
 
+onGhostRoomChange( cur, last, home )
+	
+	GHOST_ROOM = home;
+	CUR_ROOM = cur;
+	updateDesc();
+	
+end
 
 // 1 sec ticker
 // Checks yaoikai and handles aggro decay

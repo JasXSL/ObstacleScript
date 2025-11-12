@@ -85,7 +85,7 @@ integer checkConds( integer type, list huds ){
     
 }
 
-// Returns [] on fail, or [pos, rot] on success
+// Returns [] on fail, or [pos, rot, (opt)sitTarRot] on success
 // Used in filtering
 list getPoseLoc( integer type, list players, integer debug ){
     
@@ -108,7 +108,7 @@ list getPoseLoc( integer type, list players, integer debug ){
     return [l2v(gnd, 1), pr];
 }
 
-start( key hud, integer type, vector pos, rotation rot ){
+start( key hud, integer type, vector pos, rotation rot, rotation stRot ){
     
 	float scaleOffs = getScaleOffs(type);
 	vector asize = llGetAgentSize(llGetOwnerKey(hud));
@@ -128,7 +128,7 @@ start( key hud, integer type, vector pos, rotation rot ){
     POSE = type;
     string anim = getActiveAnim();
     
-    llSitTarget(st+<0,0,-posAdd>, ZERO_ROTATION);
+    llSitTarget(st+<0,0,-posAdd>, stRot);
     
     
     // Cache sub anims like spank etc
@@ -275,7 +275,7 @@ onListen( ch, data )
             return;
         }
         
-        start(TEST_VICTIM, pose, l2v(lr, 0), l2r(lr, 1));
+        start(TEST_VICTIM, pose, l2v(lr, 0), l2r(lr, 1), l2r(lr,2));
         
     }
     
@@ -304,7 +304,7 @@ onPortalGhostEventsTrigger( ghost, players )
 			list lr = getPoseLoc(pose, players, FALSE);
 			if( lr ){
 			
-				start(l2k(players, 0), pose, l2v(lr, 0), l2r(lr, 1));
+				start(l2k(players, 0), pose, l2v(lr, 0), l2r(lr, 1), l2r(lr, 2));
 				return;
 				
 			}

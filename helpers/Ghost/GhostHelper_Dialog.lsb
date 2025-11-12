@@ -4,6 +4,7 @@
 
 #define GhostHelper$dialog$MENU_DIFFICULTY 100
 
+
 int GUESS_WRONG;
 
 // Globals 
@@ -12,6 +13,69 @@ updateGconf(){
 	idbSetByIndex(idbTable$GHOST_SETTINGS, idbTable$GHOST_SETTINGS$DIFFICULTY, DIFFICULTY);
 }
 
+// Overrides DialogHelper.lsb
+loadGame(){
+
+	llSleep(1); // Helps prevent a race issue with affixes
+	raiseEvent(0, "SPAWN_GEAR");
+	
+}
+
+string loadingGroups;
+int cacheNumSpawnsInGroup;
+
+
+string getLoadStatus(){
+	
+	list q = SpawnerGet$queue();
+	
+	if( q == [] ){
+		if( loadingGroups == "" )
+			return "Tools";
+		return "";
+	}
+
+	string groups = l2s(q, SpawnerConst$queueIndex$groups);
+	if( groups != loadingGroups ){
+		
+		loadingGroups = groups;
+		cacheNumSpawnsInGroup = 0;
+		list groupsList = llJson2List(groups);
+		idbForeach( idbTable$SPAWNS, idx, row )
+			
+			string group = j(row, SpawnerConst$E_GROUP);
+			if( ~llListFindList(groupsList, (list)group) )
+				++cacheNumSpawnsInGroup;
+			
+		end
+		
+	}
+	
+	
+	if( !cacheNumSpawnsInGroup )
+		return "";
+
+	int loadingIntro;
+	string essentials = "Props: ";
+	int loaded;
+	int i;
+
+	string cb = l2s(q, SpawnerConst$queueIndex$cb);
+	if( cb == "INIT" ){
+		loadingIntro = TRUE;
+		essentials = "Essentials: ";
+	}
+	loaded = l2i(q, SpawnerConst$queueIndex$spawned);
+
+	integer perc = floor((float)loaded/cacheNumSpawnsInGroup*100);
+	string out = essentials+(str)perc+"%";
+	
+	if( !loadingIntro )
+		out += "\nThe game is playable\nif you don't want to wait.";
+	
+	return out;
+	
+}
 
 // Put into onDialogOpen. Handles difficulty select
 #define GhostHelper$dialog$handleDialogOpen() \
@@ -78,10 +142,21 @@ updateGconf(){
         return text; \
          \
     } \
-    else if( GSETTINGS & DialogHelper$GS_GAME_STARTED && GSETTINGS & DialogHelper$GS_GAME_LOADED ){ \
-		if( GUESS_WRONG ) \
-			return "Incorrect ghost!\nTry again after the next hunt!"; \
-        return "Use the keypad after\nfinding the ghost type!"; \
+    else if( GSETTINGS & DialogHelper$GS_GAME_STARTED ){ \
+		string out = ""; \
+		if( GSETTINGS & DialogHelper$GS_GAME_LOADED ){ /* Required meshes loaded. But optional may still be loading. */ \
+			if( GUESS_WRONG ) \
+				out = "Incorrect ghost!\nTry again after the next hunt!"; \
+			out = "Use the keypad after\nfinding the ghost type!"; \
+		} \
+		/* Loading optional meshes */ \
+		if( ~GSETTINGS & DialogHelper$GS_GAME_LOADED ){ \
+			if( out ) \
+				out += "\n"; \
+			out += "Loading "; \
+			out += getLoadStatus(); \
+		} \
+		return out; \
     }
 	
 // Put into the script event handler
@@ -95,15 +170,14 @@ updateGconf(){
 			GUESS_WRONG = argInt(1); \
 			_dtxt(); \
 		} \
+		else if( evt == "START_GAME" ){ \
+			loadingGroups = ""; \
+		} \
 		 \
+	end \
+	onSpawnerQueueChanged() \
+		_dtxt(); \
 	end
-		
-
-
-
 	
-
-
-
 
 #endif

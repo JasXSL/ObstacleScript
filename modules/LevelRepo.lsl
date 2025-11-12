@@ -60,6 +60,7 @@ requestAssets(){
     
     purge(FALSE);
     AnimHandler$purge();
+	
         
 }
 

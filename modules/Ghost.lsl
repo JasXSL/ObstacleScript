@@ -190,11 +190,17 @@ integer walkTowards( vector pos ){
 	}
 	
 	float speed = 1.0;
-	if( BFL & BFL_HUNTING )
-		speed = 1.2;
+	if( BFL & BFL_HUNTING ){
+		speed = 1.4;
+		if( DIF > 1 )
+			speed = 2;
+	}
+	
 	if( BFL & BFL_HUNTING && BFL & BFL_HUNT_HAS_LOS ){
 		
 		speed = 1.2+(llGetTime()-timeLOS)/4;
+		if( DIF > 1 )
+			speed += .2;
 		
 		// GHOST BEHAVIOR :: Asswang - Slow down while chasing a player if observed
 		if( GHOST_TYPE == GhostConst$type$asswang ){
@@ -321,8 +327,8 @@ vector getPlayerVisibilityPos( key player ){
 	vector as = llGetAgentSize(player);
 	integer ainfo = llGetAgentInfo(player);
 	float z = as.z/2-.1;
-	if( ainfo & AGENT_CROUCHING )
-		z = 0;
+	if( ainfo & AGENT_CROUCHING ) // When crouching, you appear 0.5m over the floor
+		z = -as.z/2+0.5;
 	return prPos(player)+<0,0,z>;
 
 }
@@ -405,7 +411,7 @@ onHuntTargLOS( vector pos ){
 
 
 // IT BEGINS //
-
+int LastRoom = -1;
 
 #include "ObstacleScript/begin.lsl"
 
@@ -421,6 +427,12 @@ handleTimer( "A" )
 	
 	vector g = llGetPos();
 	int curRoom = pointInRoom(g);
+	int startRoom = pointInRoom( spawnPos );
+	if( curRoom != LastRoom ){
+		raiseEvent(GhostEvt$roomChange, curRoom + LastRoom + startRoom);
+		LastRoom = curRoom;
+	}
+	
 	
 	bool smudged = isSmudged();
 	
@@ -583,7 +595,7 @@ handleTimer( "A" )
 		// Min time to stay in a room after going there (both roaming far and going home).
 		float roamcd = 30;
 
-		int startRoom = pointInRoom( spawnPos );
+		
 
 		int timedOut = llGetTime()-lastReturn > roamcd;
 		// Handle roaming
@@ -646,8 +658,11 @@ handleTimer( "A" )
 					Nodes$getPath( GhostMethod$followNodes, g, st );
 				}	
 				// Pick a completely random room
-				else
+				else{
+				
 					randomRoam(startRoom);
+					
+				}
 				
 			}
 		
@@ -1088,6 +1103,19 @@ handleOwnerMethod( GhostMethod$setType )
 	
 end
 
+handleOwnerMethod( GhostMethod$warp )
+	
+	vector pos = argVec(0);
+	list ray = llCastRay(pos, pos-<0,0,3>, RC_DEFAULT);
+	if( l2i(ray, -1) == 1 ){
+		
+		warpTo(l2v(ray, 1)+<0,0,hover>);
+		lastReturn = llGetTime();
+		
+	}
+	
+end
+
 handleOwnerMethod( GhostMethod$smudge )
 	
 	key smudger = argKey(0);
@@ -1134,6 +1162,12 @@ handleOwnerMethod( GhostMethod$cbPlumbing )
 		
 	}
 	
+end
+
+handleOwnerMethod( GhostMethod$triggerRoam )
+	BFL = BFL|BFL_ROAMING;
+	llOwnerSay("R");
+	randomRoam(pointInRoom(llGetPos()));
 end
 
 handleOwnerMethod( GhostMethod$followNodes )

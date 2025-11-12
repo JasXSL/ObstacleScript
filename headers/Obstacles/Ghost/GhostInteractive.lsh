@@ -9,17 +9,21 @@
 #define __GhostInteractive
 
 
-#define GhostInteractiveMethod$interact 1		// (int)flags, (float)throwStrength
+#define GhostInteractiveMethod$interact 1		// (int)flags, (float)throwStrength, (str)filterByName
 	#define GhostInteractiveConst$INTERACT_ALLOW_STAINS 0x1		// Add stains if possible
 	#define GhostInteractiveConst$NO_EVENT 0x2					// Don't raise a default event
+	
 #define GhostInteractiveMethod$breaker 2		// (bool)on - Breaker state changed
+#define GhostInteractiveMethod$ping 3			// (str)name - Raises LevelCustomEvt$GINTERACTIVE$ping if name matches, or if name is "*"
 	
 #define GhostInteractive$interact( targ, flags, throwStrength ) \
 	runMethod( targ, "GhostInteractive", GhostInteractiveMethod$interact, (flags) + (throwStrength))
 #define GhostInteractive$breaker( on ) \
 	runOmniMethod( "GhostInteractive", GhostInteractiveMethod$breaker, (on))
-
-
+#define GhostInteractive$interactByName( name, flags, throwStrength ) \
+	runOmniMethod( "GhostInteractive", GhostInteractiveMethod$interact, (flags) + (throwStrength) + (name))
+#define GhostInteractive$ping( name ) \
+	runOmniMethod( "GhostInteractive", GhostInteractiveMethod$ping, (name))
 
 #define GhostInteractiveEvent$trigger 1		// void - An interaction has triggered
 #define GhostInteractiveEvent$breaker 2		// (bool)on - Breaker state has changed
@@ -29,7 +33,7 @@
 #define LevelCustomType$GINTERACTIVE "oGint"				// Generic type for traps like the lasher
 	#define LevelCustomEvt$GINTERACTIVE$lightSwitch 1					// (str)room, (bool)on - Tells the level the light switch state
 	#define LevelCustomEvt$GINTERACTIVE$vibrator 2						// void - Tells the level that the vibrator has been picked up
-	
+	#define LevelCustomEvt$GINTERACTIVE$ping 3							// void - 
 	
 #define onLevelCustomLightSwitch( lightSwitch, room, on ) \
 	if( isEventLevelCustom() AND argStr(1) == LevelCustomType$GINTERACTIVE AND argInt(2) == LevelCustomEvt$GINTERACTIVE$lightSwitch ){ \
@@ -38,7 +42,8 @@
 		bool on = argInt(4);
 #define onLevelCustomVibrator() \
 	if( isEventLevelCustom() AND argStr(1) == LevelCustomType$GINTERACTIVE AND argInt(2) == LevelCustomEvt$GINTERACTIVE$vibrator ){
-
+#define onLevelCustomPing() \
+	if( isEventLevelCustom() AND argStr(1) == LevelCustomType$GINTERACTIVE AND argInt(2) == LevelCustomEvt$GINTERACTIVE$ping ){
 
 #define onGhostInteractiveTrigger() \
 	if( SENDER_SCRIPT IS "GhostInteractive" AND EVENT_TYPE IS GhostInteractiveEvent$trigger ){
