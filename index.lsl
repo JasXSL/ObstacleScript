@@ -80,7 +80,8 @@
 #define evt$TOUCH_START 15
 #define evt$TOUCH_END 16
 #define evt$HTTP_RESPONSE 17
-
+#define evt$HTTP_REQUEST 18
+#define evt$DATASERVER 19
 
 #define XMOD_MAX_PLAYERS 32	// max nr of players xmod can handle. used in table reservation for playerdata
 
@@ -361,6 +362,9 @@ int _pdI( key id ){
 #include "./headers/PrimSwimParticles.lsh"
 #include "./headers/PrimSwimAux.lsh"
 #include "./headers/PrimSwim.lsh"
+#include "./headers/Browser.lsh"
+#include "./headers/Scene.lsh"
+
 
 #include "./headers/Obstacles/Trap.lsh"
 #include "./headers/Obstacles/Trigger.lsh"

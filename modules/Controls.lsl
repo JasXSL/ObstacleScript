@@ -126,7 +126,7 @@ onTouchStart( total )
     
     integer ln = llDetectedLinkNumber(0);
     string name = llGetLinkName(ln);
-	raiseEvent(ControlsEvt$click, name);
+	raiseEvent(ControlsEvt$click, name + ln + llDetectedTouchFace(0));
 	
 	Level$targRaiseEvent( ComGet$host(), LevelCustomType$HUDCLICK, LevelCustomEvt$HUDCLICK$click, name );
 	

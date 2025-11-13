@@ -1,0 +1,11 @@
+#ifndef __Browser
+#define __Browser
+
+#define BrowserConst$URL "https://xmod.jasx.org"
+#define BrowserConst$API "https://xmod.jasx.org/api"
+
+
+
+
+#endif
+

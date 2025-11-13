@@ -35,7 +35,7 @@ Note: Checking if something is an event is enough to check _sc == something othe
 #endif
 
 
-// state_entry
+// http_response
 #ifdef USE_HTTP_RESPONSE
 	#define onHttpResponse( id, status, body ) \
 		if( _ty == evt$HTTP_RESPONSE && _sc == "" ){ \
@@ -46,6 +46,26 @@ Note: Checking if something is an event is enough to check _sc == something othe
 	#define onHttpResponse() #error Add #define USE_HTTP_RESPONSE to the top of your script
 #endif
 
+// http_response
+#ifdef USE_HTTP_REQUEST
+	#define onHttpRequest( id, method, body ) \
+		if( _ty == evt$HTTP_REQUEST && _sc == "" ){ \
+			key id = argKey(0); \
+			str method = argStr(1); \
+			str body = argStr(2);
+#else
+	#define onHttpRequest() #error Add #define USE_HTTP_RESPONSE to the top of your script
+#endif
+
+// dataserver
+#ifdef USE_DATASERVER
+	#define onDataserver( id, data ) \
+		if( _ty == evt$DATASERVER && _sc == "" ){ \
+			key id = argKey(0); \
+			str data = argStr(1);
+#else
+	#define onDataserver() #error Add #define USE_DATASERVER to the top of your script
+#endif
 
 // sensor
 #ifdef USE_SENSOR

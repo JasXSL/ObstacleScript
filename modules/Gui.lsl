@@ -13,12 +13,16 @@ list INSTRUCTIONS = [];		// Instruction prims
 
 int P_OL;	// Overlay
 int P_ORBS;
+
 vector ORBS;
 integer CTDN;
 vector CAM_POS;	// Orbs camera
 rotation CAM_ROT;
+
 float L_ORBS;		// Last time orbs were drawn
 float ORB_D;		// Orbs die
+
+
 
 // Tries to get a bar by label
 integer getBar( string label ){
@@ -334,7 +338,6 @@ onStateEntry()
             ;
             
         }
-		
 		else if( name == "INST" ){
 			
 			

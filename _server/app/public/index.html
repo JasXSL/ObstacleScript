@@ -3,11 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
     <title>xMod Server</title>
 </head>
 <body>
-    <h1>xMod Server</h1>
-    <p>This is a basic HTML template.</p>
+    <div id="wrap">
+        <div id="loading">
+            <span>Loading...</span>
+        </div>
+        <div id="content" class="hidden">
+            <div id="left"></div>
+            <div id="right"></div>
+        </div>
+    </div>
+    <script type="module">
+        import App from './App.js';
+        window.app = new App();
+        app.begin();
+    </script>
 </body>
 
 

@@ -15,9 +15,11 @@
 		int pressed = argInt(0); \
 		int released = argInt(1); 
 
-#define onControlsClick( linkName ) \
+#define onControlsClick( linkName, linkNr, face ) \
 	if( SENDER_SCRIPT IS "Controls" AND EVENT_TYPE IS ControlsEvt$click ){ \
-		str linkName = argStr(0);
+		str linkName = argStr(0); \
+		int linkNr = argInt(1); \
+		int face = argInt(2);
 	
 
 

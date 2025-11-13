@@ -1,0 +1,48 @@
+#ifndef __Scene
+#define __Scene
+/*
+	A scene is a level in xMod, such as "Wipeout A" or "[Ghost] Bleaseton"
+	The notecards consist of the field name followed by a : and the value. The field name is case insensitive.
+	Ex: "Name: MyName"
+*/
+
+
+#define SceneConst$fileExtension "scene"
+
+// .scene file fields
+#define SceneFile$name "name"						// Required. Displayname.
+#define SceneFile$category "category"				// Required. Default wipeout
+#define SceneFile$minPlayers "minplayers"			// Min nr of players. Default 1
+#define SceneFile$maxPlayers "maxplayers"			// Max nr of players. Default 16
+#define SceneFile$description "description"			// Description
+#define SceneFile$landImpact "landimpact"			// Approx land impact
+#define SceneFile$creator "creator"					// Name of creator
+
+// These are used when storing the scene as an object, and are what's passed to the browser HUD
+#define SceneKey$name "n"
+#define SceneKey$category "c"
+#define SceneKey$minPlayers "mi"
+#define SceneKey$maxPlayers "ma"
+#define SceneKey$description "d"
+#define SceneKey$landImpact "l"
+#define SceneKey$creator "cr"
+#define SceneKey$object "o"			// Inferred from the notecard name
+
+
+/*
+	A category is used in the web UI to describe a category.
+	The file name should be <categoryName>.category
+	The file name is used as the id of the category
+*/
+
+#define CategoryConst$fileExtension "category"
+
+#define CategoryFile$description "description"						// Describe your category.
+#define CategoryFile$color "color"									// A hex value which will be used as a background.
+
+#define CategoryKey$description "d"
+#define CategoryKey$color "c"
+#define CategoryKey$label "l"										// unique, always lowercase
+
+
+#endif

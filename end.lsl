@@ -113,8 +113,13 @@ default{
 	http_response( key id, integer status, list meta, string body ){ onEvent(evt$HTTP_RESPONSE, "", "", (list)id + status + body); }
 	#endif
 	
+	#ifdef USE_HTTP_REQUEST
+	http_request( key id, string method, string body ){ onEvent(evt$HTTP_REQUEST, "", "", (list)id + method + body); }
+	#endif
 	
-	
+	#ifdef USE_DATASERVER
+	dataserver( key id, string data ){ onEvent(evt$DATASERVER, "", "", (list)id + data); }
+	#endif
 	
 }
 

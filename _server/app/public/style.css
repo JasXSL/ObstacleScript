@@ -1,0 +1,126 @@
+:root{
+	--shadow-default: 0 3px 3px rgba(0,0,0,.25);
+	--border-btn: 2px solid #FFF;
+	--border-radius: 5px;
+	--padding-btn: 10px;
+}
+
+body{
+	padding: 0; margin:0;
+	font-family: Arial, Helvetica, sans-serif;
+}
+div{
+	position:relative;
+}
+
+*.hidden{
+	display: none !important;
+}
+
+#wrap{
+	width: 1024px;
+	height: 512px;
+	background: linear-gradient(to bottom,  #ffffff 54%,#e5e5e5 100%);
+	text-align: center;
+	display:flex;
+}
+
+#loading{
+	width: 100%;
+	height: 100%;
+	position: absolute;
+	font-size: 32px;
+	font-weight: bold;
+	font-style: italic;
+	display:flex;
+	align-items: center;
+	justify-content: center;
+}
+
+#content{
+	display:flex;
+	width: 100%;
+	max-height:1024;
+}
+
+#left{
+	width:20%;
+	overflow:auto;
+	padding:10px;
+}
+#left > div.level{
+	cursor:pointer;
+	padding: var(--padding-btn);
+	border: var(--border-btn);
+	border-radius: var(--border-radius);
+	font-weight: bold;
+	margin:3px;
+	box-shadow: var(--shadow-default);
+}
+#left > div.level:hover,
+#right > input.rez:hover{
+	border-color: #000;
+}
+#right > input.rez:active{
+	transform: scale(0.9);
+}
+#left > div.level.active{
+	transform: scaleX(1.05);
+	border-color: #333;
+	border-width: 3px;
+}
+
+#right{
+	padding: 10px;
+	border-left: 1px dotted rgba(0,0,0,.25);
+	flex: 1;
+	overflow: auto;
+	text-align: center;
+}
+
+#right > h1{
+	margin: 3px;
+}
+#right > p.subtitle{
+	margin: 0;
+	font-style: italic;
+}
+#right > div.meta{
+	display: flex;
+	width: 100%;
+	justify-content: center;
+}
+#right > div.meta > div{
+	margin: 5px;
+	padding: var(--padding-btn);
+	border-radius: var(--border-radius);
+	box-shadow: var(--shadow-default);
+	background: #AFA;
+	align-content: center;
+}
+#right > div.meta > div.landImpact{
+	background: #FAA;
+	font-weight: bold;
+}
+#right > div.meta > div.playerCount{
+	font-weight:bold;
+}
+#right > div.meta > div.category > strong{
+	display:block;
+}
+#right > p.desc{
+	max-width:60%;
+	display:inline-block;
+}
+#right > input.rez{
+	cursor:pointer;
+	margin: 5px;
+	padding: var(--padding-btn);
+	border-radius: var(--border-radius);
+	box-shadow: var(--shadow-default);
+	border: var(--border-btn);
+	background: linear-gradient(to bottom, #EFE 0%, #AFA 100%);
+	font-weight: bold;
+	font-size:20px;
+}
+
