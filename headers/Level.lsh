@@ -14,7 +14,8 @@
 	#define LevelMethod$removePlayer 10		// (key)player
 	#define LevelMethod$toggleGame 11		// (bool)game_in_progress - Locks invites
 	//#define LevelMethod$forceRefreshPortal 12	// void - Force refreshes the portal with up to date players on the linkset sending the command
-	
+	#define LevelMethod$setStartPos 13		// (vector)pos, (rotation)rot, (bool)global - Sets where to put the host when loading a map through the HUD. If global is true, the script auto subtracts the level position and rotation for you.
+	#define LevelMethod$cleanup 14			// void - Deletes the level. Doesn't work if the level was rezzed by hand from inventory.
 	
 	#define LevelEvt$mainMenu 1				// Raised when the owner clicks the level controller
 	#define LevelEvt$custom 2				// (key)sender, (str)script, (int)evt, (var)data1, (var)data2... These events are defined in resources/LevelCustomEvents
@@ -28,6 +29,9 @@
 	#define LevelConst$REMOTE_SCRIPTS (list)\
 		"Rezzer" + \
 		"Spawner"
+
+	#define LevelGet$live() \
+		(int)idbGetByIndex(idbTable$LEVEL, idbTable$LEVEL$LIVE)
 
 	#define onLevelPlayersChanged() \
 		if( SENDER_SCRIPT IS "Level" AND EVENT_TYPE IS LevelEvt$playersChanged ){
@@ -92,6 +96,9 @@
 		runMethod(LINK_THIS, "Level", LevelMethod$removePlayer, player)
 	#define Level$toggleGame( gameActive ) \
 		runMethod(LINK_THIS, "Level", LevelMethod$toggleGame, gameActive)
-
+	#define Level$setStartPos( pos, rot, global ) \
+		runOmniMethod("Level", LevelMethod$setStartPos, (pos) + (rot) + (global))
+	#define Level$cleanup() \
+		runOmniMethod("Level", LevelMethod$cleanup, [])
 
 #endif

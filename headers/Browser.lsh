@@ -1,10 +1,24 @@
 #ifndef __Browser
 #define __Browser
 
+#define BrowserMethod$refresh 1			// void - Force refresh the browser
+
+
+
+
+
 #define BrowserConst$URL "https://xmod.jasx.org"
 #define BrowserConst$API "https://xmod.jasx.org/api"
 
+										// args | callback
+#define BrowserTask$ini "Ini"
+#define BrowserTask$ping "Ping"			// void | {"lv":(arr)levels, "cat":(arr)categories} - See Scene.lsh for level and category definitions
+#define BrowserTask$launch "Launch"		// (str)level | true - Spawns a level.
+#define BrowserTask$clean "Clean"		// void | true - Cleans up any spawned levels.
 
+
+#define Browser$refresh() \
+	runMethod( LINK_ROOT, "Browser", BrowserMethod$refresh, [] )
 
 
 #endif

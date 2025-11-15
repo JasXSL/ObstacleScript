@@ -66,7 +66,6 @@ invite( key player ){
 }
 
 updateCode(){
-
 	
 	WAITING_SCRIPTS = LevelConst$REMOTE_SCRIPTS;
 	int i;
@@ -80,7 +79,7 @@ updateCode(){
 	
 	integer pin = (int)llFrand(0xFFFFFFF);
 	llSetRemoteScriptAccessPin(pin);
-	Screpo$get( pin, 1, WAITING_SCRIPTS, true );
+	Screpo$get( pin, (llGetStartParameter()+1), WAITING_SCRIPTS, true );
 	
 	setInterval("UPDATE", 2);
 	
@@ -91,11 +90,11 @@ updateCode(){
 
 onRez( start )
 
-	if( !start ){
-		llOwnerSay("Updating level, please wear your HUD...");
-		updateCode();
-	}
+	llOwnerSay("Updating level ["+(string)start+"], please wear your HUD...");
+	idbSetByIndex(idbTable$LEVEL, idbTable$LEVEL$LIVE, (str)start);
+	updateCode();
 	
+
 end
 
 onStateEntry() 
@@ -106,7 +105,7 @@ onStateEntry()
 	Com$inviteSuccess(llGetOwner());
 	
 	// this was remote loaded
-	if( llGetStartParameter() == 1 ){
+	if( llGetStartParameter() ){
 		
 		llSetRemoteScriptAccessPin(0);
 		raiseEvent(LevelEvt$init, []);
@@ -130,6 +129,18 @@ onStateEntry()
 		
 		}
 		updatePlayers();
+		
+		if( llGetStartParameter() > 1 ){
+
+			vector startPos = (vector)idbGetByIndex(idbTable$LEVEL, idbTable$LEVEL$STARTPOS);
+			rotation rot = (rotation)idbGetByIndex(idbTable$LEVEL, idbTable$LEVEL$STARTROT);
+			if( startPos ){
+				startPos += llGetRootPosition();
+				rot *= llGetRootRotation();
+				Rlv$teleportPlayer( llGetOwner(), startPos, rot );
+			}
+			
+		}
 		
 		
 	}
@@ -273,6 +284,27 @@ handleInternalMethod( LevelMethod$resetPlayers )
 	idbResetIndex(idbTable$HUDS);
     updatePlayers();
     
+end
+
+handleOwnerMethod( LevelMethod$setStartPos )
+	
+	vector pos = (vector)argStr(0);
+	rotation rot = (rotation)argStr(1);
+	int global = argInt(2);
+	if( global ){
+		pos -= llGetRootPosition();
+		rot /= llGetRootRotation();
+	}
+
+	idbSetByIndex(idbTable$LEVEL, idbTable$LEVEL$STARTPOS, (str)pos);
+	idbSetByIndex(idbTable$LEVEL, idbTable$LEVEL$STARTROT, (str)rot);
+	llOwnerSay("New start pos set: "+(str)pos+" "+(str)rot);
+	
+end
+
+handleOwnerMethod( LevelMethod$cleanup )
+	if( LevelGet$live() )
+		llDie();
 end
 
 handleMethod( LevelMethod$raiseEvent )
@@ -451,7 +483,7 @@ handleInternalMethod( LevelMethod$scriptInit )
 		
 		integer pin = (int)llFrand(0xFFFFFFF);
 		llSetRemoteScriptAccessPin(pin);
-		Screpo$get( pin, 1, llGetScriptName(), true );
+		Screpo$get( pin, llGetStartParameter()+1, llGetScriptName(), true );
 			
 	}
 	

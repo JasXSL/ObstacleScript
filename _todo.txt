@@ -1,4 +1,7 @@
 x = should be fixed, ? = not sure if fixed, - todo, u = unable to reproduce
 
+- Migrate server
+- Recompile phasmo levels and add to HUD
+
 
 

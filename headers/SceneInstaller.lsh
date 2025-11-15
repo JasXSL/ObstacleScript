@@ -1,0 +1,7 @@
+#ifndef __SceneInstaller
+#define __SceneInstaller
+
+#define SceneInstallerMethod$install 0				// void - Sent from the prim repo that we can drop our assets into.
+
+
+#endif

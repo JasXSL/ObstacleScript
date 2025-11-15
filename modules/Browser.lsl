@@ -65,7 +65,7 @@ onStateEntry()
 		}
 		
 	)
-	
+	llClearLinkMedia(P_BROWSER, 0);
 	llSetLinkPrimitiveParamsFast(0, set);
 	myUrl = llLinksetDataRead("HUD_URL");
 	if( myUrl == "" )
@@ -116,10 +116,10 @@ onHttpRequest( id, method, body )
 	list args = llJson2List(j(body, "args"));
 	integer success;
 	list out;
-	if( task == "Ping" ){
+	if( task == BrowserTask$ping ){
 		success = true;
 	}
-	else if( task == "Ini" ){
+	else if( task == BrowserTask$ini ){
 		list levels; list cats;
 		idbForeach(idbTable$SCENES, a, row)
 			levels += row;
@@ -135,6 +135,15 @@ onHttpRequest( id, method, body )
 		]);
 		success = true;
 	}
+	else if( task == BrowserTask$launch ){
+		Scene$launch(l2s(args, 0));
+		success = TRUE;
+	}
+	else if( task == BrowserTask$clean ){
+		Scene$clean();
+		success = TRUE;		
+	}
+
 
 	llSetContentType(id, CONTENT_TYPE_JSON);
 	llHTTPResponse(id, 200, llList2Json(JSON_OBJECT, [
@@ -166,12 +175,24 @@ end
 // Controls
 onControlsClick( linkName, nr, face )
 
-
 	if( linkName == "LOGO" )
 		toggleBrowser();
 	else if( nr == P_BROWSER && face == 1 && BFL & BFL_BROWSER_OPEN )
 		toggleBrowser();
 
+end
+
+handleInternalMethod( BrowserMethod$refresh )
+
+	llHTTPRequest(BrowserConst$API, [
+		HTTP_METHOD, "POST",
+		HTTP_MIMETYPE, "application/json"
+	], llList2Json(JSON_OBJECT, [
+		"task", "WSFwd",
+		"hud", myUrl,
+		"args", mkarr("Refresh")
+	]));
+	
 end
 
 

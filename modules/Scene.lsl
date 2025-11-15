@@ -1,12 +1,14 @@
 #include "ObstacleScript/helpers/Ghost/GhostHelper.lsb"
 #define USE_STATE_ENTRY
 #define USE_TIMER
+#define USE_LISTEN
 #define USE_DATASERVER
 #include "ObstacleScript/index.lsl"
 
 list toRead;
 key getLines;
 string Nc;
+int listenChan;
 
 readNotecards(){
     
@@ -48,13 +50,19 @@ readNext(){
     
 }
 
+list IncomingObjects;
+key IncomingSender;
+str IncomingScript;		// Script to reply to
+int IncomingMethod;		// Method to reply to
+list IncomingCategories;
 
 #include "ObstacleScript/begin.lsl"
 
 onStateEntry()
     
     readNotecards();
-    
+	listenChan = llCeil(llFrand(0xFFFFFFF));
+    llListen(listenChan, "", "", "");
     
 end
 
@@ -134,7 +142,9 @@ onDataserver( req, data )
 				}
                 else if( field == SceneFile$creator )
                     k = SceneKey$creator;
-                
+                else if( field == SceneFile$version )
+					k = SceneKey$version;
+				
             }
             if( k )
                 proto = llJsonSetValue(proto, (list)k, v);
@@ -151,11 +161,110 @@ onDataserver( req, data )
     
 end
 
-/*
-handleOwnerMethod()
-    raiseEvent(GhostToolEvt$data, METHOD_ARGS);
+
+handleInternalMethod( SceneMethod$clean )
+	Portal$killAllStatic();
+	Level$cleanup();
 end
-*/
+handleInternalMethod( SceneMethod$launch )
+	llOwnerSay("Spawning level, please wait...");
+	llRezAtRoot(argStr(0), llGetPos()+<0,0,9>, ZERO_VECTOR, ZERO_ROTATION, 1);
+end
+
+handleOwnerMethod( SceneMethod$reqInstall )
+	
+	IncomingObjects = llJson2List(argStr(0));		// Object names
+	IncomingCategories = llJson2List(argStr(1));
+	if( IncomingObjects == [] )
+		return;
+	
+	IncomingScript = argStr(2);
+	IncomingMethod = argInt(3);
+	
+	IncomingSender = SENDER_KEY;
+	
+	int newItems; int replacements;
+	integer i;
+	for(; i < count(IncomingObjects); ++i ){
+		
+		int ty = llGetInventoryType(l2s(IncomingObjects, i));
+		if( ty == INVENTORY_NONE )
+			++newItems;
+		else if( ty == INVENTORY_OBJECT )
+			++replacements;
+		else
+			return;
+		
+	}
+	
+	list cats;
+	for( i = 0; i < count(IncomingCategories); ++i ){
+		
+		string n = l2s(IncomingCategories, i)+".category";
+		if( llGetInventoryType(n) == INVENTORY_NONE )
+			cats += l2s(IncomingCategories, i);
+	
+	}
+	IncomingCategories = cats;
+	
+	string diag = "The object secondlife:///app/objectim/"+(str)SENDER_KEY+"/?name="+llEscapeURL(llKey2Name(SENDER_KEY))+" has requested to install:";
+	if( newItems )
+		diag += "\n- "+(string)newItems+" new level.";
+	if( replacements )
+		diag += "\n- "+(string)replacements+" level update.";
+	if( count(cats) )
+		diag += "\n- "+(string)count(cats)+" category.";
+	
+	llDialog(llGetOwner(), diag, ["Accept", "Reject"], listenChan);
+	
+	
+
+end
+
+handleOwnerMethod( SceneMethod$installComplete )
+
+	if( IncomingObjects ){
+		
+		IncomingObjects = [];
+		llOwnerSay("Install completed!");
+		readNotecards();
+		Browser$refresh();
+		
+	}
+	
+end
+
+
+onListen( ch, msg )
+	if( llGetOwnerKey(SENDER_KEY) != llGetOwner() )
+		return;
+	if( IncomingObjects == [] )
+		return;
+	
+	if( msg == "Accept" ){
+		
+		// We need to delete the object and manifest
+		int i;
+		for(; i < count(IncomingObjects); ++i ){
+		
+			string obj = l2s(IncomingObjects, i);
+			if( llGetInventoryType(obj) != INVENTORY_NONE )
+				llRemoveInventory(obj);
+			if( llGetInventoryType(obj+".scene") != INVENTORY_NONE )
+				llRemoveInventory(obj+".scene");
+			
+		}
+		
+		runMethod(IncomingSender, IncomingScript, IncomingMethod, mkarr(IncomingObjects) + mkarr(IncomingCategories));
+		
+	}
+	else if( msg == "Reject" ){
+		IncomingObjects = [];
+	}
+	
+
+end
+
 
 #include "ObstacleScript/end.lsl"
 

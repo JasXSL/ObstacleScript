@@ -5,8 +5,6 @@
 	The notecards consist of the field name followed by a : and the value. The field name is case insensitive.
 	Ex: "Name: MyName"
 */
-
-
 #define SceneConst$fileExtension "scene"
 
 // .scene file fields
@@ -17,6 +15,7 @@
 #define SceneFile$description "description"			// Description
 #define SceneFile$landImpact "landimpact"			// Approx land impact
 #define SceneFile$creator "creator"					// Name of creator
+#define SceneFile$version "version"					// Accepts any number.
 
 // These are used when storing the scene as an object, and are what's passed to the browser HUD
 #define SceneKey$name "n"
@@ -27,7 +26,7 @@
 #define SceneKey$landImpact "l"
 #define SceneKey$creator "cr"
 #define SceneKey$object "o"			// Inferred from the notecard name
-
+#define SceneKey$version "v"
 
 /*
 	A category is used in the web UI to describe a category.
@@ -43,6 +42,28 @@
 #define CategoryKey$description "d"
 #define CategoryKey$color "c"
 #define CategoryKey$label "l"										// unique, always lowercase
+
+
+#define SceneManifest$levelObj "l"									// name of object of the level we want to install
+#define SceneManifest$version "v"									// version of incoming level
+
+#define SceneMethod$reqInstall 1									// (list)objects, (list)categories, (str)cbScript, (int)cbMethod - Asks us to install objects and categories. Note that at least 1 category is required, but categories are optional. On accept we reply to the object with the sender being the prim to load inventory into. Note that categories are only ever added, not overwritten.
+#define SceneMethod$installComplete 3								// void - Useful to close the pending transaction.
+#define SceneMethod$launch 4										// (str)scene
+#define SceneMethod$clean 5
+
+#define Scene$reqInstall( target, objects, categories, cbScript, cbMethod ) \
+	runMethod( target, "Scene", SceneMethod$reqInstall, mkarr(objects) + mkarr(categories) + (cbScript) + (cbMethod) )
+#define Scene$installComplete(target) \
+	runMethod( target, "Scene", SceneMethod$installComplete, [] )
+	
+#define Scene$launch(prim) \
+	runMethod( LINK_SET, "Scene", SceneMethod$launch, (prim) )
+#define Scene$clean() \
+	runMethod( LINK_SET, "Scene", SceneMethod$clean, [] )
+
+
+
 
 
 #endif

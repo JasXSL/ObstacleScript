@@ -364,6 +364,7 @@ int _pdI( key id ){
 #include "./headers/PrimSwim.lsh"
 #include "./headers/Browser.lsh"
 #include "./headers/Scene.lsh"
+#include "./headers/SceneInstaller.lsh"
 
 
 #include "./headers/Obstacles/Trap.lsh"

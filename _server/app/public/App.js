@@ -1,3 +1,4 @@
+
 export default class App{
 
 	loading = document.getElementById("loading");
@@ -6,12 +7,54 @@ export default class App{
 	levels = new Map();
 	categories = new Map();
 	level = '';
+	io = io();
 
 	constructor(){
 
 	}
 
 	async begin(){
+
+		this.refresh();
+
+		const left = this.content.querySelector("#controls");
+		const refresh = left.querySelector(".refresh");
+		const clean = left.querySelector(".clean");
+		refresh.addEventListener('click', () => {
+
+			if( refresh.disabled )
+				return;
+			refresh.disabled = true;
+			this.refresh();
+			setTimeout(() => { refresh.disabled = false; }, 1e3);
+
+		});
+
+		clean.addEventListener('click', () => {
+			if( clean.disabled )
+				return;
+			clean.disabled = true;
+			setTimeout(() => { clean.disabled = false; }, 1e3);
+			this.fetch('Fwd', ['Clean']);
+
+		});
+
+		this.io.on('connect', () => {
+			console.log("Connected to websocket");
+			let url = window.location.hash;
+			if( url.startsWith('#') )
+				url = url.slice(1);
+			this.io.emit('hookup', {
+				hud : url
+			});
+		});
+		this.io.on('Refresh', () => {
+			this.refresh();
+		});
+
+	}
+
+	async refresh(){
 
 		let ini = await this.fetch('Fwd', ['Ini']);
 		let subData = ini.data;
@@ -82,16 +125,22 @@ export default class App{
 		this.setActiveLevel(obj);
 	}
 
-	onLaunchLevel( event ){
+	async onLaunchLevel( event ){
 
-		let obj = event.currentTarget.dataset.obj;
-		console.log("Todo: launch level: " + obj);
+		const button = event.currentTarget;
+		if( button.disabled )
+			return;
+
+		let obj = button.dataset.obj;
+		button.disabled = true;
+		setTimeout(() => { button.disabled = false; }, 1e3);
+		await this.fetch('Fwd', ['Launch', obj]); 
 
 	}
 
 	drawMenu(){
 
-		const left = this.content.querySelector("#left");
+		const left = this.content.querySelector("#left > div.content");
 
 		let levels = Array.from(this.levels.values());
 		levels.sort((a,b) => {
@@ -129,7 +178,7 @@ export default class App{
 			r = Math.min(255, r+50), g = Math.min(255, g+50), b = Math.min(255, b+50);
 			let startColor = `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
 
-			let c = ["level"];
+			let c = ["level", "inputButton"];
 			if( level.obj === this.level )
 				c.push("active");
 
@@ -142,6 +191,19 @@ export default class App{
 			div.addEventListener("click", this.onLevelClicked.bind(this));
 			
 		}
+
+		makeEl("h3", {
+			"text" : "...more",
+			"class" : "category"
+		}, left);
+		let div = makeEl("div", {
+			"text" : "Search Marketplace",
+			"class" : ["level", "inputButton"],
+			"style" : 'background:linear-gradient(to bottom, #FFF 0%, #DDD 100%)'
+		}, left);
+		div.addEventListener("click", () => {
+			window.location = "https://marketplace.secondlife.com/en-US/products/search?utf8=%E2%9C%93&search%5Bkeywords%5D=xmod+level&search%5Bcategory_id%5D=&search%5Bmaturity_level%5D=GMA";
+		});
 
 	}
 
@@ -187,6 +249,10 @@ export default class App{
 			text : level.minPl + " - " + level.maxPl + " players",
 			class : 'playerCount'
 		}, metaDiv);
+		makeEl("div", {
+			text : "Version " + level.version,
+			class : 'version'
+		}, metaDiv);
 		if( level.landImpact > 0 )
 			makeEl("div", {
 				text : "Land Impact: " + level.landImpact,
@@ -209,7 +275,7 @@ export default class App{
 		let launch = makeEl("input", {
 			type : "button",
 			value : "> Launch Level <",
-			class : "rez",
+			class : ["rez","inputButton"],
 			dataset : {obj : level.obj}
 		}, right);
 		launch.addEventListener("click", this.onLaunchLevel.bind(this));
@@ -231,6 +297,7 @@ class Level{
 	desc = '';
 	creator = '';
 	landImpact = 0;
+	version = '';
 
 	constructor( data = {} ){
 		if( typeof data !== "object" || data === null )
@@ -245,6 +312,7 @@ class Level{
 		this.landImpact = Math.trunc(data.l) || 0;
 		this.name = String(data.n).trim() || "Unknown";
 		this.obj = String(data.o).trim() || "";
+		this.version = String(data.v).trim() || "0";
 
 	}
 

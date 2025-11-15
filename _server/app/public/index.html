@@ -1,26 +1,33 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="style.css">
-    <title>xMod Server</title>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link rel="stylesheet" href="style.css">
+	<title>xMod Server</title>
+	<script src="/socket.io/socket.io.js"></script>
 </head>
 <body>
-    <div id="wrap">
-        <div id="loading">
-            <span>Loading...</span>
-        </div>
-        <div id="content" class="hidden">
-            <div id="left"></div>
-            <div id="right"></div>
-        </div>
-    </div>
-    <script type="module">
-        import App from './App.js';
-        window.app = new App();
-        app.begin();
-    </script>
+	<div id="wrap">
+		<div id="loading">
+			<span>Loading...</span>
+		</div>
+		<div id="content" class="hidden">
+			<div id="left">
+				<div class="content"></div>
+			</div>
+			<div id="right"></div>
+			<div id="controls">
+				<input type="button" class="refresh inputButton" value="Refresh" />
+				<input type="button" class="clean inputButton" value="Clean" />
+			</div>
+		</div>
+	</div>
+	<script type="module">
+		import App from './App.js';
+		window.app = new App();
+		app.begin();
+	</script>
 </body>
 
 

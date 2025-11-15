@@ -43,6 +43,7 @@ fetchScripts(){
     
     PIN = llFloor(llFrand(0xFFFFFFF));
     llSetRemoteScriptAccessPin(PIN);
+
     Screpo$get( PIN, ScrepoConst$SP_LOADED, WAITING_SCRIPTS, false );
 	setInterval("SC", 10);
     

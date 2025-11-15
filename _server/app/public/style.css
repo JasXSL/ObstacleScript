@@ -57,14 +57,14 @@ div{
 	margin:3px;
 	box-shadow: var(--shadow-default);
 }
-#left > div.level:hover,
+#left div.level:hover,
 #right > input.rez:hover{
 	border-color: #000;
 }
 #right > input.rez:active{
 	transform: scale(0.9);
 }
-#left > div.level.active{
+#left div.level.active{
 	transform: scaleX(1.05);
 	border-color: #333;
 	border-width: 3px;
@@ -102,6 +102,10 @@ div{
 	background: #FAA;
 	font-weight: bold;
 }
+#right > div.meta > div.version{
+	background: #FFA;
+	font-weight: bold;
+}
 #right > div.meta > div.playerCount{
 	font-weight:bold;
 }
@@ -112,7 +116,8 @@ div{
 	max-width:60%;
 	display:inline-block;
 }
-#right > input.rez{
+
+*.inputButton{
 	cursor:pointer;
 	margin: 5px;
 	padding: var(--padding-btn);
@@ -123,4 +128,24 @@ div{
 	font-weight: bold;
 	font-size:20px;
 }
+
+*.inputButton:disabled{
+	background: #AAA !important;
+}
+
+#controls{
+	position: absolute;
+	bottom:5px; right:5px;
+}
+
+input.inputButton.refresh{
+	background: linear-gradient(to bottom, #EFF 0%, #AFF 100%);
+	margin:0;
+}
+
+input.inputButton.clean{
+	background: linear-gradient(to bottom, #FEE 0%, #FAA 100%);
+	margin:0;
+}
+
 

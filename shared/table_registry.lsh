@@ -57,6 +57,10 @@
 #define idbTable$SCENE "0"				// char(48) - Owned by Scene.lsh
 #define idbTable$SCENES "1"				// char(49) - Owned by Scene.lsh indexed table of scenes
 #define idbTable$CATEGORIES "2"			// char(50) - Owned by Scene.lsh indexed table of categories
+#define idbTable$LEVEL "3"				// char(51) - Owned by Level.lsh
+	#define idbTable$LEVEL$STARTPOS 0		// (vector)pos - Not where players should spawn, but where host should be ported to when rezzing the level.
+	#define idbTable$LEVEL$STARTROT 1		// (rotation)rot - Same as above, but rotation.
+	#define idbTable$LEVEL$LIVE 2			// (bool)live
 
 #define idbTable$PDATA_START 223	// char(223) - Owned by GameHelper. Each table from 223 to 255 represents a player. The field index is different from game to game.
 // WARNING: PDATA_START reserves char 223-255
