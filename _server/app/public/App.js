@@ -7,6 +7,7 @@ export default class App{
 	levels = new Map();
 	categories = new Map();
 	level = '';
+	help = false;
 	io = io();
 
 	constructor(){
@@ -20,6 +21,7 @@ export default class App{
 		const left = this.content.querySelector("#controls");
 		const refresh = left.querySelector(".refresh");
 		const clean = left.querySelector(".clean");
+		const help = document.querySelector("#left div.help");
 		refresh.addEventListener('click', () => {
 
 			if( refresh.disabled )
@@ -37,6 +39,11 @@ export default class App{
 			setTimeout(() => { clean.disabled = false; }, 1e3);
 			this.fetch('Fwd', ['Clean']);
 
+		});
+
+		help.addEventListener('click', () => {
+			this.help = true;
+			this.drawLevel();
 		});
 
 		this.io.on('connect', () => {
@@ -161,44 +168,50 @@ export default class App{
 			if( !cat )
 				cat = new Category();
 
-			if( cat !== preCat ){
-				makeEl("h3", {
-					"text" : ucFirst(cat.label),
-					"class" : "category"
-				}, left);
-				preCat = cat;
-			}
-
 			let color = cat.color;
 			if( color.startsWith('#') )
 				color = color.slice(1);
 			let r = parseInt(color.slice(0,2), 16);
 			let g = parseInt(color.slice(2,4), 16);
 			let b = parseInt(color.slice(4,6), 16);
-			r = Math.min(255, r+50), g = Math.min(255, g+50), b = Math.min(255, b+50);
+			r = Math.min(255, r+25), g = Math.min(255, g+25), b = Math.min(255, b+25);
 			let startColor = `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+			
+			r = parseInt(color.slice(0,2), 16);
+			g = parseInt(color.slice(2,4), 16);
+			b = parseInt(color.slice(4,6), 16);
+			r = Math.max(0, r-100), g = Math.max(0, g-100), b = Math.max(0, b-100);
+			let textColor = `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
 
+
+			if( cat !== preCat ){
+				makeEl("h3", {
+					"text" : String(cat.label).toUpperCase(),
+					"class" : "category",
+					"style" : 'color:'+textColor
+				}, left);
+				preCat = cat;
+			}
+
+			
 			let c = ["level", "inputButton"];
 			if( level.obj === this.level )
 				c.push("active");
 
+			let style = 'background:linear-gradient(to bottom, '+startColor+' 0%, #'+color+' 100%); color:'+textColor;
 			let div = makeEl("div", {
 				"text" : level.name,
 				"class" : c,
 				"dataset" : {obj:level.obj},
-				"style" : 'background:linear-gradient(to bottom, '+startColor+' 0%, '+cat.color+' 100%)'
+				"style" : style
 			}, left);
 			div.addEventListener("click", this.onLevelClicked.bind(this));
 			
 		}
 
-		makeEl("h3", {
-			"text" : "...more",
-			"class" : "category"
-		}, left);
 		let div = makeEl("div", {
 			"text" : "Search Marketplace",
-			"class" : ["level", "inputButton"],
+			"class" : ["inputButton"],
 			"style" : 'background:linear-gradient(to bottom, #FFF 0%, #DDD 100%)'
 		}, left);
 		div.addEventListener("click", () => {
@@ -208,14 +221,76 @@ export default class App{
 	}
 
 	setActiveLevel( obj, drawLevel = true ){
+
+		this.help = false;
 		this.level = obj;
 		this.drawMenu();
 		if( drawLevel )
 			this.drawLevel();
+
+	}
+
+	drawHelp(){
+
+		document.querySelectorAll("#left div.level").forEach(e => e.classList.remove("active"));
+
+		const right = this.content.querySelector("#right");
+		right.replaceChildren();
+
+		let wrap = makeEl("div", {
+			class : "help"
+		}, right);
+		makeEl("h1", {
+			text : "Help"
+		}, wrap);
+
+		makeEl("p", {
+			text : "To host a level, select the level in the menu to the left. Then click Launch Level. This will spawn the level above you in your current sim, and teleport you to the level controller."
+		}, wrap);
+
+		makeEl("h3", {
+			text : "Level Controller"
+		}, wrap);
+
+		makeEl("p", {
+			text : "The level controller looks different depending on the game mode you are playing, but usually has a list of players above it. Click the level controller to manage the level:",
+		}, wrap);
+
+		let list = makeEl("ul", {
+			class : "levelController"
+		}, wrap);
+
+		makeEl("li", {text : "[Rst Players] Kicks all players from the game."}, list);
+		makeEl("li", {text : "[Clean Up] Cleans up all non static objects. Use the clean up button in the HUD to fully clear a level."}, list);
+		makeEl("li", {text : "[INV. ALL] Invites all nearby players to the level."}, list);
+		makeEl("li", {text : "[INV. Player] Invites a specific player to the level."}, list);
+		makeEl("li", {text : "[REM. Player] Removes a player."}, list);
+		makeEl("li", {text : "[START GAME] Starts the game with the active players."}, list);
+		let maintenance = makeEl("li", {text : "[Maintenance] Takes you to the maintenance menu."}, list);
+		let subList = makeEl("ul", {
+			class : "maintenance"
+		}, maintenance);
+		makeEl("li", {text : "[Assets] Updates the level assets from your HUD."}, subList);
+		makeEl("li", {text : "[Scripts] Updates all scripts and assets from your HUD."}, subList);
+		makeEl("li", {text : "[Players] Makes sure the players have the latest attachments from the level."}, subList);
+
+		makeEl("h3", {
+			text : "FAQ"
+		}, wrap);
+
+		let faq = makeEl("ul", {
+			class : "faq"
+		}, wrap);
+		makeEl("li", {html : "Does the host have to be in the level?<br /><i>No, but they have to remain in their sim as their HUD is used in running the level.</i>"}, faq);
+
 	}
 
 	drawLevel(){
 
+		if( this.help ){
+			this.drawHelp();
+			return;
+		}
 		if( !this.levels.size )
 			return;
 
@@ -258,17 +333,22 @@ export default class App{
 				text : "Land Impact: " + level.landImpact,
 				class : 'landImpact'
 			}, metaDiv);
-		let category = makeEl("div", {
-			class : 'category',
-			style:"background:"+cat.color
-		}, metaDiv);
-		makeEl("strong", {text : ucFirst(level.category)}, category);
-		makeEl("span", {text : cat.desc}, category);
+
+
 		
 		makeEl("p", {
 			class : "desc",
-			text : level.desc
+			text : '"'+level.desc+'"'
 		}, right);
+
+		makeEl("br", {}, right);
+
+		let category = makeEl("p", {
+			class : "category",
+		}, right);
+		makeEl("strong", {text : ucFirst(level.category)}, category);
+		makeEl("br", {}, category);
+		makeEl("span", {text : cat.desc}, category);
 
 		makeEl("br", {}, right);
 

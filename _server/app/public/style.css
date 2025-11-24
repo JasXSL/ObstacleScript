@@ -3,6 +3,17 @@
 	--border-btn: 2px solid #FFF;
 	--border-radius: 5px;
 	--padding-btn: 10px;
+	--margin-btn: 5px;
+}
+
+::-webkit-scrollbar {
+  width:2px;
+}
+::-webkit-scrollbar-track{
+	background: #FFF;
+}
+::-webkit-scrollbar-thumb{
+	background:#AAA;
 }
 
 body{
@@ -43,31 +54,62 @@ div{
 	max-height:1024;
 }
 
+
+#left > div.help{
+	position:absolute;
+	width:30px;
+	height:30px;
+	border-radius: 15px;
+	background:rgba(0,0,0,.5);
+	top: var(--margin-btn);
+	left: var(--margin-btn);
+	cursor:pointer;
+	box-shadow: var(--shadow-default);
+	border: 2px solid rgba(0,0,0,0);
+}
+#left > div.help:hover{
+	border: 2px solid rgba(0,0,0,.75);
+	transform:scale(1.1);
+}
+#left > div.help > img{
+	width:100%;
+	height:100%;
+	pointer-events: none;
+}
+
+#left h3{
+	margin-bottom:0;
+	text-align: right;
+	margin-right: var(--padding-btn);
+}
 #left{
 	width:20%;
 	overflow:auto;
-	padding:10px;
 }
-#left > div.level{
+#left div.level{
 	cursor:pointer;
 	padding: var(--padding-btn);
-	border: var(--border-btn);
+	border: 1px solid #FFF;
 	border-radius: var(--border-radius);
-	font-weight: bold;
-	margin:3px;
+	margin: 1px var(--margin-btn);
+	font-size: 16px;
+	color: #333;
+	text-align: right;
+	box-sizing: border-box;
 	box-shadow: var(--shadow-default);
+
 }
+
 #left div.level:hover,
 #right > input.rez:hover{
-	border-color: #000;
+	border-color: #AFA;
 }
 #right > input.rez:active{
 	transform: scale(0.9);
 }
 #left div.level.active{
-	transform: scaleX(1.05);
 	border-color: #333;
-	border-width: 3px;
+	padding-left:10px;
 }
 
 #right{
@@ -76,6 +118,10 @@ div{
 	flex: 1;
 	overflow: auto;
 	text-align: center;
+}
+
+#right div.help{
+	text-align: left;;
 }
 
 #right > h1{
@@ -109,17 +155,22 @@ div{
 #right > div.meta > div.playerCount{
 	font-weight:bold;
 }
-#right > div.meta > div.category > strong{
-	display:block;
-}
 #right > p.desc{
-	max-width:60%;
+	max-width:80%;
+	font-size:20px; 
+	display: inline-block;
+	clear:both;
+}
+#right > p.category{
+	max-width:80%;
+	font-style: italic;
 	display:inline-block;
+	clear:both;
 }
 
 *.inputButton{
 	cursor:pointer;
-	margin: 5px;
+	margin: var(--margin-btn);
 	padding: var(--padding-btn);
 	border-radius: var(--border-radius);
 	box-shadow: var(--shadow-default);

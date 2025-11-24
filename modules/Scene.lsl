@@ -168,6 +168,7 @@ handleInternalMethod( SceneMethod$clean )
 end
 handleInternalMethod( SceneMethod$launch )
 	llOwnerSay("Spawning level, please wait...");
+	llPlaySound("3c8fc726-1fd6-862d-fa01-16c5b2568db6", .5);
 	llRezAtRoot(argStr(0), llGetPos()+<0,0,9>, ZERO_VECTOR, ZERO_ROTATION, 1);
 end
 
