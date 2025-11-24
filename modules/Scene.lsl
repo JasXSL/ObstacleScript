@@ -109,7 +109,7 @@ onDataserver( req, data )
             list spl = split(line, ":");
             string field = llToLower(trim(l2s(spl, 0)));
             string k; string v = trim(l2s(spl, 1));
-            
+			
             if( ncFile == "category" ){
                 
                 if( field == CategoryFile$description )
@@ -119,7 +119,7 @@ onDataserver( req, data )
                 
             }
             else if( ncFile == "scene" ){
-                
+			
                 if( field == SceneFile$name )
                     k = SceneKey$name;
                 else if( field == SceneFile$category ){
@@ -144,7 +144,9 @@ onDataserver( req, data )
                     k = SceneKey$creator;
                 else if( field == SceneFile$version )
 					k = SceneKey$version;
-				
+				else if( field == SceneFile$rotation ){
+					k = SceneKey$rotation;
+				}
             }
             if( k )
                 proto = llJsonSetValue(proto, (list)k, v);
@@ -167,9 +169,26 @@ handleInternalMethod( SceneMethod$clean )
 	Level$cleanup();
 end
 handleInternalMethod( SceneMethod$launch )
-	llOwnerSay("Spawning level, please wait...");
-	llPlaySound("3c8fc726-1fd6-862d-fa01-16c5b2568db6", .5);
-	llRezAtRoot(argStr(0), llGetPos()+<0,0,9>, ZERO_VECTOR, ZERO_ROTATION, 1);
+	
+	string levelName = argStr(0);
+	// Find the level
+	idbForeach(idbTable$SCENES, idx, row)
+		
+		if( j(row, SceneKey$object) == levelName ){
+		
+			rotation r = (rotation)j(row, SceneKey$rotation);
+			llOwnerSay("Spawning level, please wait...");
+			llPlaySound("3c8fc726-1fd6-862d-fa01-16c5b2568db6", .5);	
+			llRezAtRoot(argStr(0), llGetPos()+<0,0,9>, ZERO_VECTOR, r, 1);
+			return;
+			
+		}
+	
+	end
+	
+	llOwnerSay("Error: Level not found: "+levelName);
+	
+	
 end
 
 handleOwnerMethod( SceneMethod$reqInstall )

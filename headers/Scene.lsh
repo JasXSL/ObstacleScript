@@ -16,6 +16,7 @@
 #define SceneFile$landImpact "landimpact"			// Approx land impact
 #define SceneFile$creator "creator"					// Name of creator
 #define SceneFile$version "version"					// Accepts any number.
+#define SceneFile$rotation "rotation"				// quaternion
 
 // These are used when storing the scene as an object, and are what's passed to the browser HUD
 #define SceneKey$name "n"
@@ -27,6 +28,7 @@
 #define SceneKey$creator "cr"
 #define SceneKey$object "o"			// Inferred from the notecard name
 #define SceneKey$version "v"
+#define SceneKey$rotation "r"
 
 /*
 	A category is used in the web UI to describe a category.
