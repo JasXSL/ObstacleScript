@@ -7,8 +7,8 @@
 
 
 
-#define BrowserConst$URL "https://xmod.jasx.org"
-#define BrowserConst$API "https://xmod.jasx.org/api"
+#define BrowserConst$URL "https://xmod.ca"
+#define BrowserConst$API "https://xmod.ca/api"
 
 										// args | callback
 #define BrowserTask$ini "Ini"
