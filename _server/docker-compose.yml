@@ -10,7 +10,7 @@ services:
     environment:
       NODE_ENV: production
     ports:
-      - "8150:3000"
+      - "443:3000"
     networks:
       - internal
  #   depends_on:
@@ -18,6 +18,8 @@ services:
  #       condition: service_healthy
     volumes:
       - ./app:/node
+      - /etc/ssl/certs/xmod.ca_ssl_certificate.cer:/certs/pub.cer
+      - /etc/ssl/private/_.xmod.ca_private_key.key:/certs/priv.key
     restart: unless-stopped
 
 #  mariadb:
@@ -47,8 +49,5 @@ networks:
 
 #volumes:
 #  dbstore:
-
-
-
 
 

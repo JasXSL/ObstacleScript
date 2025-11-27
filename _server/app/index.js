@@ -1,9 +1,17 @@
 import express from 'express';
-import http from 'http';
+import https from 'https';
 import {Server} from 'socket.io';
+import fs from 'fs';
+const privateKey = fs.readFileSync('/certs/priv.key');
+const certificate = fs.readFileSync('/certs/pub.cer');
+
 const app = express();
-const server = http.createServer(app);
+const server = https.createServer({
+    key : privateKey,
+    cert : certificate
+}, app);
 const io = new Server(server);
+
 
 app.use(express.static('public'));
 
@@ -76,7 +84,7 @@ app.post('/api', async (req, res) => {
 });
 
 server.listen(3000, () => {
-    console.log('Server is running on port 3000');
+    console.log('Server is running on docker port 3000');
 });
 
 io.on('connection', (socket) => {

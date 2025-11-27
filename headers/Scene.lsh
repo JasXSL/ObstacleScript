@@ -43,7 +43,7 @@
 
 #define CategoryKey$description "d"
 #define CategoryKey$color "c"
-#define CategoryKey$label "l"										// unique, always lowercase
+#define CategoryKey$label "l"										// unique, always lowercase. This is inferred from the name of the notecard.
 
 
 #define SceneManifest$levelObj "l"									// name of object of the level we want to install
