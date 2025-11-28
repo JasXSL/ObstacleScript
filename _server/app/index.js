@@ -7,6 +7,7 @@ const privateKey = fs.readFileSync('/certs/priv.key');
 const certificate = fs.readFileSync('/certs/pub.cer');
 const port = Config.port || 3000;
 const serverFile = './server';
+const versionFile = './hudversion';
 let serverUrl = fs.readFileSync(serverFile, 'utf8');
 console.log("Initializing with serverUrl", serverUrl);
 const app = express();
@@ -38,6 +39,10 @@ function validateUrl( hud ){
     if( hostname.at(-1) !== "io" && hostname.at(-2) !== "secondlife" )
         throw new Error("Invalid host");
     return hud;
+}
+
+function getVersion(){
+    return parseInt(fs.readFileSync(versionFile, 'utf8'));
 }
 
 app.post('/api', async (req, res) => {
@@ -81,7 +86,7 @@ app.post('/api', async (req, res) => {
         else if( task === "InitHud" ){
             
             data = {
-                version : Config.hudVersion
+                version : getVersion()
             };
 
         }
@@ -115,7 +120,7 @@ app.post('/api', async (req, res) => {
                 body : JSON.stringify({
                     task : 'Deliver',
                     args : [
-                        Config.hudPrefix+Config.hudVersion,
+                        Config.hudPrefix+getVersion(),
                         uuid
                     ]
                 })

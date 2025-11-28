@@ -1,5 +1,4 @@
 export default {
-	hudVersion : 128,
 	hudPrefix : "xMod ",
 	adminToken : '',
 
