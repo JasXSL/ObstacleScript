@@ -12,6 +12,7 @@ vector BROWSER_SIZE = <0.803646, 0.373427, 0.103857>;
 key urlReq;
 string myUrl;
 key pingReq;
+key refreshReq;
 
 int BFL;
 #define BFL_BROWSER_OPEN 0x1
@@ -154,13 +155,23 @@ onHttpRequest( id, method, body )
 end
 
 onHttpResponse( id, status, body )
+	
+	if( id == refreshReq ){
+		if( status != 200 ){
+			qd("Failed to refresh HUD: "+body);
+		}
+		else if( j(body, "success") != JSON_TRUE ){
+			qd("Failed to refresh HUD: "+j(body, "data"));
+		}
+		
+		return;
+	}
 
-	if( id != pingReq )
-		return;
-	if( status != 200 ){
-		//qd("Ping failed, retrying");
-		fetchNewUrl();
-		return;
+	else if( id == pingReq ){
+		if( status != 200 ){
+			//qd("Ping failed, retrying");
+			fetchNewUrl();
+		}
 	}
 end
 
@@ -184,9 +195,10 @@ end
 
 handleInternalMethod( BrowserMethod$refresh )
 
-	llHTTPRequest(BrowserConst$API, [
+	refreshReq = llHTTPRequest(BrowserConst$API, [
 		HTTP_METHOD, "POST",
-		HTTP_MIMETYPE, "application/json"
+		HTTP_MIMETYPE, "application/json",
+		HTTP_VERIFY_CERT, FALSE		// Todo: This can be enabled later. Looks like SL is lagging behind on validating the cert.
 	], llList2Json(JSON_OBJECT, [
 		"task", "WSFwd",
 		"hud", myUrl,

@@ -2,9 +2,13 @@ import express from 'express';
 import https from 'https';
 import {Server} from 'socket.io';
 import fs from 'fs';
+import Config from './config.js'
 const privateKey = fs.readFileSync('/certs/priv.key');
 const certificate = fs.readFileSync('/certs/pub.cer');
-
+const port = Config.port || 3000;
+const serverFile = './server';
+let serverUrl = fs.readFileSync(serverFile, 'utf8');
+console.log("Initializing with serverUrl", serverUrl);
 const app = express();
 const server = https.createServer({
     key : privateKey,
@@ -12,6 +16,9 @@ const server = https.createServer({
 }, app);
 const io = new Server(server);
 
+app.get('/api', (req, res) => {
+    res.send('OK');
+});
 
 app.use(express.static('public'));
 
@@ -25,6 +32,14 @@ app.use(express.json());
         hud : String
     }
 */
+function validateUrl( hud ){
+    hud = new URL(hud);
+    let hostname = hud.host.split('.');
+    if( hostname.at(-1) !== "io" && hostname.at(-2) !== "secondlife" )
+        throw new Error("Invalid host");
+    return hud;
+}
+
 app.post('/api', async (req, res) => {
 
     if( typeof req.body !== "object" )
@@ -41,14 +56,13 @@ app.post('/api', async (req, res) => {
     let data = {};
 
     try{
-        hud = new URL(hud);
-        let hostname = hud.host.split('.');
-        if( hostname.at(-1) !== "io" && hostname.at(-2) !== "secondlife" )
-            throw new Error("Invalid host");
+        
 
         // Act as a relay for the browser -> LSL. Task to relay is the first arg, followed by any additional args
-        if( task == 'Fwd' ){
+        if( task === 'Fwd' ){
             
+            hud = validateUrl(hud);
+
             let task = args[0];
             let subArgs = args.slice(1);
             const fe = await fetch(hud, {
@@ -64,13 +78,53 @@ app.post('/api', async (req, res) => {
             data = await fe.json();
 
         }
+        else if( task === "InitHud" ){
+            
+            data = {
+                version : Config.hudVersion
+            };
+
+        }
         // Reverse relay, from LSL -> browser via websocket. Task to relay is the first arg, followed by any additional args
-        else if( task == "WSFwd" ){
+        else if( task === "WSFwd" ){
+
+            hud = validateUrl(hud);
             io.to(hud.href).emit(args[0], args.slice(1));
-            return true;
+
+        }
+        // Accepts 2 arguments: admin token, and new URL
+        else if( task === "SetDeliveryUrl" && args[0] === Config.adminToken ){
+            
+            const url = args[1];
+            if( serverUrl !== url ){
+                
+                fs.writeFileSync(serverFile, url);
+                serverUrl = url;
+            }
+
+        }
+        // Arg 0 is the admin token, arg 1 is the UUID to deliver to
+        else if( task === "DeliverHud" && args[0] === Config.adminToken ){
+
+            const uuid = args[1];
+            const fe = await fetch(serverUrl, {
+                method : 'POST',
+                headers : {
+                    'Content-Type' : 'application/json'
+                },
+                body : JSON.stringify({
+                    task : 'Deliver',
+                    args : [
+                        Config.hudPrefix+Config.hudVersion,
+                        uuid
+                    ]
+                })
+            });
+            data = await fe.json();
+
         }
         else
-            throw new Error("Invalid task");
+            throw new Error("Invalid task or access denied");
 
         out.success = true;
         out.data = data;
@@ -83,8 +137,8 @@ app.post('/api', async (req, res) => {
 
 });
 
-server.listen(3000, () => {
-    console.log('Server is running on docker port 3000');
+server.listen(port, () => {
+    console.log('Server is running on docker port ' + port);
 });
 
 io.on('connection', (socket) => {

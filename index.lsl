@@ -365,6 +365,7 @@ int _pdI( key id ){
 #include "./headers/Browser.lsh"
 #include "./headers/Scene.lsh"
 #include "./headers/SceneInstaller.lsh"
+#include "./headers/Updater.lsh"
 
 
 #include "./headers/Obstacles/Trap.lsh"
