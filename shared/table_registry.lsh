@@ -62,6 +62,12 @@
 	#define idbTable$LEVEL$STARTROT 1		// (rotation)rot - Same as above, but rotation.
 	#define idbTable$LEVEL$LIVE 2			// (bool)live
 
+#define idbTable$VIBHUB "4"				// char(52) - Owner by VibHub.lsl (plugin)
+	#define idbTable$VIBHUB$token 0			// str token
+	#define idbTable$VIBHUB$capabilities 1	// Response from the whoeis endpoint - This is fetched each time you replace the token
+	#define idbTable$VIBHUB$minCap 2		// float min_val
+	
+
 #define idbTable$PDATA_START 223	// char(223) - Owned by GameHelper. Each table from 223 to 255 represents a player. The field index is different from game to game.
 // WARNING: PDATA_START reserves char 223-255
 

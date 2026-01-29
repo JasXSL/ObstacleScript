@@ -344,7 +344,7 @@ int _pdI( key id ){
 #include "./headers/Footsteps.lsh"
 #include "./headers/AnimHandler.lsh"
 #include "./headers/Qte.lsh"
-
+#include "./headers/VibHub.lsh"
 
 #include "./headers/Com.lsh"
 #include "./headers/Soundspace.lsh"
@@ -394,6 +394,7 @@ int _pdI( key id ){
 #include "./headers/Obstacles/Ghost/GhostEvents.lsh"
 #include "./headers/Obstacles/Ghost/GhostLevelHelper.lsh"
 #include "./headers/Obstacles/Ghost/GhostPathing.lsh"
+
 
 
 

@@ -849,7 +849,7 @@ onListen( ch, msg )
 		
 	}
 	
-	else if( msg == "Q" ){
+	else if( msg == "Q" || msg =="abil_5" ){ // abil_5 is GoT compability
 		
 		key id = getActiveToolWorldId();
 		int type = activeType();

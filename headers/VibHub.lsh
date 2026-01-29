@@ -1,0 +1,94 @@
+#ifndef __VibHub
+#define __VibHub
+/*
+	Preprocessor definitions you can add at the top of your script:
+	#define SERVER <url> - Defaults to https://vibhub.io
+
+*/
+
+#define VibHubGet$token() (idbGet(idbTable$VIBHUB, idbTable$VIBHUB$token))
+#define VibHubGet$capabilities() (idbGet(idbTable$VIBHUB, idbTable$VIBHUB$capabilities))
+#define VibHubGet$minCap() ((float)idbGet(idbTable$VIBHUB, idbTable$VIBHUB$minCap))
+
+#define VibHubMethod$setDevice 1			// (str)deviceID
+#define VibHubMethod$runPrograms 2 			// (arr)programs
+#define VibHubMethod$setMinCap 3			// (float)cap - Since different vibrators start turning on at specific intensities, you can set a "start" for any nonzero value to consider as the start point.
+
+#define VibHubEvt$capabilities 1			// void - Raised on capability response
+
+
+#define VibHub$setDevice(deviceID) \
+	runMethod(LINK_THIS, "VibHub", VibHubMethod$setDevice, (deviceID))
+#define VibHub$runPrograms(programs) \
+	runMethod(LINK_THIS, "VibHub", VibHubMethod$runPrograms, mkarr(programs))
+#define VibHub$stopAll(deviceID) \
+	VibHubMethod$runPrograms("[{\"stages\":[{}]}]")
+#define VibHub$setMinCap(cap) \
+	runMethod(LINK_THIS, "VibHub", VibHubMethod$setMinCap, cap)
+
+
+
+
+
+// Program builder tools
+string _vhbp( int port, int repeats, list stages ){
+	list out = [
+		"port", port,
+		"stages", mkarr(stages)
+	];
+	if( repeats )
+		out += (list)"repeats" + repeats;
+	return llList2Json(JSON_OBJECT, out);
+}
+#define VibHub$buildProgram( port, repeats, stages ) _vhbp(port, repeats, (list)stages)
+
+string _vhbs( string intensity, string duration, string easing, string repeats, bool yoyo ){
+
+	list out = (list)"d";
+	if( llJsonValueType(duration, []) == JSON_OBJECT )
+		out += duration;
+	else
+		out += (int)duration;
+	
+	if( intensity == "false" )
+		intensity = JSON_FALSE;
+	out += (list)"i" + intensity;
+	
+	if( easing != "" && easing != "Linear.None" )
+		out += (list)"e" + easing;
+		
+	if( repeats != "" && repeats != "0" ){
+		out += "r";
+		if( llJsonValueType(repeats, []) == JSON_OBJECT )
+			out += repeats;
+		else
+			out += (int)repeats;
+	}
+	
+	if( yoyo )
+		out += (list)"y" + JSON_TRUE;
+	return llList2Json(JSON_OBJECT, out);
+	
+}
+#define VibHub$buildStage( intensity, duration, easing, repeats, yoyo ) _vhbs((string)intensity, (string)duration, easing, (string)repeats, yoyo)
+
+string _vhbr( float min, float max, integer offset, integer multi, bool absolute ){
+
+	list out = [
+		"max", max
+	];
+	if( min > 0 )
+		out += (list)"min" + min;
+	if( offset )
+		out += (list)"offset" + offset;
+	if( multi > 1 )
+		out += (list)"multi" + multi;
+	if( absolute )
+		out += (list)"abs" + TRUE;
+	return llList2Json(JSON_OBJECT, out);
+	
+}
+#define VibHub$buildRandObject( min, max, offset, multi, absolute ) _vhbr(min, max, offset, multi, absolute)
+	
+
+#endif
