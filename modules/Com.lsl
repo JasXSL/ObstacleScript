@@ -12,6 +12,8 @@ float ACC_HOST;     // Timer
 key PENDING_HOST;
 key HOST;
 
+list API_REG;
+
 resetPlayersAndHuds(){
 	// Add ourselves to players and HUDs
 	idbSetByIndex(idbTable$PLAYERS, 0, llGetOwner());
@@ -20,6 +22,16 @@ resetPlayersAndHuds(){
 	idbSetIndex(idbTable$HUDS, 1);
 }
 
+// If targ is empty, it sends to all
+sendApiMessage( key targ, integer evt, list data ){
+	list targs = API_REG;
+	if( targ )
+		targs = [targ];
+	int i;
+	for( ; i < count(targs); ++i )
+		ComApi$runTask(l2k(targs, i), evt, data);
+
+}
 
 
 #include "ObstacleScript/begin.lsl"
@@ -28,6 +40,8 @@ resetPlayersAndHuds(){
     handleListenTunnel()
 
     onStateEntry()
+	
+		API_REG = [];
         
 		// Reset host
 		idbSetByIndex(idbTable$COM, idbTable$COM$HOST, HOST);
@@ -41,9 +55,28 @@ resetPlayersAndHuds(){
 		Level$autoJoin();
 		
 		llListen(3, "", llGetOwner(), "");
+		
+		llListen(ComConst$API_CHAN, "", "", "");
+		llListen(ComConst$API_CHAN_HOST, "", "", "");
+		ComApi$runTaskAll(ComApiTask$fromHud$scriptInit, []);
+		setInterval("PRUNE", 10);
         
     end
-    
+	
+	handleTimer("PRUNE")
+	
+		integer i = count(API_REG);
+		while( i-- ){
+			if( llKey2Name(l2k(API_REG, i)) == "" )
+				API_REG = llDeleteSubList(API_REG, i, i);
+		}
+	
+	end
+	
+	handleMethod( ComMethod$internalEvent )
+		sendApiMessage("", ComApiTask$fromHud$internalEvent, METHOD_ARGS);
+	end
+	   
     onListen( ch, msg )
 	
 		// Listening for hotkeys
@@ -52,6 +85,52 @@ resetPlayersAndHuds(){
 			Level$raiseEventTarg( HOST, LevelCustomType$HOTKEY, LevelCustomEvt$HOTKEY$press, msg );
 			
 			return;
+		}
+		
+		if( ch == ComConst$API_CHAN || ch == ComConst$API_CHAN_HOST ){
+		
+			key owner = llGetOwnerKey(SENDER_KEY);
+			if( owner != llGetOwner() && (owner != HOST || ch != ComConst$API_CHAN_HOST))
+				return;
+		
+			list args = llJson2List(msg);
+			if( l2s(args, 0) != "XC!" )
+				return;
+			int task = l2i(args, 1);
+			
+			// Limit host channel
+			if( ch == ComConst$API_CHAN_HOST && task != ComApiTask$toHud$gameEvent )
+				return;
+			
+			args = llDeleteSubList(args, 0, 1);
+			
+			// Script connected
+			if( task == ComApiTask$toHud$connect ){
+			
+				integer pos = llListFindList(API_REG, (list)SENDER_KEY);
+				if( pos == -1 )
+					API_REG += SENDER_KEY;
+				sendApiMessage(SENDER_KEY, ComApiTask$fromHud$connected, []);
+				
+			}
+			else if( task == ComApiTask$toHud$disconnect ){
+				
+				integer pos = llListFindList(API_REG, (list)SENDER_KEY);
+				if( ~pos )
+					API_REG = llDeleteSubList(API_REG, pos, pos);
+				
+			}
+			else if( task == ComApiTask$toHud$getHuds ){
+				sendApiMessage(SENDER_KEY, ComApiTask$fromHud$huds, [mkarr(getHuds())]);
+			}
+			else if( task == ComApiTask$toHud$getHost ){
+				sendApiMessage(SENDER_KEY, ComApiTask$fromHud$host, [HOST]);
+			}
+			else if( task == ComApiTask$toHud$gameEvent ){
+				sendApiMessage("", ComApiTask$fromHud$gameEvent, SENDER_KEY + args);
+			}
+			
+		
 		}
     
         if( ch == PUB_CHAN ){
@@ -98,6 +177,7 @@ resetPlayersAndHuds(){
 					idbSetIndex(idbTable$PLAYERS, 2);
 					
 					idbSetByIndex(idbTable$COM, idbTable$COM$HOST, HOST);
+					sendApiMessage("", ComApiTask$fromHud$host, [HOST]);
 					
 					raiseEvent(ComEvt$hostChanged, []);
 						
@@ -171,7 +251,7 @@ resetPlayersAndHuds(){
 				idbSetByIndex(idbTable$HUDS, i, argStr(i));
 			}
 			idbSetIndex(idbTable$HUDS, count(METHOD_ARGS));
-			
+			sendApiMessage("", ComApiTask$fromHud$huds, [mkarr(METHOD_ARGS)]);
 			runOmniMethod("Portal", PortalMethod$cbHUDs, METHOD_ARGS);
 	
         }

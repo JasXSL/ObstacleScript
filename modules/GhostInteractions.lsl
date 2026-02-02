@@ -159,6 +159,8 @@ interactPlayer( key hud, int power ){
 	// Parabolic
 	lastSound = sound;
 	
+	ComApi$hostApiEvtTarg( hud, GhostApiEvt$interact, type );
+	
     if( dur ){
     
         Rlv$setFlags( hud, RlvFlags$IMMOBILE, TRUE );

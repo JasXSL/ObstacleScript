@@ -24,6 +24,8 @@ onGhostEventStart(){
 
 	idbSetByIndex(idbTable$GHOST_EVENTS, idbTable$GHOST_EVENTS$active, TRUE);
 	unsetTimer("RST");
+	
+	ComApi$hostApiEvt( GhostApiEvt$ghostEvent, mkarr(evtPlayers) + evtType + subType + evtDur );
 	Level$raiseEvent(LevelCustomType$GHOSTEVT, LevelCustomEvt$GHOSTEVT$evt, mkarr(evtPlayers) + evtType + subType + evtDur);
 	raiseEvent(GhostEventsEvt$begin, mkarr(evtPlayers) + evtType + subType + evtDur );
 	llSetSoundRadius(7);

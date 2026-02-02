@@ -278,6 +278,7 @@ toggleHunt( integer on ){
     else{
         GhostRadio$garble( "*", FALSE );
     }
+	ComApi$hostApiEvt(GhostApiEvt$hunt, (BFL&BFL_HUNTING > 0));
     LAST_HUNT = llGetTime();
     Ghost$toggleHunt( hunting );
     GhostTool$toggleHunt( hunting, GhostGet$ghost() );

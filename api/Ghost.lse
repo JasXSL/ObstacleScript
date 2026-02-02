@@ -1,0 +1,16 @@
+#ifndef __APIEVT_Ghost
+#define __APIEVT_Ghost
+
+#define GhostApiEvt$gameStart 1			// (int)difficulty
+#define GhostApiEvt$gameEnd 2			// metadata... - See GhostHelper_Game.lsb onGameEnd returned data
+#define GhostApiEvt$roundStart 3		//
+#define GhostApiEvt$playerBondage 4		// (key)chair, (key)player, (bool)seated, (int)flags - Raised when a player is seated or unseated from a bondage device
+#define GhostApiEvt$affixes 5			// (int)affixes
+#define GhostApiEvt$arousal 6			// (list)arousals - Each entry corresponds to the player in the API HUD lists
+#define GhostApiEvt$hunt 7				// (bool)hunting
+#define GhostApiEvt$heartbeat 8			// (bool)on - When heartbeat sounds are toggled from having LoS to the ghost. This is only raised on idividual players.
+#define GhostApiEvt$ghostEvent 9		// (list)evtPlayers, (int)evtType, (int)subType, (float)evtDur - See GhostEvents.lsh for definitions
+#define GhostApiEvt$interact 10			// (int)type - Raised on the player when the ghost interacts with a player. Types are in GhostInteractions.lsl
+#define GhostApiEvt$trapTrigger 11		// (key)victim - A trap has triggered on victim. Use the sender UUID to infer the trap type.
+
+#endif

@@ -21,7 +21,7 @@ toggleAnim( string anim, integer on, float dur, int flags ){
     if( !beforeAnim( anim ) )
         return;
     #endif
-    
+	
     int stopFlags = 
         AnimHandler$animFlag$stopOnMove|
         AnimHandler$animFlag$stopOnUnsit
@@ -43,7 +43,8 @@ toggleAnim( string anim, integer on, float dur, int flags ){
         llStartAnimation(anim);
     else
         llStopAnimation(anim);
-
+	Com$internalEvent( HudApiEvt$anim, on + anim);
+	
 }
 
 

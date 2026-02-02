@@ -395,6 +395,10 @@ int _pdI( key id ){
 #include "./headers/Obstacles/Ghost/GhostLevelHelper.lsh"
 #include "./headers/Obstacles/Ghost/GhostPathing.lsh"
 
+// API Events
+#include "./api/Ghost.lse"
+#include "./api/Wipeout.lse"
+#include "./api/HUD.lse"
 
 
 

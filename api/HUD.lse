@@ -1,0 +1,9 @@
+#ifndef __APIEVT_HUD
+#define __APIEVT_HUD
+
+#define HudApiEvt$anim 1			// (bool)start, (str)anim
+#define HudApiEvt$swim 2			// (bool)start - Toggled when you enter or exit water
+#define HudApiEvt$clothes 3			// (int)layers - See Rlv.lsh for more info about the compacted layers bitwise array
+
+
+#endif

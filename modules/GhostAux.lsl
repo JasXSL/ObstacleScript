@@ -223,6 +223,7 @@ toggleHeartbeat( bool on ){
 	SEEN_PLAYERS = [];
 	forPlayer(tot, idx, targ)
 		Rlv$stopLoopSound( targ );
+		ComApi$hostApiEvtTarg(targ, GhostApiEvt$heartbeat, false);
 	end
 	
 	if( !on )
@@ -504,6 +505,7 @@ handleTimer( "HEART" )
 			if( llListFindList(SEEN_PLAYERS, (list)targ) == -1 ){
 			
 				Rlv$loopSoundOn(targ, "b3f04998-bac5-047b-7939-448cbdda39a1", 1);
+				ComApi$hostApiEvtTarg(targ, GhostApiEvt$heartbeat, TRUE);
 				
 			}
 			
@@ -525,6 +527,7 @@ handleTimer( "HEART" )
 		key targ = l2k(SEEN_PLAYERS, i);
 		if( llListFindList(found, (list)targ) == -1 ){
 		
+			ComApi$hostApiEvtTarg(targ, GhostApiEvt$heartbeat, false);
 			Rlv$stopLoopSound(targ);
 			
 		}

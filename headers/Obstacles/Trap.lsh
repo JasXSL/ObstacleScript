@@ -63,7 +63,8 @@
 			 \
 				Trap$seat(trap, "*", p); \
 				i = count(players); \
-				 \
+				\
+				\
 			}	\
 			\
 		} \

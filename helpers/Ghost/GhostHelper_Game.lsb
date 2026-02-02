@@ -119,6 +119,7 @@ onGameStart(){
     raiseEvent(0, "GAMESTART");
     sendAffixes();
     
+	
     BFL = 0;
     
 }
@@ -130,6 +131,7 @@ sendAffixes(){
 	int difficulty = GhostGet$difficulty();	// Handled by dialog
     GhostTool$setGhost(GhostGet$ghost(), AFFIXES, EVIDENCE_TYPES, difficulty, GHOST_TYPE);
     Ghost$setType( GHOST_TYPE, EVIDENCE_TYPES, difficulty, AFFIXES );
+	ComApi$hostApiEvt(GhostApiEvt$affixes, AFFIXES);
 }
 
 list onGameEnd(){
@@ -180,7 +182,8 @@ addArousal( key player, float arousal ){
         
     end
     GhostStatus$updatePlayers( "*", arousals );
-            
+    ComApi$hostApiEvt(GhostApiEvt$arousal, mkarr(arousals));
+	
 }
 
 // GhostTools.template has finished spawning the tools (this goes first)   

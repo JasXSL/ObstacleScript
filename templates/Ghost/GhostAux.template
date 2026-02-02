@@ -362,7 +362,6 @@ handleEvent( "#Tools", 0 )
             
         }
         
-        
         setCamOn( pos, dropped );
         
     }
@@ -396,6 +395,7 @@ handleEvent( "#Game", 0 )
         end
         
         warpToStart(FALSE);
+		ComApi$hostApiEvt( GhostApiEvt$gameStart, (GhostGet$difficulty()) );
         
     }
     else if( type == "SPAWN_GHOST" )
@@ -414,6 +414,8 @@ handleEvent( "#Game", 0 )
         // Game Loaded
         if( GhostGet$difficulty() > 1 )
             Door$setRandomPerc( "*" );
+			
+		ComApi$hostApiEvt( GhostApiEvt$roundStart, [] );
             
     }
     else if( type == "END_GAME" ){
@@ -442,6 +444,8 @@ handleEvent( "#Game", 0 )
         setTimeout("RESET_DOOR", 5);
         setTimeout("END", 3);   // Unsit after getting back
         
+		ComApi$hostApiEvt(GhostApiEvt$gameEnd, llDeleteSubList(METHOD_ARGS, 0, 0));
+		
     }
     else if( type == "GAMESTART" ){
         generateGhost();
@@ -464,7 +468,7 @@ end
 // Also strip
 onLevelCustomBondagePlayerDied( chair, player, dead, flags )
     
-    
+    ComApi$hostApiEvt(GhostApiEvt$playerBondage, chair + player + dead + flags);
     if( dead ){
 	
 		if( ~flags & LevelCustomEvt$BONDAGE$playerDied$flags$no_strip ){
@@ -523,8 +527,6 @@ onGhostEvent( ghost, players, baseType, subType, dur )
 	// Red flash
 	else
 		Nodes$getRoomName( LINK_THIS, ("_FE_"+(str)dur), prPos(ghost), 255 );
-	
-
 	
 end
 

@@ -504,6 +504,7 @@ handleMethod( RlvMethod$setClothes )
     }
 	
 	setDesc();
+	Com$internalEvent(HudApiEvt$clothes, n);
 
 end
 

@@ -51,7 +51,7 @@ onRunTimePermissions( perm )
     if( perm & PERMISSION_ATTACH ){
         
 		if( DETACH )
-			llDetachFromAvatar();
+			detach();
 		else{
 			llAttachToAvatarTemp(0);
 			unsetTimer("chk");

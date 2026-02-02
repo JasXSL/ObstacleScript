@@ -201,6 +201,7 @@ enterWater(){
     pp=.75;
     
     setInterval(TIMER_COUT_CHECK, .5);
+	Com$internalEvent( HudApiEvt$swim, TRUE );
     
 }
 
@@ -227,7 +228,7 @@ exitWater(){
     wl_set = "";
     
     unsetTimer(TIMER_COUT_CHECK);
-    
+    Com$internalEvent( HudApiEvt$swim, FALSE);
 }
 
 #if PrimSwimCfg$USE_WINDLIGHT==1

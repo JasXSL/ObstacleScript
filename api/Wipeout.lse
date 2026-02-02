@@ -1,0 +1,21 @@
+#ifndef __APIEVT_Wipeout
+#define __APIEVT_Wipeout
+// #define WipeoutApiEvt$
+#define WipeoutApiEvt$gameStart 1
+#define WipeoutApiEvt$gameEnd 2
+#define WipeoutApiEvt$arousal 3				// (key)player, (int)amount, (int)max
+#define WipeoutApiEvt$checkpoint 4			// (key)player, (key)checkpointObj, (str)checkpointName
+#define WipeoutApiEvt$trapUnseated 5		// (key)trap, (arr)players
+#define WipeoutApiEvt$projectileHit 6		// (key)projectile, (key)target - Note that objects are also valid targets
+#define WipeoutApiEvt$beamVibEnd 7			// (key)player - Vibrating beam ended
+#define WipeoutApiEvt$buttonActivation 8	// (key)button - Button fully activated
+#define WipeoutApiEvt$trapdoorTriggered 9	// (key)door, (str)label, (key)player
+#define WipeoutApiEvt$shimmyWallHit 10		// (key)object, (int)started, (list)players
+#define WipeoutApiEvt$trapHit 11			// (key)object, (list)players
+#define WipeoutApiEvt$roundStart 12			// 
+#define WipeoutApiEvt$ladder 13				// (key)hud, (key)ladder, (bool)seated - Includes anything "climbable" such as shimmy walls and balance beams
+#define WipeoutApiEvt$dunked 14				// 
+#define WipeoutApiEvt$teamFinish 15			// (int)team - A player of team has reached the ending platform
+
+#endif
+

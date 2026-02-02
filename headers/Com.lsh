@@ -3,6 +3,9 @@
 
 // db
 
+#define ComConst$API_CHAN 0xBA115		// Owner only
+#define ComConst$API_CHAN_HOST 0xBA116	// Limited endpoint for host to all players
+
 #define ComGet$host() idbGetByIndex(idbTable$COM, idbTable$COM$HOST)
 
 
@@ -13,6 +16,51 @@
 #define ComMethod$uninvite 5			// void - When sent from the host, wipes all players
 #define ComMethod$updatePortal 6		// void - Sends callbacks with players and huds. See Portal.lsh for the callbacks
 #define ComMethod$debug 7				// void - Outputs debug info
+#define ComMethod$hookup 8				// void - Tells the API that we want to receive API messages
+#define ComMethod$internalEvent 9		// (int)evt, data... - Raises an internal API event
+
+
+
+#define ComApiTask$toHud$connect 1				// void - Registers your script to receive updates.
+#define ComApiTask$toHud$disconnect 2			// void - Disconnects your script. The script is auto disconnected if its container is removed from the sim.
+#define ComApiTask$toHud$getHuds 3				// void - Forces ComApiTask$fromHud$huds to be sent to the script sending this task.
+#define ComApiTask$toHud$getHost 4				// void - Forces ComApiTask$fromHud$host to be sent to the script sending this task.
+#define ComApiTask$toHud$gameEvent 5			// (int)evt, (var)arg1, arg2... - Use ComApi$raiseEventHost/all. This method is allowed from HOST, regardless of owner.
+
+
+
+#define ComApiTask$fromHud$scriptInit 100		// void - Sent globally when the Com script is started. You'll want to connect your API when this is received.
+#define ComApiTask$fromHud$connected 101		// void - Sent to a script on successful connect
+#define ComApiTask$fromHud$huds 102				// (arr)player_huds - Auto raised when HUDs have changed
+#define ComApiTask$fromHud$host 103				// (key)host - Auto raised when host has changed. Host is the start game monitor prim. You can use Com$inferLevelType(host)
+#define ComApiTask$fromHud$gameEvent 104		// (key)event_raiser, (int)evt, (var)arg1, arg2...	- These are the events sent by the games themselves and varies based on game mode.
+												// See /api/*.lsh for game specific definitions
+#define ComApiTask$fromHud$internalEvent 105	// (int)evt, ...args - Similar to above, but for internal events raised by your own HUD. These events are only seen by the owner.
+
+#define Com$inferLevelType(host) llToLower(llGetSubString(llKey2Name(prRoot(host)), 1, llSubStringIndex(llKey2Name(prRoot(host)), "]")-1))
+
+#define ComApi$buildTaskArray( task, args ) mkarr("XC!" + (task) + (list)args)
+#define ComApi$runTaskAll( task, args ) llRegionSay(ComConst$API_CHAN, ComApi$buildTaskArray(task, args))
+#define ComApi$runTask( targ, task, args ) llRegionSayTo(targ, ComConst$API_CHAN, ComApi$buildTaskArray(task, args))
+#define ComApi$raiseEventHostAll( evt, args ) llRegionSay(ComConst$API_CHAN_HOST, ComApi$buildTaskArray(ComApiTask$toHud$gameEvent, evt + args))		// Use this for host
+#define ComApi$raiseEventHost( targ, evt, args ) llRegionSayTo(targ, ComConst$API_CHAN_HOST, ComApi$buildTaskArray(ComApiTask$toHud$gameEvent, evt + args))		// Use this for host
+
+
+// Macros to simplify for client
+#define ComApi$connect() ComApi$runTask(llGetOwner(), ComApiTask$toHud$connect, [])
+#define ComApi$disconnect() ComApi$runTask(llGetOwner(), ComApiTask$toHud$disconnect, [])
+#define ComApi$getHuds() ComApi$runTask(llGetOwner(), ComApiTask$toHud$getHuds, [])
+#define ComApi$getHost() ComApi$runTask(llGetOwner(), ComApiTask$toHud$getHost, [])
+
+// Simplify for host 
+_cahae( int evt, list args ){
+	forPlayer(total, idx, pl)
+		ComApi$raiseEventHost(pl, evt, args);
+	end
+}
+#define ComApi$hostApiEvt( evt, args ) _cahae(evt, (list)args)
+#define ComApi$hostApiEvtTarg( targ, evt, args ) ComApi$raiseEventHost(targ, evt, args)
+#define ComApi$raiseTrapTrigger(player) ComApi$hostApiEvt(GhostApiEvt$trapTrigger, player)	// Helper for hardcoded traps
 
 // Events
 #define ComEvt$hostChanged 1			// void - Raised with whenever you join a game
@@ -35,6 +83,7 @@
 	runMethod(target, "Com", ComMethod$huds, huds )
 #define Com$updatePortal() \
 	runMethod(llGetOwner(), "Com", ComMethod$updatePortal, [] )
-
+#define Com$internalEvent( evt, data ) \
+	runMethod(LINK_ROOT, "Com", ComMethod$internalEvent, evt + data)
 
 #endif
