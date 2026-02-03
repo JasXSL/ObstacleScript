@@ -50,7 +50,7 @@
 
 // Put this into onTrapHit to auto seat a viable player when a trap is triggered
 // Auto seats with a filter function, the filter function is passed the arguments key trap, key player
-#define _TRAPS_autoSeat(filterFunction){ \
+#define _TRAPS_autoSeat(filterFunction, onSuccess){ \
 	\
 	players = llListRandomize(players, 1); \
 	integer i; \
@@ -63,6 +63,7 @@
 			 \
 				Trap$seat(trap, "*", p); \
 				i = count(players); \
+				onSuccess; \
 				\
 				\
 			}	\

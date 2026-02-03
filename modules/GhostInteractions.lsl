@@ -54,12 +54,12 @@ integer isInteractive( key id ){
 list touchedPlayers;
 
 
-#define INTERACT_BUTT 0
-#define INTERACT_GROIN 1
-#define INTERACT_BREASTS_PINCH 2
-#define INTERACT_BREASTS_GRAB 3
-#define INTERACT_BUTT_SMALL 4
-#define INTERACT_GROIN_SMALL 5
+#define INTERACT_BUTT 0				// Squeeze butt
+#define INTERACT_GROIN 1			// Squeeze groin
+#define INTERACT_BREASTS_PINCH 2	// Pinch breasts
+#define INTERACT_BREASTS_GRAB 3		// Squeeze breasts
+#define INTERACT_BUTT_SMALL 4		// 
+#define INTERACT_GROIN_SMALL 5		// Small touch
 #define INTERACT_BREASTS_SMALL 6
 #define INTERACT_BREASTS_MOTORBOAT 7
 #define INTERACT_BREASTS_SLAP 8

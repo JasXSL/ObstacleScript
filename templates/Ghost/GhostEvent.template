@@ -38,6 +38,7 @@ list TARGS; // UUIDs of viable victims (players in the ghost room)
 
 #define getActiveAnim() getAnim(POSE)
 #define getActiveTools() getTools(POSE)
+#define getActiveDuration() getDuration(POSE)
 
 // Runtime globals
 key VICTIM;
@@ -146,6 +147,7 @@ start( key hud, integer type, vector pos, rotation rot, rotation stRot ){
     
 	raiseEvent(0, "TRIGGER" + anim);
 	
+	
 	Rlv$sit( VICTIM, llGetKey(), TRUE );
 	// set EMF on victim
 	Level$raiseEvent( LevelCustomType$GHOSTINT, LevelCustomEvt$GHOSTINT$interacted, VICTIM + 1 );
@@ -180,9 +182,9 @@ onStart(){
     }
 	
 	#ifdef customOnStart
-		customOnStart(getActiveAnim());
+		customOnStart(anim);
 	#endif
-    
+    ComApi$raiseEventHost( VICTIM, GhostApiEvt$eventPropStart, anim + getActiveDuration() );
 	
 	
 }
@@ -207,6 +209,8 @@ onEnd(){
 	llSetKeyframedMotion([], [KFM_COMMAND, KFM_CMD_STOP]);
 	llSleep(.5);
 	llSetRegionPos(REZPOS);
+	
+	ComApi$raiseEventHost( ast, GhostApiEvt$eventPropEnd, [] );
 
 }
 

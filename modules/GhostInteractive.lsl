@@ -104,8 +104,8 @@ handleOwnerMethod( GhostInteractiveMethod$interact )
 	
 	}
 	
-    // Auto
-    if( flags & DescConst$GI$auto_push && pushStrength > 0 ){
+    // Auto - ~intFlags & GhostInteractiveConst$NO_EVENT makes sure the object doesn't move from an obukakke power
+    if( flags & DescConst$GI$auto_push && pushStrength > 0 && ~intFlags & GhostInteractiveConst$NO_EVENT ){
         
         if( dir == ZERO_VECTOR )
             dir = <0,0,1>;

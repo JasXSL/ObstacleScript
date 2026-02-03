@@ -110,7 +110,9 @@ onListen( chan, msg )
 			return;
 		
 		blinks = 0;
-		llSetLinkPrimitiveParamsFast(LINK_THIS, (list)PRIM_FULLBRIGHT + ALL_SIDES + TRUE);
+		llSetLinkPrimitiveParamsFast(LINK_THIS, (list)
+			PRIM_GLTF_EMISSIVE + ALL_SIDES + NULL_KEY + ONE_VECTOR + ONE_VECTOR + 0 + <.5,.5,.5>
+		);
 		setTimeout("blink", 0.25);
 	
 	}
@@ -120,7 +122,9 @@ end
 
 handleTimer( "blink" )
 	
-	llSetLinkPrimitiveParamsFast(LINK_THIS, (list)PRIM_FULLBRIGHT + ALL_SIDES + FALSE);
+	llSetLinkPrimitiveParamsFast(LINK_THIS, (list)
+		PRIM_GLTF_EMISSIVE + ALL_SIDES + NULL_KEY + ONE_VECTOR + ONE_VECTOR + 0 + ZERO_VECTOR
+	);
 	
 end
 

@@ -13,6 +13,7 @@
 #define VibHubMethod$setDevice 1			// (str)deviceID
 #define VibHubMethod$runPrograms 2 			// (arr)programs
 #define VibHubMethod$setMinCap 3			// (float)cap - Since different vibrators start turning on at specific intensities, you can set a "start" for any nonzero value to consider as the start point.
+#define VibHubMethod$refreshCaps 4			// void - Requests a capability update from the server. Cap fetch is also run every 30 seconds automatically.
 
 #define VibHubEvt$capabilities 1			// void - Raised on capability response
 
@@ -21,12 +22,18 @@
 	runMethod(LINK_THIS, "VibHub", VibHubMethod$setDevice, (deviceID))
 #define VibHub$runPrograms(programs) \
 	runMethod(LINK_THIS, "VibHub", VibHubMethod$runPrograms, mkarr(programs))
-#define VibHub$stopAll(deviceID) \
+#define VibHub$stopAll() \
 	VibHubMethod$runPrograms("[{\"stages\":[{}]}]")
 #define VibHub$setMinCap(cap) \
-	runMethod(LINK_THIS, "VibHub", VibHubMethod$setMinCap, cap)
-
-
+	runMethod(LINK_THIS, "VibHub", VibHubMethod$setMinCap, (cap))
+#define VibHub$dropDeviceLSD() idbUnset(idbTable$VIBHUB, idbTable$VIBHUB$token)
+#define VibHub$refreshCaps() \
+	runMethod(LINK_THIS, "VibHub", VibHubMethod$refreshCaps, [])
+	
+	
+#define onVibHubCapabilities() \
+if( SENDER_SCRIPT IS "VibHub" AND EVENT_TYPE IS VibHubEvt$capabilities ){ \
+	
 
 
 
@@ -71,7 +78,6 @@ string _vhbs( string intensity, string duration, string easing, string repeats, 
 	
 }
 #define VibHub$buildStage( intensity, duration, easing, repeats, yoyo ) _vhbs((string)intensity, (string)duration, easing, (string)repeats, yoyo)
-
 string _vhbr( float min, float max, integer offset, integer multi, bool absolute ){
 
 	list out = [
@@ -89,6 +95,8 @@ string _vhbr( float min, float max, integer offset, integer multi, bool absolute
 	
 }
 #define VibHub$buildRandObject( min, max, offset, multi, absolute ) _vhbr(min, max, offset, multi, absolute)
+	
+	
 	
 
 #endif

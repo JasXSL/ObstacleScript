@@ -9,8 +9,11 @@
 #define GhostApiEvt$arousal 6			// (list)arousals - Each entry corresponds to the player in the API HUD lists
 #define GhostApiEvt$hunt 7				// (bool)hunting
 #define GhostApiEvt$heartbeat 8			// (bool)on - When heartbeat sounds are toggled from having LoS to the ghost. This is only raised on idividual players.
-#define GhostApiEvt$ghostEvent 9		// (list)evtPlayers, (int)evtType, (int)subType, (float)evtDur - See GhostEvents.lsh for definitions
+#define GhostApiEvt$ghostEvent 9		// (list)evtPlayerHUDs, (int)evtType, (int)subType, (float)evtDur - See GhostEvents.lsh for definitions
 #define GhostApiEvt$interact 10			// (int)type - Raised on the player when the ghost interacts with a player. Types are in GhostInteractions.lsl
 #define GhostApiEvt$trapTrigger 11		// (key)victim - A trap has triggered on victim. Use the sender UUID to infer the trap type.
+#define GhostApiEvt$eventPropStart 12	// (str)name, (float)dur, (var)additional? - Used by "sittable" ghost event extensions. Such as the "Ghosthands Evt" object. The object itself defines the name.
+#define GhostApiEvt$eventPropEnd 13		// void - Same as above but stop
+
 
 #endif

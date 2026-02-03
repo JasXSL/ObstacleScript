@@ -18,36 +18,37 @@ int capBits = 8;
 string cVersion;		// Cache version to detect device
 
 // Helper function that converts a float to be in the range of minVal and maxVal
-int minMax( float in ){
+int minMax( float in, int use ){
 	if( in <= 0 )
 		return 0;
+	if( !use )
+		return (int)in;
 	int maxInt = (1 << capBits) - 1;
 	int minInt = llFloor(maxInt * minCap);
 	int dif = llFloor(llAbs(maxInt-minInt));
 	return llRound(in*dif)+minInt;
 }
 
-string updateRandObject( string randObj ){
+string updateRandObject( string randObj, bool useMinMax ){
 
 	if( j(randObj, "abs") != JSON_INVALID )
 		return llJsonSetValue(randObj, (list)"abs", JSON_DELETE);
 	float v = (float)j(randObj, "min");
 	if( v > 0 )
-		randObj = llJsonSetValue(randObj, (list)"min", (str)minMax(v));
+		randObj = llJsonSetValue(randObj, (list)"min", (str)minMax(v, useMinMax));
 	v = (float)j(randObj, "max");
 	if( v > 0 )
-		randObj = llJsonSetValue(randObj, (list)"max", (str)minMax(v));
+		randObj = llJsonSetValue(randObj, (list)"max", (str)minMax(v, useMinMax));
 	return randObj;
 }
 
 fetchCapabilities(){
 
-	if( deviceID == "" ){
-		llOwnerSay("No device ID, call VibHub$setDevice(deviceID) first!");
+	if( deviceID == "" || !reqs )
 		return;
-	}
 	idbSet(idbTable$VIBHUB, idbTable$VIBHUB$capabilities, "");
 	capFetch = llHTTPRequest(SERVER+"api/?id="+llEscapeURL(deviceID)+"&type=whois&data="+llEscapeURL("[]"), [], "");
+	
 }
 
 onCapChange(){
@@ -64,10 +65,13 @@ onCapChange(){
 	if( version != cVersion ){
 	
 		cVersion = version;
+		/*
 		string start = "Found " + version +" with "+(str)capBits+"-bit support!";
 		if( version == "???" )
 			start = "Device seems to be offline.";
 		llOwnerSay(start);
+		*/
+		raiseEvent(VibHubEvt$capabilities, []);
 		
 	}
 
@@ -86,7 +90,7 @@ onStateEntry()
 		onCapChange();
 		fetchCapabilities();
 	}
-	setInterval("PING", 60);
+	setInterval("PING", 30);
 	
 end
 
@@ -95,8 +99,6 @@ handleTimer( "RST" )
 end
 
 handleTimer( "PING" )
-	if( !reqs || deviceID == "" )
-		return;
 	fetchCapabilities();
 end
 
@@ -108,7 +110,7 @@ onHttpResponse( id, status, body )
 		else{
 			idbSet(idbTable$VIBHUB, idbTable$VIBHUB$capabilities, j(body, "message"));
 			onCapChange();
-			raiseEvent(VibHubEvt$capabilities, []);
+			
 		}
 	}
 	else if( id == lastReq ){
@@ -126,10 +128,15 @@ end
 
 handleInternalMethod( VibHubMethod$setDevice )
 	
+	cVersion = "";
 	deviceID = argStr(0);
 	idbSet(idbTable$VIBHUB, idbTable$VIBHUB$token, deviceID);
 	fetchCapabilities();
 	
+end
+
+handleInternalMethod( VibHubMethod$refreshCaps )
+	fetchCapabilities();
 end
 
 handleInternalMethod( VibHubMethod$runPrograms )
@@ -144,7 +151,6 @@ handleInternalMethod( VibHubMethod$runPrograms )
 		return;
 	}
 	
-	
 	list programsArray = llJson2List(argStr(0));
 	--reqs;
 	
@@ -152,7 +158,6 @@ handleInternalMethod( VibHubMethod$runPrograms )
 	for( ; program < count(programsArray); ++program ){
 		
 		string pData = l2s(programsArray, program);
-		
 		list stages = llJson2List(j(pData, "stages"));
 		integer stage;
 		for(; stage < count(stages); ++stage ){
@@ -161,20 +166,20 @@ handleInternalMethod( VibHubMethod$runPrograms )
 			// Intensity
 			string val = j(sData, "i");
 			if( llJsonValueType(val, []) == JSON_OBJECT )
-				val = updateRandObject(val);
+				val = updateRandObject(val, TRUE);
 			else if( val != JSON_FALSE )
-				val = (str)minMax((float)val);
+				val = (str)minMax((float)val, TRUE);
 			sData = llJsonSetValue(sData, (list)"i", val);
 			
 			// Duration
 			val = j(sData, "d");
 			if( llJsonValueType(val, []) == JSON_OBJECT )
-				sData = llJsonSetValue(sData, (list)"d", updateRandObject(val));
+				sData = llJsonSetValue(sData, (list)"d", updateRandObject(val, FALSE));
 				
 			// Repeats	
 			val = j(sData, "r");
 			if( llJsonValueType(val, []) == JSON_OBJECT )
-				sData = llJsonSetValue(sData, (list)"r", updateRandObject(val));
+				sData = llJsonSetValue(sData, (list)"r", updateRandObject(val, FALSE));
 				
 			stages = llListReplaceList(stages, (list)sData, stage, stage);
 			
@@ -186,8 +191,9 @@ handleInternalMethod( VibHubMethod$runPrograms )
 	
 	}
 	
-	//qd(mkarr(programsArray));
-	
+	#ifdef VERBOSE
+	qd("Sending updated prog array" + mkarr(programsArray));
+	#endif
 	
 	
 	lastReq = llHTTPRequest(SERVER+"api?id="+llEscapeURL(deviceID)+"&type=vib&data="+llEscapeURL(mkarr(programsArray)), [], "");

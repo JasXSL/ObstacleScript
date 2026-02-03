@@ -11,11 +11,12 @@
 #define WipeoutApiEvt$buttonActivation 8	// (key)button - Button fully activated
 #define WipeoutApiEvt$trapdoorTriggered 9	// (key)door, (str)label, (key)player
 #define WipeoutApiEvt$shimmyWallHit 10		// (key)object, (int)started, (list)players
-#define WipeoutApiEvt$trapHit 11			// (key)object, (list)players
+#define WipeoutApiEvt$trapHit 11			// (key)object, (key)player
 #define WipeoutApiEvt$roundStart 12			// 
 #define WipeoutApiEvt$ladder 13				// (key)hud, (key)ladder, (bool)seated - Includes anything "climbable" such as shimmy walls and balance beams
 #define WipeoutApiEvt$dunked 14				// 
 #define WipeoutApiEvt$teamFinish 15			// (int)team - A player of team has reached the ending platform
+#define WipeoutApiEvt$beamVibStart 8		// (key)player, (float)dur - Vibrating beam started
 
 #endif
 
