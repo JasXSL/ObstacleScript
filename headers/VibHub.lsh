@@ -26,7 +26,8 @@
 	VibHubMethod$runPrograms("[{\"stages\":[{}]}]")
 #define VibHub$setMinCap(cap) \
 	runMethod(LINK_THIS, "VibHub", VibHubMethod$setMinCap, (cap))
-#define VibHub$dropDeviceLSD() idbUnset(idbTable$VIBHUB, idbTable$VIBHUB$token)
+#define VibHub$dropDeviceLSDToken() idbUnset(idbTable$VIBHUB, idbTable$VIBHUB$token)
+#define VibHub$dropDeviceLSDCapabilities() idbUnset(idbTable$VIBHUB, idbTable$VIBHUB$capabilities)
 #define VibHub$refreshCaps() \
 	runMethod(LINK_THIS, "VibHub", VibHubMethod$refreshCaps, [])
 	
